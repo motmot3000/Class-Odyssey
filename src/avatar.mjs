@@ -319,6 +319,21 @@ function heroShapes(opt) {
   const backArm = hand === "shield"
     ? [{ x: 72, y: 112, w: 25 }, { x: 47, y: 152, w: 20.5 }, { x: 44, y: 188, w: 13 }]
     : [{ x: 72, y: 112, w: 25 }, { x: 56, y: 159, w: 20.5 }, { x: 49, y: 198, w: 13 }];
+
+  /* --- bras avant. Tenir un objet ne change qu'une chose : le poignet vient
+         se poser sur GRIP. Au repos, la pose est le MIROIR exact du bras
+         arrière (x' = 200 - x) : deux bras ballants ne peuvent pas pendre
+         différemment. */
+  const gripping = hand !== "none" && hand !== "shield";
+  const frontArm = gripping
+    ? [{ x: 128, y: 112, w: 25 }, { x: 143, y: 156, w: 20.5 }, { x: GRIP.x, y: GRIP.y - 11, w: 13 }]
+    : backArm.map((j) => ({ ...j, x: 200 - j.x }));
+
+  /* Les DEUX bras passent avant le torse : la tunique leur mange l'épaule de
+     la même façon, donc les épaules restent symétriques. Poussé après, un
+     bras posait sa calotte d'épaule PAR-DESSUS le tissu — une épaule en
+     relief d'un seul côté. Seuls la main et ce qu'elle tient remontent en
+     fin de liste. */
   S.push(limb(backArm, sleeve));
   S.push(limbCrease(backArm, C.line, -1));
   S.push(bracer(backArm, LEATHER.dark));
@@ -326,6 +341,9 @@ function heroShapes(opt) {
     x: backArm[2].x, y: backArm[2].y + 2, rot: wristAngle(backArm),
     flip: true, fist: hand === "shield", dark: true
   }));
+  S.push(limb(frontArm, sleeve));
+  S.push(limbCrease(frontArm, C.line, 1));
+  S.push(bracer(frontArm, LEATHER.base));
 
   /* --- chausses. Sans grèves la botte s'arrête au mollet : une tige qui
          monte au genou lit comme une cuissarde, pas comme un aventurier. */
@@ -493,18 +511,9 @@ function heroShapes(opt) {
     a: { ...shape.a, transform: `${shape.a.transform || ""} translate(-8 -4) scale(1.08)`.trim() }
   })));
 
-  /* --- bras avant. Tenir un objet ne change qu'une chose : le poignet vient
-         se poser sur GRIP. Ce qui traverse le poing (hampe, fusée, tranchant)
-         se pousse AVANT lui, ce qui pend en dessous APRÈS. Aucune pièce n'a
-         donc de position propre à régler — plus rien ne peut flotter. */
-  const gripping = hand !== "none" && hand !== "shield";
-  const frontArm = gripping
-    ? [{ x: 128, y: 112, w: 25 }, { x: 143, y: 156, w: 20.5 }, { x: GRIP.x, y: GRIP.y - 11, w: 13 }]
-    : [{ x: 128, y: 112, w: 25 }, { x: 146, y: 156, w: 20.5 }, { x: 147, y: 205, w: 13 }];
-  S.push(limb(frontArm, sleeve));
-  S.push(limbCrease(frontArm, C.line, 1));
-  S.push(bracer(frontArm, LEATHER.base));
-
+  /* --- ce que tient la main avant. Ce qui traverse le poing (hampe, fusée,
+         tranchant) se pousse AVANT lui, ce qui pend en dessous APRÈS. Aucune
+         pièce n'a de position propre à régler — plus rien ne peut flotter. */
   const held = [];   /* passe DANS le poing */
   const hung = [];   /* pend sous le poing */
 
