@@ -5,70 +5,55 @@
    l'élève apprenne à lire sa carte en lisant les règles.
    ============================================================ */
 
-import { renderCoinIcon, renderHeartIcon } from "../avatar.mjs";
-import { escapeHtml, icon, renderLevel } from "../ui.mjs";
+import { icon } from "../ui.mjs";
 
-const QUICK_REFERENCE = [
-  ["Do homework", "+100 XP"],
-  ["Learn vocabulary", "+150 XP"],
-  ["Be nice", "+50 XP"],
-  ["Good grade", "+Coins"],
-  ["Bad behaviour", "-1 HP"]
+const GAME_RULES = [
+  "When you have a good behaviour, you get XP and money.",
+  "When you have a bad behaviour, you lose HP.",
+  "Everybody starts at LVL 1 with 5 HP.",
+  "If you reach 0 HP, you are out of the game!",
+  "Level up and you get your HP back.",
+  "Every level unlocks new rewards.",
+  "You can buy items with your money."
 ];
+
+const XP_ACTIONS = [
+  "Do your homework.",
+  "Learn your vocabulary."
+];
+
+const MONEY_ACTIONS = [
+  "Be nice.",
+  "Work well.",
+  "Good grades."
+];
+
+function renderRuleList(items) {
+  return `<ul class="rules-list">
+    ${items.map((item) => `<li>${item}</li>`).join("")}
+  </ul>`;
+}
 
 export function renderRules() {
   return `
     <article class="rules">
       <header class="rules-head">
         <h1>How does it work?</h1>
-        <p class="lede">Every student is a hero with HP, XP and a level.</p>
+        <p class="lede">Every pupil has a character with HP, XP and LVL.</p>
       </header>
 
       <section class="rules-section">
-        <dl class="rules-stats">
-          <div>
-            <dt>
-              <span class="rules-demo">${Array.from({ length: 5 }, (_, i) => renderHeartIcon(i < 4)).join("")}</span>
-              HP — Hit Points
-            </dt>
-            <dd>Bad behaviour costs HP. Reach 0 and the hero is out until they level up.</dd>
-          </div>
-          <div>
-            <dt>
-              <span class="rules-demo"><span class="xp-track"><span class="xp-fill" style="width:62%"></span></span></span>
-              XP — Experience
-            </dt>
-            <dd>Homework, vocabulary and good behaviour earn XP. Level up to unlock rewards.</dd>
-          </div>
-          <div>
-            <dt>
-              <span class="rules-demo">${renderCoinIcon()}</span>
-              Coins
-            </dt>
-            <dd>Good grades and nice actions earn coins. Spend them in the hero shop.</dd>
-          </div>
-          <div>
-            <dt>
-              <span class="rules-demo">${renderLevel(2)}</span>
-              Level up
-            </dt>
-            <dd>Level up to heal HP and unlock new outfits, hats, items and titles.</dd>
-          </div>
-        </dl>
+        ${renderRuleList(GAME_RULES)}
       </section>
 
       <section class="rules-section">
-        <h2>Quick reference</h2>
-        <table class="rules-table">
-          <tbody>
-            ${QUICK_REFERENCE.map(([action, result]) => `
-              <tr>
-                <th scope="row">${escapeHtml(action)}</th>
-                <td>${escapeHtml(result)}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
+        <h2>How to get XP?</h2>
+        ${renderRuleList(XP_ACTIONS)}
+      </section>
+
+      <section class="rules-section">
+        <h2>How to get money?</h2>
+        ${renderRuleList(MONEY_ACTIONS)}
       </section>
 
       <p class="rules-back">
