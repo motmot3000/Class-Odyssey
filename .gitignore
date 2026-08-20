@@ -9,6 +9,7 @@ step1-*.png
 
 # État du jeu : les données vivent sur le serveur, jamais dans le dépôt.
 server/data/
+var/
 
 # Verrous LibreOffice sur les .docx
 .~lock.*#

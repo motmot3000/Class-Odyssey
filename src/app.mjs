@@ -39,9 +39,9 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 
-// Le backend ne tourne que sur cagipi. Les domaines qui miroitent l'app
-// reverse-proxient /api/ vers lui, donc le navigateur le voit toujours en
-// same-origin — voir BACKEND.md.
+// En production, Infomaniak sert l'API sous /api/ sur le même domaine que
+// l'application. L'URL reste relative pour fonctionner aussi en local et sous
+// un éventuel sous-chemin — voir BACKEND.md.
 function apiUrl(path) {
   return new URL(`api/${path}`, document.baseURI).toString();
 }

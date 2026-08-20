@@ -29,11 +29,11 @@ dans l'en-tête, à côté des onglets de classe.
 
 ## Production (sauvegarde partagée)
 
-L'application est aussi servie par un petit backend Node (`server/server.mjs`)
-qui stocke l'état dans un fichier JSON sur le serveur, avec sauvegardes
-horodatées. N'importe quelle machine qui ouvre l'URL retrouve les données.
+En production, l'application et son API PHP sont servies par Infomaniak. L'API
+stocke l'état dans un fichier JSON privé, avec sauvegardes horodatées. N'importe
+quelle machine qui ouvre l'URL retrouve les données.
 
-Voir `BACKEND.md` pour l'architecture, le déploiement sur cagipi et l'API.
+Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 
 ## Structure du code
 

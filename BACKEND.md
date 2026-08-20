@@ -1,133 +1,87 @@
 # Game of More — Backend
 
-Le backend de **Game of More** permet de sauvegarder les données des élèves
-(classes, XP, niveaux, HP, skins, money…) **sur le serveur** plutôt que dans le
-`localStorage` d'un seul navigateur. Résultat : n'importe quelle machine qui
-ouvre l'URL retrouve exactement les données laissées précédemment.
+Le backend sauvegarde les classes, élèves, XP, niveaux, HP, skins et monnaie
+sur l'hébergement Infomaniak. Le `localStorage` du navigateur reste uniquement
+un cache hors ligne.
 
-## Architecture
+## Production
 
-```
-navigateur (n'importe quelle machine)
-        │
-        ▼  https://cagipi.taild0ddf5.ts.net/game-of-more
-   Tailscale Funnel (HTTPS public, terminaison TLS par Tailscale)
-        │  proxy /game-of-more → 127.0.0.1:5180
-        ▼
-server/server.mjs  (Node, sans dépendances, ~/services/game-of-more/)
-        │  sert aussi les fichiers statiques (index.html, styles.css, src/, assets/)
-        ▼
-data/state.json            ← l'état complet du jeu (JSON)
-data/backups/              ← sauvegardes horodatées (rotation : 60 max)
+```text
+navigateur
+    │ https://game-of-more.lecagibi.ch
+    ▼
+Apache Infomaniak
+    ├── fichiers statiques : index.html, styles.css, src/, assets/
+    └── /api/* → api/index.php
+                      │
+                      ▼
+                 var/state.json
+                 var/backups/state-*.json (60 versions)
 ```
 
-> **Sous-chemin et barre oblique finale.** Le Funnel monte l'app sur
-> `/game-of-more` et retire ce préfixe avant de transmettre la requête à Node :
-> le serveur ne peut donc pas savoir sous quel préfixe il est servi. Or les URLs
-> relatives (`./styles.css`, `./src/app.mjs`, `api/state`) ne se résolvent
-> correctement que si le chemin se termine par `/`. Sans elle, tout tombait en
-> 404 et la page restait blanche. `index.html` contient donc un court script en
-> tête de `<head>` qui rétablit la barre oblique. C'est volontairement
-> indépendant du préfixe : ça marchera aussi tel quel sous un domaine dédié,
-> où l'app est servie à la racine.
+Le dossier `var/` est refusé par Apache et ignoré par Git. Les fichiers de
+données sont créés avec des permissions privées. Les écritures sont protégées
+par `flock`, atomiques (fichier temporaire puis `rename`) et précédées d'une
+sauvegarde horodatée.
 
-> Le nom de domaine final `game-of-more.lecagibi.ch` sera publié par
-> l'enseignant ; il pourra être raccroché au même backend soit par un CNAME
-> vers l'URL Funnel ci-dessus, soit par un bloc nginx `server_name
-> game-of-more.lecagibi.ch` en `proxy_pass` vers `127.0.0.1:5180` (voir plus bas).
+`GAME_OF_MORE_DATA_DIR` permet de placer les données ailleurs si cette variable
+d'environnement est fournie à PHP. Sans elle, `var/` à la racine du site est
+utilisé.
 
 ## API
 
-| Méthode | Route          | Rôle                                    |
-|---------|----------------|------------------------------------------|
-| GET     | `/api/health`  | Vérifie que le serveur tourne            |
-| GET     | `/api/state`   | Lit l'état sauvegardé (404 si aucun)     |
-| PUT     | `/api/state`   | Écrase l'état complet (corps = JSON)     |
+| Méthode | Route         | Rôle                                |
+|---------|---------------|-------------------------------------|
+| GET     | `/api/health` | Vérifie l'API et identifie le stockage |
+| GET     | `/api/state`  | Lit l'état sauvegardé (404 si vide) |
+| PUT     | `/api/state`  | Valide puis remplace l'état complet |
 
-L'état est écrit de façon **atomique** (fichier temporaire puis `rename`) et une
-**sauvegarde horodatée** de l'état précédent est conservée avant chaque
-écrasement, pour pouvoir revenir en arrière en cas d'erreur.
+La taille maximale d'un état est de 10 Mio. Le serveur pose lui-même
+`updatedAt` après une écriture réussie.
 
-## Côté client
+## Côté navigateur
 
-- Au chargement, l'app lit le `localStorage` (affichage immédiat) puis fait un
-  `GET /api/state` : si le serveur a une copie plus récente, elle devient
-  autoritaire et remplace l'affichage.
-- À chaque modification, l'app fait un `PUT /api/state` (debounce de 300 ms).
-- `localStorage` reste utilisé comme **cache hors-ligne** : si le serveur est
-  injoignable, l'app continue de fonctionner et resynchronisera au prochain
-  accès en ligne.
+- L'application affiche immédiatement son cache `localStorage`, puis charge
+  `/api/state` depuis la même origine.
+- Chaque modification déclenche un `PUT /api/state` après 300 ms.
+- En cas de coupure réseau, le cache local permet de continuer et une nouvelle
+  synchronisation est tentée à la visite suivante.
 
-## Déploiement sur cagipi (KJPy)
+## Déploiement Infomaniak
 
-Le serveur tourne en **service systemd utilisateur** (démarre au boot grâce à
-`loginctl enable-linger motmot3000`), dans `~/services/game-of-more/`.
+Le site se trouve dans `~/sites/game-of-more.lecagibi.ch` sur l'accès SSH
+Infomaniak. Déployer les fichiers applicatifs sans supprimer `var/` :
 
 ```bash
-# 1) copier les fichiers
-rsync -az --exclude node_modules --exclude .git --exclude data \
-  index.html styles.css src server assets package.json \
-  cagipi:services/game-of-more/
-
-# 2) activer/démarrer le service
-systemctl --user daemon-reload
-systemctl --user enable --now game-of-more.service
+rsync -az \
+  --exclude .git --exclude node_modules --exclude var --exclude server/data \
+  .htaccess index.html styles.css src assets api package.json \
+  infomaniak-goM:sites/game-of-more.lecagibi.ch/
 ```
 
-Le service :
-
-```ini
-[Unit]
-Description=Game of More backend (127.0.0.1:5180)
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-Environment=PORT=5180
-Environment=DATA_DIR=/home/motmot3000/services/game-of-more/data
-WorkingDirectory=/home/motmot3000/services/game-of-more
-ExecStart=/usr/bin/node /home/motmot3000/services/game-of-more/server/server.mjs
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=default.target
-```
-
-Exposition publique (Tailscale Funnel) :
+Vérifications après déploiement :
 
 ```bash
-# cockpit (dashboard) : reste sur le tailnet, via HTTP
-sudo tailscale serve --http=80 --bg http://127.0.0.1:3010
-# jeu : public sur internet
-sudo tailscale funnel --set-path /game-of-more --bg http://127.0.0.1:5180
+curl -fsS https://game-of-more.lecagibi.ch/api/health
+curl -fsS https://game-of-more.lecagibi.ch/api/state
 ```
 
-Exposition par nginx (option alternative, pour un domaine dédié —
-fichier `/etc/nginx/sites-available/game-of-more`, lié dans `sites-enabled/`) :
+## Migration depuis l'ancien Raspberry Pi
 
-```nginx
-server {
-    listen 80;
-    server_name game-of-more.lecagibi.ch;
+1. Arrêter brièvement les écritures ou mettre le site en maintenance.
+2. Copier `~/services/game-of-more/data/state.json` du Pi vers le `var/` du
+   site Infomaniak.
+3. Déployer `.htaccess` et `api/index.php`, puis vérifier par HTTPS que l'état
+   lu est identique.
+4. Faire un PUT de contrôle, relire l'état et vérifier la création d'un backup.
+5. Seulement après ces contrôles, désactiver le service et le Funnel du Pi.
+6. Conserver une archive finale hors du dossier de service avant de supprimer
+   l'ancienne copie d'exécution.
 
-    location / {
-        proxy_pass http://127.0.0.1:5180;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+Le serveur Node historique (`server/server.mjs`) reste disponible pour lancer
+une instance locale avec `npm start`; il n'est plus utilisé en production.
 
-Puis `sudo nginx -t && sudo systemctl reload nginx`.
+## Sauvegarde manuelle
 
-## Sauvegarde
-
-- Les données vivent dans `data/state.json` (`~/services/game-of-more/data/`).
-- Les 60 dernières versions sont dans `data/backups/`.
-- **Astuce** : l'app propose aussi un export/import JSON manuel (bouton ⬇/⬆)
-  dans la console du prof, utile comme sauvegarde de secours.
+La console enseignant propose aussi l'export/import JSON. Utiliser un export
+avant une longue période sans cours fournit une copie indépendante du serveur.
