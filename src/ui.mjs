@@ -37,7 +37,9 @@ const PATHS = {
   user: `<circle cx="10" cy="7" r="3"/><path d="M4.5 16.5c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5"/>`,
   shop: `<path d="M4 7.5h12l-1 8.5H5z"/><path d="M7.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5"/>`,
   clock: `<circle cx="10" cy="10" r="6.5"/><path d="M10 6.5V10l2.5 1.5"/>`,
-  back: `<path d="M15 10H5"/><path d="M9 5.5 4.5 10 9 14.5"/>`
+  back: `<path d="M15 10H5"/><path d="M9 5.5 4.5 10 9 14.5"/>`,
+  lock: `<rect x="4.5" y="8.5" width="11" height="8" rx="1.8"/><path d="M7.2 8.5V6.6a2.8 2.8 0 0 1 5.6 0v1.9"/><path d="M10 11.6v2"/>`,
+  unlock: `<rect x="4.5" y="8.5" width="11" height="8" rx="1.8"/><path d="M7.2 8.5V6.6a2.8 2.8 0 0 1 5.5-.6"/><path d="M10 11.6v2"/>`
 };
 
 export function icon(name, extraClass = "") {

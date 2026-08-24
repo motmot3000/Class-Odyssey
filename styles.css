@@ -2042,6 +2042,178 @@ textarea {
   display: flex;
 }
 
+/* ---------- Portes ----------
+   Deux écrans partagent ce gabarit : la page d'accueil et le verrou de la
+   console. Une carte étroite, centrée, sans rien d'autre à toucher — un
+   élève doit comprendre en deux secondes qu'il n'est pas puni, seulement
+   au mauvais endroit. */
+
+.gate {
+  display: flex;
+  justify-content: center;
+}
+
+.gate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  width: min(100%, 27rem);
+  padding: var(--s6) var(--s5);
+  text-align: center;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.gate-badge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  color: var(--money);
+  background: var(--money-dim);
+  border-radius: var(--r-pill);
+}
+
+.gate-badge .icon {
+  width: 26px;
+  height: 26px;
+}
+
+.gate-card h2 {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+}
+
+.gate-lede {
+  max-width: 36ch;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+.gate-tabs {
+  margin-top: var(--s1);
+}
+
+.gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: 100%;
+  margin-top: var(--s1);
+  text-align: left;
+}
+
+/* Les champs d'une porte sont plus hauts que ceux de la console : ils sont
+   souvent visés du bout du doigt, sur une tablette tenue à une main. */
+.gate-form input {
+  min-height: 48px;
+  padding: 0 var(--s3);
+  font-size: var(--t-md);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+
+.gate-form input[type="password"] {
+  font-size: var(--t-lg);
+  letter-spacing: 0.12em;
+}
+
+.gate-form input:focus {
+  border-color: var(--xp);
+  outline: none;
+}
+
+.gate-form .btn {
+  min-height: 48px;
+}
+
+.field-hint {
+  font-size: var(--t-xs);
+  color: var(--ink-muted);
+}
+
+.gate-help {
+  font-size: var(--t-sm);
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+.gate-error {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--hp);
+  text-wrap: pretty;
+}
+
+.gate-card .rule {
+  width: 100%;
+}
+
+.gate-actions {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Le cadenas de l'onglet « Teacher » : un signe, pas une alarme. La gouttière
+   du groupe segmenté suffit à l'espacer du mot. */
+.segmented .icon-tab {
+  width: 14px;
+  height: 14px;
+  opacity: 0.65;
+}
+
+/* Le nom de la classe connectée, en bout de barre : une étiquette, pas un
+   bouton — on ne clique pas dessus, on se déconnecte depuis la console. */
+.account-tag {
+  max-width: 16ch;
+  overflow: hidden;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.account-line span {
+  font-size: var(--t-sm);
+  color: var(--ink-muted);
+}
+
+.access-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.access-form input {
+  min-height: 44px;
+  padding: 0 var(--s3);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--ink);
+}
+
+.access-form input:focus {
+  border-color: var(--xp);
+  outline: none;
+}
+
 /* ---------- Dialogues ---------- */
 
 .dialog {
@@ -2370,6 +2542,12 @@ dialog.dialog:not([open]) {
     justify-content: space-between;
   }
 
+  /* Le nom de la classe tiendrait la moitié de la ligne : il reste lisible
+     dans le panneau « Class account » de la console. */
+  .account-tag {
+    display: none;
+  }
+
   .console {
     position: fixed;
     width: auto;
@@ -2531,6 +2709,21 @@ dialog.dialog:not([open]) {
 }
 
 @media (max-width: 520px) {
+  /* Trois commandes dans l'en-tête tiennent mal sur un téléphone : le
+     cadenas garde son icône, son libellé reste lisible par les lecteurs
+     d'écran. */
+  .btn-lock span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .board-bar-tools .segmented button {
     width: 44px;
     min-width: 44px;
