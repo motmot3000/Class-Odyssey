@@ -102,7 +102,8 @@ export function gearOf(pupil) {
     ["Hat", getItemName("hat", pupil.hat)],
     ["Item", getItemName("weapon", pupil.weapon)],
     ["Hair", getItemName("hair", pupil.hair)],
-    ["Face", getItemName("face", pupil.face)]
+    ["Face", getItemName("face", pupil.face)],
+    ["Skin", getItemName("tone", pupil.skinTone)]
   ];
 }
 

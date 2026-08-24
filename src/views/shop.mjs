@@ -15,6 +15,7 @@ export const SHOP_CATEGORIES = [
   { type: "hair", label: "Hair" },
   { type: "face", label: "Faces" },
   { type: "title", label: "Titles" },
+  { type: "tone", label: "Skins" },
   { type: "bespoke", label: "Custom" }
 ];
 
@@ -49,7 +50,7 @@ export function renderShop(pupil, activeType) {
 /* Un seul bouton par article, dont le libellé dit ce qui va se passer :
    « Buy 40 », « Equip », « Equipped ». Jamais « OK ». */
 function renderShopItem(item, pupil) {
-  const field = item.type === "outfit" ? "skin" : item.type;
+  const field = item.type === "outfit" ? "skin" : item.type === "tone" ? "skinTone" : item.type;
   const bespoke = item.type === "bespoke";
   const equipped = !bespoke && pupil[field] === item.id;
   const owned = isItemOwned(pupil, item.id);

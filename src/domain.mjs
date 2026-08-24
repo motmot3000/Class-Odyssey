@@ -70,38 +70,35 @@ export const TITLES = [
   { id: "rookie", name: "Rookie", minLevel: 1, price: 0, description: "The first step of the quest." },
   { id: "perfect-pupil", name: "Pupil", minLevel: 2, price: 20, description: "A good student badge." },
   { id: "pathfinder", name: "Explorer", minLevel: 3, price: 30, description: "For curious students." },
-  { id: "grammar-master", name: "Master", minLevel: 4, price: 45, description: "English language master." },
-  { id: "class-legend", name: "Legend", minLevel: 5, price: 60, description: "A classroom legend." },
-  { id: "scholar-virtuoso", name: "Star", minLevel: 6, price: 70, description: "A shining star in class." },
-  { id: "realm-champion", name: "Champion", minLevel: 7, price: 80, description: "A true class champion." },
-  { id: "grand-archon", name: "Leader", minLevel: 8, price: 90, description: "A great team leader." },
-  { id: "paragon-sovereign", name: "King", minLevel: 10, price: 100, description: "The supreme title." }
+  { id: "scholar-virtuoso", name: "Star", minLevel: 4, price: 45, description: "A shining star in class." },
+  { id: "realm-champion", name: "Champion", minLevel: 5, price: 55, description: "A true class champion." },
+  { id: "grand-archon", name: "Leader", minLevel: 6, price: 65, description: "A great team leader." },
+  { id: "paragon-sovereign", name: "King", minLevel: 7, price: 75, description: "The supreme royal title." },
+  { id: "grammar-master", name: "Master", minLevel: 8, price: 85, description: "English language master." },
+  { id: "class-legend", name: "Legend", minLevel: 10, price: 100, description: "The ultimate classroom legend." }
 ];
 
 export const HATS = [
   { id: "no-hat", name: "No Hat", minLevel: 1, price: 0, description: "No hat on your head." },
   { id: "explorer-cap", name: "Goggles", minLevel: 1, price: 15, description: "Cool explorer goggles." },
   { id: "sunglasses", name: "Sunglasses", minLevel: 2, price: 25, description: "Black sunglasses." },
-  { id: "feather-beret", name: "Beret", minLevel: 2, price: 20, description: "Green beret with a feather." },
-  { id: "wizard-hat", name: "Wizard Hat", minLevel: 3, price: 30, description: "Pointed blue wizard hat." },
-  { id: "shadow-hood", name: "Hood", minLevel: 4, price: 40, description: "Warm travel hood." },
+  { id: "feather-beret", name: "Beret", minLevel: 2, price: 20, description: "A smart green beret with a gold pin." },
+  { id: "wizard-hat", name: "Wizard Hat", minLevel: 3, price: 30, description: "A tall pointed wizard hat." },
   { id: "gold-crown", name: "King's Crown", minLevel: 5, price: 55, description: "Shiny gold crown." },
-  { id: "steel-helm", name: "Helmet", minLevel: 6, price: 65, description: "Steel knight helmet." },
-  { id: "winged-circlet", name: "Diadem", minLevel: 7, price: 75, description: "Silver winged headband." },
-  { id: "star-cowl", name: "Magic Hood", minLevel: 8, price: 85, description: "Dark hood with bright stars." },
+  { id: "steel-helm", name: "Helmet", minLevel: 6, price: 65, description: "Horned steel knight helmet." },
+  { id: "classy-hat", name: "Classy Hat", minLevel: 7, price: 75, description: "A refined black top hat." },
   { id: "celestial-crown", name: "Royal Crown", minLevel: 10, price: 100, description: "The greatest golden crown." }
 ];
 
 export const WEAPONS = [
   { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." },
-  { id: "pencil-sword", name: "Sword", minLevel: 2, price: 20, description: "A sharp steel sword." },
-  { id: "word-wand", name: "Wand", minLevel: 3, price: 35, description: "A glowing magic wand." },
-  { id: "star-shield", name: "Shield", minLevel: 4, price: 45, description: "A blue shield with a star." },
-  { id: "lore-lantern", name: "Lantern", minLevel: 5, price: 55, description: "A bright yellow lantern." },
-  { id: "spell-grimoire", name: "Magic Book", minLevel: 6, price: 65, description: "An ancient magic spellbook." },
-  { id: "dual-daggers", name: "Daggers", minLevel: 7, price: 75, description: "Two fast silver daggers." },
-  { id: "astral-scepter", name: "Scepter", minLevel: 8, price: 85, description: "A golden royal scepter." },
-  { id: "wisdom-relic", name: "Magic Crystal", minLevel: 10, price: 100, description: "A powerful glowing crystal." }
+  { id: "star-shield", name: "Shield", minLevel: 2, price: 20, description: "A blue shield with a star." },
+  { id: "lore-lantern", name: "Lantern", minLevel: 3, price: 30, description: "A bright yellow lantern." },
+  { id: "spell-grimoire", name: "Magic Book", minLevel: 4, price: 45, description: "An ancient magic spellbook." },
+  { id: "dual-daggers", name: "Daggers", minLevel: 5, price: 55, description: "Two fast silver daggers." },
+  { id: "pencil-sword", name: "Sword", minLevel: 6, price: 65, description: "A fierce pointed steel sword." },
+  { id: "word-wand", name: "Wand", minLevel: 8, price: 85, description: "A powerful glowing magic wand." },
+  { id: "swords-and-shield", name: "Swords & Shield", minLevel: 10, price: 100, description: "A legendary pair of swords and royal shield." }
 ];
 
 export const FACES = [
@@ -109,22 +106,21 @@ export const FACES = [
   { id: "grin", name: "Grin", minLevel: 1, price: 10, description: "A friendly grin." },
   { id: "wink", name: "Wink", minLevel: 2, price: 20, description: "A clever wink." },
   { id: "cool", name: "Cool", minLevel: 3, price: 30, description: "A determined cool face." },
-  { id: "smirk", name: "Smart Smile", minLevel: 4, price: 35, description: "A clever adventurer smile." },
-  { id: "evil", name: "Evil Face", minLevel: 5, price: 40, description: "A sneaky villain face." },
-  { id: "fierce", name: "Hero Face", minLevel: 6, price: 50, description: "A brave and focused look." },
+  { id: "evil", name: "Evil Face", minLevel: 6, price: 55, description: "Small red demon eyes and a sly smile." },
   { id: "star-eyes", name: "Star Eyes", minLevel: 8, price: 70, description: "Eyes shining like bright stars." },
-  { id: "transcendent", name: "Gold Eyes", minLevel: 10, price: 90, description: "Golden glowing eyes." }
+  { id: "transcendent", name: "God Face", minLevel: 10, price: 100, description: "Divine golden eyes and celestial marks." }
 ];
 
 export const HAIRS = [
   { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
-  { id: "curly", name: "Curly Hair", minLevel: 2, price: 20, description: "Cool curly hair." },
-  { id: "spiky", name: "Spiky Hair", minLevel: 3, price: 30, description: "Fun spiky hair." },
-  { id: "ponytail", name: "Ponytail", minLevel: 4, price: 35, description: "Tied back ponytail." },
+  { id: "bald", name: "Bald", minLevel: 1, price: 0, description: "A clean fully shaved head." },
+  { id: "buzz-cut", name: "Buzz Cut", minLevel: 2, price: 15, description: "A clean close-cropped haircut." },
+  { id: "curly", name: "Afro", minLevel: 2, price: 20, description: "A classic rounded afro." },
+  { id: "spiky", name: "Spiky Hair", minLevel: 3, price: 30, description: "Bold hair with sharp visible spikes." },
+  { id: "monk-cut", name: "Monk Cut", minLevel: 4, price: 40, description: "A traditional monk tonsure." },
   { id: "braided", name: "Braids", minLevel: 6, price: 50, description: "Warrior braids." },
-  { id: "flowing", name: "Wavy Hair", minLevel: 8, price: 70, description: "Long wavy flowing hair." },
-  { id: "celestial-hair", name: "Crown Braids", minLevel: 10, price: 90, description: "Braids tied with a gold ribbon." }
+  { id: "royal-hair", name: "Royal Hair", minLevel: 10, price: 90, description: "Long curls with subtle royal jewels." }
 ];
 
 export const BESPOKE_ITEMS = [
@@ -140,11 +136,16 @@ export const BESPOKE_ITEMS = [
 ];
 
 export const SKIN_TONES = [
-  { id: "light", name: "Light", color: "#ffd7b0" },
-  { id: "medium", name: "Medium", color: "#f2c193" },
-  { id: "tan", name: "Tan", color: "#d9a06b" },
-  { id: "brown", name: "Brown", color: "#b07a4f" },
-  { id: "dark", name: "Dark", color: "#7d4f33" }
+  { id: "light", name: "Light Skin", color: "#ffd7b0", minLevel: 1, price: 0, description: "A natural light skin tone." },
+  { id: "medium", name: "Medium Skin", color: "#f2c193", minLevel: 1, price: 0, description: "A natural medium skin tone." },
+  { id: "tan", name: "Tan Skin", color: "#d9a06b", minLevel: 1, price: 0, description: "A natural tan skin tone." },
+  { id: "brown", name: "Brown Skin", color: "#b07a4f", minLevel: 1, price: 0, description: "A natural brown skin tone." },
+  { id: "dark", name: "Dark Skin", color: "#7d4f33", minLevel: 1, price: 0, description: "A natural dark skin tone." },
+  { id: "blue-skin", name: "Blue Skin", color: "#6096c7", minLevel: 3, price: 30, description: "Mystical sapphire-blue skin." },
+  { id: "red-skin", name: "Red Skin", color: "#b65b57", minLevel: 4, price: 40, description: "Bold ruby-red skin." },
+  { id: "green-skin", name: "Green Skin", color: "#638f68", minLevel: 5, price: 50, description: "Enchanted emerald-green skin." },
+  { id: "tattooed-skin", name: "Tattoos", color: "#c68a55", minLevel: 8, price: 80, description: "Warrior skin marked with elegant tattoos." },
+  { id: "golden-skin", name: "Golden Skin", color: "#d8ad4a", minLevel: 10, price: 100, description: "Living gold skin decorated with diamonds." }
 ];
 
 export const SHOP_ITEMS = [
@@ -154,6 +155,7 @@ export const SHOP_ITEMS = [
   ...FACES.map((item) => ({ ...item, type: "face" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
+  ...SKIN_TONES.map((item) => ({ ...item, type: "tone" })),
   ...BESPOKE_ITEMS
 ];
 
@@ -162,8 +164,12 @@ const CLASS_NAMES = ["7P", "8P"];
 // Maps the original class ids/names ("CP"/"VIP") to the renamed ones ("7P"/"8P").
 const LEGACY_CLASS_MAP = { cp: "7p", vip: "8p", CP: "7P", VIP: "8P" };
 
+/* `samples` donne le plateau de démonstration, celui qui montre à quoi
+   ressemble le jeu. Une classe qui vient d'être créée part vide : son
+   enseignant tape de vrais prénoms, il n'a pas à effacer des faux. */
 export function createInitialState({ samples = true } = {}) {
   const pupilsOf = (classId, names) => (samples ? samplePupils(classId, names) : []);
+
   return {
     revision: 0,
     activeClassId: "7p",
@@ -564,6 +570,7 @@ function normalizePupil(pupil) {
     weapon,
     face,
     hair,
+    skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
   const customOrders = Array.isArray(pupil.customOrders)
@@ -591,7 +598,7 @@ function normalizePupil(pupil) {
     hat: ownedItems.includes(hat) ? hat : "no-hat",
     weapon: ownedItems.includes(weapon) ? weapon : "no-weapon",
     gender,
-    skinTone,
+    skinTone: ownedItems.includes(skinTone) ? skinTone : "light",
     face: ownedItems.includes(face) ? face : "smile",
     hair: ownedItems.includes(hair) ? hair : defaultHair,
     lastLevelUpAt: pupil.lastLevelUpAt || null
@@ -619,7 +626,9 @@ function applyXp(pupil, amount) {
 }
 
 function cosmeticField(type) {
-  return type === "outfit" ? "skin" : type;
+  if (type === "outfit") return "skin";
+  if (type === "tone") return "skinTone";
+  return type;
 }
 
 function updateClass(state, classId, updater) {
