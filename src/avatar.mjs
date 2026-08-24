@@ -956,9 +956,9 @@ function renderFigure(opt) {
   const atmosphere = opt.ground === false ? "" : roleAtmosphere(opt.role);
 
   const mirrored = opt.mirror ? "translate(200 0) scale(-1 1)" : "";
-  const figure = `<g transform="${mirrored}"><g transform="translate(-3 2) scale(1.03 0.96)">${body}${shading}</g></g>`;
+  const figure = `<g transform="${mirrored}"><g transform="translate(0 10) scale(1 0.97)">${body}${shading}</g></g>`;
 
-  return `<svg class="${escapeXml(opt.cls || "avatar")}" data-role="${escapeXml(opt.role || "scout")}" viewBox="${escapeXml(opt.viewBox || "0 0 200 360")}" role="img" aria-label="${escapeXml(opt.alt || "hero")}">
+  return `<svg class="${escapeXml(opt.cls || "avatar")}" data-role="${escapeXml(opt.role || "scout")}" viewBox="${escapeXml(opt.viewBox || "-16 -22 232 412")}" role="img" aria-label="${escapeXml(opt.alt || "hero")}">
     ${defs}${atmosphere}${ground}${figure}
   </svg>`;
 }
@@ -1009,7 +1009,7 @@ export function renderHero(pupil) {
    Aucune géométrie dupliquée : ce qu'on achète est ce qu'on portera. */
 const ITEM_CROPS = {
   outfit: "44 84 112 214",
-  hat: "58 0 84 76",
+  hat: "50 2 100 92",
   sunglasses: "70 30 60 45",
   face: "76 30 48 52",
   evil: "76 30 48 52",
@@ -1025,14 +1025,14 @@ const ITEM_CROPS = {
   "astral-scepter": "122 96 50 152",
   "wisdom-relic": "124 130 46 94",
   "custom-bespoke": "40 40 120 120",
-  short: "68 4 64 84",
-  long: "60 2 80 144",
-  curly: "60 0 80 88",
-  spiky: "62 0 76 90",
-  ponytail: "60 2 80 80",
-  braided: "60 2 80 100",
-  flowing: "58 2 84 140",
-  "celestial-hair": "58 2 84 90"
+  short: "64 -4 72 96",
+  long: "56 -6 88 156",
+  curly: "56 -8 88 100",
+  spiky: "58 -10 84 104",
+  ponytail: "56 -4 88 92",
+  braided: "56 -4 88 108",
+  flowing: "54 -6 92 152",
+  "celestial-hair": "54 -6 92 102"
 };
 
 export function renderItemArt(item) {

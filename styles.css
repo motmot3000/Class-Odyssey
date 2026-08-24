@@ -90,6 +90,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -188,6 +189,7 @@ textarea {
   align-items: center;
   gap: var(--s4);
   min-height: var(--topbar-h);
+  min-width: 0;
   padding-block: env(safe-area-inset-top) 0;
   padding-inline: max(var(--s5), env(safe-area-inset-left)) max(var(--s5), env(safe-area-inset-right));
   /* Opaque : le plateau défile dessous et un fond translucide laissait
@@ -244,6 +246,7 @@ textarea {
 .page {
   max-width: 1760px;
   margin: 0 auto;
+  min-width: 0;
   padding-block: var(--s5) max(var(--s7), env(safe-area-inset-bottom));
   padding-inline: max(var(--s5), env(safe-area-inset-left)) max(var(--s5), env(safe-area-inset-right));
 }
@@ -276,6 +279,7 @@ textarea {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s3) var(--s4);
+  min-width: 0;
   padding: var(--s3) var(--s4);
   background: var(--surface-1);
   border: 1px solid var(--line);
@@ -774,6 +778,8 @@ textarea {
   font-size: var(--t-sm);
   font-weight: 700;
   color: var(--money);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .out-badge {
@@ -870,6 +876,7 @@ textarea {
   font-size: var(--t-xl);
   font-weight: 800;
   letter-spacing: -0.01em;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -879,7 +886,7 @@ textarea {
   position: relative;
   display: grid;
   place-items: center;
-  padding: var(--s2);
+  padding: var(--s2) var(--s3) 0;
   background: radial-gradient(120% 80% at 50% 12%, rgba(56, 201, 255, 0.12), transparent 70%), var(--surface-3);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -887,7 +894,8 @@ textarea {
 
 .hero-card-art .avatar {
   width: auto;
-  height: 148px;
+  height: 168px;
+  max-width: 100%;
   display: block;
 }
 
@@ -1111,6 +1119,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--s3);
+  min-width: 0;
   padding: var(--s4);
   background: var(--surface-1);
   border: 1px solid var(--line);
@@ -1251,12 +1260,16 @@ textarea {
 
 .hp-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--s2);
 }
 
 .hp-row .btn {
   padding-inline: var(--s2);
+}
+
+.hp-row .btn:last-child {
+  grid-column: 1 / -1;
 }
 
 .coin-row {
@@ -1347,17 +1360,19 @@ textarea {
 
 .hero-sheet-art {
   display: grid;
-  place-items: center;
-  padding: var(--s2);
+  place-items: end center;
+  padding: var(--s2) var(--s2) 0;
   background: var(--surface-3);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   cursor: pointer;
+  flex: none;
 }
 
 .hero-sheet-art .avatar {
-  height: 92px;
+  height: 108px;
   width: auto;
+  max-width: 88px;
 }
 
 .hero-sheet-facts {
@@ -1484,6 +1499,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--s3);
+  min-width: 0;
 }
 
 .shop-head {
@@ -1507,6 +1523,7 @@ textarea {
   flex-wrap: nowrap;
   gap: var(--s1);
   max-width: 100%;
+  min-width: 0;
   padding-bottom: 2px;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
@@ -1786,27 +1803,29 @@ textarea {
 
 .locker-hero {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   gap: var(--s5);
   padding: var(--s5);
   background: var(--surface-1);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
+  min-width: 0;
 }
 
 .locker-art {
   position: relative;
   align-self: start;
   display: grid;
-  place-items: center;
-  padding: var(--s4);
+  place-items: end center;
+  padding: var(--s4) var(--s4) 0;
   background: radial-gradient(120% 80% at 50% 10%, rgba(56, 201, 255, 0.14), transparent 70%), var(--surface-3);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
+  min-width: 0;
 }
 
 .locker-art .avatar {
-  height: clamp(200px, 26vw, 300px);
+  height: clamp(220px, 28vw, 320px);
   width: auto;
   max-width: 100%;
 }
@@ -2045,6 +2064,7 @@ textarea {
 /* ---------- Dialogues ---------- */
 
 .dialog {
+  position: relative;
   padding: var(--s5);
   max-width: min(880px, 92vw);
   max-height: 90vh;
@@ -2089,19 +2109,21 @@ dialog.dialog:not([open]) {
 
 .dialog-hero {
   display: grid;
-  grid-template-columns: auto minmax(0, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
   gap: var(--s5);
   align-items: center;
+  padding-top: var(--s2);
 }
 
 .dialog-hero-art {
   position: relative;
   display: grid;
-  place-items: center;
-  padding: var(--s4);
+  place-items: end center;
+  padding: var(--s4) var(--s4) 0;
   background: radial-gradient(120% 80% at 50% 10%, rgba(56, 201, 255, 0.16), transparent 70%), var(--surface-3);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
+  min-width: 0;
 }
 
 .dialog-hero-art .avatar {
@@ -2405,16 +2427,6 @@ dialog.dialog:not([open]) {
      plus utile en haut de la feuille. */
   .console-head .btn {
     flex: 1;
-  }
-
-  /* À trois colonnes, « Restore class » se coupe en deux lignes dans un
-     bouton de 44px : on lui donne la largeur entière. */
-  .hp-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .hp-row .btn:last-child {
-    grid-column: 1 / -1;
   }
 
   .console-mobile-toggle {
