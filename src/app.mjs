@@ -28,9 +28,28 @@ import {
   toggleSelection,
   updateCosmetics
 } from "./domain.mjs";
+import { apiUrl } from "./api.mjs";
+import {
+  changePassword,
+  forgetSession,
+  getAccount,
+  isAdultUnlocked,
+  isSignedIn,
+  lockAdult,
+  sessionHeaders,
+  signIn,
+  signOut,
+  signUp,
+  unlockAdult,
+  unlockUntil,
+  validateNewPassword,
+  verifyPassword
+} from "./session.mjs";
 import { escapeHtml, icon } from "./ui.mjs";
 import { renderBoard } from "./views/board.mjs";
 import { renderConsole } from "./views/console.mjs";
+import { renderLockScreen } from "./views/lock.mjs";
+import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
@@ -39,18 +58,14 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 
-// En production, l'hébergement du frontend transmet /api/ au VPS Infomaniak.
-// L'URL reste relative et same-origin pour le navigateur, et fonctionne aussi
-// en local ou sous un éventuel sous-chemin — voir BACKEND.md.
-function apiUrl(path) {
-  return new URL(`api/${path}`, document.baseURI).toString();
-}
-
 // Mémorise le héros choisi sur CET appareil, pour rouvrir le casier
 // directement à la visite suivante. Jamais synchronisé au serveur.
 const STUDENT_KEY = "game-of-more:student";
 
-let state = loadState();
+/* Le compte décide de tout : quelles classes s'affichent, quel cache local
+   sert de secours, vers quel dossier le serveur écrit. */
+let account = getAccount();
+let state = account ? loadState(account.id) : createInitialState();
 let history = [];
 let studentPupilId = loadStudentId();
 let persistTimer = null;
@@ -70,15 +85,25 @@ const ui = {
   xpAmount: 100,
   coinAmount: 20,
   consoleOpen: false,
-  openPanels: new Set(["hero"])
+  openPanels: new Set(["hero"]),
+  lockError: "",
+  lockPending: false,
+  gateTab: "signin",
+  gateError: "",
+  gatePending: false,
+  gateValues: {}
 };
 
 /* ---------- Routage ---------- */
 
 function currentView() {
+  if (!isSignedIn()) return "welcome";
   if (location.hash === "#rules") return "rules";
   if (location.hash.startsWith("#student")) return "student";
-  return "board";
+  if (location.hash.startsWith("#board")) return isAdultUnlocked() ? "board" : "lock";
+  /* Sans route, l'appareil décide : la tablette d'un élève ouvre son casier,
+     l'écran de la classe, déjà déverrouillé, retrouve son plateau. */
+  return isAdultUnlocked() ? "board" : "student";
 }
 
 function navigate(hash) {
@@ -86,10 +111,23 @@ function navigate(hash) {
   else location.hash = hash;
 }
 
+/* Effacer la route sans passer par `hashchange` : l'appelant rend l'écran
+   lui-même, une fois, au moment qui lui convient. */
+function clearRoute() {
+  if (!location.hash) return;
+  try {
+    window.history.replaceState(null, "", location.pathname + location.search);
+  } catch {
+    location.hash = "";
+  }
+}
+
 window.addEventListener("hashchange", () => {
   closeDialog();
   ui.query = "";
   ui.consoleOpen = false;
+  ui.lockError = "";
+  ui.lockPending = false;
   render();
 });
 
@@ -109,10 +147,33 @@ function render() {
 }
 
 function renderViewBody(view) {
+  if (view === "welcome") {
+    return `
+      <main class="page page-narrow">
+        ${renderBanner()}
+        ${renderWelcome({
+          tab: ui.gateTab,
+          error: ui.gateError,
+          pending: ui.gatePending,
+          values: ui.gateValues
+        })}
+      </main>
+    `;
+  }
+
   const classroom = getCurrentClass(state);
 
   if (view === "rules") {
     return `<main class="page page-narrow">${renderBanner()}${renderRules()}</main>`;
+  }
+
+  if (view === "lock") {
+    return `
+      <main class="page page-narrow">
+        ${renderBanner()}
+        ${renderLockScreen({ account, error: ui.lockError, pending: ui.lockPending })}
+      </main>
+    `;
   }
 
   if (view === "student") {
@@ -152,7 +213,9 @@ function renderViewBody(view) {
             focused,
             canUndo: history.length > 0,
             events: state.events,
-            armedReset: armedDanger === "reset"
+            armedReset: armedDanger === "reset",
+            unlockedUntil: unlockUntil(),
+            account
           })}
         </div>
       </aside>
@@ -162,12 +225,27 @@ function renderViewBody(view) {
 }
 
 function renderTopbar(view) {
+  /* L'écran verrouillé reste « l'onglet Teacher » : l'élève doit comprendre
+     qu'il a bien appuyé là où il voulait, et que c'est la porte qui résiste. */
+  const teacherTab = view === "board" || view === "lock";
+  const unlocked = isAdultUnlocked();
+
+  const brand = `
+    <div class="brand">
+      <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
+      <span class="brand-name">Game <em>of</em> More</span>
+    </div>
+  `;
+
+  /* Avant la connexion, la barre ne porte que le nom du jeu : il n'y a
+     encore aucune classe à afficher, donc aucun onglet à proposer. */
+  if (view === "welcome") {
+    return `<header class="topbar">${brand}</header>`;
+  }
+
   return `
     <header class="topbar">
-      <div class="brand">
-        <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
-        <span class="brand-name">Game <em>of</em> More</span>
-      </div>
+      ${brand}
 
       <nav class="segmented class-tabs" aria-label="Classes">
         ${state.classes.map((classroom) => {
@@ -178,10 +256,14 @@ function renderTopbar(view) {
 
       <div class="topbar-end">
         <div class="segmented" role="group" aria-label="Interface">
-          <button type="button" class="${view === "board" ? "is-active" : ""}" data-action="show-board" aria-pressed="${view === "board"}">Teacher</button>
+          <button type="button" class="${teacherTab ? "is-active" : ""}" data-action="show-board" aria-pressed="${teacherTab}">
+            Teacher${unlocked ? "" : icon("lock", "icon-tab")}
+          </button>
           <button type="button" class="${view === "student" ? "is-active" : ""}" data-action="show-student" aria-pressed="${view === "student"}">Students</button>
         </div>
+        ${unlocked ? `<button type="button" class="btn btn-sm btn-ghost btn-lock" data-action="lock-adult" title="Close the adult session on this device">${icon("lock")}<span>Lock</span></button>` : ""}
         <button type="button" class="btn btn-sm btn-ghost ${view === "rules" ? "is-active" : ""}" data-action="show-rules">${icon("book")}<span>Rules</span></button>
+        <span class="account-tag" title="Signed in as ${escapeHtml(account?.username || "")}">${escapeHtml(account?.displayName || "")}</span>
       </div>
     </header>
   `;
@@ -315,7 +397,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("storage", (event) => {
-  if (event.key !== STORAGE_KEY || !event.newValue) return;
+  if (!account || event.key !== stateKey(account.id) || !event.newValue) return;
   try {
     state = normalizeState(JSON.parse(event.newValue));
     history = [];
@@ -329,6 +411,44 @@ const ACTIONS = {
   "show-board": () => navigate("#board"),
   "show-student": () => navigate("#student"),
   "show-rules": () => navigate("#rules"),
+
+  "gate-tab": (el) => {
+    ui.gateTab = el.dataset.tab;
+    ui.gateError = "";
+    render();
+  },
+
+  /* Se déconnecter, c'est souvent rendre une tablette partagée : on pousse
+     d'abord ce qui n'est pas encore parti, puis on efface le cache local —
+     mais jamais tant qu'une modification n'a pas atteint le serveur. */
+  "sign-out": async () => {
+    const name = account?.displayName || "";
+    const accountId = account?.id;
+    if (localDirty) await saveToServer();
+    const flushed = !localDirty;
+    await signOut();
+    if (accountId && flushed) {
+      try {
+        localStorage.removeItem(stateKey(accountId));
+      } catch {
+        // Le cache disparaîtra avec les données du site.
+      }
+    }
+    endSession();
+    toast(flushed
+      ? (name ? `Signed out of ${name}.` : "Signed out.")
+      : "Signed out. Some changes are still waiting to reach the server on this device.",
+    flushed ? "info" : "warn");
+  },
+
+  /* Reverrouiller est le geste de fin de cours : un appui, et l'écran de la
+     classe redevient celui des élèves. */
+  "lock-adult": () => {
+    lockAdult();
+    ui.consoleOpen = false;
+    navigate("#student");
+    toast("Adult access locked.", "info");
+  },
 
   "toggle-console": () => {
     ui.consoleOpen = !ui.consoleOpen;
@@ -469,6 +589,132 @@ const ACTIONS = {
 };
 
 const FORMS = {
+  "sign-in": async (form) => {
+    if (ui.gatePending) return;
+    const data = new FormData(form);
+    const username = String(data.get("username") || "").trim();
+    const password = String(data.get("password") || "");
+    ui.gateValues = { username };
+
+    if (!username || !password) {
+      ui.gateError = "Type the username and the password.";
+      render();
+      return;
+    }
+
+    ui.gatePending = true;
+    ui.gateError = "";
+    render();
+
+    const result = await signIn(username, password);
+    ui.gatePending = false;
+
+    if (!result.ok) {
+      ui.gateError = result.error;
+      render();
+      // Le champ était désactivé pendant l'attente : on rend le curseur.
+      document.querySelector("#gate-password")?.focus();
+      return;
+    }
+
+    openAccount(result.account);
+    toast(`Welcome back, ${result.account.displayName}.`, "success");
+  },
+
+  "sign-up": async (form) => {
+    if (ui.gatePending) return;
+    const data = new FormData(form);
+    const username = String(data.get("username") || "").trim();
+    const displayName = String(data.get("displayName") || "").trim();
+    const password = String(data.get("password") || "");
+    ui.gateValues = { username, displayName };
+
+    const problem = validateNewPassword(password, data.get("confirm"));
+    if (problem) {
+      ui.gateError = problem;
+      render();
+      return;
+    }
+
+    ui.gatePending = true;
+    ui.gateError = "";
+    render();
+
+    const result = await signUp({ username, displayName, password });
+    ui.gatePending = false;
+
+    if (!result.ok) {
+      ui.gateError = result.error;
+      render();
+      document.querySelector("#gate-username")?.focus();
+      return;
+    }
+
+    /* Une classe neuve part vide : son enseignant ajoute ses vrais élèves,
+       il n'a pas à effacer d'abord un plateau de démonstration. */
+    openAccount(result.account, createInitialState({ samples: false }));
+    toast(`${result.account.displayName} is ready.`, "levelup");
+  },
+
+  unlock: async (form) => {
+    if (ui.lockPending) return;
+    const password = String(new FormData(form).get("password") || "");
+    if (!password) {
+      ui.lockError = "Type the class password first.";
+      render();
+      return;
+    }
+
+    ui.lockPending = true;
+    ui.lockError = "";
+    render();
+
+    const result = await verifyPassword(password);
+    ui.lockPending = false;
+
+    if (result.expired) {
+      endSession("The session ended. Sign in again.");
+      return;
+    }
+    if (!result.ok) {
+      ui.lockError = result.error;
+      render();
+      document.querySelector("#adult-password")?.focus();
+      return;
+    }
+
+    ui.lockError = "";
+    unlockAdult();
+    navigate("#board");
+    toast(result.offline
+      ? "Console unlocked — offline, without the server."
+      : "Console unlocked.", "success");
+  },
+
+  "change-password": async (form) => {
+    const data = new FormData(form);
+    const current = String(data.get("current") || "");
+    const next = String(data.get("next") || "");
+    const problem = validateNewPassword(next, data.get("confirm"));
+    if (problem) {
+      toast(problem, "error");
+      return;
+    }
+
+    const result = await changePassword(current, next);
+    if (!result.ok) {
+      toast(result.error, "error");
+      return;
+    }
+
+    form.reset();
+    /* Le mot de passe change pour tout le monde : cet appareil garde sa
+       session ouverte, les autres devront saisir le nouveau. */
+    unlockAdult();
+    render();
+    toast("Class password updated. The other devices were signed out.", "success");
+  },
+
   "custom-xp": (form) => {
     const amount = Number(new FormData(form).get("amount"));
     giveXp(amount, "Custom XP");
@@ -669,20 +915,31 @@ function announce(previous, next) {
   }
 }
 
-function saveAndRender() {
-  state = { ...state, updatedAt: new Date().toISOString() };
+/* Un cache par compte : deux enseignants qui se succèdent sur le même
+   navigateur ne doivent jamais voir les héros l'un de l'autre. */
+function stateKey(accountId) {
+  return `${STORAGE_KEY}:${accountId}`;
+}
+
+function cacheState() {
+  if (!account) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(stateKey(account.id), JSON.stringify(state));
   } catch {
     toast("Could not save locally: storage is full or blocked.", "error");
   }
+}
+
+function saveAndRender() {
+  state = { ...state, updatedAt: new Date().toISOString() };
+  cacheState();
   localDirty = true;
   scheduleServerSave();
   render();
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
+function loadState(accountId) {
+  const raw = localStorage.getItem(stateKey(accountId));
   if (!raw) return createInitialState();
   try {
     return normalizeState(JSON.parse(raw));
@@ -691,9 +948,54 @@ function loadState() {
   }
 }
 
+/* ---------- Ouverture et fermeture d'une session ---------- */
+
+function openAccount(next, seed = null) {
+  account = next;
+  history = [];
+  localDirty = false;
+  state = seed ?? loadState(account.id);
+  ui.gateError = "";
+  ui.gateValues = {};
+  ui.query = "";
+  studentPupilId = loadStudentId();
+  /* Une classe neuve n'a encore rien sur le serveur : on y pousse le plateau
+     de départ, sinon le premier rechargement retomberait sur un état vide. */
+  if (seed) saveAndRender();
+  else render();
+  bootstrapFromServer();
+}
+
+/* Déconnexion, ou jeton que le serveur ne reconnaît plus : l'appareil oublie
+   le compte et revient à la page d'accueil, sans rien perdre côté serveur. */
+function endSession(message = "") {
+  forgetSession();
+  account = null;
+  state = createInitialState();
+  history = [];
+  localDirty = false;
+  clearTimeout(persistTimer);
+  persistTimer = null;
+  ui.gateError = message;
+  ui.gateTab = "signin";
+  ui.gatePending = false;
+  ui.consoleOpen = false;
+  /* La route de l'ancien compte ne doit pas suivre le suivant : sans cela,
+     se reconnecter retomberait sur l'écran verrouillé au lieu de la classe. */
+  clearRoute();
+  render();
+  if (message) toast(message, "warn");
+}
+
+/* Le héros choisi appartient à l'appareil ET au compte : une tablette
+   prêtée à un collègue ne doit pas rouvrir le casier d'un autre élève. */
+function studentKey() {
+  return account ? `${STUDENT_KEY}:${account.id}` : STUDENT_KEY;
+}
+
 function loadStudentId() {
   try {
-    return localStorage.getItem(STUDENT_KEY);
+    return localStorage.getItem(studentKey());
   } catch {
     return null;
   }
@@ -702,8 +1004,8 @@ function loadStudentId() {
 function rememberStudent(pupilId) {
   studentPupilId = pupilId;
   try {
-    if (pupilId) localStorage.setItem(STUDENT_KEY, pupilId);
-    else localStorage.removeItem(STUDENT_KEY);
+    if (pupilId) localStorage.setItem(studentKey(), pupilId);
+    else localStorage.removeItem(studentKey());
   } catch {
     // Stockage indisponible (navigation privée…) : le choix ne survivra pas.
   }
@@ -780,14 +1082,21 @@ async function saveToServer() {
     saveQueued = true;
     return;
   }
+  if (!account) return;
   saveInFlight = true;
   const snapshot = JSON.stringify(state);
   try {
     const response = await fetch(apiUrl("state"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...sessionHeaders() },
       body: snapshot
     });
+    if (response.status === 401) {
+      saveInFlight = false;
+      saveQueued = false;
+      endSession("The session ended. Sign in again — nothing was lost.");
+      return;
+    }
     if (!response.ok) throw new Error(`save failed: ${response.status}`);
     if (snapshot === JSON.stringify(state)) localDirty = false;
   } catch {
@@ -802,8 +1111,13 @@ async function saveToServer() {
 }
 
 async function bootstrapFromServer() {
+  if (!account) return;
   try {
-    const response = await fetch(apiUrl("state"), { cache: "no-store" });
+    const response = await fetch(apiUrl("state"), { cache: "no-store", headers: sessionHeaders() });
+    if (response.status === 401) {
+      endSession("The session ended. Sign in again — nothing was lost.");
+      return;
+    }
     if (response.status === 404) {
       saveToServer();
       return;
@@ -820,11 +1134,7 @@ async function bootstrapFromServer() {
     }
     state = normalizeState(remote);
     history = [];
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // La copie serveur fait foi ; l'échec du cache local est sans effet.
-    }
+    cacheState();
     render();
   } catch {
     // Hors ligne : on garde ce que localStorage contenait.
@@ -832,7 +1142,7 @@ async function bootstrapFromServer() {
 }
 
 window.addEventListener("pagehide", () => {
-  if (!localDirty) return;
+  if (!localDirty || !account) return;
   clearTimeout(persistTimer);
   persistTimer = null;
   // Never race a newer keepalive write against an older request already in flight.
@@ -841,7 +1151,7 @@ window.addEventListener("pagehide", () => {
   try {
     fetch(apiUrl("state"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...sessionHeaders() },
       body: JSON.stringify(state),
       keepalive: true
     });

@@ -162,15 +162,20 @@ const CLASS_NAMES = ["7P", "8P"];
 // Maps the original class ids/names ("CP"/"VIP") to the renamed ones ("7P"/"8P").
 const LEGACY_CLASS_MAP = { cp: "7p", vip: "8p", CP: "7P", VIP: "8P" };
 
-export function createInitialState() {
+/* `samples` donne le plateau de démonstration, celui qui montre à quoi
+   ressemble le jeu. Une classe qui vient d'être créée part vide : son
+   enseignant tape de vrais prénoms, il n'a pas à effacer des faux. */
+export function createInitialState({ samples = true } = {}) {
+  const pupilsOf = (classId, names) => (samples ? samplePupils(classId, names) : []);
+
   return {
     activeClassId: "7p",
     selectedPupilId: null,
     selectMode: false,
     selectedPupilIds: [],
     classes: [
-      { id: "7p", name: "7P", pupils: samplePupils("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
-      { id: "8p", name: "8P", pupils: samplePupils("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
+      { id: "7p", name: "7P", pupils: pupilsOf("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
+      { id: "8p", name: "8P", pupils: pupilsOf("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
     ],
     events: []
   };

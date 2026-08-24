@@ -18,7 +18,7 @@ const XP_PRESETS = [
 
 const COIN_PRESETS = [10, 20, 30, 50];
 
-export function renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset = false }) {
+export function renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset = false, unlockedUntil = null, account = null }) {
   const open = (name) => (ui.openPanels.has(name) ? "open" : "");
 
   return `
@@ -35,6 +35,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     ${renderRosterPanel(classroom, open)}
     ${renderActivityPanel(events, open)}
     ${renderDataPanel(open, armedReset)}
+    ${renderAccountPanel(open, unlockedUntil, account)}
   `;
 }
 
@@ -259,6 +260,56 @@ function renderDataPanel(open, armedReset) {
       </div>
       <hr class="rule" />
       <button class="btn btn-sm btn-quiet-danger ${armedReset ? "is-armed" : ""}" type="button" data-action="reset-all">${icon("trash")}<span>${armedReset ? "Tap again to erase everything" : "Erase every class"}</span></button>
+    </details>
+  `;
+}
+
+/* ---------- Le compte de la classe ----------
+   La console est la seule porte par laquelle des points sortent : le mot
+   de passe qui la garde se change ici, à côté de ce qu'il protège. */
+
+function renderAccountPanel(open, unlockedUntil, account) {
+  const endsAt = Number.isFinite(unlockedUntil)
+    ? new Date(unlockedUntil).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : null;
+
+  return `
+    <details class="panel" data-panel="account" ${open("account")}>
+      <summary>${icon("lock")}<span>Class account</span></summary>
+
+      ${account ? `
+        <p class="account-line">
+          <strong>${escapeHtml(account.displayName)}</strong>
+          <span>@${escapeHtml(account.username)}</span>
+        </p>
+      ` : ""}
+      <p class="panel-note">
+        This password opens the class on a device and, typed again, this console.
+        ${endsAt ? `The console stays open here until ${endsAt}.` : ""}
+      </p>
+
+      <form class="access-form" data-action="change-password" autocomplete="off">
+        <label class="field">
+          <span>Current password</span>
+          <input name="current" type="password" autocomplete="current-password" />
+        </label>
+        <label class="field">
+          <span>New password</span>
+          <input name="next" type="password" autocomplete="new-password" />
+        </label>
+        <label class="field">
+          <span>Repeat the new password</span>
+          <input name="confirm" type="password" autocomplete="new-password" />
+        </label>
+        <button class="btn btn-primary btn-sm" type="submit">Change password</button>
+        <p class="panel-note">Changing it signs out every other device.</p>
+      </form>
+
+      <hr class="rule" />
+      <div class="button-row">
+        <button class="btn btn-sm" type="button" data-action="lock-adult">${icon("lock")}<span>Lock console</span></button>
+        <button class="btn btn-sm btn-quiet-danger" type="button" data-action="sign-out">${icon("back")}<span>Sign out</span></button>
+      </div>
     </details>
   `;
 }
