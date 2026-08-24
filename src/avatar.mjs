@@ -1035,9 +1035,9 @@ function renderFigure(opt) {
   const atmosphere = roleAtmosphere(opt.role);
 
   const mirrored = opt.mirror ? "translate(200 0) scale(-1 1)" : "";
-  const figure = `<g transform="${mirrored}"><g transform="translate(-3 2) scale(1.03 0.96)">${body}${shading}</g></g>`;
+  const figure = `<g transform="${mirrored}"><g transform="translate(0 10) scale(1 0.97)">${body}${shading}</g></g>`;
 
-  return `<svg class="${escapeXml(opt.cls || "avatar")}" data-role="${escapeXml(opt.role || "scout")}" viewBox="${escapeXml(opt.viewBox || "0 0 200 360")}" role="img" aria-label="${escapeXml(opt.alt || "hero")}">
+  return `<svg class="${escapeXml(opt.cls || "avatar")}" data-role="${escapeXml(opt.role || "scout")}" viewBox="${escapeXml(opt.viewBox || "-16 -22 232 412")}" role="img" aria-label="${escapeXml(opt.alt || "hero")}">
     ${defs}${atmosphere}${ground}${figure}
   </svg>`;
 }
@@ -1123,7 +1123,7 @@ export function renderHero(pupil) {
 const ITEM_CROPS = {
   outfit: "44 84 112 214",
   tone: "54 18 92 150",
-  hat: "58 0 84 76",
+  hat: "50 2 100 92",
   sunglasses: "70 30 60 45",
   face: "76 30 48 52",
   evil: "76 30 48 52",
@@ -1139,15 +1139,15 @@ const ITEM_CROPS = {
   "dual-daggers": "126 106 42 118",
   "swords-and-shield": "6 16 174 260",
   "custom-bespoke": "40 40 120 120",
-  short: "68 4 64 84",
-  long: "60 2 80 144",
-  bald: "68 4 64 84",
-  "buzz-cut": "68 4 64 84",
-  curly: "60 0 80 88",
-  spiky: "62 0 76 90",
-  "monk-cut": "68 4 64 84",
-  braided: "60 2 80 100",
-  "royal-hair": "58 2 84 148"
+  short: "64 -4 72 96",
+  long: "56 -6 88 156",
+  bald: "64 -4 72 96",
+  "buzz-cut": "64 -4 72 96",
+  curly: "56 -8 88 100",
+  spiky: "58 -10 84 104",
+  "monk-cut": "64 -4 72 96",
+  braided: "56 -4 88 108",
+  "royal-hair": "54 -6 92 160"
 };
 
 export function renderItemArt(item) {
