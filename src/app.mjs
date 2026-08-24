@@ -28,9 +28,30 @@ import {
   toggleSelection,
   updateCosmetics
 } from "./domain.mjs";
+import { apiUrl } from "./api.mjs";
+import {
+  captureSessionContext,
+  changePassword,
+  forgetSession,
+  getAccount,
+  isAdultUnlocked,
+  isCurrentSession,
+  isSignedIn,
+  lockAdult,
+  signIn,
+  signOut,
+  signUp,
+  unlockAdult,
+  unlockUntil,
+  validateNewPassword,
+  verifyPassword
+} from "./session.mjs";
 import { escapeHtml, icon } from "./ui.mjs";
 import { renderBoard } from "./views/board.mjs";
 import { renderConsole } from "./views/console.mjs";
+import { renderAdmin } from "./views/admin.mjs";
+import { renderLockScreen } from "./views/lock.mjs";
+import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
@@ -39,24 +60,20 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 
-// En production, l'hébergement du frontend transmet /api/ au VPS Infomaniak.
-// L'URL reste relative et same-origin pour le navigateur, et fonctionne aussi
-// en local ou sous un éventuel sous-chemin — voir BACKEND.md.
-function apiUrl(path) {
-  return new URL(`api/${path}`, document.baseURI).toString();
-}
-
 // Mémorise le héros choisi sur CET appareil, pour rouvrir le casier
 // directement à la visite suivante. Jamais synchronisé au serveur.
 const STUDENT_KEY = "game-of-more:student";
 
-let state = loadState();
+let account = getAccount();
+let state = account ? loadState(account.id) : createInitialState({ samples: false });
 let history = [];
 let studentPupilId = loadStudentId();
 let persistTimer = null;
-let saveInFlight = false;
+let saveInFlight = null;
 let saveQueued = false;
-let localDirty = false;
+let localDirty = account ? loadDirty(account.id) : false;
+let syncConflict = false;
+let gateRequest = 0;
 let armedDanger = null;
 const pendingFlash = new Set();
 
@@ -70,15 +87,27 @@ const ui = {
   xpAmount: 100,
   coinAmount: 20,
   consoleOpen: false,
-  openPanels: new Set(["hero"])
+  openPanels: new Set(["hero"]),
+  lockError: "",
+  lockPending: false,
+  gateTab: "signin",
+  gateError: "",
+  gatePending: false,
+  gateValues: {},
+  adminAccounts: [],
+  adminPending: false,
+  adminError: ""
 };
 
 /* ---------- Routage ---------- */
 
 function currentView() {
+  if (!isSignedIn()) return "welcome";
   if (location.hash === "#rules") return "rules";
   if (location.hash.startsWith("#student")) return "student";
-  return "board";
+  if (location.hash === "#admin" && account?.role === "admin") return isAdultUnlocked() ? "admin" : "lock";
+  if (location.hash.startsWith("#board")) return isAdultUnlocked() ? "board" : "lock";
+  return isAdultUnlocked() ? "board" : "student";
 }
 
 function navigate(hash) {
@@ -90,6 +119,7 @@ window.addEventListener("hashchange", () => {
   closeDialog();
   ui.query = "";
   ui.consoleOpen = false;
+  ui.lockError = "";
   render();
 });
 
@@ -101,6 +131,7 @@ function render() {
 
   app.innerHTML = `
     ${renderTopbar(view)}
+    ${renderConflict()}
     ${renderViewBody(view)}
   `;
 
@@ -109,10 +140,23 @@ function render() {
 }
 
 function renderViewBody(view) {
+  if (view === "welcome") {
+    return `<main class="page page-narrow">${renderBanner()}${renderWelcome({
+      tab: ui.gateTab,
+      error: ui.gateError,
+      pending: ui.gatePending,
+      values: ui.gateValues
+    })}</main>`;
+  }
+  if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   const classroom = getCurrentClass(state);
 
   if (view === "rules") {
     return `<main class="page page-narrow">${renderBanner()}${renderRules()}</main>`;
+  }
+
+  if (view === "lock") {
+    return `<main class="page page-narrow">${renderBanner()}${renderLockScreen({ account, error: ui.lockError, pending: ui.lockPending })}</main>`;
   }
 
   if (view === "student") {
@@ -152,7 +196,9 @@ function renderViewBody(view) {
             focused,
             canUndo: history.length > 0,
             events: state.events,
-            armedReset: armedDanger === "reset"
+            armedReset: armedDanger === "reset",
+            unlockedUntil: unlockUntil(),
+            account
           })}
         </div>
       </aside>
@@ -162,12 +208,17 @@ function renderViewBody(view) {
 }
 
 function renderTopbar(view) {
+  const brand = `
+    <div class="brand">
+      <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
+      <span class="brand-name">Game <em>of</em> More</span>
+    </div>`;
+  if (view === "welcome") return `<header class="topbar">${brand}</header>`;
+  const teacherTab = view === "board" || view === "lock";
+  const unlocked = isAdultUnlocked();
   return `
     <header class="topbar">
-      <div class="brand">
-        <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
-        <span class="brand-name">Game <em>of</em> More</span>
-      </div>
+      ${brand}
 
       <nav class="segmented class-tabs" aria-label="Classes">
         ${state.classes.map((classroom) => {
@@ -178,13 +229,21 @@ function renderTopbar(view) {
 
       <div class="topbar-end">
         <div class="segmented" role="group" aria-label="Interface">
-          <button type="button" class="${view === "board" ? "is-active" : ""}" data-action="show-board" aria-pressed="${view === "board"}">Teacher</button>
+          <button type="button" class="${teacherTab ? "is-active" : ""}" data-action="show-board" aria-pressed="${teacherTab}">Teacher${unlocked ? "" : icon("lock", "icon-tab")}</button>
           <button type="button" class="${view === "student" ? "is-active" : ""}" data-action="show-student" aria-pressed="${view === "student"}">Students</button>
         </div>
+        ${account?.role === "admin" ? `<button type="button" class="btn btn-sm btn-ghost ${view === "admin" ? "is-active" : ""}" data-action="show-admin">Accounts</button>` : ""}
+        ${unlocked ? `<button type="button" class="btn btn-sm btn-ghost" data-action="lock-adult">${icon("lock")}<span>Lock</span></button>` : ""}
         <button type="button" class="btn btn-sm btn-ghost ${view === "rules" ? "is-active" : ""}" data-action="show-rules">${icon("book")}<span>Rules</span></button>
+        <span class="account-tag" title="Signed in as ${escapeHtml(account?.username || "")}">${escapeHtml(account?.displayName || "")}</span>
       </div>
     </header>
   `;
+}
+
+function renderConflict() {
+  if (!syncConflict || !account) return "";
+  return `<aside class="sync-conflict" role="alert"><strong>Sync paused:</strong> another device saved newer data. Your local changes are still on this device. <button class="btn btn-sm" data-action="export">Export local copy</button><button class="btn btn-sm" data-action="reload-server">Load server copy</button></aside>`;
 }
 
 /* La grande bannière reste sur les écrans que la classe regarde ensemble ;
@@ -315,7 +374,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("storage", (event) => {
-  if (event.key !== STORAGE_KEY || !event.newValue) return;
+  if (!account || localDirty || event.key !== stateKey(account.id) || !event.newValue) return;
   try {
     state = normalizeState(JSON.parse(event.newValue));
     history = [];
@@ -329,6 +388,39 @@ const ACTIONS = {
   "show-board": () => navigate("#board"),
   "show-student": () => navigate("#student"),
   "show-rules": () => navigate("#rules"),
+  "show-admin": () => {
+    if (account?.role !== "admin") return;
+    navigate("#admin");
+    if (isAdultUnlocked()) loadAdminAccounts();
+  },
+  "refresh-admin": () => loadAdminAccounts(),
+
+  "gate-tab": (el) => {
+    ui.gateTab = el.dataset.tab;
+    ui.gateError = "";
+    render();
+  },
+
+  "sign-out": async () => {
+    const name = account?.displayName || "";
+    if (localDirty && !syncConflict) await saveToServer();
+    const unsynced = localDirty;
+    ++gateRequest;
+    await signOut();
+    endSession();
+    toast(unsynced
+      ? "Signed out. Unsynced changes remain saved on this device."
+      : (name ? `Signed out of ${name}.` : "Signed out."), unsynced ? "warn" : "info");
+  },
+
+  "lock-adult": () => {
+    lockAdult();
+    ui.consoleOpen = false;
+    navigate("#student");
+    toast("Adult access locked.", "info");
+  },
+
+  "reload-server": () => reloadServerCopy(),
 
   "toggle-console": () => {
     ui.consoleOpen = !ui.consoleOpen;
@@ -463,12 +555,138 @@ const ACTIONS = {
       return;
     }
     armedDanger = null;
-    commit(createInitialState());
+    commit(createInitialState({ samples: false }));
     toast("Every class was erased.", "warn", { undo: true });
   }
 };
 
 const FORMS = {
+  "sign-in": async (form) => {
+    if (ui.gatePending) return;
+    const request = ++gateRequest;
+    const data = new FormData(form);
+    const username = String(data.get("username") || "").trim();
+    const password = String(data.get("password") || "");
+    ui.gateValues = { username };
+    if (!username || !password) {
+      ui.gateError = "Type the username and password.";
+      render();
+      return;
+    }
+    ui.gatePending = true;
+    ui.gateError = "";
+    render();
+    const result = await signIn(username, password);
+    if (request !== gateRequest) return;
+    ui.gatePending = false;
+    if (!result.ok) {
+      ui.gateError = result.error;
+      render();
+      return;
+    }
+    openAccount(result.account);
+    toast(`Welcome back, ${result.account.displayName}.`, "success");
+  },
+
+  "sign-up": async (form) => {
+    if (ui.gatePending) return;
+    const request = ++gateRequest;
+    const data = new FormData(form);
+    const username = String(data.get("username") || "").trim();
+    const displayName = String(data.get("displayName") || "").trim();
+    const password = String(data.get("password") || "");
+    ui.gateValues = { username, displayName };
+    const problem = validateNewPassword(password, data.get("confirm"));
+    if (problem) {
+      ui.gateError = problem;
+      render();
+      return;
+    }
+    ui.gatePending = true;
+    ui.gateError = "";
+    render();
+    const result = await signUp({ username, displayName, password });
+    if (request !== gateRequest) return;
+    ui.gatePending = false;
+    if (!result.ok) {
+      ui.gateError = result.error;
+      render();
+      return;
+    }
+    openAccount(result.account);
+    toast(`${result.account.displayName} is ready.`, "levelup");
+  },
+
+  unlock: async (form) => {
+    if (ui.lockPending) return;
+    const context = captureSessionContext();
+    const password = String(new FormData(form).get("password") || "");
+    if (!password) {
+      ui.lockError = "Type the account password first.";
+      render();
+      return;
+    }
+    ui.lockPending = true;
+    ui.lockError = "";
+    render();
+    const result = await verifyPassword(password);
+    if (!isCurrentSession(context)) return;
+    ui.lockPending = false;
+    if (result.expired) {
+      endSession("The session ended. Sign in again. Your local cache was kept.", context);
+      return;
+    }
+    if (!result.ok) {
+      ui.lockError = result.error;
+      render();
+      return;
+    }
+    unlockAdult();
+    if (location.hash === "#admin" && account?.role === "admin") {
+      render();
+      loadAdminAccounts();
+    } else navigate("#board");
+    toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
+  },
+
+  "change-password": async (form) => {
+    const data = new FormData(form);
+    const current = String(data.get("current") || "");
+    const next = String(data.get("next") || "");
+    const problem = validateNewPassword(next, data.get("confirm"));
+    if (problem) return toast(problem, "error");
+    const result = await changePassword(current, next);
+    if (!result.ok) return toast(result.error, "error");
+    form.reset();
+    unlockAdult();
+    toast("Password updated. Other devices were signed out.", "success");
+  },
+
+  "admin-reset": async (form) => {
+    const password = String(new FormData(form).get("password") || "");
+    const problem = validateNewPassword(password, password);
+    if (problem) return toast(problem, "error");
+    const context = captureSessionContext();
+    const accountId = form.dataset.accountId;
+    let response;
+    try {
+      response = await fetch(apiUrl(`admin/accounts/${accountId}/password`), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
+        body: JSON.stringify({ password })
+      });
+    } catch {
+      toast("The server is unreachable.", "error");
+      return;
+    }
+    if (!isCurrentSession(context)) return;
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) return toast(payload?.error || "Password reset failed.", "error");
+    form.reset();
+    toast("Password reset. That account's sessions were revoked.", "success");
+    loadAdminAccounts();
+  },
+
   "custom-xp": (form) => {
     const amount = Number(new FormData(form).get("amount"));
     giveXp(amount, "Custom XP");
@@ -644,7 +862,7 @@ function undo() {
     toast("Nothing left to undo.", "info");
     return;
   }
-  state = history.pop();
+  state = { ...history.pop(), revision: state.revision };
   saveAndRender();
   toast("Last change undone.", "info");
 }
@@ -671,29 +889,106 @@ function announce(previous, next) {
 
 function saveAndRender() {
   state = { ...state, updatedAt: new Date().toISOString() };
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    toast("Could not save locally: storage is full or blocked.", "error");
-  }
-  localDirty = true;
-  scheduleServerSave();
+  cacheState();
+  setDirty(true);
+  if (!syncConflict) scheduleServerSave();
   render();
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return createInitialState();
+function stateKey(accountId) {
+  return `${STORAGE_KEY}:${accountId}`;
+}
+
+function dirtyKey(accountId) {
+  return `${stateKey(accountId)}:dirty`;
+}
+
+function cacheState() {
+  if (!account) return;
   try {
-    return normalizeState(JSON.parse(raw));
+    localStorage.setItem(stateKey(account.id), JSON.stringify(state));
   } catch {
-    return createInitialState();
+    toast("Could not save locally: storage is full or blocked.", "error");
   }
+}
+
+function setDirty(value) {
+  localDirty = Boolean(value);
+  if (!account) return;
+  try {
+    if (localDirty) localStorage.setItem(dirtyKey(account.id), "1");
+    else localStorage.removeItem(dirtyKey(account.id));
+  } catch {
+    // State remains in memory when localStorage is unavailable.
+  }
+}
+
+function loadDirty(accountId) {
+  try {
+    return localStorage.getItem(dirtyKey(accountId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function loadState(accountId) {
+  try {
+    const raw = localStorage.getItem(stateKey(accountId));
+    return raw ? normalizeState(JSON.parse(raw)) : createInitialState({ samples: false });
+  } catch {
+    return createInitialState({ samples: false });
+  }
+}
+
+function openAccount(next) {
+  account = next;
+  state = loadState(next.id);
+  localDirty = loadDirty(next.id);
+  syncConflict = false;
+  history = [];
+  ui.gateError = "";
+  ui.gateValues = {};
+  ui.adminAccounts = [];
+  studentPupilId = loadStudentId();
+  render();
+  bootstrapFromServer();
+}
+
+function endSession(message = "", context = null) {
+  if (context && !isCurrentSession(context)) return;
+  forgetSession(context);
+  account = null;
+  state = createInitialState({ samples: false });
+  history = [];
+  localDirty = false;
+  syncConflict = false;
+  clearTimeout(persistTimer);
+  persistTimer = null;
+  saveQueued = false;
+  ui.gateError = message;
+  ui.gateTab = "signin";
+  ui.gatePending = false;
+  ui.consoleOpen = false;
+  if (location.hash) historyReplaceWithoutHash();
+  render();
+  if (message) toast(message, "warn");
+}
+
+function historyReplaceWithoutHash() {
+  try {
+    window.history.replaceState(null, "", location.pathname + location.search);
+  } catch {
+    location.hash = "";
+  }
+}
+
+function studentKey() {
+  return account ? `${STUDENT_KEY}:${account.id}` : STUDENT_KEY;
 }
 
 function loadStudentId() {
   try {
-    return localStorage.getItem(STUDENT_KEY);
+    return localStorage.getItem(studentKey());
   } catch {
     return null;
   }
@@ -702,8 +997,8 @@ function loadStudentId() {
 function rememberStudent(pupilId) {
   studentPupilId = pupilId;
   try {
-    if (pupilId) localStorage.setItem(STUDENT_KEY, pupilId);
-    else localStorage.removeItem(STUDENT_KEY);
+    if (pupilId) localStorage.setItem(studentKey(), pupilId);
+    else localStorage.removeItem(studentKey());
   } catch {
     // Stockage indisponible (navigation privée…) : le choix ne survivra pas.
   }
@@ -718,7 +1013,7 @@ document.addEventListener("change", (event) => {
     .then((text) => {
       const imported = importState(text);
       const total = imported.classes.reduce((sum, classroom) => sum + classroom.pupils.length, 0);
-      commit(imported, { record: true, notify: false });
+      commit({ ...imported, revision: state.revision }, { record: true, notify: false });
       toast(`Import done: ${total} heroes restored.`, "success", { undo: true });
     })
     .catch((error) => toast(error.message || "Could not read that file.", "error"));
@@ -764,7 +1059,7 @@ function dismiss(node) {
 /* ---------- Serveur ---------- */
 
 function scheduleServerSave() {
-  if (saveInFlight) {
+  if (saveInFlight || syncConflict) {
     saveQueued = true;
     return;
   }
@@ -780,68 +1075,143 @@ async function saveToServer() {
     saveQueued = true;
     return;
   }
-  saveInFlight = true;
+  if (!account || syncConflict) return;
+  const context = captureSessionContext();
+  if (!context || context.accountId !== account.id) return;
+  saveInFlight = context;
   const snapshot = JSON.stringify(state);
   try {
     const response = await fetch(apiUrl("state"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Session-Token": context.token },
       body: snapshot
     });
-    if (!response.ok) throw new Error(`save failed: ${response.status}`);
-    if (snapshot === JSON.stringify(state)) localDirty = false;
+    if (!isCurrentSession(context) || account?.id !== context.accountId) return;
+    const payload = await response.json().catch(() => null);
+    if (!isCurrentSession(context) || account?.id !== context.accountId) return;
+    if (response.status === 401) {
+      endSession("The session ended. Sign in again. Your local cache was kept.", context);
+      return;
+    }
+    if (response.status === 409) {
+      syncConflict = true;
+      setDirty(true);
+      saveQueued = false;
+      render();
+      toast("Synchronization paused because another device saved newer data.", "warn");
+      return;
+    }
+    if (!response.ok || !Number.isSafeInteger(payload?.revision)) throw new Error(`save failed: ${response.status}`);
+    const unchanged = snapshot === JSON.stringify(state);
+    state = { ...state, revision: payload.revision, updatedAt: payload.updatedAt || state.updatedAt };
+    cacheState();
+    setDirty(!unchanged);
   } catch {
     // Hors ligne ou sans backend : localStorage suffit, la synchro se fera
     // au prochain chargement réussi.
+  } finally {
+    if (saveInFlight === context) saveInFlight = null;
   }
-  saveInFlight = false;
-  if (saveQueued) {
+  if (saveQueued && !syncConflict && isCurrentSession(context)) {
     saveQueued = false;
     saveToServer();
   }
 }
 
 async function bootstrapFromServer() {
+  if (!account) return;
+  const context = captureSessionContext();
+  if (!context || context.accountId !== account.id) return;
   try {
-    const response = await fetch(apiUrl("state"), { cache: "no-store" });
-    if (response.status === 404) {
-      saveToServer();
+    const response = await fetch(apiUrl("state"), {
+      cache: "no-store",
+      headers: { "X-Session-Token": context.token }
+    });
+    if (!isCurrentSession(context) || account?.id !== context.accountId) return;
+    if (response.status === 401) {
+      endSession("The session ended. Sign in again. Your local cache was kept.", context);
       return;
     }
     if (!response.ok) return;
     const remote = await response.json();
+    if (!isCurrentSession(context) || account?.id !== context.accountId) return;
     if (!remote || !Array.isArray(remote.classes)) return;
-    if (localDirty) return;
-    const localAt = Date.parse(state.updatedAt || "");
-    const remoteAt = Date.parse(remote.updatedAt || "");
-    if (Number.isFinite(localAt) && (!Number.isFinite(remoteAt) || localAt > remoteAt)) {
-      saveToServer();
+    if (localDirty) {
+      if ((Number(state.revision) || 0) === (Number(remote.revision) || 0)) saveToServer();
+      else {
+        syncConflict = true;
+        render();
+      }
       return;
     }
     state = normalizeState(remote);
     history = [];
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // La copie serveur fait foi ; l'échec du cache local est sans effet.
-    }
+    cacheState();
     render();
   } catch {
     // Hors ligne : on garde ce que localStorage contenait.
   }
 }
 
+async function reloadServerCopy() {
+  if (!account || !syncConflict) return;
+  const context = captureSessionContext();
+  const accountId = account.id;
+  try {
+    const response = await fetch(apiUrl("state"), { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    if (!isCurrentSession(context) || account?.id !== accountId || !response.ok) return;
+    const remote = await response.json();
+    if (!isCurrentSession(context) || account?.id !== accountId) return;
+    if (!remote || !Array.isArray(remote.classes)) return;
+    localStorage.setItem(`${stateKey(accountId)}:conflict:${Date.now()}`, JSON.stringify(state));
+    state = normalizeState(remote);
+    history = [];
+    syncConflict = false;
+    cacheState();
+    setDirty(false);
+    render();
+    toast("Server copy loaded. The previous local copy was archived on this device.", "success");
+  } catch {
+    toast("Could not load the server copy.", "error");
+  }
+}
+
+async function loadAdminAccounts() {
+  if (account?.role !== "admin") return;
+  const context = captureSessionContext();
+  ui.adminPending = true;
+  ui.adminError = "";
+  render();
+  try {
+    const response = await fetch(apiUrl("admin/accounts"), { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    if (!isCurrentSession(context) || account?.role !== "admin") return;
+    const payload = await response.json().catch(() => null);
+    if (!isCurrentSession(context) || account?.role !== "admin") return;
+    if (response.status === 401) return endSession("The session ended. Sign in again.", context);
+    if (!response.ok) throw new Error(payload?.error || "Could not load accounts.");
+    ui.adminAccounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+  } catch (error) {
+    if (isCurrentSession(context)) ui.adminError = error.message || "Could not load accounts.";
+  } finally {
+    if (isCurrentSession(context)) {
+      ui.adminPending = false;
+      render();
+    }
+  }
+}
+
 window.addEventListener("pagehide", () => {
-  if (!localDirty) return;
+  if (!localDirty || !account || syncConflict) return;
   clearTimeout(persistTimer);
   persistTimer = null;
   // Never race a newer keepalive write against an older request already in flight.
   // The dirty localStorage copy will be retried on the next visit.
   if (saveInFlight) return;
+  const context = captureSessionContext();
   try {
     fetch(apiUrl("state"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
       body: JSON.stringify(state),
       keepalive: true
     });

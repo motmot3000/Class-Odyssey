@@ -2662,3 +2662,39 @@ dialog.dialog:not([open]) {
 .title-perfect-pupil { color: var(--ok); }
 .title-grammar-master { color: var(--rank); }
 .title-class-legend { color: var(--money); }
+/* Account access and administration */
+.gate { display: flex; justify-content: center; }
+.gate-card { display: flex; flex-direction: column; align-items: center; gap: var(--s3); width: min(100%, 27rem); padding: var(--s6) var(--s5); text-align: center; background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1); }
+.gate-badge { display: grid; place-items: center; width: 52px; height: 52px; color: var(--money); background: var(--money-dim); border-radius: var(--r-pill); }
+.gate-badge .icon { width: 26px; height: 26px; }
+.gate-card h2 { font-family: var(--font-display); font-size: var(--t-2xl); font-weight: 700; }
+.gate-lede, .gate-help { color: var(--ink-muted); text-wrap: pretty; }
+.gate-lede { max-width: 36ch; }
+.gate-help, .gate-error { font-size: var(--t-sm); }
+.gate-error { color: var(--hp); font-weight: 600; }
+.gate-tabs { margin-top: var(--s1); }
+.gate-form, .access-form { display: flex; flex-direction: column; gap: var(--s3); width: 100%; text-align: left; }
+.gate-form input, .access-form input, .admin-reset input { min-height: 44px; padding: 0 var(--s3); color: var(--ink); background: var(--surface-3); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.gate-form input { min-height: 48px; font-size: var(--t-md); }
+.gate-form input:focus, .access-form input:focus, .admin-reset input:focus { border-color: var(--xp); outline: none; }
+.gate-form .btn { min-height: 48px; }
+.gate-card .rule { width: 100%; }
+.gate-actions, .account-line, .admin-heading, .admin-reset { display: flex; align-items: center; gap: var(--s2); }
+.gate-actions, .account-line { flex-wrap: wrap; }
+.account-tag { max-width: 16ch; overflow: hidden; color: var(--ink-muted); font-size: var(--t-xs); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.account-line span { color: var(--ink-muted); font-size: var(--t-sm); }
+.segmented .icon-tab { width: 14px; height: 14px; opacity: 0.65; }
+.sync-conflict { display: flex; align-items: center; justify-content: center; gap: var(--s2); flex-wrap: wrap; padding: var(--s2) var(--s4); color: var(--ink); background: var(--hp-dim); border-bottom: 1px solid var(--hp); font-size: var(--t-sm); }
+.admin-page { width: min(100%, 86rem); }
+.admin-card { padding: var(--s5); background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1); }
+.admin-heading { justify-content: space-between; margin-bottom: var(--s4); }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.admin-table th, .admin-table td { padding: var(--s3); text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.admin-table th { color: var(--ink-muted); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+.admin-reset input { min-width: 10rem; }
+
+@media (max-width: 720px) {
+  .account-tag { display: none; }
+  .gate-card, .admin-card { padding: var(--s4); }
+}

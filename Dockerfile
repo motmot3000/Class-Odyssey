@@ -2,7 +2,7 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-COPY server/server.mjs ./server/server.mjs
+COPY server/ ./server/
 
 ENV HOST=0.0.0.0 \
     PORT=5180 \

@@ -19,6 +19,8 @@ services:
       PORT: 5180
       DATA_DIR: /data
       MAX_BACKUPS: 60
+      FOUNDER_USERNAME: ${FOUNDER_USERNAME:?FOUNDER_USERNAME is required}
+      FOUNDER_PASSWORD: ${FOUNDER_PASSWORD:?FOUNDER_PASSWORD is required}
       NODE_ENV: production
     volumes:
       - ./data:/data

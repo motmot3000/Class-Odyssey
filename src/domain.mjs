@@ -162,15 +162,17 @@ const CLASS_NAMES = ["7P", "8P"];
 // Maps the original class ids/names ("CP"/"VIP") to the renamed ones ("7P"/"8P").
 const LEGACY_CLASS_MAP = { cp: "7p", vip: "8p", CP: "7P", VIP: "8P" };
 
-export function createInitialState() {
+export function createInitialState({ samples = true } = {}) {
+  const pupilsOf = (classId, names) => (samples ? samplePupils(classId, names) : []);
   return {
+    revision: 0,
     activeClassId: "7p",
     selectedPupilId: null,
     selectMode: false,
     selectedPupilIds: [],
     classes: [
-      { id: "7p", name: "7P", pupils: samplePupils("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
-      { id: "8p", name: "8P", pupils: samplePupils("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
+      { id: "7p", name: "7P", pupils: pupilsOf("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
+      { id: "8p", name: "8P", pupils: pupilsOf("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
     ],
     events: []
   };
@@ -183,6 +185,7 @@ export function normalizeState(rawState) {
 
   const state = {
     ...rawState,
+    revision: Number.isSafeInteger(rawState.revision) && rawState.revision >= 0 ? rawState.revision : 0,
     activeClassId: LEGACY_CLASS_MAP[rawState.activeClassId] || rawState.activeClassId || rawState.classes[0]?.id || "7p",
     selectedPupilId: rawState.selectedPupilId || null,
     selectMode: Boolean(rawState.selectMode),
