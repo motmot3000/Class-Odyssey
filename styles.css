@@ -2656,9 +2656,111 @@ dialog.dialog:not([open]) {
   flex: none;
 }
 
-/* Les titres gagnés portent la couleur de leur rang : un élève reconnaît
-   son palier sans lire le mot. */
-.title-rookie { color: var(--ink-muted); }
-.title-perfect-pupil { color: var(--ok); }
-.title-grammar-master { color: var(--rank); }
-.title-class-legend { color: var(--money); }
+/* Les titres deviennent de vrais insignes au fil des rangs, pas seulement
+   le même mot repeint dans une autre couleur. */
+:is(.title-chip, .hero-title-tag, .preview-title) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 7px;
+  line-height: 1.1;
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+
+:is(.title-chip, .hero-title-tag) {
+  position: relative;
+}
+
+.title-rookie {
+  color: var(--ink-muted);
+}
+
+.title-perfect-pupil {
+  color: var(--ok);
+  border-bottom-color: color-mix(in srgb, var(--ok) 70%, transparent);
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+
+.title-pathfinder {
+  color: #70cff4;
+  border-color: rgba(112, 207, 244, 0.38);
+  background: rgba(112, 207, 244, 0.08);
+}
+
+:is(.title-scholar-virtuoso, .title-realm-champion, .title-grand-archon,
+    .title-paragon-sovereign, .title-grammar-master, .title-class-legend)::before,
+:is(.title-scholar-virtuoso, .title-realm-champion, .title-grand-archon,
+    .title-paragon-sovereign, .title-grammar-master, .title-class-legend)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 7px currentColor;
+}
+
+:is(.title-scholar-virtuoso, .title-realm-champion, .title-grand-archon,
+    .title-paragon-sovereign, .title-grammar-master, .title-class-legend)::before {
+  left: -4px;
+}
+
+:is(.title-scholar-virtuoso, .title-realm-champion, .title-grand-archon,
+    .title-paragon-sovereign, .title-grammar-master, .title-class-legend)::after {
+  right: -4px;
+}
+
+.title-scholar-virtuoso {
+  color: #b69cff;
+  border-color: rgba(182, 156, 255, 0.48);
+  background: rgba(182, 156, 255, 0.1);
+}
+
+.title-realm-champion {
+  color: #80d9bc;
+  border-color: rgba(101, 217, 154, 0.62);
+  background: linear-gradient(90deg, rgba(101, 217, 154, 0.08), rgba(112, 207, 244, 0.14));
+  box-shadow: inset 0 -2px 0 rgba(101, 217, 154, 0.22);
+}
+
+.title-grand-archon {
+  color: #8fcdf5;
+  border-color: rgba(143, 205, 245, 0.68);
+  background: rgba(65, 109, 153, 0.2);
+  box-shadow: inset 0 0 0 2px rgba(143, 205, 245, 0.1), 0 0 8px rgba(112, 207, 244, 0.12);
+}
+
+.title-paragon-sovereign {
+  color: #ffd66b;
+  border-color: rgba(255, 214, 107, 0.72);
+  background: linear-gradient(135deg, rgba(142, 50, 48, 0.28), rgba(192, 145, 62, 0.2));
+  box-shadow: inset 0 0 0 2px rgba(255, 214, 107, 0.12), 0 0 9px rgba(255, 214, 107, 0.18);
+}
+
+.title-grammar-master {
+  color: #d7c8ff;
+  border-color: #9d82e8;
+  background: linear-gradient(135deg, rgba(87, 53, 102, 0.52), rgba(49, 74, 116, 0.34));
+  box-shadow: inset 0 0 0 2px rgba(215, 200, 255, 0.13), 0 0 12px rgba(182, 156, 255, 0.28);
+  text-shadow: 0 0 7px rgba(215, 200, 255, 0.5);
+}
+
+.title-class-legend {
+  color: #fff0a8;
+  border-color: #e2bc70;
+  background: linear-gradient(135deg, rgba(142, 50, 48, 0.56), rgba(90, 63, 19, 0.72));
+  box-shadow: inset 0 0 0 2px rgba(255, 240, 168, 0.2), 0 0 14px rgba(255, 214, 107, 0.38);
+  text-shadow: 0 0 6px rgba(255, 240, 168, 0.58);
+}
+
+.title-class-legend::before,
+.title-class-legend::after {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #fff0a8;
+  background: #c0913e;
+}

@@ -212,7 +212,7 @@ function renderRosterPanel(classroom, open) {
           <label class="field">
             <span>Skin tone</span>
             <select name="skinTone">
-              ${SKIN_TONES.map((tone) => `<option value="${tone.id}">${tone.name}</option>`).join("")}
+              ${SKIN_TONES.filter((tone) => !tone.price).map((tone) => `<option value="${tone.id}">${tone.name}</option>`).join("")}
             </select>
           </label>
         </div>
