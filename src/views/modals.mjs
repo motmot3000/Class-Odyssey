@@ -29,6 +29,7 @@ const TYPE_LABEL = {
   face: "Face",
   hair: "Hair",
   title: "Title",
+  tone: "Skin",
   bespoke: "Custom"
 };
 
@@ -68,7 +69,7 @@ export function renderPupilDialog(pupil) {
 }
 
 export function renderItemDialog(item, pupil) {
-  const field = item.type === "outfit" ? "skin" : item.type;
+  const field = item.type === "outfit" ? "skin" : item.type === "tone" ? "skinTone" : item.type;
   const bespoke = item.type === "bespoke";
   const equipped = !bespoke && pupil[field] === item.id;
   const owned = isItemOwned(pupil, item.id);

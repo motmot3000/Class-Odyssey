@@ -65,27 +65,40 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
   const names = {
     "pencil-sword": "Sword",
     "word-wand": "Wand",
+    "swords-and-shield": "Swords & Shield",
     "star-shield": "Shield",
     "lore-lantern": "Lantern",
     "spell-grimoire": "Magic Book",
     "dual-daggers": "Daggers",
-    "astral-scepter": "Scepter",
     "gold-crown": "King's Crown",
     "explorer-cap": "Goggles",
     "wizard-hat": "Wizard Hat",
-    "shadow-hood": "Hood",
     "steel-helm": "Helmet",
+    "classy-hat": "Classy Hat",
     short: "Short Hair",
     long: "Long Hair",
-    ponytail: "Ponytail",
+    bald: "Bald",
+    "buzz-cut": "Buzz Cut",
+    curly: "Afro",
+    "monk-cut": "Monk Cut",
+    "royal-hair": "Royal Hair",
     braided: "Braids",
     cool: "Cool",
     "star-eyes": "Star Eyes",
+    transcendent: "God Face",
+    "golden-skin": "Golden Skin",
     "custom-bespoke": "Custom Item"
   };
 
   for (const [id, name] of Object.entries(names)) {
     assert.equal(getShopItem(id)?.name, name);
+  }
+
+  for (const removedId of [
+    "shadow-hood", "winged-circlet", "star-cowl",
+    "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair"
+  ]) {
+    assert.equal(getShopItem(removedId), null);
   }
 });
 
@@ -187,12 +200,34 @@ test("next reward finds the closest upcoming unlock and stops at the top", () =>
 });
 
 test("shop covers all categories with regular level unlocks up to level 10", () => {
-  const categories = ["outfit", "hat", "weapon", "face", "hair", "title"];
+  const categories = ["outfit", "hat", "weapon", "face", "hair", "title", "tone"];
   for (const cat of categories) {
     const items = getShopItems(cat);
     assert.ok(items.length > 0);
     assert.ok(items.some((item) => item.minLevel >= 6));
   }
+});
+
+test("items and titles follow their intended progression", () => {
+  assert.deepEqual(
+    getShopItems("weapon").map((item) => item.id),
+    ["no-weapon", "star-shield", "lore-lantern", "spell-grimoire", "dual-daggers", "pencil-sword", "word-wand", "swords-and-shield"]
+  );
+  assert.deepEqual(
+    getShopItems("title").map((item) => item.name),
+    ["Rookie", "Pupil", "Explorer", "Star", "Champion", "Leader", "King", "Master", "Legend"]
+  );
+});
+
+test("fantasy skins can be bought and equipped", () => {
+  let state = createInitialState();
+  const pupilId = getCurrentClass(state).pupils[0].id;
+  state = awardXp(state, [pupilId], xpNeededForLevel(1) + xpNeededForLevel(2), "level up");
+  state = awardMoney(state, [pupilId], 30, "reward");
+  state = purchaseItem(state, pupilId, "blue-skin");
+  const pupil = getPupilById(state, pupilId);
+  assert.equal(pupil.skinTone, "blue-skin");
+  assert.equal(isItemOwned(pupil, "blue-skin"), true);
 });
 
 test("bespoke item costs 100 money and requires level 10", () => {
