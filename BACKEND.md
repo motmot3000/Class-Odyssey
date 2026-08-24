@@ -1,8 +1,8 @@
 # Game of More — Backend
 
 Le backend sauvegarde les classes, élèves, XP, niveaux, HP, skins et monnaie
-sur l'hébergement Infomaniak. Le `localStorage` du navigateur reste uniquement
-un cache hors ligne.
+sur le VPS Infomaniak. Le `localStorage` du navigateur reste un cache hors
+ligne.
 
 ## Production
 
@@ -10,78 +10,114 @@ un cache hors ligne.
 navigateur
     │ https://game-of-more.lecagibi.ch
     ▼
-Apache Infomaniak
-    ├── fichiers statiques : index.html, styles.css, src/, assets/
-    └── /api/* → api/index.php
-                      │
-                      ▼
-                 var/state.json
-                 var/backups/state-*.json (60 versions)
+hébergement Web Infomaniak classique
+    ├── frontend statique : index.html, styles.css, src/, assets/
+    └── Apache /api/*
+             │ proxy HTTPS
+             ▼
+       endpoint HTTPS du VPS
+             │ Caddy
+             ▼
+       127.0.0.1:5180
+             │ Docker
+             ▼
+       backend Node + /srv/apps/game-of-more/data
 ```
 
-Le dossier `var/` est refusé par Apache et ignoré par Git. Les fichiers de
-données sont créés avec des permissions privées. Les écritures sont protégées
-par `flock`, atomiques (fichier temporaire puis `rename`) et précédées d'une
-sauvegarde horodatée.
+Le frontend reste donc sur l'hébergement classique. Seuls l'API et son stockage
+persistent tournent sur le VPS.
 
-`GAME_OF_MORE_DATA_DIR` permet de placer les données ailleurs si cette variable
-d'environnement est fournie à PHP. Sans elle, `var/` à la racine du site est
-utilisé.
+En attendant la publication DNS de `api.game-of-more.lecagibi.ch`, le transport
+HTTPS entre les deux hébergements passe par le chemin privé
+`www.thomaswunsche.com/_game-of-more-api/`. Le navigateur ne voit jamais cette
+URL : pour lui, l'API reste `/api` sur le domaine Game of More.
 
 ## API
 
 | Méthode | Route         | Rôle                                |
 |---------|---------------|-------------------------------------|
-| GET     | `/api/health` | Vérifie l'API et identifie le stockage |
+| GET     | `/api/health` | Vérifie que le conteneur fonctionne |
 | GET     | `/api/state`  | Lit l'état sauvegardé (404 si vide) |
 | PUT     | `/api/state`  | Valide puis remplace l'état complet |
 
-La taille maximale d'un état est de 10 Mio. Le serveur pose lui-même
-`updatedAt` après une écriture réussie.
+Les écritures sont atomiques et précédées d'une sauvegarde horodatée. Les 60
+dernières versions sont conservées dans `data/backups/`.
 
 ## Côté navigateur
 
 - L'application affiche immédiatement son cache `localStorage`, puis charge
   `/api/state` depuis la même origine.
 - Chaque modification déclenche un `PUT /api/state` après 300 ms.
+- Apache transmet la requête au VPS sans exposer un changement de domaine au
+  navigateur.
 - En cas de coupure réseau, le cache local permet de continuer et une nouvelle
   synchronisation est tentée à la visite suivante.
 
-## Déploiement Infomaniak
+## Déploiement du frontend
 
-Le site se trouve dans `~/sites/game-of-more.lecagibi.ch` sur l'accès SSH
-Infomaniak. Déployer les fichiers applicatifs sans supprimer `var/` :
+Le frontend reste dans `~/sites/game-of-more.lecagibi.ch` sur l'hébergement
+classique :
+
+```bash
+ssh infomaniak-goM
+cd sites/game-of-more.lecagibi.ch
+git pull --ff-only
+```
+
+Le dossier historique `var/` n'est plus utilisé après la migration, mais reste
+ignoré par Git afin qu'une archive ou une restauration locale ne soit jamais
+commitée.
+
+## Déploiement du backend VPS
+
+Les fichiers d'exécution se trouvent dans `/srv/apps/game-of-more` :
+
+```text
+/srv/apps/game-of-more/
+├── Dockerfile
+├── compose.yaml
+├── server/server.mjs
+└── data/
+    ├── state.json
+    └── backups/
+```
+
+Depuis le dépôt local, copier la configuration avec la clé SSH du VPS :
 
 ```bash
 rsync -az \
-  --exclude .git --exclude node_modules --exclude var --exclude server/data \
-  .htaccess index.html styles.css src assets api package.json \
-  infomaniak-goM:sites/game-of-more.lecagibi.ch/
+  -e "ssh -i ~/.ssh/infomaniak_ssh/infomaniak_vps" \
+  .dockerignore Dockerfile compose.yaml server \
+  debian@<IP_DU_VPS>:/srv/apps/game-of-more/
 ```
 
-Vérifications après déploiement :
+Puis reconstruire et contrôler le service :
 
 ```bash
-curl -fsS https://game-of-more.lecagibi.ch/api/health
-curl -fsS https://game-of-more.lecagibi.ch/api/state
+cd /srv/apps/game-of-more
+docker compose config
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=100
+curl -fsS http://127.0.0.1:5180/api/health
 ```
 
-## Migration depuis l'ancien Raspberry Pi
+Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
+Web exposé publiquement et utilise la configuration versionnée dans
+`deploy/vps/api.game-of-more.lecagibi.ch.caddy`.
 
-1. Arrêter brièvement les écritures ou mettre le site en maintenance.
-2. Copier `~/services/game-of-more/data/state.json` du Pi vers le `var/` du
-   site Infomaniak.
-3. Déployer `.htaccess` et `api/index.php`, puis vérifier par HTTPS que l'état
-   lu est identique.
-4. Faire un PUT de contrôle, relire l'état et vérifier la création d'un backup.
-5. Seulement après ces contrôles, désactiver le service et le Funnel du Pi.
-6. Conserver une archive finale hors du dossier de service avant de supprimer
-   l'ancienne copie d'exécution.
+Après une modification Caddy :
 
-Le serveur Node historique (`server/server.mjs`) reste disponible pour lancer
-une instance locale avec `npm start`; il n'est plus utilisé en production.
+```bash
+sudo -u caddy -H caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
 
-## Sauvegarde manuelle
+## Sauvegardes
 
-La console enseignant propose aussi l'export/import JSON. Utiliser un export
-avant une longue période sans cours fournit une copie indépendante du serveur.
+- Données actives : `/srv/apps/game-of-more/data/` sur le VPS.
+- Rotation applicative : 60 versions dans `data/backups/`.
+- Archive de la migration depuis le Pi conservée sur l'hébergement Infomaniak
+  dans `~/cagipi_backup/`.
+- La console enseignant propose aussi l'export/import JSON pour conserver une
+  copie indépendante du serveur.

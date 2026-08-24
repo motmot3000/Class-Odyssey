@@ -1,0 +1,20 @@
+www.thomaswunsche.com {
+	import security_headers
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	encode zstd gzip
+
+	# Transport endpoint used by the classic Infomaniak hosting until the
+	# dedicated api.game-of-more.lecagibi.ch DNS record is published.
+	handle_path /_game-of-more-api/* {
+		reverse_proxy 127.0.0.1:5180
+	}
+
+	handle {
+		root * /srv/www/www.thomaswunsche.com
+		file_server
+	}
+
+	log {
+		format json
+	}
+}

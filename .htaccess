@@ -11,7 +11,6 @@ RedirectMatch 404 \.(?:md|docx|json)$
 
 RewriteEngine On
 
-# Keep the browser API same-origin while storing the state directly on the
-# Infomaniak host. The route is handled by PHP because Node is unavailable on
-# the managed host.
-RewriteRule ^api(?:/(.*))?/?$ api/index.php?route=$1 [END,QSA]
+# Keep the browser API same-origin. Apache forwards only /api to the Node
+# backend running on the Infomaniak VPS; the frontend stays on this hosting.
+RewriteRule ^api/(.*)$ https://www.thomaswunsche.com/_game-of-more-api/api/$1 [P,L]

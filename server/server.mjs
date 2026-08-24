@@ -9,6 +9,7 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const PORT = Number(process.env.PORT || 5180);
+const HOST = process.env.HOST || "127.0.0.1";
 const MAX_BACKUPS = Number(process.env.MAX_BACKUPS || 60);
 
 const MIME = {
@@ -258,7 +259,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 ensureDirs();
-server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Game of More backend on http://127.0.0.1:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Game of More backend on http://${HOST}:${PORT}`);
   console.log(`state file: ${STATE_FILE}`);
 });

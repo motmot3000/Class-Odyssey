@@ -39,9 +39,9 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 
-// En production, Infomaniak sert l'API sous /api/ sur le même domaine que
-// l'application. L'URL reste relative pour fonctionner aussi en local et sous
-// un éventuel sous-chemin — voir BACKEND.md.
+// En production, l'hébergement du frontend transmet /api/ au VPS Infomaniak.
+// L'URL reste relative et same-origin pour le navigateur, et fonctionne aussi
+// en local ou sous un éventuel sous-chemin — voir BACKEND.md.
 function apiUrl(path) {
   return new URL(`api/${path}`, document.baseURI).toString();
 }

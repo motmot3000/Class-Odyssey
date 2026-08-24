@@ -29,9 +29,10 @@ dans l'en-tête, à côté des onglets de classe.
 
 ## Production (sauvegarde partagée)
 
-En production, l'application et son API PHP sont servies par Infomaniak. L'API
-stocke l'état dans un fichier JSON privé, avec sauvegardes horodatées. N'importe
-quelle machine qui ouvre l'URL retrouve les données.
+En production, le frontend reste sur l'hébergement Web Infomaniak classique.
+Ses appels `/api` sont transmis au backend Node conteneurisé sur le VPS
+Infomaniak, qui conserve l'état et ses sauvegardes. N'importe quelle machine qui
+ouvre l'URL retrouve les données.
 
 Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 
