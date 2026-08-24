@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 *.log
+.env
 
 # Sorties d'outils et captures de travail : régénérables depuis l'app.
 .playwright-mcp/

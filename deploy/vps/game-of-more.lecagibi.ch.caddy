@@ -1,0 +1,13 @@
+game-of-more.lecagibi.ch {
+	import security_headers
+	encode zstd gzip
+
+	@api path /api/*
+	header @api Cache-Control "no-store"
+
+	reverse_proxy 127.0.0.1:5180
+
+	log {
+		format json
+	}
+}

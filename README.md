@@ -39,11 +39,10 @@ compte.
 
 ## Production (sauvegarde partagée)
 
-En production, le frontend reste sur l'hébergement Web Infomaniak classique.
-Ses appels `/api` sont transmis au seul backend de production, Node
-conteneurisé sur le VPS
-Infomaniak, qui conserve l'état et ses sauvegardes. N'importe quelle machine qui
-ouvre l'URL retrouve les données.
+En production, le frontend et le backend Node sont réunis dans le même
+conteneur sur le VPS Infomaniak. Caddy sert le domaine public et les données
+persistantes restent montées hors du conteneur. N'importe quelle machine qui
+ouvre l'URL retrouve les données de son compte.
 
 Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 

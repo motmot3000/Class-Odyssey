@@ -10,27 +10,19 @@ hors ligne isolé par compte. Aucun backend PHP n'est utilisé.
 navigateur
     │ https://game-of-more.lecagibi.ch
     ▼
-hébergement Web Infomaniak classique
+Caddy sur le VPS
+    │ reverse proxy vers 127.0.0.1:5180
+    ▼
+conteneur Docker Node
     ├── frontend statique : index.html, styles.css, src/, assets/
-    └── Apache /api/*
-             │ proxy HTTPS
-             ▼
-       endpoint HTTPS du VPS
-             │ Caddy
-             ▼
-       127.0.0.1:5180
-             │ Docker
-             ▼
-       backend Node central + /srv/apps/game-of-more/data
+    ├── API comptes et jeu : /api/*
+    └── volume persistant : /srv/apps/game-of-more/data
 ```
 
-Le frontend reste donc sur l'hébergement classique. Seuls l'API et son stockage
-persistent tournent sur le VPS.
-
-En attendant la publication DNS de `api.game-of-more.lecagibi.ch`, le transport
-HTTPS entre les deux hébergements passe par le chemin privé
-`www.thomaswunsche.com/_game-of-more-api/`. Le navigateur ne voit jamais cette
-URL : pour lui, l'API reste `/api` sur le domaine Game of More.
+Le frontend, l'API et les données sont donc centralisés sur le VPS. Pendant la
+propagation DNS, l'ancien hébergement peut relayer provisoirement toutes les
+requêtes vers `www.thomaswunsche.com/_game-of-more-site/`. Le navigateur garde
+dans tous les cas l'URL Game of More.
 
 ## Configuration obligatoire
 
@@ -83,8 +75,7 @@ L'index des comptes possède également ses propres copies de récupération.
 - L'application affiche le cache `localStorage` du compte connecté, puis charge
   `/api/state` depuis la même origine.
 - Chaque modification déclenche un `PUT /api/state` après 300 ms.
-- Apache transmet la requête au VPS sans exposer un changement de domaine au
-  navigateur.
+- Le frontend et l'API partagent directement la même origine sur le VPS.
 - En cas de coupure réseau, le cache local permet de continuer et une nouvelle
   synchronisation est tentée à la visite suivante.
 - Une réponse `401` ou une déconnexion oublie la session, jamais un cache local
@@ -93,22 +84,7 @@ L'index des comptes possède également ses propres copies de récupération.
   de l'exporter ou de charger explicitement la copie serveur. La copie locale
   est archivée sur l'appareil avant ce chargement.
 
-## Déploiement du frontend
-
-Le frontend reste dans `~/sites/game-of-more.lecagibi.ch` sur l'hébergement
-classique :
-
-```bash
-ssh infomaniak-goM
-cd sites/game-of-more.lecagibi.ch
-git pull --ff-only
-```
-
-Le dossier historique `var/` n'est plus utilisé après la migration, mais reste
-ignoré par Git afin qu'une archive ou une restauration locale ne soit jamais
-commitée.
-
-## Déploiement du backend VPS
+## Déploiement VPS
 
 Les fichiers d'exécution se trouvent dans `/srv/apps/game-of-more` :
 
@@ -119,6 +95,10 @@ Les fichiers d'exécution se trouvent dans `/srv/apps/game-of-more` :
 ├── server/
 │   ├── server.mjs
 │   └── api.mjs
+├── index.html
+├── styles.css
+├── src/
+├── assets/
 └── data/
     ├── accounts.json
     ├── sessions.json
@@ -134,7 +114,7 @@ Depuis le dépôt local, copier la configuration avec la clé SSH du VPS :
 ```bash
 rsync -az \
   -e "ssh -i ~/.ssh/infomaniak_ssh/infomaniak_vps" \
-  .dockerignore Dockerfile compose.yaml server \
+  .dockerignore Dockerfile compose.yaml server index.html styles.css src assets \
   debian@<IP_DU_VPS>:/srv/apps/game-of-more/
 ```
 
@@ -153,7 +133,7 @@ curl -fsS http://127.0.0.1:5180/api/health
 
 Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
 Web exposé publiquement et utilise la configuration versionnée dans
-`deploy/vps/api.game-of-more.lecagibi.ch.caddy`.
+`deploy/vps/game-of-more.lecagibi.ch.caddy`.
 
 Après une modification Caddy :
 

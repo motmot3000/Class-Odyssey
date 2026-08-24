@@ -3,14 +3,14 @@ AddOutputFilterByType DEFLATE "application/atom+xml" "application/javascript" "a
 
 Options -Indexes
 
-# Only the web app and its API are public. In particular, never expose the
-# persisted state, its backups, the Git checkout or the Node implementation.
+# Keep private files blocked even while this hosting is only a relay to the
+# complete application running on the VPS.
 RedirectMatch 404 /\.git(?:/|$)
 RedirectMatch 404 ^/(server|tests|docs|var)(?:/|$)
 RedirectMatch 404 \.(?:md|docx|json)$
 
 RewriteEngine On
 
-# Keep the browser API same-origin. Apache forwards only /api to the Node
-# backend running on the Infomaniak VPS; the frontend stays on this hosting.
-RewriteRule ^api/(.*)$ https://www.thomaswunsche.com/_game-of-more-api/api/$1 [P,L]
+# Temporary cutover relay. Frontend and API both come from the VPS while DNS
+# for game-of-more.lecagibi.ch still points to this classic hosting.
+RewriteRule ^(.*)$ https://www.thomaswunsche.com/_game-of-more-site/$1 [P,L]
