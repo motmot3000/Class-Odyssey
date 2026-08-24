@@ -1908,6 +1908,29 @@ textarea {
   text-wrap: pretty;
 }
 
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-list li {
+  padding: var(--s3);
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.rules-list li::before {
+  content: "◆";
+  margin-right: var(--s2);
+  color: var(--xp);
+}
+
 .rules-stats {
   display: flex;
   flex-direction: column;
