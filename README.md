@@ -29,11 +29,11 @@ dans l'en-tête, à côté des onglets de classe.
 
 ## Production (sauvegarde partagée)
 
-En production, l'application et son API PHP sont servies par Infomaniak. L'API
-stocke l'état dans un fichier JSON privé, avec sauvegardes horodatées. N'importe
-quelle machine qui ouvre l'URL retrouve les données.
+En production, l'application et son API Node sont servies par le VPS Infomaniak,
+via Caddy et Docker Compose. Les données privées persistent dans
+`/srv/apps/game-of-more/data/`, hors du conteneur.
 
-Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
+Voir `BACKEND.md` pour l'architecture et les précautions de déploiement sur le VPS.
 
 ## Structure du code
 
