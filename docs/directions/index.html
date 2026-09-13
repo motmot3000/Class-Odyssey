@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Game of More — trois directions d'interface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef0ee; --card:#ffffff; --ink:#15201f; --ink-2:#4c5a57; --muted:#7d8a86;
+    --rule:#d9ded9; --rule-2:#bcc6bf; --accent:#1f6f5c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Public Sans",system-ui,sans-serif;color:var(--ink);background:
+    radial-gradient(900px 420px at 50% -10%, rgba(31,111,92,.08), transparent 60%), var(--bg);
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1240px;margin:0 auto;padding:46px 26px 80px}
+  .eyebrow{font-family:"Bricolage Grotesque";font-weight:800;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--accent);margin:0}
+  h1{font-family:"Bricolage Grotesque";font-weight:800;font-size:clamp(30px,4vw,46px);letter-spacing:-.03em;margin:8px 0 12px;line-height:1.02}
+  .lede{font-size:17px;line-height:1.55;color:var(--ink-2);max-width:78ch;margin:0}
+  .meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);
+    font-size:13.5px;color:var(--muted)}
+  .meta b{color:var(--ink);font-weight:600}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:38px}
+  .prop{background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:0 1px 2px rgba(20,32,30,.06),0 14px 34px rgba(20,32,30,.07)}
+  .shot{position:relative;display:block;aspect-ratio:16/11;overflow:hidden;border-bottom:1px solid var(--rule);background:#333}
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform .4s ease}
+  .shot:hover img{transform:scale(1.02)}
+  .shot .lane{position:absolute;top:12px;left:12px;font-family:"Bricolage Grotesque";font-weight:800;font-size:10.5px;
+    letter-spacing:.16em;text-transform:uppercase;background:rgba(10,14,13,.78);color:#fff;padding:5px 9px;border-radius:5px}
+  .body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px;flex:1}
+  .body h2{font-family:"Bricolage Grotesque";font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0}
+  .body .sub{font-size:13px;color:var(--muted);margin:-8px 0 0}
+  .swatch{display:flex;gap:6px}
+  .swatch i{width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,.12)}
+  ul{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:var(--ink-2);line-height:1.45}
+  ul b{color:var(--ink)}
+  .go{margin-top:auto;padding-top:6px}
+  .go a{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;color:var(--accent);text-decoration:none}
+  .go a:hover{text-decoration:underline}
+
+  .closing{margin-top:52px;border-top:1px solid var(--rule);padding-top:26px;display:grid;grid-template-columns:1.4fr 1fr;gap:34px}
+  .closing h3{font-family:"Bricolage Grotesque";font-weight:800;font-size:20px;margin:0 0 12px}
+  .closing p{font-size:14.5px;line-height:1.6;color:var(--ink-2);margin:0 0 12px;max-width:70ch}
+  .closing .pick{background:rgba(31,111,92,.06);border-top:2px solid var(--accent);padding:16px 18px 6px;border-radius:10px}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}.closing{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Game of More — refonte d'interface</p>
+  <h1>Trois directions pour l'arrivée des héros 3D</h1>
+  <p class="lede">Le plateau actuel est bleu nuit, arrondi et « petit jeu mignon ». Les personnages 3D demandent un cadre plus mature et plus aventurier, du niveau de Breath of the Wild : matière, relief, hiérarchie, couleur rare. Voici trois directions de la même page (plateau + console enseignant), à comparer avant de détailler.</p>
+  <div class="meta">
+    <span><b>Écran</b> tableau projeté, lu du fond de la classe</span>
+    <span><b>Public</b> 7P–8P, 11–13 ans</span>
+    <span><b>Règle</b> le personnage et sa progression se lisent d'un regard</span>
+  </div>
+
+  <div class="grid">
+    <article class="prop">
+      <a class="shot" href="./1-atlas.html"><img src="./dir1-atlas.png" alt="Aperçu de la direction L'Atlas du Jour"><span class="lane">Proposition 01 · claire</span></a>
+      <div class="body">
+        <h2>L'Atlas du Jour</h2>
+        <p class="sub">Cartographie ouverte au grand jour</p>
+        <div class="swatch"><i style="background:#e7ece8"></i><i style="background:#16272c"></i><i style="background:#0d7a63"></i><i style="background:#b0791a"></i></div>
+        <ul>
+          <li><b>Matière</b> papier froid, courbes de niveau, encre ardoise, jade et or de boussole.</li>
+          <li><b>Maturité</b> par la précision cartographique : règles fines, coins repérés, pas de dorure.</li>
+          <li><b>Pour</b> une ambiance scolaire claire et aérée, qui reste lisible en plein jour.</li>
+        </ul>
+        <div class="go"><a href="./1-atlas.html">Ouvrir la maquette →</a></div>
+      </div>
+    </article>
+
+    <article class="prop">
+      <a class="shot" href="./2-sheikah.html"><img src="./dir2-sheikah.png" alt="Aperçu de la direction La Tablette Sheikah"><span class="lane">Proposition 02 · sombre</span></a>
+      <div class="body">
+        <h2>La Tablette Sheikah</h2>
+        <p class="sub">Dalle d'un artefact ancien</p>
+        <div class="swatch"><i style="background:#060a0e"></i><i style="background:#122230"></i><i style="background:#4fd9e8"></i><i style="background:#e2a04a"></i></div>
+        <ul>
+          <li><b>Matière</b> pierre gravée, cercles de socle, énergie cyan contenue, sceau ambré.</li>
+          <li><b>Maturité</b> le bleu nuit actuel est conservé mais sculpté et hiérarchisé ; la lumière vient de la matière.</li>
+          <li><b>Pour</b> la projection en classe : contraste élevé, aucune fatigue visuelle, héros mis en avant.</li>
+        </ul>
+        <div class="go"><a href="./2-sheikah.html">Ouvrir la maquette →</a></div>
+      </div>
+    </article>
+
+    <article class="prop">
+      <a class="shot" href="./3-expedition.html"><img src="./dir3-expedition.png" alt="Aperçu de la direction L'Expédition"><span class="lane">Proposition 03 · libre</span></a>
+      <div class="body">
+        <h2>L'Expédition</h2>
+        <p class="sub">Terrain de camp et carnet de bord</p>
+        <div class="swatch"><i style="background:#0f2119"></i><i style="background:#244c37"></i><i style="background:#efe6d2"></i><i style="background:#d8562b"></i></div>
+        <ul>
+          <li><b>Matière</b> deux matières seulement : terrain de conifères et carnet de papier, un accent braise unique.</li>
+          <li><b>Maturité</b> composition réinventée : horizon plein cadre, héros en camps sur une crête graduée, journal en marge.</li>
+          <li><b>Pour</b> l'identité aventurière la plus forte, et un relevé de classe très lisible projeté.</li>
+        </ul>
+        <div class="go"><a href="./3-expedition.html">Ouvrir la maquette →</a></div>
+      </div>
+    </article>
+  </div>
+
+  <section class="closing">
+    <div>
+      <h3>Choix à faire</h3>
+      <p>Les trois directions reposent sur le même contenu et les mêmes règles : seule change la matière. Une fois la direction retenue, on peut mélanger une signature d'une autre — par exemple poser l'horizon et la crête de <b>L'Expédition</b> sur la dalle sombre de <b>Sheikah</b>, ou garder le carnet papier en marge comme console.</p>
+      <p>À confirmer avant de détailler : la direction, le niveau de couleur des stats (couleur unique vs sémantique), et la place de la liste vs la grille pour les grands effectifs.</p>
+    </div>
+    <div class="pick">
+      <h3>Lecture rapide</h3>
+      <p><b>Sheikah</b> est l'évolution la plus sûre : elle garde le confort de projection et le repère visuel actuel tout en le rendant vraiment mature.</p>
+      <p><b>L'Expédition</b> est la plus ambitieuse et la plus « aventure » ; c'est elle qui se distinguerait le plus d'une appli scolaire ordinaire.</p>
+      <p><b>L'Atlas</b> est la plus douce et scolaire, mais un fond clair projetera moins bien au fond de la classe qu'un fond sombre.</p>
+    </div>
+  </section>
+</div>
+</body>
+</html>

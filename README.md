@@ -4,11 +4,21 @@ Premier draft d'application web pour ludifier les cours d'anglais avec des perso
 
 ## Lancer (développement local)
 
+Avec Node.js 22.9 ou supérieur, préparer la configuration une fois par worktree :
+
 ```bash
-export FOUNDER_USERNAME
-export FOUNDER_PASSWORD
+cp .env.example .env
+```
+
+Renseigner `FOUNDER_USERNAME` et `FOUNDER_PASSWORD` dans `.env`, puis lancer :
+
+```bash
 npm start
 ```
+
+`npm start` charge automatiquement `.env` s'il existe. Le bouton Go Live
+d'Orca utilise cette même commande. Les variables déjà exportées dans le
+terminal restent prioritaires.
 
 Puis ouvrir :
 
@@ -17,8 +27,11 @@ http://localhost:5180
 ```
 
 Les deux variables fondateur sont obligatoires lors de la première
-initialisation. Le mot de passe ne doit jamais être ajouté au dépôt. Pour les
-données de développement, `DATA_DIR` peut pointer vers un dossier temporaire.
+initialisation. `.env` est exclu de Git et contient les identifiants du compte
+local. Les données sont conservées dans `server/data/`, propre à chaque
+worktree et également exclu de Git ; `DATA_DIR` permet de choisir un autre
+dossier. Pour lancer plusieurs branches simultanément, choisir un `PORT`
+différent dans chaque `.env` et utiliser ce port dans l'URL.
 
 ## Deux interfaces
 
