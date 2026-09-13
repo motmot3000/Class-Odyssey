@@ -139,11 +139,12 @@ let theme = (() => {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch { /* stockage bloqué */ }
-  return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return "light";
 })();
 
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#e7e9df" : "#101b20");
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* stockage bloqué */ }
   setSheikahTheme(theme);
 }
