@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f3ed">
+  <meta name="description" content="Première collection 3D des équipements Game of More, ajustée aux personnages Noa et Mila du vestiaire en développement.">
+  <title>Les équipements en 3D — Game of More</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/items-3d.css">
+  <script type="module" src="/assets/items-3d/web/items.js"></script>
+</head>
+<body>
+  <!-- THESIS: Try the current game's equipment on the real Noa/Mila reference body.
+  OWN-WORLD: Inherit the wardrobe's daylight studio, warm paper, sage, green ink and restrained brass; equipment supplies the color.
+  STORY: Choose a character and a loadout, inspect the real geometry, compare to its SVG design, export the visible model.
+  FIRST VIEWPORT: Large sticky character stage at left, compact catalogue at right; presets above, view controls below the figure, export below equipment.
+  FORM: Narrow extension of the existing wardrobe composition, pinned by the user's reference branch.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+  <a class="skip-link" href="#catalogue">Aller aux équipements</a>
+  <header class="masthead">
+    <a class="brand" href="/items-3d.html">GAME <span>OF</span> MORE</a>
+    <span>Atelier 3D</span>
+    <a id="reference-link" href="/assets/items-3d/sources/boy-medium.glb" download>Base de référence (.glb)</a>
+  </header>
+  <main>
+    <div class="intro">
+      <div><h1>Les équipements prennent vie.</h1><p>Le catalogue du jeu, ajusté à Noa et Mila. Première version à essayer.</p></div>
+      <button id="reset" class="quiet" type="button">Réinitialiser</button>
+    </div>
+    <section class="presets" aria-label="Combinaisons à essayer">
+      <span>Essayer un ensemble</span>
+      <button data-preset="ranger" type="button">Ranger</button>
+      <button data-preset="mage" type="button">Mage</button>
+      <button data-preset="knight" type="button">Knight</button>
+      <button data-preset="king" type="button">King</button>
+    </section>
+    <div class="workbench">
+      <section class="stage" aria-label="Personnage équipé et angles de vue">
+        <header class="stage-heading"><div><h2 id="character-name">Noa</h2><p id="loadout">Ranger · Goggles · Lantern</p></div><span id="render-mode">Chargement 3D</span></header>
+        <div id="viewer" role="img" aria-label="Noa équipé, vue de trois quarts"><img id="poster" src="/assets/items-3d/preview.png" width="900" height="1000" alt="Aperçu Blender de Noa en tenue Ranger, lunettes d’explorateur et lanterne."></div>
+        <div id="svg-reference" hidden></div>
+        <div class="loading"><p id="loading-status" role="status">Préparation du personnage et des équipements…</p><button id="retry" type="button" hidden>Réessayer</button></div>
+        <div class="view-controls">
+          <div class="angles" role="group" aria-label="Angle de vue">
+            <button data-angle="front" type="button" aria-pressed="false">Face</button>
+            <button data-angle="quarter" type="button" aria-pressed="true">¾</button>
+            <button data-angle="back" type="button" aria-pressed="false">Dos</button>
+            <button data-angle="head" type="button" aria-pressed="false">Tête</button>
+            <button data-angle="item" type="button" aria-pressed="false">Objet</button>
+          </div>
+          <button id="rotate" type="button" aria-pressed="false" aria-label="Rotation automatique"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></svg><span>Tourner</span></button>
+        </div>
+        <footer class="stage-footer"><span id="geometry-info">Modèles Blender</span><button id="compare" type="button" aria-pressed="false">Voir la référence 2D</button></footer>
+      </section>
+      <section class="catalogue" id="catalogue" aria-label="Choisir le personnage et ses équipements" tabindex="-1">
+        <fieldset class="personas"><legend>Personnage</legend><div>
+          <button data-persona="male" type="button" aria-pressed="true"><strong>Noa</strong><span>Base masculine</span></button>
+          <button data-persona="female" type="button" aria-pressed="false"><strong>Mila</strong><span>Base féminine</span></button>
+        </div></fieldset>
+        <div class="catalogue-heading"><h2>Équipements</h2><span id="collection-count"></span></div>
+        <p class="catalogue-note">Tout est essayable ici. Niveaux et prix sont ceux du jeu.</p>
+        <div id="categories" class="categories" role="group" aria-label="Catégorie d’équipement"></div>
+        <div id="choices" class="choices" aria-label="Pièces à essayer"></div>
+        <section class="equipped" aria-labelledby="equipped-title"><h3 id="equipped-title">Sur le personnage</h3><dl id="equipped-list"></dl></section>
+        <div class="export-actions"><label for="export-kind">Télécharger en 3D</label><select id="export-kind"><option value="look">Personnage équipé (.glb)</option><option value="items">Équipements seuls (.glb)</option></select><button id="export" class="primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>Exporter cette combinaison</button><p id="action-status" role="status" aria-live="polite"></p></div>
+      </section>
+    </div>
+    <footer class="page-footer"><span>GAME OF MORE <span aria-hidden="true">/</span> Étude d’équipements · pose statique</span><a href="/assets/items-3d/catalogue.blend" download>Scène Blender éditable</a><details><summary>Sources & fabrication</summary><p>Bases Noa/Mila « characters-base », révision base-v2-2026-09, livrées par la branche test-modelisation. Morphologie Nintendo / The Models Resource — Trikeboy, adaptée pour ce prototype. Corps et nuques soudés conservés ; équipements et coiffures ajustés dans Blender aux ancrages anatomiques. Les exports contiennent les pièces visibles, dans la pose statique affichée.</p><a href="/assets/items-3d/provenance.json">Provenance des modèles</a></details></footer>
+  </main>
+  <noscript><p class="no-script">Activez JavaScript pour essayer les modèles 3D. L’aperçu et la scène Blender restent accessibles.</p></noscript>
+</body>
+</html>

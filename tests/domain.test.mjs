@@ -53,8 +53,8 @@ test("a girl defaults to long hair and keeps her skin tone", () => {
 });
 
 test("faces and hairstyles are shop items", () => {
-  assert.equal(getShopItem("grin")?.type, "face");
-  assert.equal(getShopItem("spiky")?.type, "hair");
+  assert.equal(getShopItem("wink")?.type, "face");
+  assert.equal(getShopItem("curly")?.type, "hair");
   assert.equal(getShopItem("sunglasses")?.type, "hat");
   assert.equal(getShopItem("evil")?.type, "face");
   assert.equal(getShopItem("story-keeper")?.name, "Warrior");
@@ -78,9 +78,7 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
     short: "Short Hair",
     long: "Long Hair",
     bald: "Bald",
-    "buzz-cut": "Buzz Cut",
     curly: "Afro",
-    "monk-cut": "Monk Cut",
     "royal-hair": "Royal Hair",
     braided: "Braids",
     cool: "Cool",
@@ -96,7 +94,8 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
 
   for (const removedId of [
     "shadow-hood", "winged-circlet", "star-cowl",
-    "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair"
+    "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair", "monk-cut", "spiky", "buzz-cut", "grin",
+    "red-skin", "green-skin", "blue-skin"
   ]) {
     assert.equal(getShopItem(removedId), null);
   }
@@ -219,15 +218,79 @@ test("items and titles follow their intended progression", () => {
   );
 });
 
-test("fantasy skins can be bought and equipped", () => {
-  let state = createInitialState();
-  const pupilId = getCurrentClass(state).pupils[0].id;
-  state = awardXp(state, [pupilId], xpNeededForLevel(1) + xpNeededForLevel(2), "level up");
-  state = awardMoney(state, [pupilId], 30, "reward");
-  state = purchaseItem(state, pupilId, "blue-skin");
-  const pupil = getPupilById(state, pupilId);
-  assert.equal(pupil.skinTone, "blue-skin");
-  assert.equal(isItemOwned(pupil, "blue-skin"), true);
+test("regular and Yakuza tattoos can be bought at levels 5 and 8", () => {
+  for (const [itemId, minLevel, price] of [["tattooed-skin", 5, 50], ["yakuza-tattoos", 8, 80]]) {
+    let state = createInitialState();
+    const pupilId = getCurrentClass(state).pupils[0].id;
+    state = awardMoney(state, [pupilId], price, "reward");
+    for (let level = 1; level < minLevel - 1; level++) {
+      state = awardXp(state, [pupilId], xpNeededForLevel(level), "level up");
+    }
+    assert.equal(purchaseItem(state, pupilId, itemId), state);
+    state = awardXp(state, [pupilId], xpNeededForLevel(minLevel - 1), "level up");
+    state = purchaseItem(state, pupilId, itemId);
+    const pupil = getPupilById(importState(JSON.stringify(state)), pupilId);
+    assert.equal(pupil.skinTone, itemId);
+    assert.equal(pupil.money, 0);
+    assert.equal(isItemOwned(pupil, itemId), true);
+  }
+});
+
+test("hair colors unlock at the requested levels and keep the haircut through purchases and saves", () => {
+  for (const [itemId, minLevel, price] of [
+    ["blond-hair", 3, 30], ["black-hair", 3, 30], ["white-hair", 3, 30],
+    ["red-hair", 5, 50], ["green-hair", 5, 50], ["blue-hair", 5, 50]
+  ]) {
+    let state = createInitialState();
+    const pupilId = getCurrentClass(state).pupils[1].id;
+    const item = getShopItem(itemId);
+    assert.equal(item.type, "hairColor");
+    assert.equal(item.minLevel, minLevel);
+    assert.equal(item.price, price);
+    state = awardMoney(state, [pupilId], price, "reward");
+    for (let level = 1; level < minLevel - 1; level++) {
+      state = awardXp(state, [pupilId], xpNeededForLevel(level), "level up");
+    }
+    assert.equal(purchaseItem(state, pupilId, itemId), state);
+    state = updateCosmetics(state, pupilId, { hairColor: itemId });
+    assert.equal(getPupilById(state, pupilId).hairColor, "brown-hair");
+    state = awardXp(state, [pupilId], xpNeededForLevel(minLevel - 1), "level up");
+    assert.equal(canBuyItem({ ...getPupilById(state, pupilId), money: price - 1 }, item), false);
+    state = purchaseItem(state, pupilId, itemId);
+    state = importState(JSON.stringify(state));
+    const pupil = getPupilById(state, pupilId);
+    assert.equal(pupil.hair, "long");
+    assert.equal(pupil.hairColor, itemId);
+    assert.equal(pupil.money, 0);
+    assert.equal(isItemOwned(pupil, itemId), true);
+    state = updateCosmetics(state, pupilId, { hairColor: "brown-hair", hair: "short" });
+    state = updateCosmetics(state, pupilId, { hairColor: itemId });
+    assert.equal(getPupilById(state, pupilId).hair, "short");
+    assert.equal(getPupilById(state, pupilId).hairColor, itemId);
+    assert.equal(getPupilById(state, pupilId).money, 0);
+  }
+});
+
+test("old saves fall back from removed cosmetics and missing or invalid hair colors", () => {
+  for (const gender of ["boy", "girl"]) {
+    for (const [hair, skinTone] of [["monk-cut", "red-skin"], ["spiky", "green-skin"], ["buzz-cut", "blue-skin"]]) {
+      const state = createInitialState();
+      const pupil = getCurrentClass(state).pupils[0];
+      Object.assign(pupil, { gender, hair, skinTone, face: "grin", ownedItems: [hair, skinTone, "grin"] });
+      delete pupil.hairColor;
+      const normalized = getPupilById(normalizeState(state), pupil.id);
+      assert.equal(normalized.hair, gender === "girl" ? "long" : "short");
+      assert.equal(normalized.face, "smile");
+      assert.equal(normalized.skinTone, "light");
+      assert.equal(normalized.hairColor, "brown-hair");
+      assert.equal(isItemOwned(normalized, hair), false);
+      assert.equal(isItemOwned(normalized, "grin"), false);
+      assert.equal(isItemOwned(normalized, skinTone), false);
+      assert.equal(isItemOwned(normalized, "brown-hair"), true);
+      pupil.hairColor = "unknown-color";
+      assert.equal(getPupilById(normalizeState(state), pupil.id).hairColor, "brown-hair");
+    }
+  }
 });
 
 test("bespoke item costs 100 money and requires level 10", () => {

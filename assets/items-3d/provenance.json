@@ -1,0 +1,22 @@
+{
+  "title": "Game of More — première collection d’équipements 3D",
+  "referenceBranch": "motmot3000/test-modelisation",
+  "referenceAssets": ["assets/characters-base/boy-medium.glb", "assets/characters-base/girl-medium.glb"],
+  "referenceRevision": "base-v2-2026-09",
+  "referenceCharacters": "Noa et Mila, corps soudés en pose naturelle à 82 degrés depuis la pose T",
+  "sourceGeometry": {
+    "copyright": "Nintendo — The Legend of Zelda: Breath of the Wild",
+    "archiveUploader": "Trikeboy, The Models Resource",
+    "body": "https://models.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/asset/303154/",
+    "trousers": "https://models.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/asset/303172/",
+    "adaptation": "Corps, nuques soudées et textures issus des fichiers characters-base livrés. Les équipements et coiffures affinés sont ajustés séparément pour chaque personnage à partir du manifeste d’ancrages."
+  },
+  "sourceSnapshots": ["sources/boy-medium.glb", "sources/girl-medium.glb", "sources/manifest.json"],
+  "constructionScript": "tools/build-items-3d.py",
+  "hairConstruction": "Coiffures reconstruites localement : mèches effilées, volumes continus, tresses entrelacées et afro sculpté. Variantes open, covered et crowned pour ajuster les cheveux aux chapeaux et couronnes.",
+  "headAttachment": "Les meshes de coiffure et de chapeau sont ajustés à hat_seat et à son ellipse pour chaque sexe. headFit décrit le gabarit de construction ; headFits décrit les transformations vers les bases livrées. Les extras glTF conservent origine, quaternion et matrice d’ajustement.",
+  "heldItems": "Lames alignées sur grip_left/grip_right, bouclier ajusté à l’avant-bras gauche depuis wrist_left, lanterne et baguette dégagées des cuisses ; mains naturelles du corps livré conservées intégralement.",
+  "importCompatibility": "Le constructeur importe une copie temporaire de la seule scène active des GLB livrés pour contourner les scènes vides et les nœuds inutilisés de Blender 4.5. Les snapshots et les données binaires de géométrie/textures sont conservés.",
+  "catalogSource": "src/domain.mjs",
+  "pose": "Pose statique livrée : bras abaissés de 82 degrés, coudes fléchis de 8 degrés, doigts de 10 degrés, paumes vers les cuisses. Les équipements sont des volumes séparés, indexés par les identifiants du jeu et par fit_persona."
+}

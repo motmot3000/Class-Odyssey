@@ -5,6 +5,15 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "start": "node server/server.mjs"
+    "dev": "node --env-file-if-exists=.env server/server.mjs --auto-port",
+    "start": "node --env-file-if-exists=.env server/server.mjs",
+    "build:items-3d": "node tools/build-items-viewer.mjs",
+    "dev:items-3d": "node tools/serve-items-3d.mjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
   }
 }

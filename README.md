@@ -4,21 +4,42 @@ Premier draft d'application web pour ludifier les cours d'anglais avec des perso
 
 ## Lancer (développement local)
 
+Utiliser Node.js 22.9 ou ultérieur. À la première utilisation de chaque clone
+ou worktree, préparer la configuration locale :
+
 ```bash
-export FOUNDER_USERNAME
-export FOUNDER_PASSWORD
-npm start
+cp .env.example .env
 ```
 
-Puis ouvrir :
+Dans `.env`, choisir `FOUNDER_USERNAME` (3 à 32 caractères : lettres minuscules,
+chiffres, points, tirets ou underscores) et renseigner `FOUNDER_PASSWORD`
+(4 à 128 caractères). Puis lancer :
+
+```bash
+npm run dev
+```
+
+Puis ouvrir l'URL annoncée par le serveur, par défaut :
 
 ```text
 http://localhost:5180
 ```
 
-Les deux variables fondateur sont obligatoires lors de la première
-initialisation. Le mot de passe ne doit jamais être ajouté au dépôt. Pour les
-données de développement, `DATA_DIR` peut pointer vers un dossier temporaire.
+Go Live utilise automatiquement `npm run dev`. Ce mode essaie le port défini
+par `PORT` dans `.env` (sinon `5180`) ; s'il est déjà occupé, le système lui
+attribue un port libre. Go Live ouvre l'URL effective annoncée par le serveur.
+`npm start` permet de démarrer sur un port strictement fixé et signale un conflit
+si celui-ci est occupé.
+
+`npm run dev` et `npm start` chargent automatiquement le fichier `.env`, ignoré
+par Git. Les variables déjà exportées dans le terminal sont prioritaires.
+Les deux identifiants servent à créer le compte administrateur lors de la
+première initialisation ; modifier `.env` ensuite ne réinitialise pas son mot
+de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
+
+Les données locales sont conservées dans `server/data/`, propre à chaque
+worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
+temporaire.
 
 ## Deux interfaces
 

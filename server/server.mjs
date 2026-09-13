@@ -380,8 +380,22 @@ export function startServer(options = {}) {
   const server = createGameServer(options);
   const port = Number(options.port ?? process.env.PORT ?? 5180);
   const host = options.host ?? process.env.HOST ?? "127.0.0.1";
-  server.listen(port, host, () => console.log(`Game of More backend on http://${host}:${port}`));
+  const retryOnFreePort = (error) => {
+    if (error.code !== "EADDRINUSE") throw error;
+    console.warn(`Port ${port} déjà utilisé ; attribution automatique d'un port libre.`);
+    // Bind directly to an OS-assigned port, avoiding a probe-then-listen race.
+    server.listen(0, host);
+  };
+  if (options.autoPort && port !== 0) server.once("error", retryOnFreePort);
+  server.once("listening", () => {
+    server.off("error", retryOnFreePort);
+    const urlHost = host.includes(":") ? `[${host}]` : host;
+    console.log(`Game of More backend on http://${urlHost}:${server.address().port}`);
+  });
+  server.listen(port, host);
   return server;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) startServer();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  startServer({ autoPort: process.argv.includes("--auto-port") });
+}

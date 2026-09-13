@@ -27,7 +27,8 @@ const TYPE_LABEL = {
   hat: "Hat",
   weapon: "Item",
   face: "Face",
-  hair: "Hair",
+  hair: "Hair Cut",
+  hairColor: "Hair Color",
   title: "Title",
   tone: "Skin",
   bespoke: "Custom"

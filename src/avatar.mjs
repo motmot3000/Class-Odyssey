@@ -29,14 +29,20 @@ const TONES = {
   tan:    { base: "#C68A55", dark: "#A16A3A", lite: "#DFAE7E", line: "#63381C" },
   brown:  { base: "#9A6440", dark: "#77482B", lite: "#B98056", line: "#472817" },
   dark:   { base: "#6B452F", dark: "#4C2E1E", lite: "#875A3F", line: "#2E1810" },
-  "blue-skin":     { base: "#6096C7", dark: "#416D99", lite: "#8BC0E5", line: "#244566" },
-  "red-skin":      { base: "#B65B57", dark: "#873E3C", lite: "#D98279", line: "#572523" },
-  "green-skin":    { base: "#638F68", dark: "#426748", lite: "#8AB48C", line: "#29432D" },
   "tattooed-skin": { base: "#C68A55", dark: "#A16A3A", lite: "#DFAE7E", line: "#3E315D" },
+  "yakuza-tattoos": { base: "#C68A55", dark: "#A16A3A", lite: "#DFAE7E", line: "#3E315D" },
   "golden-skin":   { base: "#D8AD4A", dark: "#A77A28", lite: "#FFE28A", line: "#704A12" }
 };
 
-const HAIR = { base: "#402D1D", dark: "#291C11", lite: "#5F4530", line: "#1B1209" };
+const HAIR_PALETTES = {
+  "brown-hair": { base: "#402D1D", dark: "#291C11", lite: "#5F4530", line: "#1B1209" },
+  "blond-hair": { base: "#D2AF5E", dark: "#A5813E", lite: "#EAD18C", line: "#6D512B" },
+  "black-hair": { base: "#24242C", dark: "#14141C", lite: "#444451", line: "#0D0D14" },
+  "white-hair": { base: "#E6E3DC", dark: "#B3B3B9", lite: "#FAF8F1", line: "#747481" },
+  "red-hair":   { base: "#A84635", dark: "#753024", lite: "#D66E4E", line: "#4E201B" },
+  "green-hair": { base: "#55815F", dark: "#35583E", lite: "#80AD83", line: "#203A29" },
+  "blue-hair":  { base: "#487FB8", dark: "#2D527F", lite: "#7CA9D5", line: "#1D3554" }
+};
 
 /* Couleurs de tunique, tenues en sourdine : c'est la sourdine qui donne
    l'effet « classe ». Pas de primaires saturées. */
@@ -62,7 +68,7 @@ const WOOD    = { base: "#7A5A38", dark: "#573F26", lite: "#96754C", line: "#2E2
 
 const MATERIAL_LINES = new Map();
 for (const material of [
-  ...Object.values(TONES), HAIR, ...Object.values(CLOTHS), CLOAK,
+  ...Object.values(TONES), ...Object.values(HAIR_PALETTES), ...Object.values(CLOTHS), CLOAK,
   MAIL, STEEL, GOLD, LEATHER, HOSE, WOOD
 ]) {
   for (const color of [material.base, material.dark, material.lite]) {
@@ -108,10 +114,7 @@ const HAIRCUTS = {
   short: "court",
   long: "longue",
   bald: "chauve",
-  "buzz-cut": "buzz",
   curly: "boucle",
-  spiky: "epis",
-  "monk-cut": "moine",
   braided: "tresse",
   "royal-hair": "royal"
 };
@@ -293,6 +296,7 @@ function mirrorFor(value) {
 function heroShapes(opt) {
   const T = TONES[opt.tone] || TONES.light;
   const C = CLOTHS[opt.cloth] || CLOTHS.lin;
+  const hair = HAIR_PALETTES[opt.hairColor] || HAIR_PALETTES["brown-hair"];
   const mailFill = `url(#mail-${opt.id})`;
   const head = opt.head || "none";
   const hand = opt.hand || "none";
@@ -519,6 +523,9 @@ function heroShapes(opt) {
   S.push(p("M88,82 C88,75 112,75 112,82 L122,108 L78,108 Z", opt.mail ? mailFill : C.dark));
   S.push(p("M91,68 L109,68 L109,92 L91,92 Z", T.dark));
   S.push(ao("M88,78 C94,86 106,86 112,78 L112,88 L88,88 Z", 0.22));
+  if (opt.tone === "yakuza-tattoos") {
+    S.push(p("M94,82 C98,79 102,88 106,83 M94,86 C98,83 102,92 106,87", "none", { sw: 1.4, stroke: "#3E315D" }));
+  }
 
   /* Le bloc tête est agrandi autour de son centre. Les cheveux, expressions
      et couvre-chefs gardent ainsi exactement les mêmes points d'ancrage. */
@@ -526,14 +533,14 @@ function heroShapes(opt) {
 
   /* Les longueurs tombent DERRIÈRE la tête : la nuque les cache à la racine
      et elles n'empiètent jamais sur le visage. */
-  if (head !== "helm" && head !== "hood") H.push(...backHair(cut, opt.girl));
+  if (head !== "helm" && head !== "hood") H.push(...backHair(cut, opt.girl, hair));
 
   if (head === "hood") H.push(p("M72,58 C68,24 84,6 100,6 C116,6 132,24 128,58 C128,76 121,94 112,102 L88,102 C79,94 72,76 72,58 Z", CLOAK.base));
   H.push(p("M100,22 C116,22 124,35 123,51 C122,68 113,80 100,84 C87,80 78,68 77,51 C76,35 84,22 100,22 Z", T.base));
   H.push(ao("M121,51 C124,62 121,72 115,79 L111,74 C115,67 116,59 115,51 Z", 0.18));
 
   /* --- chevelure, posée SUR le crâne */
-  H.push(...hairShapes(cut, head, opt.girl));
+  H.push(...hairShapes(cut, head, opt.girl, hair));
 
   /* Oreilles par-dessus la coiffure : une coupe courte dégage l'oreille,
      elle ne l'avale pas. Masquées sous capuche et sous heaume. */
@@ -548,12 +555,18 @@ function heroShapes(opt) {
   }
 
   /* --- visage */
-  H.push(...faceShapes(opt.face, opt.girl, T));
+  H.push(...faceShapes(opt.face, opt.girl, T, hair));
 
   if (opt.tone === "tattooed-skin") {
     H.push(p("M82,48 L87,44 L84,52 L89,56", "none", { sw: 1.6, stroke: "#4A376B" }));
     H.push(p("M118,48 L113,44 L116,52 L111,56", "none", { sw: 1.6, stroke: "#4A376B" }));
     if (opt.face !== "transcendent") H.push(p("M96,36 L100,31 L104,36 L100,41 Z", "none", { sw: 1.4, stroke: "#4A376B" }));
+  } else if (opt.tone === "yakuza-tattoos") {
+    H.push(p("M81,55 C87,52 92,57 89,62 C87,65 83,62 85,60 C87,59 88,61 87,62 M81,62 C82,70 90,76 95,77", "none", { sw: 1.6, stroke: "#3E315D" }));
+    H.push(p("M84,66 C88,64 91,68 89,71 M87,72 C91,70 94,73 93,75", "none", { sw: 1.3, stroke: "#3E315D" }));
+    H.push(p("M113,57 C108,52 107,59 111,60 C105,62 109,66 113,63 C115,69 119,64 116,61 C122,60 119,54 115,57 C116,51 110,52 113,57 Z", "#A34F4B", { sw: 1.1, stroke: "#3E315D" }));
+    H.push(c(113.5, 59.5, 1.2, "#E2BC70", { noStroke: true }));
+    H.push(p("M116,67 C113,71 109,72 105,77 M112,71 C115,73 115,76 111,77", "none", { sw: 1.5, stroke: "#3E315D" }));
   } else if (opt.tone === "golden-skin") {
     if (opt.face !== "transcendent") H.push(p("M100,31 L105,37 L100,43 L95,37 Z", "#7FC7D9", { sw: 1.2, stroke: "#FFF4C8" }));
     H.push(c(82, 56, 2.2, "#FFF4C8", { noStroke: true }));
@@ -665,7 +678,7 @@ function heroShapes(opt) {
    direction. Sous un couvre-chef on ne dessine QUE ce qui dépasse du bord,
    sinon la coiffe flotte sur une masse qu'elle devrait écraser.          */
 
-function backHair(cut, girl) {
+function backHair(cut, girl, HAIR) {
   if (cut === "longue") {
     /* Fille : longueurs qui encadrent le visage et tombent devant l'épaule. */
     if (girl) {
@@ -681,16 +694,6 @@ function backHair(cut, girl) {
       p("M106,50 C120,58 127,78 123,104 C119,116 107,117 101,109 C109,90 109,68 100,54 Z", HAIR.dark),
       p("M103,52 C112,58 116,70 115,82 C111,74 107,64 100,56 Z", HAIR.base, { noStroke: true }),
       fold("M110,68 C115,82 116,94 113,104", HAIR.line, 1.6, 0.4)
-    ];
-  }
-
-  /* Version fille des épis : la même coupe, prolongée. C'est ce qui la rend
-     personnelle sans doubler le nombre de dessins. */
-  if (cut === "epis" && girl) {
-    return [
-      p("M84,44 C74,68 72,96 78,118 C84,124 93,123 97,116 C90,96 88,68 92,46 Z", HAIR.base),
-      p("M116,44 C126,68 128,96 122,118 C116,124 107,123 103,116 C110,96 112,68 108,46 Z", HAIR.dark),
-      fold("M82,70 C79,92 79,106 82,116", HAIR.lite, 1.6, 0.35)
     ];
   }
 
@@ -718,7 +721,7 @@ function backHair(cut, girl) {
 /* Ce qui reste visible sous un chapeau : pattes pour une coupe garçon,
    côtés du carré pour une coupe fille. Sans ça la coiffe flotte sur une
    masse qu'elle devrait écraser. */
-function underHat(girl) {
+function underHat(girl, HAIR) {
   if (girl) {
     return [
       p("M75,68 C70,56 70,46 73,36 L86,38 C84,48 81,59 75,68 Z", HAIR.base),
@@ -731,21 +734,17 @@ function underHat(girl) {
   ];
 }
 
-function hairShapes(cut, head, girl) {
+function hairShapes(cut, head, girl, HAIR) {
   /* Heaume et capuche enferment la tête : rien ne dépasse. */
   if (head === "helm" || head === "hood") return [];
   if (cut === "chauve") return [];
 
   const capped = head === "wizard" || head === "crown" || head === "tophat";
   if (capped) {
-    if (cut === "buzz") return [];
-    const S = cut === "boucle" ? [] : underHat(girl);
+    const S = cut === "boucle" ? [] : underHat(girl, HAIR);
     if (cut === "boucle") {
       S.push(c(74, 46, 7, HAIR.base), c(126, 46, 7, HAIR.dark));
       S.push(c(77, 58, 5.5, HAIR.base), c(123, 58, 5.5, HAIR.dark));
-    } else if (cut === "epis" && !girl) {
-      S.push(p("M76,36 C68,34 63,38 62,43 C68,41 73,42 76,45 Z", HAIR.base));
-      S.push(p("M124,36 C132,34 137,38 138,43 C132,41 127,42 124,45 Z", HAIR.dark));
     }
     return S;
   }
@@ -759,32 +758,6 @@ function hairShapes(cut, head, girl) {
     S.push(fold("M107,13 C114,9 122,14 121,21 C129,19 133,26 130,32", HAIR.line, 1.7, 0.4));
     S.push(fold("M68,45 C72,38 80,37 84,43", HAIR.lite, 1.6, 0.4));
     S.push(fold("M113,34 C120,29 128,34 128,42", HAIR.line, 1.6, 0.38));
-    return S;
-  }
-
-  /* ----- Épis : mèches effilées, balayées. La calotte doit couvrir le
-     sommet du crâne (y=24), sinon le cuir chevelu apparaît entre les
-     mèches et ça fait crête de punk sur un front nu. ----- */
-  if (cut === "epis") {
-    S.push(p("M76,57 C72,43 73,29 80,20 L75,4 L89,14 L95,-1 L103,13 L116,1 L115,17 L132,11 L121,30 C126,39 126,49 122,58 C120,48 116,40 110,36 C102,31 93,33 87,39 C82,44 80,50 80,58 Z", HAIR.base));
-    S.push(p("M103,13 L116,1 L115,23 C110,19 106,17 103,13 Z", HAIR.dark, { noStroke: true }));
-    S.push(p("M115,17 L132,11 L121,32 C119,26 117,21 115,17 Z", HAIR.dark, { noStroke: true }));
-    S.push(fold("M82,24 C90,18 101,18 112,24", HAIR.lite, 2, 0.55));
-    S.push(fold("M83,34 C82,42 81,49 81,55", HAIR.line, 1.5, 0.35));
-    return S;
-  }
-
-  if (cut === "buzz") {
-    S.push(p("M79,52 C75,40 77,25 86,18 C94,12 106,12 114,18 C123,25 125,40 121,52 C118,40 111,33 100,32 C89,33 82,40 79,52 Z", HAIR.dark));
-    S.push(fold("M83,30 C91,22 106,20 116,29", HAIR.lite, 1.6, 0.32));
-    [[86,25], [94,20], [103,19], [112,24], [82,35], [119,35]].forEach(([x, y]) => S.push(c(x, y, 0.8, HAIR.lite, { noStroke: true })));
-    return S;
-  }
-
-  if (cut === "moine") {
-    S.push(p("M78,58 C74,43 77,29 87,21 C94,16 106,16 113,21 C123,29 126,43 122,58 L117,50 C119,40 115,32 107,28 C99,24 90,28 85,36 C81,42 80,50 78,58 Z", HAIR.base));
-    S.push(fold("M80,38 C85,28 93,23 102,24", HAIR.lite, 1.8, 0.45));
-    S.push(fold("M113,29 C120,36 122,45 120,54", HAIR.line, 1.6, 0.4));
     return S;
   }
 
@@ -845,7 +818,7 @@ function hairShapes(cut, head, girl) {
 
 /* ---------- visage ---------- */
 
-function faceShapes(face, girl, T) {
+function faceShapes(face, girl, T, HAIR) {
   const S = [];
   const brow = (x, dir) => p(`M${x - 5},44.5 Q${x},${42.2 + dir} ${x + 5},44.5`, "none", { sw: 1.65, stroke: HAIR.dark });
   const eye = (x) => [
@@ -904,10 +877,7 @@ function faceShapes(face, girl, T) {
   S.push(p("M100,56.5 L100,63", "none", { sw: 1.6, stroke: T.line }));
   S.push(p("M100,63 C102.5,63.5 104,62.5 104.5,61", "none", { sw: 1.4, stroke: T.line }));
 
-  if (face === "grin") {
-    S.push(p("M93.5,68 C97,73.5 103,73.5 106.5,68 Z", "#8A4048", { sw: 1.6 }));
-    S.push(p("M94.5,67.5 L105.5,67.5", "none", { sw: 1.6, stroke: "#F7EEDD" }));
-  } else if (face !== "evil" && face !== "star-eyes" && face !== "transcendent") {
+  if (face !== "evil" && face !== "star-eyes" && face !== "transcendent") {
     S.push(p("M95.5,69 Q100,72 104.5,69", "none", { sw: 2, stroke: T.line }));
   }
   return S;
@@ -1108,6 +1078,7 @@ export function renderHero(pupil) {
     tone: pupil.skinTone,
     ...outfit,
     hairStyle: HAIRCUTS[pupil.hair] || "court",
+    hairColor: pupil.hairColor,
     head: HEADGEAR[pupil.hat] || "none",
     hand: HANDGEAR[pupil.weapon] || "none",
     face: pupil.face,
@@ -1128,6 +1099,7 @@ const ITEM_CROPS = {
   face: "76 30 48 52",
   evil: "76 30 48 52",
   hair: "60 2 80 80",
+  hairColor: "64 -4 72 96",
   weapon: "116 60 72 190",
   bespoke: "40 40 120 120",
   "pencil-sword": "120 48 56 184",
@@ -1142,15 +1114,12 @@ const ITEM_CROPS = {
   short: "64 -4 72 96",
   long: "56 -6 88 156",
   bald: "64 -4 72 96",
-  "buzz-cut": "64 -4 72 96",
   curly: "56 -8 88 100",
-  spiky: "58 -10 84 104",
-  "monk-cut": "64 -4 72 96",
   braided: "56 -4 88 108",
   "royal-hair": "54 -6 92 160"
 };
 
-export function renderItemArt(item) {
+export function renderItemArt(item, pupil) {
   if (item.type === "bespoke" || item.id === "custom-bespoke") {
     const glowId = safeId("bespoke-glow");
     return `<svg class="avatar item-art bespoke-art" viewBox="0 0 100 100" role="img" aria-label="${escapeXml(item.name)}">
@@ -1174,6 +1143,7 @@ export function renderItemArt(item) {
     tone: "light",
     ...OUTFITS.starter,
     hairStyle: "court",
+    hairColor: pupil?.hairColor,
     head: "none",
     hand: "none",
     face: "smile",
@@ -1189,6 +1159,7 @@ export function renderItemArt(item) {
   else if (item.type === "weapon") base.hand = HANDGEAR[item.id] || "none";
   else if (item.type === "face") base.face = item.id;
   else if (item.type === "hair") base.hairStyle = HAIRCUTS[item.id] || "court";
+  else if (item.type === "hairColor") base.hairColor = item.id;
   else if (item.type === "tone") base.tone = TONES[item.id] ? item.id : "light";
 
   /* « Aucun » n'a rien à montrer : un tiret vaut mieux qu'un aperçu trompeur. */
