@@ -194,6 +194,9 @@ export async function createHeroViewer(container, glbUrl, initialState, { onProg
 
   let pointer;
   const canvas = renderer.domElement;
+  canvas.tabIndex = 0;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', 'Aperçu 3D du héros. Utilisez les flèches gauche et droite pour le faire pivoter.');
   canvas.addEventListener('pointerdown', (event) => {
     pointer = { id: event.pointerId, x: event.clientX };
     canvas.setPointerCapture(event.pointerId);
@@ -212,6 +215,14 @@ export async function createHeroViewer(container, glbUrl, initialState, { onProg
   const release = () => { pointer = undefined; };
   canvas.addEventListener('pointerup', release);
   canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    rotating = false;
+    yaw += event.key === 'ArrowLeft' ? -0.14 : 0.14;
+    onFreeView?.();
+    requestDraw();
+  });
   canvas.addEventListener('webglcontextlost', (event) => {
     event.preventDefault();
     lost = true;

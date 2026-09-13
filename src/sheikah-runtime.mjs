@@ -12,6 +12,7 @@ let currentHost = null;
 let viewerAngle = "quarter";
 let viewerRotating = false;
 let currentTheme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+let onFreeView = () => {};
 
 function loadRuntime() {
   if (!runtime) {
@@ -39,7 +40,11 @@ function getInstance(host, look) {
       .then(({ createHeroViewer }) => createHeroViewer(host, GLB_URL, look, {
         theme: currentTheme,
         onProgress: updateProgress,
-        onError: (message) => fail(new Error(message), currentHost)
+        onError: (message) => fail(new Error(message), currentHost),
+        onFreeView: () => {
+          viewerRotating = false;
+          onFreeView();
+        }
       }))
       .then((instance) => { viewer = instance; return instance; })
       .catch((error) => { instancePromise = null; throw error; });
@@ -85,6 +90,10 @@ export function setSheikahRotation(rotating) {
 export function setSheikahTheme(theme) {
   currentTheme = theme;
   viewer?.setTheme(theme);
+}
+
+export function setSheikahFreeViewHandler(handler) {
+  onFreeView = typeof handler === "function" ? handler : () => {};
 }
 
 export function retrySheikahViewer() {
