@@ -1,0 +1,44 @@
+{
+  "boy": {
+    "geometryUnchanged": true,
+    "parts": {
+      "skin": {
+        "sha256": "d7c9ee716c12198051c2ff2d0f7a908328b24b071c064d7872fbbecdbbab1b4c",
+        "vertices": 2520
+      },
+      "eyes": {
+        "sha256": "df9fe112d1ab0259fa37e1ff6c78be032baeb83a32063a78c39d3f312b7b8f03",
+        "vertices": 418
+      },
+      "clothes": {
+        "sha256": "829101582ee6f8a6475e29faa0a6c58f8683404f270f0e22d93833cc9f4a4db0",
+        "vertices": 7499
+      },
+      "hair": {
+        "sha256": "d17415726f22b43d8774bcacf1af0c46cf821f0d92c1213885c37c7b2324baf9",
+        "vertices": 15758
+      }
+    }
+  },
+  "girl": {
+    "geometryUnchanged": true,
+    "parts": {
+      "skin": {
+        "sha256": "9cced504514c4d610d81316c837f28e8b0c8bebd3ea99cd689e487eb71d65f54",
+        "vertices": 2520
+      },
+      "eyes": {
+        "sha256": "05dcc604210e5b4820a02dba710b7c4f7157739413fce0313454bb4d84db43ac",
+        "vertices": 418
+      },
+      "clothes": {
+        "sha256": "829101582ee6f8a6475e29faa0a6c58f8683404f270f0e22d93833cc9f4a4db0",
+        "vertices": 7499
+      },
+      "hair": {
+        "sha256": "fdbb350dcee612e14591be49bcc001822c5c662314c0d8970c972c098849e503",
+        "vertices": 17940
+      }
+    }
+  }
+}

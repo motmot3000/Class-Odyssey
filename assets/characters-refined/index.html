@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personnages — détails et matières · Game of More</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../src/surface-study.css">
+  <script type="module" src="../../src/surface-study.mjs"></script>
+</head>
+<body>
+  <header><a class="brand" href="../../"><img src="../emblem.svg" width="28" height="34" alt=""><span>GAME <small>OF</small> MORE</span></a><a href="../../">Retour au jeu</a></header>
+  <main>
+    <div class="intro"><div><h1>Détails & matières.</h1><p>Une nouvelle lecture du visage, du tissu, du cuir et des cheveux.</p></div><div class="choices"><label>Personnage<select id="surface-gender"><option value="boy">Noa · garçon</option><option value="girl">Mila · fille</option></select></label><label>Carnation<select id="surface-tone"><option value="medium">Medium</option><option value="light">Light</option><option value="tan">Tan</option><option value="brown">Brown</option><option value="dark">Dark</option></select></label></div></div>
+    <div class="toolbar"><div role="group" aria-label="Présentation"><button data-mode="image" aria-pressed="true">Rendus Blender</button><button data-mode="live" aria-pressed="false">Comparer en 3D</button></div><div class="angle-controls" role="group" aria-label="Vue synchronisée"><button data-view="quarter" aria-pressed="true">Silhouette</button><button data-view="face" aria-pressed="false">Visage</button><button data-view="outfit" aria-pressed="false">Tenue</button><button data-view="back" aria-pressed="false">Dos</button></div></div>
+    <section class="comparison" aria-label="Comparaison des matières avant et après">
+      <article class="stage"><div class="stage-title"><h2>Version intégrée</h2><span>base-v2</span></div><div class="viewer" id="before-viewer" role="img" aria-label="Personnage avant la reprise des matières"><img id="before-poster" src="../characters-base/boy-medium.webp" width="512" height="896" alt="Noa, matériaux de la version intégrée"></div><p class="caption">Matières initiales</p></article>
+      <article class="stage refined"><div class="stage-title"><h2>Détails retravaillés</h2><span>surface-v3</span></div><div class="viewer" id="after-viewer" role="img" aria-label="Personnage après la reprise des matières"><img id="after-poster" src="boy-medium.webp" width="512" height="896" alt="Noa, reliefs et matériaux détaillés"></div><p class="caption">Reliefs · rugosité · fibres · détails des yeux</p></article>
+    </section>
+    <div class="status-row"><p id="surface-status" role="status" aria-live="polite">La pose et les ancrages des équipements sont conservés.</p><button id="surface-retry" hidden>Réessayer la 3D</button><a id="surface-download" href="boy-medium.glb" download>Télécharger la version détaillée .glb</a></div>
+    <section class="details"><div><h2>Visage</h2><p>Reliefs du visage restaurés, zones de peau différenciées et iris plus définis.</p></div><div><h2>Cheveux</h2><p>Fibres orientées et rugosité variable, au lieu d’un reflet uniforme.</p></div><div><h2>Vêtements</h2><p>Grain du coton, plis, coutures et réponse du cuir à la lumière.</p></div></section>
+    <p class="method">Les deux modèles utilisent la même géométrie et les mêmes ancrages. La comparaison 3D synchronise la caméra et l’éclairage pour juger les matières. Les rendus Blender montrent leur mise en scène respective.</p>
+  </main>
+  <footer><span>Game of More · étude de surfaces</span><a href="refined-characters.blend" download>Scènes Blender</a><a href="provenance.json">Sources et fabrication</a></footer>
+</body>
+</html>
