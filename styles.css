@@ -2262,6 +2262,7 @@ dialog.dialog:not([open]) {
 
 .dialog-close {
   position: absolute;
+  z-index: 1;
   top: var(--s3);
   inset-inline-end: var(--s3);
   display: grid;

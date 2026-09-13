@@ -103,7 +103,6 @@ export const WEAPONS = [
 
 export const FACES = [
   { id: "smile", name: "Smile", minLevel: 1, price: 0, description: "A happy smile." },
-  { id: "grin", name: "Grin", minLevel: 1, price: 10, description: "A friendly grin." },
   { id: "wink", name: "Wink", minLevel: 2, price: 20, description: "A clever wink." },
   { id: "cool", name: "Cool", minLevel: 3, price: 30, description: "A determined cool face." },
   { id: "evil", name: "Evil Face", minLevel: 6, price: 55, description: "Small red demon eyes and a sly smile." },
@@ -114,13 +113,20 @@ export const FACES = [
 export const HAIRS = [
   { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
-  { id: "bald", name: "Bald", minLevel: 1, price: 0, description: "A clean fully shaved head." },
-  { id: "buzz-cut", name: "Buzz Cut", minLevel: 2, price: 15, description: "A clean close-cropped haircut." },
-  { id: "curly", name: "Afro", minLevel: 2, price: 20, description: "A classic rounded afro." },
-  { id: "spiky", name: "Spiky Hair", minLevel: 3, price: 30, description: "Bold hair with sharp visible spikes." },
-  { id: "monk-cut", name: "Monk Cut", minLevel: 4, price: 40, description: "A traditional monk tonsure." },
+  { id: "bald", name: "Bald", minLevel: 1, price: 10, description: "A clean fully shaved head." },
+  { id: "curly", name: "Afro", minLevel: 2, price: 40, description: "A classic rounded afro." },
   { id: "braided", name: "Braids", minLevel: 6, price: 50, description: "Warrior braids." },
   { id: "royal-hair", name: "Royal Hair", minLevel: 10, price: 90, description: "Long curls with subtle royal jewels." }
+];
+
+export const HAIR_COLORS = [
+  { id: "brown-hair", name: "Brown", minLevel: 1, price: 0, description: "Classic brown hair." },
+  { id: "blond-hair", name: "Blond", minLevel: 3, price: 30, description: "Warm golden-blond hair." },
+  { id: "black-hair", name: "Black", minLevel: 3, price: 30, description: "Deep black hair." },
+  { id: "white-hair", name: "White", minLevel: 3, price: 30, description: "Bright silver-white hair." },
+  { id: "red-hair", name: "Red", minLevel: 5, price: 50, description: "Bold red hair." },
+  { id: "green-hair", name: "Green", minLevel: 5, price: 50, description: "Enchanted green hair." },
+  { id: "blue-hair", name: "Blue", minLevel: 5, price: 50, description: "Vivid blue hair." }
 ];
 
 export const BESPOKE_ITEMS = [
@@ -141,10 +147,8 @@ export const SKIN_TONES = [
   { id: "tan", name: "Tan Skin", color: "#d9a06b", minLevel: 1, price: 0, description: "A natural tan skin tone." },
   { id: "brown", name: "Brown Skin", color: "#b07a4f", minLevel: 1, price: 0, description: "A natural brown skin tone." },
   { id: "dark", name: "Dark Skin", color: "#7d4f33", minLevel: 1, price: 0, description: "A natural dark skin tone." },
-  { id: "blue-skin", name: "Blue Skin", color: "#6096c7", minLevel: 3, price: 30, description: "Mystical sapphire-blue skin." },
-  { id: "red-skin", name: "Red Skin", color: "#b65b57", minLevel: 4, price: 40, description: "Bold ruby-red skin." },
-  { id: "green-skin", name: "Green Skin", color: "#638f68", minLevel: 5, price: 50, description: "Enchanted emerald-green skin." },
-  { id: "tattooed-skin", name: "Tattoos", color: "#c68a55", minLevel: 8, price: 80, description: "Warrior skin marked with elegant tattoos." },
+  { id: "tattooed-skin", name: "Regular Tattoos", color: "#c68a55", minLevel: 5, price: 50, description: "Simple geometric tattoos." },
+  { id: "yakuza-tattoos", name: "Yakuza Tattoos", color: "#c68a55", minLevel: 8, price: 80, description: "Detailed wave and blossom tattoos." },
   { id: "golden-skin", name: "Golden Skin", color: "#d8ad4a", minLevel: 10, price: 100, description: "Living gold skin decorated with diamonds." }
 ];
 
@@ -154,6 +158,7 @@ export const SHOP_ITEMS = [
   ...WEAPONS.map((item) => ({ ...item, type: "weapon" })),
   ...FACES.map((item) => ({ ...item, type: "face" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
+  ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
   ...SKIN_TONES.map((item) => ({ ...item, type: "tone" })),
   ...BESPOKE_ITEMS
@@ -513,7 +518,7 @@ export function getUnlockedTitles(level) {
 
 export function getRewardsForLevel(level) {
   const rewards = SHOP_ITEMS.filter((item) => item.minLevel === level).map((item) =>
-    item.type === "title" ? `${item.name} title` : item.name
+    item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.name
   );
   if (level > 1) rewards.push("HP restored");
   return rewards;
@@ -561,6 +566,7 @@ function normalizePupil(pupil) {
   const face = FACES.some((item) => item.id === pupil.face) ? pupil.face : "smile";
   const defaultHair = gender === "girl" ? "long" : "short";
   const hair = HAIRS.some((item) => item.id === pupil.hair) ? pupil.hair : defaultHair;
+  const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
   const starterItems = SHOP_ITEMS.filter((item) => item.price === 0).map((item) => item.id);
   const ownedItems = [...new Set([
     ...starterItems,
@@ -570,6 +576,7 @@ function normalizePupil(pupil) {
     weapon,
     face,
     hair,
+    hairColor,
     skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
@@ -601,6 +608,7 @@ function normalizePupil(pupil) {
     skinTone: ownedItems.includes(skinTone) ? skinTone : "light",
     face: ownedItems.includes(face) ? face : "smile",
     hair: ownedItems.includes(hair) ? hair : defaultHair,
+    hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
 }

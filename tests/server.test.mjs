@@ -1,11 +1,63 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { createGameServer } from "../server/server.mjs";
+import { createGameServer, startServer } from "../server/server.mjs";
 
 const FOUNDER = { username: "founder.test", password: "founder-secret" };
+
+for (const { name, autoPort, dynamicPort } of [
+  { name: "startup reports the actual OS-assigned port", autoPort: false, dynamicPort: true },
+  { name: "development startup recovers from an occupied port", autoPort: true, dynamicPort: false },
+  { name: "normal startup preserves the configured port on a conflict", autoPort: false, dynamicPort: false }
+]) {
+  test(name, { timeout: 5000 }, async (t) => {
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "game-of-more-startup-"));
+    const blocker = net.createServer();
+    let server;
+    t.after(async () => {
+      if (server) await new Promise((resolve) => server.close(resolve));
+      await new Promise((resolve) => blocker.close(resolve));
+      fs.rmSync(dataDir, { recursive: true, force: true });
+    });
+    const log = t.mock.method(console, "log", () => {});
+    const warn = t.mock.method(console, "warn", () => {});
+    await new Promise((resolve, reject) => {
+      blocker.once("error", reject);
+      blocker.listen(0, "127.0.0.1", resolve);
+    });
+    const occupiedPort = blocker.address().port;
+    server = startServer({
+      dataDir,
+      founderUsername: FOUNDER.username,
+      founderPassword: FOUNDER.password,
+      host: "127.0.0.1",
+      port: dynamicPort ? 0 : occupiedPort,
+      autoPort
+    });
+    if (!autoPort && !dynamicPort) {
+      const error = await new Promise((resolve) => server.once("error", resolve));
+      assert.equal(error.code, "EADDRINUSE");
+      assert.equal(server.listening, false);
+      assert.equal(log.mock.callCount(), 0);
+      assert.equal(warn.mock.callCount(), 0);
+      return;
+    }
+    await new Promise((resolve) => server.once("listening", resolve));
+    const port = server.address().port;
+    assert.ok(port > 0);
+    assert.notEqual(port, occupiedPort);
+    assert.deepEqual(log.mock.calls.map((call) => call.arguments), [
+      [`Game of More backend on http://127.0.0.1:${port}`]
+    ]);
+    assert.equal(warn.mock.callCount(), autoPort ? 1 : 0);
+    const response = await fetch(`http://127.0.0.1:${port}/api/health`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true });
+  });
+}
 
 async function fixture({ legacyState, rateLimit } = {}) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "game-of-more-"));

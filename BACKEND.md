@@ -37,6 +37,13 @@ du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
 configurables ; le conteneur utilise `HOST=0.0.0.0`, tandis que son port est
 publié uniquement sur la boucle locale du VPS.
 
+En développement local, `npm run dev` (utilisé par Go Live) et `npm start`
+chargent automatiquement le fichier `.env` à la racine du worktree. Copier `.env.example`
+vers `.env` et y renseigner les identifiants avant le premier démarrage, comme
+décrit dans `README.md`. Les variables déjà exportées restent prioritaires.
+Le mode de développement choisit automatiquement un port libre si le port
+configuré est occupé et affiche l'URL effective.
+
 Au premier démarrage, `data/state.json`, s'il existe, est copié atomiquement
 dans l'état du compte fondateur (`admin`). Le fichier d'origine n'est renommé
 en `state.json.migrated` qu'après l'écriture durable de l'index des comptes. Il

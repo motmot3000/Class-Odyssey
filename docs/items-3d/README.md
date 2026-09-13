@@ -1,0 +1,243 @@
+# Première collection d’équipements 3D
+
+Ouvrir **http://localhost:5201/items-3d.html**.
+
+```sh
+npm ci
+npm run build:items-3d
+npm run dev:items-3d
+```
+
+Le serveur de l’atelier est en lecture seule. Son port par défaut est 5201
+(`PORT` permet de le changer). Les comptes et les données des classes ne sont
+pas nécessaires pour essayer les équipements.
+
+## Base livrée et ajustement actuel
+
+La base stabilisée **`base-v2-2026-09` est livrée et intégrée**, après
+autorisation du réajustement. Les entrées sont les copies exactes
+`assets/items-3d/sources/boy-medium.glb`, `girl-medium.glb` et `manifest.json`,
+issues de `test-modelisation/assets/characters-base/`. Seules les deux bases
+**medium** sont intégrées, pas les dix carnations de la livraison.
+Le manifeste du catalogue conserve la révision, la pose et les SHA-256 sources.
+
+Pose livrée : bras abaissés de **82° depuis T**, coudes fléchis de **8°**, doigts
+de **10°**, paumes vers les cuisses ; glTF en mètres, +Y vertical, +Z face,
+origine au sol. Le corps avec nuque soudée et ses mains naturelles est importé
+entier. Les anciens morceaux de mains à prise sculptée sont abandonnés : les
+mains restent dans leur pose naturelle, sans fermeture animée autour des objets.
+Les crédits **Nintendo / The Models Resource — Trikeboy** et les adaptations
+sont conservés dans `assets/items-3d/provenance.json`.
+
+Les cheveux source sont filtrés via `cosmetic_slot` et remplacés par les cinq
+coupes affinées. Chaque sexe réutilise son haut source à manches naturelles ;
+l’ajustement du torse ignore les intersections de manches plus proches lors
+des projections, et les épaulières partent des ancrages d’épaule. `fit_persona`
+filtre chaque pièce selon le personnage. Les lames reposent vers le bas selon
+le quaternion de main, le bouclier longe l’extérieur de l’avant-bras gauche ;
+lanterne et baguette ont des angles de dégagement, le livre est aminci.
+
+## Contenu de cette version
+
+Les sélections utilisent directement les identifiants et les prix de
+`src/domain.mjs` :
+
+- **7 tenues** : Scout, Ranger, Mage, Warrior, Knight, Archmage, King.
+- **8 couvre-chefs** : Goggles, Sunglasses, Beret, Wizard Hat, King’s Crown,
+  Helmet, Classy Hat, Royal Crown.
+- **7 ensembles d’objets** : Shield, Lantern, Magic Book, Daggers, Sword,
+  Wand, Swords & Shield.
+- **5 coiffures avec géométrie** : Short Hair, Long Hair, Afro, Braids,
+  Royal Hair. Bald retire les cheveux.
+- **7 couleurs de cheveux** : Brown, Blond, Black, White, Red, Green, Blue.
+- No Hat et Empty Hands retirent les objets de leur emplacement.
+
+Soit **27 modèles équipables**, avec plusieurs pièces nommées par modèle et
+des ajustements par sexe. Les carnations sont celles des deux bases medium.
+
+Les tenues comportent de vrais volumes : jupes de tunique, capes, plastrons,
+épaulières, jambières, mantelet et col. Les anneaux de ceinture suivent la
+surface du haut de référence. Les coiffures disposent des variantes `open`,
+`covered` et `crowned` ; le casque masque les cheveux. Les mains naturelles
+de la base livrée sont conservées.
+
+### Finition actuelle des cheveux et couvre-chefs
+
+Les cinq coupes utilisent des mèches Catmull effilées et aplaties, avec de fins
+brins ; les tresses sont entrelacées en continu et l’Afro est sculpté par bruit,
+sans gros amas de sphères. Wizard Hat et Classy Hat ont des bords annulaires
+avec une véritable ouverture ; le béret est ajusté et
+incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`
+pour les cinq coupes** : ajustement radial progressif au niveau du bandeau
+métallique, en conservant le sommet et les longueurs.
+
+`manifest.json.headFit` conserve l’ancien espace de construction `HEAD_FIT`
+(assise à 1,692 m) ; **`headFits` décrit sa transformation vers chaque base
+livrée**, à partir de l’ellipse `hat_seat` et de la marge des cheveux.
+Les ancrages canoniques sont `hat_seat`, `grip_right`, `grip_left`, `wrist_left`
+et `back`. Les pièces attachées conservent la position et le quaternion exacts
+du manifeste source dans `attachment_origin` / `attachment_quaternion`, avec
+`template_to_character` pour la transformation, en axes glTF. L’ancien
+`hat-seat` fixe du snapshot V1 n’est plus le contrat d’attache courant.
+
+## Essayer, comparer et exporter
+
+- Les quatre ensembles Ranger / Mage / Knight / King donnent un point de départ.
+- Chaque catégorie reste indépendante et tous les articles sont essayables,
+  quel que soit leur niveau dans le jeu. Aucun achat n’est effectué.
+- Vues face, trois quarts, dos, tête et objet ; glissement pour tourner,
+  rotation automatique uniquement à la demande ; vue ¾ à 0,55 rad.
+- La vue Tête recadre automatiquement les limites tête/cheveux/couvre-chef
+  après sélection, en utilisant les `head_bounds` enregistrées sur le corps
+  entier ; le canvas est redessiné immédiatement au redimensionnement.
+  Les matériaux de cheveux conservent trois nuances : base, ombre (×0,78)
+  et reflet (×1,18) pour chaque couleur choisie.
+- « Voir la référence 2D » montre le rendu SVG actuel avec la même sélection.
+- L’adresse contient la combinaison : recharger ou partager cette URL restitue
+  les choix, après validation des identifiants.
+- Export GLB du **personnage équipé** ou des **équipements seuls**, à leurs
+  coordonnées d’ajustement. Les autres variantes sont exclues de l’export.
+- Un rendu Blender réel sert de secours si WebGL ou le téléchargement échoue.
+- Le lien de référence de l’en-tête télécharge le véritable fichier
+  `boy-medium.glb` ou `girl-medium.glb` selon le personnage sélectionné.
+
+Le modèle est en **pose statique évaluée**, comme les bases livrées.
+Il ne contient pas de rig d’animation. Les groupes du catalogue
+et leurs surfaces restent éditables dans `catalogue.blend`.
+
+## Reconstruction Blender
+
+Avec Blender 4.5 :
+
+```sh
+blender --background --factory-startup --python tools/build-items-3d.py
+npm run build:items-3d
+npm test
+```
+
+Le script part des deux snapshots medium locaux et recrée :
+
+| Fichier | Usage |
+| --- | --- |
+| `assets/items-3d/catalogue.glb` | Collection web avec toutes les alternatives, environ 27 Mo |
+| `assets/items-3d/catalogue.blend` | Scène éditable compressée, studio et combinaison de départ, environ 9 Mo |
+| `assets/items-3d/preview.png` | Rendu Cycles de la combinaison de départ |
+| `assets/items-3d/manifest.json` | Inventaire, révision/pose/SHA sources et ajustements `headFits` |
+| `assets/items-3d/web/` | Modules navigateur compilés avec Three.js local |
+
+La modélisation utilise les mètres, Z vertical et face vers −Y dans Blender.
+L’export glTF est en Y vertical, face vers +Z. Les propriétés `shop_slot`,
+`shop_id`, `hat_fit` et `fit_persona` pilotent la visibilité ; les identifiants sont identiques
+à ceux du catalogue du jeu.
+
+Compatibilité d’import Blender : les GLB livrés comportent des scènes vides
+sans `nodes` et des nœuds hérités inaccessibles que Blender importe néanmoins.
+Le constructeur extrait temporairement le seul graphe de la scène active par
+défaut et remappe nœuds/scènes. Il rejette les nœuds actifs liés à un skin, puis
+retire les skins et animations inutilisés. Tous les octets BIN de géométrie et
+texture, les snapshots originaux et leurs SHA sont conservés ; la branche
+productrice n’est pas modifiée.
+
+## Vérification
+
+`tests/items-3d.test.mjs` lit le vrai fichier GLB et vérifie sa couverture du
+catalogue, ses dimensions après transformations, les combinaisons de coiffure
+et couvre-chef pour les deux personnages, les ancrages des objets, l’exclusion du
+corps pour l’export d’items et la validation des URLs partagées.
+
+### Base-v2 — bilan actuel rapporté
+
+Résultats fournis après réajustement, **non rejoués pour cette documentation** :
+
+- **58 tests passés** : SHA et pose sources, conservation pour les deux sexes
+  de l’ensemble des positions de peau quantifiées à **10⁻⁵** (pas une preuve
+  de topologie intégrale), positions/quaternions de chaque attache conformes au
+  manifeste livré, 27 modèles, 108 combinaisons et dégagement de toutes les
+  couronnes dans le repère inverse du gabarit. `git diff --check` : réussi.
+- Export navigateur réel **Mila / King / Long Hair bleu / Royal Crown /
+  Swords & Shield** : personnage **2 794 344 octets, 137 meshes**, dont
+  **5 primitives de peau**, toutes les pièces `female`, révision v2 ;
+  équipements **2 403 232 octets, 128 meshes**, tous `female`, sans peau,
+  `core` ni `persona`. Cheveux `crowned`, ancrages `wrist_left`, `grip_right`,
+  `back` et trois nuances conservés.
+- Téléchargement de la bonne base selon le sexe, comparaison SVG et restauration
+  URL : validés. Bureau **1440 × 1000** et mobile **390 × 844**, commandes sticky
+  comprises : sans débordement horizontal.
+- Détecteur exécuté une fois : `[]`, mais **DEGRADED** (analyse regex, parser
+  manquant). Aperçu réellement rendu dans Blender, provenance embarquée :
+  **1 raster, 0 manquant**.
+
+**Nouvelle revue indépendante : SHIP, sans correction demandée**, sur les
+sources et captures finales. Verdict limité à cette proposition statique ;
+il ne certifie pas l’absence de collisions pour tous les angles et ensembles.
+
+Preuves fournies dans `/tmp/opencode/` : `basev2-desktop-final.png`,
+`basev2-mobile-final.png`, `basev2-mobile-controls-final.png` ;
+`basev2-collection-first.png` et
+`basev2-{male,female}-{ranger,mage,knight,king}-first.png` montrent bien la
+**géométrie finale** (seule la copie du lien de référence a changé ensuite).
+Les autres `basev2-*-first.png` couvrent grimoire, dagues, crâne chauve et
+détail tête/couronne. Captures temporaires, non copiées ici.
+
+### Historique — finition cheveux et couvre-chefs avant base-v2
+
+Résultats de l’ancien snapshot, **non rejoués pour cette documentation** :
+
+- **56 tests passés**, dont contrôle des sommets du vrai GLB binaire pour le
+  dégagement radial du bandeau et la conservation de la hauteur du sommet des
+  cinq coupes ; couverture des 108 combinaisons et 27 identifiants.
+  Bundle et `git diff --check` : **réussis**.
+- Export navigateur réel **Long Hair bleu + Royal Crown** : **49 meshes de
+  cheveux, tous `crowned`**, ancrages présents et trois nuances conservées.
+- Bureau **1440 × 1000**, mobile **390 × 844**, captures des commandes sticky :
+  validés sans débordement horizontal. Détecteur sur le JS modifié : `[]` ;
+  scan de provenance embarquée PNG : **1 raster, 0 manquant**.
+
+Le même reviewer indépendant a d’abord signalé **FIX** pour les intersections
+avec les bandeaux des couronnes. Après une seule passe de correction, son
+verdict sur ce point était **RESOLVED / SHIP** pour Noa/Mila de ce snapshot : aucun
+blocage restant dans ce périmètre. Il ne s’agit pas d’une nouvelle revue
+complète du prototype, ni de la validation base-v2 rapportée ci-dessus.
+
+Captures fournies dans `/tmp/opencode/` : `refined-hair-contact-final.png`,
+`refined-hats-contact-final.png`, `refined-desktop-final.png`,
+`refined-mobile-final.png`, `refined-mobile-controls-final.png`,
+`refined-celestial-crown-final.png`, `refined-afro-crown-final.png` et
+`refined-gold-crown-final.png` (preuves temporaires, non copiées ici).
+
+### Historique V1 — bilan rapporté avant la finition
+
+Résultats historiques, **non rejoués ici** : les 55 tests, comptes et tailles
+d’export ci-dessous décrivent la V1, pas les géométries actuelles.
+
+- `npm test` : **55 tests passés**, dont lecture du vrai GLB, couverture des
+  27 identifiants, dimensions en coordonnées monde, 108 combinaisons
+  couvre-chef × coiffure × personnage, filtres d’export, prises et URLs.
+- `npm run build:items-3d` : **réussi**. Dans le navigateur, **37 choix**
+  sélectionnés : 7 tenues, 9 couvre-chefs, 8 objets, 6 coiffures, 7 couleurs
+  (choix de retrait inclus).
+- Exports GLB réels de **Mila / Mage / Wizard Hat / Wand / Braids bleues**
+  téléchargés et parsés : personnage équipé **99 meshes, 2 305 708 octets**,
+  slots `hand/outfit/hair/hat/weapon/core/persona` ; équipements seuls
+  **82 meshes, 1 866 196 octets**, slots `outfit/hair/hat/weapon`, sans corps.
+  Le matériau bleu des cheveux est conservé.
+- Comparaison SVG, arrêt de rotation sur vue prédéfinie, état URL après
+  rechargement, poster de secours sur GLB bloqué et reprise : **validés**.
+  Mobile **390 × 844 sans débordement horizontal** ; bureau **1440 × 1000**.
+
+Finition indépendante V1 : **SHIP**, première proposition d’équipements statiques,
+aucune correction bloquante. La racine brune du cuir chevelu avec cheveux blancs
+était consignée comme limitation de texture héritée **non bloquante**.
+Détecteur V1 dégradé
+(parser manquant), un avertissement Inter hérité sans action à entreprendre.
+Le crédit Nintendo / Trikeboy reste applicable au corps ; aucune intégration
+d’animation n’est revendiquée. Direction et limites : [DESIGN.md](DESIGN.md).
+
+Captures fournies dans `/tmp/opencode/` : `equipment-desktop-final.png`,
+`equipment-mobile-final.png`, `equipment-ranger-final.png`,
+`equipment-mage-final.png`, `equipment-knight-final.png`,
+`equipment-king-final.png`, `equipment-king-back-final.png` et
+`equipment-hair-mobile-final.png` (preuves temporaires, non copiées ici).
+Le snapshot source V1 était `assets/items-3d/reference.glb`, remplacé comme
+entrée du constructeur par les deux fichiers `sources/*-medium.glb`.
+`preview.png` reste un rendu Blender réel avec son sidecar `preview.png.json`.

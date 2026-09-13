@@ -12,7 +12,8 @@ export const SHOP_CATEGORIES = [
   { type: "outfit", label: "Outfits" },
   { type: "hat", label: "Hats" },
   { type: "weapon", label: "Items" },
-  { type: "hair", label: "Hair" },
+  { type: "hair", label: "Hair Cut" },
+  { type: "hairColor", label: "Hair Color" },
   { type: "face", label: "Faces" },
   { type: "title", label: "Titles" },
   { type: "tone", label: "Skins" },
@@ -104,7 +105,7 @@ function renderShopItem(item, pupil) {
         data-action="preview-item"
         data-item-id="${escapeHtml(item.id)}"
         aria-label="Preview ${escapeHtml(item.name)}"
-      >${renderThumb(item)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
+      >${renderThumb(item, pupil)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
       <div class="shop-item-text">
         <strong>${escapeHtml(item.name)}</strong>
         <small>${meta}</small>
@@ -121,9 +122,9 @@ function renderShopItem(item, pupil) {
   `;
 }
 
-function renderThumb(item) {
+function renderThumb(item, pupil) {
   if (item.type === "title") {
     return `<span class="title-chip title-${item.id}">${escapeHtml(item.name)}</span>`;
   }
-  return renderItemArt(item);
+  return renderItemArt(item, pupil);
 }

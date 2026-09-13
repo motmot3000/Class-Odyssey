@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "title": "Design System: Les équipements en 3D — Noa & Mila",
+  "extensions": {
+    "motion": [
+      { "name": "control-transition", "value": "background-color 120ms, border-color 120ms", "purpose": "Retour des boutons et du sélecteur ; supprimé en mouvement réduit." },
+      { "name": "rotation", "value": "0.27rad/s", "purpose": "Rotation volontaire, arrêtée par une vue prédéfinie ou un glissement." }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "1050px" },
+      { "name": "mobile", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Exporter la combinaison",
+      "kind": "button",
+      "refersTo": "button-export",
+      "description": "Action principale, occupée pendant la préparation du GLB.",
+      "html": "<button class=\"ds-export\" type=\"button\">Exporter cette combinaison</button>",
+      "css": ".ds-export{font:inherit;font-size:13px;background:var(--accent,#31674f);color:#fff;border:1px solid var(--accent,#31674f);border-radius:7px;padding:12px;width:100%;min-height:44px;cursor:pointer;transition:background-color 120ms,border-color 120ms}.ds-export:hover:not(:disabled){background:#285941}.ds-export:focus-visible{outline:2px solid var(--accent,#31674f);outline-offset:4px}.ds-export:disabled{opacity:.55;cursor:wait}@media(prefers-reduced-motion:reduce){.ds-export{transition:none}}"
+    },
+    {
+      "name": "Pièce du catalogue",
+      "kind": "custom",
+      "refersTo": "equipment-choice",
+      "description": "Rangée sélectionnée avec point, niveau, état textuel et prix.",
+      "html": "<button class=\"ds-choice\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-dot\" aria-hidden=\"true\"></span><span><strong>Ranger</strong><small>Niveau · Équipé</small></span><span class=\"ds-price\">Prix du jeu</span></button>",
+      "css": ".ds-choice{font:inherit;color:var(--ink,#273e35);display:grid;grid-template-columns:17px minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;border:0;border-bottom:1px solid var(--line,#d3dccd);border-radius:0;padding:13px 11px;background:transparent;min-height:61px;width:100%;cursor:pointer}.ds-choice[aria-pressed=true],.ds-choice:hover{background:var(--selected,#e2ebdc)}.ds-choice:focus-visible{outline:2px solid var(--accent,#31674f);outline-offset:4px}.ds-dot{box-sizing:border-box;width:12px;height:12px;border:1px solid #8c9b81;border-radius:50%}.ds-choice[aria-pressed=true] .ds-dot{border:3px solid var(--accent,#31674f);background:var(--surface,#fafbf6)}.ds-choice strong{display:block;font-size:13px;font-weight:650}.ds-choice small{display:block;margin-top:3px;font-size:11px;color:var(--muted,#596b60)}.ds-price{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}"
+    },
+    {
+      "name": "Type d’export",
+      "kind": "input",
+      "refersTo": "export-select",
+      "description": "Sélecteur natif des deux périmètres d’export statique.",
+      "html": "<label class=\"ds-label\" for=\"ds-export-kind\">Télécharger en 3D</label><select class=\"ds-select\" id=\"ds-export-kind\"><option>Personnage équipé (.glb)</option><option>Équipements seuls (.glb)</option></select>",
+      "css": ".ds-label{display:block;font-size:12px;font-weight:650;margin-bottom:8px;color:var(--ink,#273e35)}.ds-select{font:inherit;font-size:12px;color:var(--ink,#273e35);box-sizing:border-box;width:100%;padding:10px;border:1px solid var(--line,#d3dccd);border-radius:7px;background:var(--surface,#fafbf6);min-height:44px;transition:background-color 120ms,border-color 120ms}.ds-select:focus-visible{outline:2px solid var(--accent,#31674f);outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-select{transition:none}}"
+    }
+  ]
+}
