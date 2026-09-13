@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-12",
+  "title": "Design System: Le veilleur des sous-bois — SVG",
+  "extensions": {
+    "colorMeta": {
+      "base-shirt": { "role": "primary", "displayName": "Haut simple — arrêt intermédiaire de base-shirt-color", "tonalRamp": ["#54736B", "#6A8A80", "#809D93"] },
+      "base-trouser": { "role": "neutral", "displayName": "Pantalon ardoise — arrêt sombre de base-trouser-color", "tonalRamp": ["#374749", "#515D5D"] },
+      "base-shoe": { "role": "neutral", "displayName": "Chaussures sobres — arrêt sombre de base-shoe-color", "tonalRamp": ["#4B4438", "#78654E"] },
+      "forest": { "role": "primary", "displayName": "Forêt — arrêt intermédiaire de cape-color", "tonalRamp": ["#203B33", "#2C493D", "#3D6251"] },
+      "skin": { "role": "secondary", "displayName": "Carnation — arrêt intermédiaire de skin-color", "tonalRamp": ["#BC885F", "#D6A87D", "#E7BE94"] },
+      "leather": { "role": "secondary", "displayName": "Cuir — arrêt intermédiaire de leather-color", "tonalRamp": ["#4D392B", "#705036", "#896141"] },
+      "brass": { "role": "tertiary", "displayName": "Laiton — arrêt intermédiaire de brass-color", "tonalRamp": ["#967243", "#C1A16B", "#E4CE98"] },
+      "vector-action": { "role": "primary", "displayName": "Action SVG" },
+      "action-ink": { "role": "neutral", "displayName": "Encre de l’action" },
+      "selector-bg": { "role": "neutral", "displayName": "Fond des sélecteurs" },
+      "selector-ink": { "role": "neutral", "displayName": "Texte des sélecteurs" }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Titre d’inspection", "purpose": "Personnage de base. / Rôdeur, en SVG. / Rôdeuse, en SVG. — 24px à 700px et moins; seule la taille locale est extraite." },
+      "selector": { "displayName": "Sélecteurs de variante", "purpose": "10px entre 701 et 1000px, 12px à 700px et moins; famille héritée du studio." }
+    },
+    "depth": {
+      "stageBackground": "radial-gradient(ellipse at 51% 46%,#34483e,#14232b 75%)",
+      "drawing": "Dégradés verticaux, modelé radial du visage et ombre au sol; cape et halo de lanterne réservés aux variantes équipées. Aucun motif de tissage ni filtre de flou."
+    },
+    "motion": [
+      { "name": "portrait-hover", "value": "transform 500ms cubic-bezier(.16,1,.3,1)", "purpose": "Image à scale(1.025) au survol." },
+      { "name": "card-scroll", "value": "smooth", "purpose": "Ouverture depuis la carte vers l’introduction; instant avec prefers-reduced-motion: reduce dans le JavaScript." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-max", "value": "700px" },
+      { "name": "compact-max", "value": "1000px" },
+      { "name": "wide-min", "value": "1550px" }
+    ],
+    "scope": {
+      "sources": ["assets/character-lab/ranger-vector.svg", "assets/character-lab/character-base-male.svg", "assets/character-lab/character-base-female.svg", "assets/character-lab/ranger-feminine.svg", "tools/svg/build-character-variants.py", "tools/svg/base-parts.svg", "src/character-svg-variants.mjs", "src/character-svg-variants.css", "src/character-vector-lab.css", "src/character-lab.mjs", "character-lab.html", "package.json"],
+      "extraction": "Illustrations, portrait, carte, sélecteurs, comparaison de source et inspection SVG; styles locaux et comportements SVG uniquement.",
+      "componentPreviews": "Extraits sémantiques statiques avec styles locaux; les comportements dynamiques sont décrits et les propriétés UI héritées utilisent des fallbacks du studio.",
+      "validation": "SVG uniquement; page globale, 3D et PNG hors verdict."
+    },
+    "svg": {
+      "editableSources": ["assets/character-lab/ranger-vector.svg", "tools/svg/base-parts.svg"],
+      "build": {
+        "command": "npm run build:svg",
+        "script": "python3 tools/svg/build-character-variants.py",
+        "outputDirectory": "assets/character-lab/",
+        "exports": ["character-base-male.svg", "character-base-female.svg", "ranger-feminine.svg"],
+        "behavior": "Partage le visage du rôdeur source, assemble les pièces de base et féminines, élague les defs inutilisés; le rôdeur masculin reste la source éditable. Les trois exports autonomes conservent des tracés natifs."
+      },
+      "defaultVariant": "male/base",
+      "variants": [
+        { "key": "male/base", "asset": "character-base-male.svg", "title": "Base neutre", "gender": "male", "outfit": "base", "viewCount": 3 },
+        { "key": "female/base", "asset": "character-base-female.svg", "title": "Base neutre", "gender": "female", "outfit": "base", "viewCount": 3 },
+        { "key": "male/ranger", "asset": "ranger-vector.svg", "title": "Rôdeur", "gender": "male", "outfit": "ranger", "viewCount": 4 },
+        { "key": "female/ranger", "asset": "ranger-feminine.svg", "title": "Rôdeuse", "gender": "female", "outfit": "ranger", "viewCount": 4 }
+      ],
+      "viewBox": "0 0 560 940",
+      "symmetryAxisX": 280,
+      "mirrorTransform": "translate(560 0) scale(-1 1)",
+      "mirroredTemplates": {
+        "base": ["base-leg", "base-shoe", "base-sleeve", "base-hand", "eye-template"],
+        "ranger": ["cape-left-fold", "leg-template", "boot-template", "sleeve-template", "eye-template"]
+      },
+      "face": {
+        "sharedGroup": "frontal-face",
+        "eyeTemplate": "eye-template",
+        "eyeClip": "eye-opening",
+        "iris": { "shape": "circle", "radius": 4.05, "clipped": true },
+        "pupil": { "shape": "circle", "radius": 2.1, "clipped": true },
+        "refinement": "Ovale raccourci, volume facial atténué, nez et bouche affinés; reflets des yeux posés séparément.",
+        "feminine": "Ovale et sourcils adaptés, face-volume à .08, lower-lip à .64; feminine-front-hair dans les deux tenues, feminine-back-hair en base uniquement.",
+        "baseFemaleBodyTransform": "translate(280 0) scale(.97 1) translate(-280 0)"
+      },
+      "outfits": {
+        "base": "Haut simple vert grisé, pantalon ardoise, chaussures sobres; sans équipement, capuche, cape ni accessoire.",
+        "ranger": "Capuche, cape et mantelet réguliers, tunique, bottes, sacoche et lanterne verticale; gestes des mains distincts."
+      },
+      "views": {
+        "base": { "face": "219 86 122 159", "materials": "193 237 174 278" },
+        "ranger": { "face": "209 80 142 169", "materials": "187 284 186 270", "lantern": "345 491 82 177" }
+      },
+      "imageUrls": {
+        "portraitCardAndDownload": "/assets/character-lab/{asset}",
+        "initialDetail": "/assets/character-lab/character-base-male.svg?view=full",
+        "full": "/assets/character-lab/{asset}?view=full",
+        "detail": "/assets/character-lab/{asset}?view={view}#{view}"
+      },
+      "resourceIsolation": "La query distingue les ressources image; le fragment choisit le viewBox natif sans changer l’échelle du portrait ou de la carte."
+    },
+    "interaction": {
+      "selectors": [
+        { "id": "svg-gender", "label": "Version du personnage", "options": { "male": "Masculin", "female": "Féminin" }, "default": "male" },
+        { "id": "svg-outfit", "label": "Tenue du personnage", "options": { "base": "Base neutre", "ranger": "Rôdeur" }, "default": "base" }
+      ],
+      "groupLabel": "Personnage et tenue du SVG",
+      "onChange": "Synchronise portrait, carte, titres, fiche, ALT, téléchargement et SVG actuel; réaffiche le SVG 2.0, réinitialise la bascule de source et conserve le cadrage compatible.",
+      "baseViews": ["Silhouette", "Visage", "Tenue"],
+      "rangerViews": ["Silhouette", "Visage", "Coutures", "Lanterne"],
+      "lanternInBase": "hidden et disabled; retour à full si lantern était sélectionné.",
+      "alt": {
+        "descriptionAssignment": "portrait.dataset.svgDescription = fullTitle",
+        "fullTitle": "Personnage masculin/féminin 2.0 — tenue de base/tenue de rôdeur",
+        "viewClick": "Description courante — nom générique exact du cadrage",
+        "viewNames": { "full": "silhouette complète", "face": "gros plan du visage et du regard", "materials": "gros plan de la tenue", "lantern": "gros plan de la main et de la lanterne" },
+        "variantChangeSuffix": "silhouette complète pour full, gros plan pour les détails; le clic de cadrage ajoute ensuite le nom précis."
+      },
+      "focus": "Portrait et carte focalisent #vector-title; l’onglet change le mode sans déplacer le focus. Retour vers #open-vector, ou #toggle-original si le portrait est masqué.",
+      "glbLoading": "loadViewer est réservé au mode model; le parcours SVG ne le déclenche pas."
+    },
+    "verification": {
+      "method": "Actualisation sur lecture des sources locales et preuves transmises dans la demande; revue visuelle et essais navigateur non rejoués.",
+      "reportedChecks": {
+        "provenance": "Vérifications transmises dans la demande",
+        "xmlFiles": 4,
+        "xmlValid": true,
+        "uniqueIdsPerFile": true,
+        "bitmaps": 0,
+        "unresolvedReferences": 0,
+        "baseEquipment": false,
+        "correctViews": 14,
+        "correctDownloads": 4,
+        "enterActivation": true,
+        "horizontalOverflowAt390px": false,
+        "glbLoadedInSvg": false,
+        "pageErrors": 0
+      },
+      "screenshotProvenance": "Captures validées transmises; chemins relatifs à la racine du dépôt, images non réinspectées pendant cette actualisation.",
+      "screenshots": [
+        { "path": ".impeccable/review/base-male.png", "subject": "Base masculine" },
+        { "path": ".impeccable/review/base-female.png", "subject": "Base féminine" },
+        { "path": ".impeccable/review/ranger-male.png", "subject": "Rôdeur masculin" },
+        { "path": ".impeccable/review/ranger-female.png", "subject": "Rôdeuse" },
+        { "path": ".impeccable/review/face-refined.png", "subject": "Visage affiné" },
+        { "path": ".impeccable/review/base-female-mobile.png", "subject": "Base féminine sur mobile" },
+        { "path": ".impeccable/review/base-female-detail-mobile.png", "subject": "Inspection de la base féminine sur mobile" }
+      ],
+      "independentReview": {
+        "provenance": "Revue indépendante transmise dans la demande",
+        "verdict": "ship SVG",
+        "scope": "SVG uniquement",
+        "initialReservation": "ALT génériques et ancienne copie des gros plans",
+        "correction": "Description courante incluant sexe et tenue dans dataset.svgDescription; ALT des boutons composé avec le nom générique exact du cadrage.",
+        "correctionConfirmedInLocalSources": true,
+        "reviewRerun": false,
+        "absolutePerfectionClaim": false
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Examiner le dessin",
+      "kind": "button",
+      "refersTo": "vector-action",
+      "description": "Action du portrait sélectionné; le bouton réel englobe l’illustration et focalise #vector-title, comme la carte SVG.",
+      "html": "<button class=\"ds-vector-action\" aria-label=\"Examiner le dessin SVG en détail\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10 3H3v7m11-7h7v7M3 14v7h7m11-7v7h-7\"/></svg>Examiner le dessin<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-vector-action{display:flex;align-items:center;gap:13px;white-space:nowrap;background:#c0d0a8;color:#18291f;border:0;border-radius:6px;padding:13px 19px;font:650 13px Inter,ui-sans-serif,system-ui,sans-serif;box-shadow:0 7px 20px #0005;transition:background 180ms;cursor:pointer}.ds-vector-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.ds-vector-action svg:last-child{width:17px}.ds-vector-action:hover{background:#d1debf}.ds-vector-action:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:-6px}@media(max-width:1000px){.ds-vector-action{font-size:12px;gap:8px;padding:13px}}@media(max-width:700px){.ds-vector-action{font-size:11px;padding:12px 14px}}"
+    },
+    {
+      "name": "Version et tenue du SVG",
+      "kind": "input",
+      "refersTo": "variant-selector",
+      "description": "Deux sélecteurs natifs indépendants; état initial masculin/base, labels accessibles masqués visuellement. La position absolue au-dessus du portrait appartient à la mise en page.",
+      "html": "<div class=\"ds-svg-options\" role=\"group\" aria-label=\"Personnage et tenue du SVG\"><label><span class=\"ds-svg-option-label\">Version du personnage</span><select><option value=\"male\" selected>Masculin</option><option value=\"female\">Féminin</option></select></label><label><span class=\"ds-svg-option-label\">Tenue du personnage</span><select><option value=\"base\" selected>Base neutre</option><option value=\"ranger\">Rôdeur</option></select></label></div>",
+      "css": ".ds-svg-options{display:flex;justify-content:center;gap:8px;font-family:Inter,ui-sans-serif,system-ui,sans-serif}.ds-svg-options label{display:block;min-width:0}.ds-svg-options select{max-width:100%;height:33px;border:1px solid #456051;border-radius:5px;background:#172c26;color:#dbe8d7;font:inherit;font-size:11px;padding:0 26px 0 10px;cursor:pointer;accent-color:#c0d0a8}.ds-svg-option-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.ds-svg-options select:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}@media(min-width:701px) and (max-width:1000px){.ds-svg-options{gap:5px}.ds-svg-options select{height:31px;font-size:10px;padding:0 17px 0 6px}}@media(max-width:700px){.ds-svg-options select{height:34px;font-size:12px}}"
+    },
+    {
+      "name": "Cadrages SVG natifs",
+      "kind": "nav",
+      "description": "État Visage de la base : trois boutons; en rôdeur, Tenue devient Coutures et Lanterne s’ajoute. URL isolée, ALT contextualisé et aria-pressed synchronisés par le code.",
+      "html": "<div class=\"ds-vector-views\" role=\"group\" aria-label=\"Détail à examiner dans le SVG\"><button aria-pressed=\"false\">Silhouette</button><button aria-pressed=\"true\">Visage</button><button aria-pressed=\"false\">Tenue</button><button aria-pressed=\"false\" hidden disabled>Lanterne</button></div>",
+      "css": ".ds-vector-views{display:flex;gap:3px}.ds-vector-views button{font:inherit;font-size:11px;cursor:pointer}.ds-vector-views button[hidden]{display:none}.ds-vector-views button[aria-pressed=true]{background:#405345;color:#edf4e1}.ds-vector-views button:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}@media(max-width:700px){.ds-vector-views button{font-size:11px;padding:9px 12px}}"
+    },
+    {
+      "name": "Bascule vers le SVG actuel",
+      "kind": "button",
+      "description": "Compare la version actuelle correspondant aux sélecteurs; aria-pressed et libellé alternent avec « Revenir au SVG retravaillé ». Un changement de variante réinitialise cette bascule.",
+      "html": "<button class=\"ds-vector-source\" aria-pressed=\"false\">Voir le SVG actuel</button>",
+      "css": ".ds-vector-source{background:none;border:0;color:var(--muted,#a1b4cc);padding:3px 14px;font:11px Inter,ui-sans-serif,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.ds-vector-source:hover{color:var(--ink,#eaf3ff)}.ds-vector-source:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}@media(max-width:700px){.ds-vector-source{font-size:10px}}"
+    },
+    {
+      "name": "Titre de l’inspection SVG",
+      "kind": "custom",
+      "description": "Titre de base après initialisation; devient Rôdeur, en SVG. ou Rôdeuse, en SVG. selon la tenue et la version. Cible de focus à l’ouverture depuis portrait ou carte.",
+      "html": "<h2 class=\"ds-vector-title\" tabindex=\"-1\">Personnage de base.</h2>",
+      "css": ".ds-vector-title{color:var(--ink,#eaf3ff);font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.02em;outline:none}@media(max-width:700px){.ds-vector-title{font-size:24px}}"
+    },
+    {
+      "name": "Téléchargement de la variante SVG",
+      "kind": "custom",
+      "description": "Lien sans query ni fragment vers le fichier sélectionné; exemple initial de la base masculine.",
+      "html": "<a class=\"ds-vector-download\" href=\"/assets/character-lab/character-base-male.svg\" download>Télécharger le SVG <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4\"/></svg></a>",
+      "css": ".ds-vector-download{display:flex;align-items:center;justify-content:space-between;color:#c0d0a8;text-decoration:none;font:12px Inter,ui-sans-serif,system-ui,sans-serif}.ds-vector-download svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.ds-vector-download:hover{text-decoration:underline}.ds-vector-download:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}@media(max-width:700px){.ds-vector-download{gap:9px;font-size:11px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Le veilleur des sous-bois",
+    "overview": "Personnages juvéniles debout de face, visage naturel et calme, silhouette centrée et relief discret. La base neutre masculine ouvre l’expérience; les deux versions du personnage partagent une tenue simple et peuvent retrouver la tenue d’aventure du rôdeur ou de la rôdeuse.",
+    "keyCharacteristics": ["Visage affiné, pupilles circulaires et iris clippés, pièces appariées et tracés éditables.", "Quatre variantes, deux sélecteurs natifs, bases sans équipement et cadrages isolés."],
+    "rules": [
+      { "name": "Axe 280", "body": "Conserver l’axe de construction x=280 pour le visage et les pièces appariées; les accessoires du rôdeur gardent leur asymétrie fonctionnelle.", "section": "shapes" },
+      { "name": "Ressources isolées", "body": "Utiliser `/assets/character-lab/{fichier}.svg?view=nom#nom` pour les détails et `?view=full` sans fragment pour Silhouette; la query isole le cadrage du portrait et de la carte.", "section": "components" }
+    ],
+    "dos": [
+      "**Do** Garder la base masculine par défaut, les deux bases en vêtements simples et les rôdeur/rôdeuse accessibles par les sélecteurs.",
+      "**Do** Préserver le visage affiné, l’axe 280, les templates miroir, les deux sources éditables et les trois exports reproductibles.",
+      "**Do** Synchroniser variante, cadrage, ALT, téléchargement et focus; conserver trois vues en base, quatre en rôdeur et leurs URLs isolées."
+    ],
+    "donts": [
+      "**Don't** Ajouter équipement, capuche, cape ou accessoire aux bases neutres; remplacer les tracés par un bitmap.",
+      "**Don't** Étendre le verdict SVG à la page globale, au PNG ou à la 3D, ni le présenter comme une perfection absolue."
+    ]
+  }
+}

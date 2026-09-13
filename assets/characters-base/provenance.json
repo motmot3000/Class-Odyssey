@@ -1,0 +1,15 @@
+{
+  "title": "Game of More — integrated basic boy and girl characters",
+  "date": "2026-09-13",
+  "source": "Nintendo / The Models Resource — Trikeboy; source lineage recorded in assets/wardrobe/provenance.json.",
+  "request": "Première intégration des personnages garçon et fille basiques dans l’application, correction de la nuque, des coiffures et des bras le long du corps, en coordination avec items/update.",
+  "geometry": "Evaluated base wardrobe geometry. Actual head/body neck boundary loops connected and welded, UV layers canonicalized before joining. Head and body scalp paint cleared. New separate short/bob hair meshes. No optional outfit, held item or backpack is included.",
+  "pose": "Shared items/update contract: arms lowered 82 degrees from T-pose, elbows flexed 8 degrees, fingers flexed slightly, palms toward thighs. glTF Y-up, face +Z, metres, origin at ground.",
+  "variants": "boy and girl, each in the five existing game skin tones: light, medium, tan, brown, dark.",
+  "portraits": "Actual Blender Cycles renders of the corrected GLBs at 512x896, 32 samples, transparent film, soft daylight. WebP portraits and 256x448 thumbnails derived from the PNG renders.",
+  "neckChecks": "Rear close-ups of each repaired character with hair hidden, rendered at 640x640. These validate the actual closed neck surface rather than hiding the opening behind hair.",
+  "textures": "Source albedos adapted for the existing five skin-tone settings; connected painted scalp regions removed while retaining face detail.",
+  "scripts": ["tools/blender/prepare_base_textures.py", "tools/blender/build_base_characters.py", "tools/blender/finalize_base_characters.py"],
+  "anchors": "manifest.json contains per-character local/world positions and xyzw quaternions, hat-seat ellipse and anatomical frame conventions.",
+  "credits": "The underlying source morphology is a credited derivative, not a claim of wholly original anatomy. New neck continuity, hairstyles, pose, export contract and application integration belong to this Game of More study."
+}

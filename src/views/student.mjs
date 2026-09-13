@@ -5,11 +5,10 @@
    ============================================================ */
 
 import { getNextReward, isEliminated, xpProgress } from "../domain.mjs";
-import { renderHero } from "../avatar.mjs";
+import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
 import {
   escapeHtml,
   gearOf,
-  heroStageAttributes,
   icon,
   renderHearts,
   renderCustomOrders,
@@ -116,8 +115,9 @@ export function renderStudentLocker(pupil, ui) {
       <div class="locker ${statusClass(pupil)}">
       <div class="locker-hero">
         <div class="locker-art" ${heroStageAttributes(pupil)}>
-          ${renderHero(pupil)}
+          ${renderHero(pupil, { large: true })}
           ${renderOutBadge(pupil)}
+          <button type="button" class="btn btn-sm base-character-open" data-action="zoom-pupil" data-pupil-id="${escapeHtml(pupil.id)}">${icon("expand")}<span>View in 3D</span></button>
         </div>
 
         <div class="locker-facts">

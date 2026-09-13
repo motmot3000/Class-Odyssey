@@ -39,7 +39,8 @@ de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
 
 Les données locales sont conservées dans `server/data/`, propre à chaque
 worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
-temporaire.
+temporaire. Pour lancer plusieurs branches en parallèle, choisir un `PORT`
+différent dans chaque `.env` et ouvrir l'URL correspondante.
 
 ## Deux interfaces
 

@@ -18,6 +18,7 @@ const MIME = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".glb": "model/gltf-binary",
   ".ico": "image/x-icon"
 };
 

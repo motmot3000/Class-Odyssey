@@ -6,6 +6,7 @@
 
 import { canBuyItem, getNextReward, isItemOwned, xpProgress } from "../domain.mjs";
 import { renderHero, renderItemArt } from "../avatar.mjs";
+import { renderBaseCharacterViewer, baseStageAttributes } from "../characters.mjs";
 import {
   escapeHtml,
   getItemRarity,
@@ -43,8 +44,8 @@ export function renderPupilDialog(pupil) {
   return `
     <dialog class="dialog dialog-hero ${statusClass(pupil)}" aria-label="${escapeHtml(pupil.name)}">
       <button class="dialog-close" type="button" data-action="close-dialog" aria-label="Close">${icon("close")}</button>
-      <div class="dialog-hero-art" ${heroStageAttributes(pupil)}>
-        ${renderHero(pupil)}
+      <div class="dialog-hero-art dialog-hero-art-3d" ${baseStageAttributes(pupil)}>
+        ${renderBaseCharacterViewer(pupil)}
         ${renderOutBadge(pupil)}
       </div>
       <div class="dialog-hero-facts">

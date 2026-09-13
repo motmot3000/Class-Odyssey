@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f3ed">
+  <meta name="description" content="Le vestiaire 3D Game of More : deux personnages, trois tenues et des accessoires à essayer en temps réel.">
+  <title>Le vestiaire 3D — Game of More</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/wardrobe.css">
+  <script type="module" src="/assets/wardrobe/wardrobe.js"></script>
+</head>
+<body>
+  <!-- THESIS: Make dressing the actual character immediate and legible: a large 3D figure beside a compact, ordered wardrobe.
+  MODE: Operate / character customization, with the artifact kept prominent.
+  WORLD: Game of More daylight studio, warm paper and dark green, restrained teal and rust from the authored garments.
+  STORY: Choose Noa or Mila, try one of three real garment groups, equip a belt item and optional backpack, inspect and export the visible look.
+  TRUTH: The source morphology is credited. This is a locally adapted prototype, not a claim of wholly original source geometry. -->
+  <a class="skip-link" href="#wardrobe-controls">Aller au vestiaire</a>
+  <header class="wardrobe-header">
+    <a class="brand" href="/character-lab.html"><img src="/assets/emblem.svg" alt="" width="28" height="34"><span>GAME <small>OF</small> MORE</span></a>
+    <span class="header-context">Atelier de personnages</span>
+    <a class="back-link" href="/character-lab.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg>Les autres études</a>
+  </header>
+  <main>
+    <div class="page-heading"><div><h1>Le vestiaire.</h1><p>Deux personnages. Une tenue à leur image.</p></div><button class="reset-button" id="reset-look" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a8 8 0 1 1 0 8M4 3v5h5"/></svg>Réinitialiser</button></div>
+    <div class="workbench">
+      <section class="character-stage" id="character-stage" aria-label="Personnage 3D et commandes de vue">
+        <div class="stage-heading"><div><strong id="character-name">Noa</strong><span id="look-description">Essentiel · sans accessoire</span></div><span class="render-label">3D en temps réel</span></div>
+        <div id="wardrobe-viewer" class="viewer" role="img" aria-label="Noa en tenue essentielle, vue de trois quarts"><img id="wardrobe-poster" src="/assets/wardrobe/noa-portrait.webp" width="1100" height="1400" alt="Noa : cheveux châtains courts, haut simple sauge et pantalon neutre." fetchpriority="high"></div>
+        <p class="loading-message" id="loading-message" role="status" aria-live="polite">Préparation du personnage 3D…</p>
+        <button id="retry-load" class="retry-button" hidden>Réessayer le chargement</button>
+        <div class="view-controls"><div role="group" aria-label="Angle de vue du personnage"><button data-angle="front" aria-pressed="false" disabled>Face</button><button data-angle="quarter" aria-pressed="true" disabled>¾</button><button data-angle="back" aria-pressed="false" disabled>Dos</button><button data-angle="outfit" aria-pressed="false" disabled>Tenue</button><button data-angle="face" aria-pressed="false" disabled>Visage</button></div><button id="rotate-look" aria-label="Rotation automatique" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></svg><span>Rotation</span></button></div>
+        <div class="stage-footer"><span>Glissez pour tourner</span><span id="visible-pieces">Chargement des pièces…</span></div>
+      </section>
+      <section class="wardrobe-controls" id="wardrobe-controls" aria-label="Choisir le personnage et son équipement" tabindex="-1">
+        <fieldset><legend>Personnage</legend><div class="gender-options" role="group" aria-label="Choisir un personnage"><button data-slot="gender" data-value="male" aria-pressed="true" disabled><span class="avatar-mark noa">N</span><span><strong>Noa</strong><small>Version garçon</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button><button data-slot="gender" data-value="female" aria-pressed="false" disabled><span class="avatar-mark mila">M</span><span><strong>Mila</strong><small>Version fille</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg></button></div></fieldset>
+        <fieldset><legend>Tenue</legend><div class="outfit-options" role="group" aria-label="Choisir une tenue"><button data-slot="outfit" data-value="base" aria-pressed="true" disabled><span class="garment-icon essential"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m14 8-8 5 5 9 3-2v13h12V20l3 2 5-9-8-5c-2 4-10 4-12 0Z"/></svg></span><span><strong>Essentiel</strong><small>Un haut simple, la base du personnage</small></span><span class="choice-dot"></span></button><button data-slot="outfit" data-value="explorer" aria-pressed="false" disabled><span class="garment-icon explorer"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m14 7-6 5 4 8v13h7V17Zm12 0 6 5-4 8v13h-7V17Z"/></svg></span><span><strong>Éclaireur</strong><small>Gilet bleu-vert sur coton écru</small></span><span class="choice-dot"></span></button><button data-slot="outfit" data-value="traveller" aria-pressed="false" disabled><span class="garment-icon traveller"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m14 8-7 5-2 19h7l2-11v12h12V21l2 11h7l-2-19-7-5-6 6Z"/><path d="M20 14v19m-5-8h3m4 0h3"/></svg></span><span><strong>Voyageur</strong><small>Veste terre cuite et foulard</small></span><span class="choice-dot"></span></button></div></fieldset>
+        <fieldset id="dye-field"><legend>Couleur du haut <span id="dye-name">Sauge</span></legend><div class="dye-options" role="group" aria-label="Couleur du haut essentiel"><button data-slot="dye" data-value="sage" class="dye sage" aria-label="Sauge" aria-pressed="true" disabled></button><button data-slot="dye" data-value="mist" class="dye mist" aria-label="Brume" aria-pressed="false" disabled></button><button data-slot="dye" data-value="sand" class="dye sand" aria-label="Sable" aria-pressed="false" disabled></button></div></fieldset>
+        <fieldset><legend>Objet à la ceinture</legend><div class="item-options" role="group" aria-label="Choisir un objet"><button data-slot="item" data-value="none" aria-pressed="true" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m6.4 6.4 11.2 11.2"/></svg><span>Aucun</span></button><button data-slot="item" data-value="satchel" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v12H4Zm4 0V4h8v4M4 11l8 3 8-3m-8 1v5"/></svg><span>Sacoche</span></button><button data-slot="item" data-value="lantern" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9h10l2 11H5Zm2 0V5a3 3 0 0 1 6 0v4M5 20h14M9 9v11m6-11v11"/></svg><span>Lanterne</span></button></div></fieldset>
+        <label class="backpack-option"><span><strong>Sac à dos</strong><small>Un équipement de dos indépendant</small></span><input type="checkbox" id="pack-toggle" disabled><span class="switch" aria-hidden="true"></span></label>
+        <button class="export-button" id="export-look" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>Exporter cette combinaison <span>.glb</span></button>
+        <p class="export-note">Le fichier contient uniquement le personnage et les pièces affichés.</p>
+        <p class="action-message" id="action-message" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+  </main>
+  <footer><span>GAME OF MORE <span class="footer-divider">/</span> Démo de personnalisation</span><a href="/assets/wardrobe/wardrobe.blend" download>Ouvrir la scène Blender</a><details class="credits"><summary>Sources & fabrication</summary><p>Base morphologique : Nintendo, fichiers mis à disposition par Trikeboy sur <a href="https://models.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/asset/303154/" target="_blank" rel="noreferrer">The Models Resource</a>, référencés dans le modèle Sketchfab fourni. Visages adaptés, coiffures, habits modulaires et accessoires réalisés dans Blender pour ce test Game of More.</p></details></footer>
+  <noscript><p class="noscript">Le rendu de Noa reste visible. Activez JavaScript pour utiliser le vestiaire 3D.</p></noscript>
+</body>
+</html>

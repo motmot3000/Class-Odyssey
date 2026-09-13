@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <script>
@@ -13,7 +13,7 @@
       }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Game of More — turn your English class into a medieval quest." />
+    <meta name="description" content="Game of More — transforme ton cours d'anglais en quête médiévale." />
     <meta name="theme-color" content="#0A1220" />
     <title>Game of More</title>
     <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
@@ -24,11 +24,18 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./src/characters.css" />
   </head>
   <body>
     <div id="app"></div>
     <div id="toasts" aria-live="polite"></div>
     <div id="dialog-root"></div>
+    <div id="language-switcher">
+      <button id="lang-toggle" aria-label="Changer de langue" title="Changer de langue">
+        <span id="current-lang">FR</span>
+      </button>
+    </div>
     <script type="module" src="./src/app.mjs"></script>
+    <script type="module" src="./src/i18n.mjs"></script>
   </body>
 </html>

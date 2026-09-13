@@ -1,0 +1,32 @@
+{
+  "title": "Game of More — Noa & Mila, modular wardrobe study",
+  "date": "2026-09-13",
+  "userRequest": "prépare moi une démo nickel avec quelques item, habit à tester pour voir si ça marche. tu fais style link zelda mais essaie de de différencier et t'éloigner un peu. personnage style similaire mais pas reprondruire link à l'identique et faire  un version fille",
+  "sourceGeometry": {
+    "copyright": "Nintendo — The Legend of Zelda: Breath of the Wild",
+    "archiveUploader": "Trikeboy, The Models Resource",
+    "body": "https://models.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/asset/303154/",
+    "trousers": "https://models.spriters-resource.com/wii_u/thelegendofzeldabreathofthewild/asset/303172/",
+    "referenceListing": "https://sketchfab.com/3d-models/link-the-legend-of-zelda-breath-of-the-wild-f7446b9dd7424914a713f854c14513fc",
+    "additionalReference": "https://sketchfab.com/3d-models/link-breath-of-the-wild-free-download-e1ecb04a66f24722bff0e493a8741bce",
+    "method": "The source archives publicly linked by the first listing were imported as Collada. This is a local derivative prototype, not a claim of wholly original source anatomy. The second Sketchfab model was inspected but not downloaded."
+  },
+  "adaptation": {
+    "male": "Noa: reshaped face, reduced ear tips, amber irises, recolored brows and new short chestnut hair geometry.",
+    "female": "Mila: softer/narrower facial proportions, green irises, recolored brows and new auburn bob geometry.",
+    "outfits": ["Essentiel: neutral long-sleeve cotton top", "Éclaireur: separate fitted teal waistcoat over a cream top", "Voyageur: clay-colored jacket, pocket volumes, front placket and rust scarf"],
+    "accessories": ["Separate belt satchel", "Separate belt lantern", "Independently switchable backpack and shoulder straps"],
+    "colors": ["Sage", "Mist", "Sand"],
+    "construction": "Plain shirt derived from the source torso, with added volume and thickness. Waistcoat, clothing details, hairstyles and accessories authored in Blender. A dedicated outer-surface fitting mesh prevents clothing penetration."
+  },
+  "files": {
+    "model": "wardrobe.glb",
+    "editableScene": "wardrobe.blend",
+    "portraitSources": ["noa-portrait.png", "mila-portrait.png"],
+    "portraitWebAssets": ["noa-portrait.webp", "mila-portrait.webp"]
+  },
+  "portraitProvenance": "Actual Blender Cycles renders of each default character in the essential outfit, not diffusion images. 1100x1400, transparent background, soft daylight area lights. WebP files are derived from these PNGs.",
+  "textureProvenance": "Source game albedos from the credited archives, adjusted locally for brightness and new iris/brow/hair-root palettes by prepare_link_textures.py. No generated concept image is used in the final 3D wardrobe.",
+  "scripts": ["tools/blender/prepare_link_textures.py", "tools/blender/neutral_link.py", "tools/blender/wardrobe.py"],
+  "webExport": "Evaluated meshes baked into a relaxed pose. The source rig is retained in the Blender scene; web GLBs and exported looks are static. wardrobe_slot and wardrobe_variant extras drive actual geometry visibility."
+}

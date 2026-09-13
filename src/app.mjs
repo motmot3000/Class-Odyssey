@@ -55,10 +55,12 @@ import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
+import { mountCharacterViewer } from "./character-runtime.mjs";
 
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
+let releaseCharacterViewer = null;
 
 // Mémorise le héros choisi sur CET appareil, pour rouvrir le casier
 // directement à la visite suivante. Jamais synchronisé au serveur.
@@ -804,6 +806,8 @@ function openPupilDialog(pupilId) {
   const pupil = getPupilById(state, pupilId);
   if (!pupil) return;
   showDialog(renderPupilDialog(pupil));
+  const viewer = dialogRoot.querySelector("[data-base-character-viewer]");
+  if (viewer) releaseCharacterViewer = mountCharacterViewer(viewer);
 }
 
 function openItemDialog(itemId) {
@@ -814,6 +818,7 @@ function openItemDialog(itemId) {
 }
 
 function showDialog(html) {
+  closeDialog();
   dialogRoot.innerHTML = html;
   const dialog = dialogRoot.querySelector("dialog");
   if (!dialog) return;
@@ -823,7 +828,11 @@ function showDialog(html) {
     if (close) closeDialog();
   });
   dialog.addEventListener("close", () => {
-    dialogRoot.innerHTML = "";
+    if (dialogRoot.contains(dialog)) {
+      releaseCharacterViewer?.();
+      releaseCharacterViewer = null;
+      dialogRoot.innerHTML = "";
+    }
   });
   dialog.showModal();
 }
@@ -832,6 +841,8 @@ function showDialog(html) {
    tour suivant : on vide tout de suite pour qu'aucun dialogue fermé ne
    traîne dans le DOM (ni dans l'arbre d'accessibilité). */
 function closeDialog() {
+  releaseCharacterViewer?.();
+  releaseCharacterViewer = null;
   const dialog = dialogRoot.querySelector("dialog");
   if (dialog?.open) dialog.close();
   dialogRoot.innerHTML = "";

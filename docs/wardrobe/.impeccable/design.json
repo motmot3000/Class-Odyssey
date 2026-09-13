@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-13T00:49:45+02:00",
+  "title": "Design System: Le vestiaire 3D — Noa & Mila",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Vert atelier", "tonalRamp": ["oklch(15.00% 0.07035 162.78)", "oklch(26.43% 0.07035 162.78)", "oklch(37.86% 0.07035 162.78)", "oklch(49.29% 0.07035 162.78)", "oklch(60.71% 0.07035 162.78)", "oklch(72.14% 0.07035 162.78)", "oklch(83.57% 0.07035 162.78)", "oklch(95.00% 0.07035 162.78)"] },
+      "bg": { "role": "neutral", "displayName": "Papier chaud", "tonalRamp": ["oklch(15.00% 0.00794 106.55)", "oklch(26.43% 0.00794 106.55)", "oklch(37.86% 0.00794 106.55)", "oklch(49.29% 0.00794 106.55)", "oklch(60.71% 0.00794 106.55)", "oklch(72.14% 0.00794 106.55)", "oklch(83.57% 0.00794 106.55)", "oklch(95.00% 0.00794 106.55)"] },
+      "ink": { "role": "neutral", "displayName": "Encre verte", "tonalRamp": ["oklch(15.00% 0.03305 167.94)", "oklch(26.43% 0.03305 167.94)", "oklch(37.86% 0.03305 167.94)", "oklch(49.29% 0.03305 167.94)", "oklch(60.71% 0.03305 167.94)", "oklch(72.14% 0.03305 167.94)", "oklch(83.57% 0.03305 167.94)", "oklch(95.00% 0.03305 167.94)"] },
+      "muted": { "role": "neutral", "displayName": "Feuillage discret", "tonalRamp": ["oklch(15.00% 0.02176 157.41)", "oklch(26.43% 0.02176 157.41)", "oklch(37.86% 0.02176 157.41)", "oklch(49.29% 0.02176 157.41)", "oklch(60.71% 0.02176 157.41)", "oklch(72.14% 0.02176 157.41)", "oklch(83.57% 0.02176 157.41)", "oklch(95.00% 0.02176 157.41)"] },
+      "line": { "role": "neutral", "displayName": "Lisière claire", "tonalRamp": ["oklch(15.00% 0.01779 131.89)", "oklch(26.43% 0.01779 131.89)", "oklch(37.86% 0.01779 131.89)", "oklch(49.29% 0.01779 131.89)", "oklch(60.71% 0.01779 131.89)", "oklch(72.14% 0.01779 131.89)", "oklch(83.57% 0.01779 131.89)", "oklch(95.00% 0.01779 131.89)"] },
+      "selected": { "role": "neutral", "displayName": "Sauge sélectionnée", "tonalRamp": ["oklch(15.00% 0.02048 131.46)", "oklch(26.43% 0.02048 131.46)", "oklch(37.86% 0.02048 131.46)", "oklch(49.29% 0.02048 131.46)", "oklch(60.71% 0.02048 131.46)", "oklch(72.14% 0.02048 131.46)", "oklch(83.57% 0.02048 131.46)", "oklch(95.00% 0.02048 131.46)"] },
+      "paper": { "role": "neutral", "displayName": "Papier des choix", "tonalRamp": ["oklch(15.00% 0.00666 115.70)", "oklch(26.43% 0.00666 115.70)", "oklch(37.86% 0.00666 115.70)", "oklch(49.29% 0.00666 115.70)", "oklch(60.71% 0.00666 115.70)", "oklch(72.14% 0.00666 115.70)", "oklch(83.57% 0.00666 115.70)", "oklch(95.00% 0.00666 115.70)"] },
+      "white": { "role": "neutral", "displayName": "Blanc d’action", "tonalRamp": ["oklch(15.00% 0.00000 0.00)", "oklch(26.43% 0.00000 0.00)", "oklch(37.86% 0.00000 0.00)", "oklch(49.29% 0.00000 0.00)", "oklch(60.71% 0.00000 0.00)", "oklch(72.14% 0.00000 0.00)", "oklch(83.57% 0.00000 0.00)", "oklch(95.00% 0.00000 0.00)"] },
+      "dye-sage": { "role": "secondary", "displayName": "Sauge — haut Essentiel", "tonalRamp": ["oklch(15.00% 0.03328 164.76)", "oklch(26.43% 0.03328 164.76)", "oklch(37.86% 0.03328 164.76)", "oklch(49.29% 0.03328 164.76)", "oklch(60.71% 0.03328 164.76)", "oklch(72.14% 0.03328 164.76)", "oklch(83.57% 0.03328 164.76)", "oklch(95.00% 0.03328 164.76)"] },
+      "dye-mist": { "role": "secondary", "displayName": "Brume — haut Essentiel", "tonalRamp": ["oklch(15.00% 0.03671 237.39)", "oklch(26.43% 0.03671 237.39)", "oklch(37.86% 0.03671 237.39)", "oklch(49.29% 0.03671 237.39)", "oklch(60.71% 0.03671 237.39)", "oklch(72.14% 0.03671 237.39)", "oklch(83.57% 0.03671 237.39)", "oklch(95.00% 0.03671 237.39)"] },
+      "dye-sand": { "role": "secondary", "displayName": "Sable — haut Essentiel", "tonalRamp": ["oklch(15.00% 0.04816 79.93)", "oklch(26.43% 0.04816 79.93)", "oklch(37.86% 0.04816 79.93)", "oklch(49.29% 0.04816 79.93)", "oklch(60.71% 0.04816 79.93)", "oklch(72.14% 0.04816 79.93)", "oklch(83.57% 0.04816 79.93)", "oklch(95.00% 0.04816 79.93)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Titre du vestiaire", "purpose": "Titre compact de la page ; pile body héritée, 29 px sur mobile." },
+      "title": { "displayName": "Nom du personnage", "purpose": "Noa ou Mila au-dessus du rendu ; pile body héritée, 17 px sur mobile." },
+      "body": { "displayName": "Sans empattement d’atelier", "purpose": "Pile Inter puis système, sans chargement dédié ; le fichier CSS est la référence." },
+      "label": { "displayName": "Légende de groupe", "purpose": "Ordre de lecture des fieldsets ; pile body héritée, 13 px sur mobile." }
+    },
+    "shadows": [
+      { "name": "dye-rest", "value": "0 0 0 1px #d0d7c8", "purpose": "Anneau de pastille au repos, pas une élévation." },
+      { "name": "dye-selected", "value": "0 0 0 2px #476e4f", "purpose": "Anneau de la couleur choisie." },
+      { "name": "switch-knob", "value": "0 1px 3px #263c2720", "purpose": "Unique petite ombre portée d’un contrôle." }
+    ],
+    "motion": [
+      { "name": "switch-background", "value": "background 150ms", "purpose": "Transition native du fond du sac à dos ; supprimée avec prefers-reduced-motion: reduce." },
+      { "name": "switch-knob", "value": "transform 150ms", "purpose": "Translation de 15 px du curseur ; supprimée avec prefers-reduced-motion: reduce." },
+      { "name": "rotation", "value": "0.27 rad/s", "purpose": "Rotation explicitement activée, arrêtée initialement ; rendu à la demande sinon, suspendu hors vue ou onglet masqué." }
+    ],
+    "breakpoints": [
+      { "name": "wide-min", "value": "1600px" },
+      { "name": "compact-max", "value": "1100px" },
+      { "name": "mobile-max", "value": "760px" },
+      { "name": "narrow-max", "value": "380px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Exporter cette combinaison",
+      "kind": "button",
+      "refersTo": "button-export",
+      "description": "Action pleine ; export des pièces visibles, état disabled pendant le traitement. Extrait visuel autonome, sans déclenchement d’export.",
+      "html": "<button class=\"ds-export\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4\"/></svg>Exporter cette combinaison <span>.glb</span></button>",
+      "css": ".ds-export{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;border:1px solid var(--accent,#31674f);border-radius:7px;padding:13px;background:var(--accent,#31674f);color:#fff;font:550 12px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer;touch-action:manipulation}.ds-export:hover{background:#285941}.ds-export:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-export:disabled{opacity:.46;cursor:wait}.ds-export>span{margin-left:auto;color:#bcd5c3;font-size:10px;font-weight:400}.ds-export svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}@media(max-width:760px){.ds-export{font-size:13px;padding:14px}}"
+    },
+    {
+      "name": "Réinitialiser",
+      "kind": "button",
+      "refersTo": "button-reset",
+      "description": "Action discrète ramenant l’application à Noa, Essentiel, Sauge, vue trois quarts, sans accessoire ni rotation.",
+      "html": "<button class=\"ds-reset\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 8a8 8 0 1 1 0 8M4 3v5h5\"/></svg>Réinitialiser</button>",
+      "css": ".ds-reset{display:flex;align-items:center;gap:7px;border:0;background:none;padding:10px 0;color:var(--muted,#65736a);font:400 11px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}.ds-reset:hover{color:var(--accent,#31674f)}.ds-reset:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-reset:disabled{opacity:.46;cursor:wait}.ds-reset svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}@media(max-width:760px){.ds-reset{font-size:10px;padding:8px 0;gap:5px}.ds-reset svg{width:14px}}"
+    },
+    {
+      "name": "Réessayer le chargement",
+      "kind": "button",
+      "refersTo": "button-retry",
+      "description": "Reprise après échec initial du chargement, avec portrait Blender conservé. La perte de contexte demande un rechargement de page.",
+      "html": "<button class=\"ds-retry\" type=\"button\">Réessayer le chargement</button>",
+      "css": ".ds-retry{border:0;border-radius:6px;background:var(--accent,#31674f);color:white;padding:11px 15px;white-space:nowrap;font:400 14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}.ds-retry:hover{cursor:pointer}.ds-retry:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-retry:disabled{opacity:.46;cursor:wait}"
+    },
+    {
+      "name": "Choix du personnage",
+      "kind": "card",
+      "refersTo": "character-choice",
+      "description": "Bouton de sélection avec initiale, identité, coche et aria-pressed ; exemple Noa sélectionné.",
+      "html": "<button class=\"ds-character\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-avatar\">N</span><span><strong>Noa</strong><small>Version garçon</small></span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m5 12 4 4 10-10\"/></svg></button>",
+      "css": ".ds-character{display:flex;align-items:center;gap:9px;padding:11px 10px;border:1px solid var(--line,#d9e0d4);border-radius:8px;background:var(--paper,#fafbf6);color:var(--ink,#273e35);text-align:left;font:400 14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}.ds-character[aria-pressed=true]{background:var(--selected,#e4ecdE);border-color:#9caf91}.ds-character:hover{border-color:#8da680}.ds-character:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-character:disabled{opacity:.46;cursor:wait}.ds-character strong{display:block;font-size:13px;font-weight:600}.ds-character small{display:block;margin-top:1px;font-size:10px;color:var(--muted,#65736a)}.ds-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;background:#ded7c8;color:#6c5338;font-size:14px;font-weight:600}.ds-character svg{width:14px;height:14px;margin-left:auto;color:#537443;visibility:hidden;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}.ds-character[aria-pressed=true] svg{visibility:visible}@media(max-width:1100px){.ds-character{gap:7px;padding:10px 8px}.ds-avatar{width:28px;height:28px}}@media(max-width:760px){.ds-character{gap:8px;padding:12px 10px}.ds-character strong{font-size:14px}.ds-character small{font-size:11px;white-space:nowrap}.ds-avatar{width:31px;height:31px}.ds-character svg{width:12px;height:12px}}"
+    },
+    {
+      "name": "Choix de tenue",
+      "kind": "card",
+      "refersTo": "outfit-choice",
+      "description": "Carte de géométrie vestimentaire : pictogramme, nom, description et point sélectionné ; exemple Éclaireur.",
+      "html": "<button class=\"ds-outfit\" type=\"button\" aria-pressed=\"true\"><span class=\"ds-garment\"><svg viewBox=\"0 0 40 40\" aria-hidden=\"true\"><path d=\"m14 7-6 5 4 8v13h7V17Zm12 0 6 5-4 8v13h-7V17Z\"/></svg></span><span><strong>Éclaireur</strong><small>Gilet bleu-vert sur coton écru</small></span><span class=\"ds-choice-dot\" aria-hidden=\"true\"></span></button>",
+      "css": ".ds-outfit{width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line,#d9e0d4);border-radius:8px;background:var(--paper,#fafbf6);color:var(--ink,#273e35);text-align:left;font:400 14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}.ds-outfit[aria-pressed=true]{background:var(--selected,#e4ecdE);border-color:#9caf91}.ds-outfit:hover{border-color:#8da680}.ds-outfit:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-outfit:disabled{opacity:.46;cursor:wait}.ds-outfit strong{display:block;font-size:12px;font-weight:600}.ds-outfit small{display:block;color:var(--muted,#65736a);font-size:10px;margin-top:3px}.ds-garment{width:40px;height:40px;border-radius:7px;display:grid;place-items:center;flex:none;color:#2f706e;background:#dceae4}.ds-garment svg{width:32px;height:32px;fill:currentColor;fill-opacity:.25;stroke:currentColor;stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round}.ds-choice-dot{width:13px;height:13px;border:1px solid #bdcab3;border-radius:50%;margin-left:auto;flex:none}.ds-outfit[aria-pressed=true] .ds-choice-dot{border:4px solid #60844e;background:#f8fbf3}@media(max-width:760px){.ds-outfit{padding:12px}.ds-outfit strong{font-size:13px}.ds-outfit small{font-size:11px}.ds-garment{width:43px;height:43px}}"
+    },
+    {
+      "name": "Couleurs du haut Essentiel",
+      "kind": "chip",
+      "description": "Trois pastilles nommées, sélection par anneau ; ce groupe est masqué pour Éclaireur et Voyageur.",
+      "html": "<div class=\"ds-dyes\" role=\"group\" aria-label=\"Couleur du haut essentiel\"><button class=\"ds-dye ds-sage\" type=\"button\" aria-label=\"Sauge\" aria-pressed=\"true\"></button><button class=\"ds-dye ds-mist\" type=\"button\" aria-label=\"Brume\" aria-pressed=\"false\"></button><button class=\"ds-dye ds-sand\" type=\"button\" aria-label=\"Sable\" aria-pressed=\"false\"></button></div>",
+      "css": ".ds-dyes{display:flex;align-items:center;gap:11px}.ds-dye{width:27px;height:27px;border:3px solid var(--bg,#f3f3ed);border-radius:50%;box-shadow:0 0 0 1px #d0d7c8;padding:0;cursor:pointer;touch-action:manipulation}.ds-dye[aria-pressed=true]{box-shadow:0 0 0 2px #476e4f}.ds-dye:hover{cursor:pointer}.ds-dye:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-dye:disabled{opacity:.46;cursor:wait}.ds-sage{background:#80998d}.ds-mist{background:#718999}.ds-sand{background:#b8a586}"
+    },
+    {
+      "name": "Sac à dos indépendant",
+      "kind": "input",
+      "description": "Checkbox native sous un interrupteur visuel ; le changement de tenue ou d’objet ne désactive pas le sac.",
+      "html": "<label class=\"ds-backpack\"><span><strong>Sac à dos</strong><small>Un équipement de dos indépendant</small></span><input type=\"checkbox\" checked><span class=\"ds-switch\" aria-hidden=\"true\"></span></label>",
+      "css": ".ds-backpack{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--line,#d9e0d4);padding-top:17px;color:var(--ink,#273e35);font:400 14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}.ds-backpack:hover{cursor:pointer}.ds-backpack strong{display:block;font-size:12px;font-weight:600}.ds-backpack small{display:block;font-size:10px;color:var(--muted,#65736a);margin-top:4px}.ds-backpack input{position:absolute;right:0;width:37px;height:22px;opacity:0;z-index:1;cursor:pointer;margin:0}.ds-switch{display:block;position:relative;width:37px;height:22px;border-radius:11px;background:#d5ddcd;flex:none;transition:background 150ms}.ds-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 3px #263c2720;transition:transform 150ms}.ds-backpack input:checked+.ds-switch{background:#648858}.ds-backpack input:checked+.ds-switch::after{transform:translateX(15px)}.ds-backpack input:focus-visible+.ds-switch{outline:2px solid #39815a;outline-offset:4px}.ds-backpack input:disabled+.ds-switch{opacity:.5}@media(max-width:760px){.ds-backpack strong{font-size:13px}.ds-backpack small{font-size:11px}}@media(prefers-reduced-motion:reduce){.ds-switch,.ds-switch::after{transition:none!important}}"
+    },
+    {
+      "name": "Vues et rotation",
+      "kind": "nav",
+      "refersTo": "view-button",
+      "description": "Cinq cadrages et rotation ; nom accessible stable même quand le texte Rotation disparaît. Les boutons illustrent les états, sans moteur 3D embarqué.",
+      "html": "<div class=\"ds-views\"><div class=\"ds-angles\" role=\"group\" aria-label=\"Angle de vue du personnage\"><button type=\"button\" aria-pressed=\"false\">Face</button><button type=\"button\" aria-pressed=\"true\">¾</button><button type=\"button\" aria-pressed=\"false\">Dos</button><button type=\"button\" aria-pressed=\"false\">Tenue</button><button type=\"button\" aria-pressed=\"false\">Visage</button></div><button class=\"ds-rotate\" type=\"button\" aria-label=\"Rotation automatique\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 8a8 8 0 1 0 0 8M20 3v5h-5\"/></svg><span>Rotation</span></button></div>",
+      "css": ".ds-views{display:flex;align-items:center;justify-content:center;gap:10px}.ds-angles{display:flex;gap:2px;padding:3px;border:1px solid #c7d3bf;border-radius:6px;background:#fbfcf7ed}.ds-views button{border:0;background:none;border-radius:3px;color:var(--muted,#65736a);padding:8px 12px;font:400 11px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer;touch-action:manipulation}.ds-views button:hover{cursor:pointer}.ds-views button[aria-pressed=true]{background:#d7e5cf;color:#2f533d}.ds-views button:focus-visible{outline:2px solid #39815a;outline-offset:4px}.ds-views button:disabled{opacity:.46;cursor:wait}.ds-views>.ds-rotate{display:flex;align-items:center;gap:6px;padding:11px;border:1px solid #c7d3bf;border-radius:6px;background:#fbfcf7ed}.ds-views>.ds-rotate[aria-pressed=true]{background:#d7e5cf}.ds-views svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}@media(max-width:1100px){.ds-views{gap:6px}.ds-views button{padding:8px 9px}.ds-views>.ds-rotate{padding:11px 8px}.ds-rotate span{display:none}}@media(max-width:760px){.ds-views{gap:7px}.ds-views button{font-size:10px;padding:8px 10px}.ds-views>.ds-rotate{padding:11px}}@media(max-width:380px){.ds-views button{padding:8px}.ds-views>.ds-rotate{padding:11px 8px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "L’atelier de personnages en lumière du jour",
+    "overview": "Un studio calme, papier chaud et verts assourdis, où la silhouette habillée domine et les commandes restent compactes. La surface sert une tâche de personnalisation (Operate) : choisir, examiner, exporter ; sa signature est le personnage réel accompagné d’un vestiaire ordonné.",
+    "keyCharacteristics": [
+      "Personnage 3D prioritaire, choix immédiatement lisibles.",
+      "Vêtements modulaires réels et accessoires indépendants.",
+      "Lumière douce, surfaces sobres et états explicites."
+    ],
+    "rules": [
+      { "name": "The État explicite Rule", "body": "Associer la couleur sélectionnée à un état accessible et, selon le contrôle, une coche, un point, un anneau ou la position du curseur.", "section": "colors" },
+      { "name": "The Personnage visible Rule", "body": "Conserver le retour visuel pendant l’équipement mobile ; à 390 px de largeur, les cinq vues et la rotation tiennent ensemble, puis les contrôles défilent sous la scène.", "section": "layout" }
+    ],
+    "dos": [
+      "**Do** garder le personnage visible pendant les choix, notamment sur mobile à 390 px.",
+      "**Do** préserver les crédits Nintendo / Trikeboy et distinguer anatomie dérivée, pièces créées et pose web statique.",
+      "**Do** faire correspondre choix, géométrie visible, états accessibles et export GLB."
+    ],
+    "donts": [
+      "**Don't** présenter les trois tenues comme de simples recolorations ou étendre la teinture aux tenues qui ne l’exposent pas.",
+      "**Don't** présenter le GLB statique comme un personnage animé prêt pour le moteur, ni l’anatomie comme 100 % originale.",
+      "**Don't** imposer une boucle de rendu au repos ou remplacer Inter sur le seul signal d’un détecteur dégradé."
+    ]
+  }
+}

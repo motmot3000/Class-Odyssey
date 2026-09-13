@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-12T00:00:00Z",
+  "title": "Design System: Game of More — Atelier du rôdeur",
+  "extensions": {
+    "shadows": [
+      { "name": "portrait", "value": "drop-shadow(0 22px 18px #02081260)", "purpose": "Filtre du portrait transparent, pas une ombre de panneau." },
+      { "name": "portrait-action", "value": "0 7px 20px #0005", "purpose": "Ombre portée de l’appel laiton superposé au portrait." }
+    ],
+    "motion": [
+      { "name": "portrait-hover", "value": "transform 500ms cubic-bezier(.16,1,.3,1)", "purpose": "Agrandissement du portrait à 1.025 au survol." },
+      { "name": "portrait-action-hover", "value": "background 180ms", "purpose": "Éclaircissement de l’appel laiton au survol du portrait." },
+      { "name": "rotation", "value": "0.28rad/s", "purpose": "Rotation WebGL uniquement sur activation ; arrêt lors du choix d’un angle, suspension quand masqué." },
+      { "name": "reduced-motion", "value": "(prefers-reduced-motion: reduce)", "purpose": "Transitions et animations CSS supprimées, défilement sans douceur ; rotation manuelle toujours disponible." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-max", "value": "700px" },
+      { "name": "intermediate-max", "value": "1000px" },
+      { "name": "wide-min", "value": "1550px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Sélecteur de présentation",
+      "kind": "nav",
+      "refersTo": "mode-tab",
+      "description": "Extrait des boutons de mode ; états visuels seulement, sans chargement du viewer dans ce spécimen.",
+      "html": "<div class=\"ds-tabs\" role=\"group\" aria-label=\"Mode de présentation\"><button aria-pressed=\"true\">Comparer</button><button aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9\"/></svg>Explorer en 3D</button></div>",
+      "css": ".ds-tabs{display:flex;padding:4px;gap:4px;border:1px solid var(--line,#293b50);border-radius:8px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}.ds-tabs button{display:flex;align-items:center;gap:8px;padding:10px 16px;background:none;border:0;border-radius:5px;font:inherit;font-size:13px;color:var(--muted,#a1b4cc);white-space:nowrap;cursor:pointer}.ds-tabs button[aria-pressed=true]{background:#27384a;color:var(--ink,#eaf3ff)}.ds-tabs button:hover{color:var(--ink,#eaf3ff);background:#1e3044}.ds-tabs button:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}.ds-tabs svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Appel du portrait",
+      "kind": "custom",
+      "refersTo": "portrait-action",
+      "description": "Extrait du bouton de portrait et de son appel interne ; image et positionnement de scène omis du spécimen.",
+      "html": "<button class=\"ds-portrait\" aria-label=\"Explorer le personnage complet en 3D\"><span class=\"ds-action\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9\"/></svg>Découvrir le personnage en 3D<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></svg></span></button>",
+      "css": ".ds-portrait{background:none;border:0;padding:0;cursor:pointer;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}.ds-action{display:flex;align-items:center;gap:13px;white-space:nowrap;background:var(--gold,#d9bc82);color:#1d2527;padding:13px 19px;border-radius:6px;font-size:13px;font-weight:650;box-shadow:0 7px 20px #0005;transition:background 180ms}.ds-portrait:hover .ds-action{background:#ecd4a3}.ds-portrait:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:-6px}.ds-action svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.ds-action svg:last-child{width:17px}@media(prefers-reduced-motion:reduce){.ds-action{transition:none}}"
+    },
+    {
+      "name": "Angles de vue",
+      "kind": "button",
+      "description": "Quatre presets, trois quarts sélectionné au chargement ; commandes désactivées pendant le chargement.",
+      "html": "<div class=\"ds-angles\" role=\"group\" aria-label=\"Angle de vue\"><button aria-pressed=\"false\">Face</button><button aria-pressed=\"true\">¾</button><button aria-pressed=\"false\">Dos</button><button aria-pressed=\"false\">Détail</button></div>",
+      "css": ".ds-angles{display:inline-flex;background:#0b1421;border:1px solid var(--line,#293b50);padding:4px;border-radius:6px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}.ds-angles button{padding:8px 17px;background:none;border:0;border-radius:3px;color:var(--muted,#a1b4cc);font:inherit;font-size:12px;cursor:pointer}.ds-angles button[aria-pressed=true]{background:#304150;color:var(--ink,#eaf3ff)}.ds-angles button:hover{background:#263a4f;color:var(--ink,#eaf3ff)}.ds-angles button:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}.ds-angles button:disabled{cursor:wait;opacity:.5}"
+    },
+    {
+      "name": "Badge d’étude",
+      "kind": "chip",
+      "description": "Étiquette informative de la nouvelle scène, sans interaction.",
+      "html": "<span class=\"ds-study\">Étude 3D</span>",
+      "css": ".ds-study{color:var(--gold,#d9bc82);border:1px solid #6d5d42;border-radius:4px;padding:3px 8px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:11px}"
+    },
+    {
+      "name": "Carte de démonstration 2.0",
+      "kind": "card",
+      "refersTo": "pupil-card",
+      "description": "Extrait de la carte interactive : cadre, identité et XP. L’espace du portrait reste vide dans ce spécimen autonome, sans image externe de substitution.",
+      "html": "<button class=\"ds-card\" aria-label=\"Alex version 2.0, ouvrir le personnage 3D\"><span class=\"ds-version\">Version 2.0<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9\"/></svg></span><div class=\"ds-figure\" aria-hidden=\"true\"></div><div class=\"ds-identity\"><strong>Alex</strong><span>Niveau 5 · Rôdeur</span></div><div class=\"ds-progress\"><span>340 / 500 XP</span><div><i></i></div></div></button>",
+      "css": ".ds-card{width:210px;height:345px;display:flex;flex-direction:column;border:1px solid #526258;border-radius:12px;background:#152635;padding:14px 16px;text-align:left;color:var(--ink,#eaf3ff);font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;cursor:pointer}.ds-card:hover{border-color:var(--gold,#d9bc82);background:#1b3040}.ds-card:focus-visible{outline:2px solid var(--blue,#38c9ff);outline-offset:5px}.ds-version{font-size:11px;color:var(--gold,#d9bc82);display:flex;justify-content:space-between;align-items:center;width:100%}.ds-version svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.ds-figure{height:200px;flex-shrink:0}.ds-identity{display:flex;flex-direction:column;gap:2px}.ds-identity strong{font-size:15px;font-weight:650}.ds-identity>span{font-size:11px;color:var(--muted,#a1b4cc)}.ds-progress{width:100%;margin-top:12px;font-size:10px;color:var(--muted,#a1b4cc);font-variant-numeric:tabular-nums}.ds-progress>div{margin-top:5px;height:4px;background:#273b51;border-radius:2px;overflow:hidden}.ds-progress i{display:block;width:68%;height:100%;background:var(--blue,#38c9ff)}"
+    }
+  ],
+  "narrative": {
+    "overview": "Relevé du monde effectivement construit au 12 septembre 2026, limité à `character-lab.html`, `src/character-lab.css`, `src/character-lab.mjs` et `src/character-viewer.mjs`. Le prototype prolonge le monde bleu nuit existant : figures centrales, texte bleu pâle, cadres discrets et accent laiton sur l’accès à la 3D. Aucune composition approuvée ni nouvelle métaphore de marque n’est établie.",
+    "keyCharacteristics": [
+      "Monde bleu nuit maintenu, accent laiton ponctuel et progression cyan.",
+      "Personnage en pied, portrait prioritaire et commandes secondaires.",
+      "Prototype local explicitement signalé, avec données fictives."
+    ],
+    "dos": [
+      "Préserver le monde bleu nuit et la priorité visuelle du personnage sur cette surface.",
+      "Garder explicites la comparaison, le statut de prototype et les données de démonstration.",
+      "Distinguer le rendu Blender, la référence générée et le modèle interactif dans toute présentation des assets."
+    ],
+    "donts": [
+      "Ne pas présenter cette réinterprétation comme une reproduction exacte des personnalisations du SVG.",
+      "Ne pas convertir le verdict ship du prototype en validation de production ou en composition approuvée.",
+      "Ne pas étendre ces relevés locaux à un système visuel global du jeu."
+    ]
+  }
+}

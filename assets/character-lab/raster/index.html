@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1220">
+  <meta name="description" content="Test de personnage 2D issu de ChatGPT : PNG détourés, tuniques en calques et équipements interchangeables.">
+  <title>Le rôdeur, à équiper — Game of More</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/character-lab.css">
+  <link rel="stylesheet" href="/src/character-raster-lab.css">
+  <script type="module" src="/src/character-raster-lab.mjs"></script>
+</head>
+<body class="raster-lab">
+  <!-- THESIS: Try the supplied ChatGPT character as a real layered PNG in the incumbent character lab.
+  OWN-WORLD: Midnight blue, pale blue typography and brass actions inherited from Game of More; the supplied painted character leads.
+  STORY: Choose a rendering and tunic, inspect transparency and card readability, import equipment, export the assembled PNG.
+  FIRST VIEWPORT: A large character between a compact wardrobe and a classroom-card preview; export is available beside the heading.
+  FORM: User-specified extension of the existing lab. Fixed 2D pose, aligned raster layers, no new visual-world selection.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+  <a class="skip-link" href="#workbench">Aller au personnage</a>
+  <header class="topbar">
+    <a class="brand" href="/character-lab.html"><span>GAME <small>OF</small> MORE</span></a>
+    <span class="studio-name">Atelier de personnages</span>
+    <span class="prototype">Test 2D · PNG</span>
+    <a class="back-link" href="/character-lab.html">Les autres versions</a>
+  </header>
+  <main>
+    <div class="intro">
+      <div><h1>Le rôdeur, à équiper.</h1><p>L’illustration ChatGPT, préparée pour changer de tenue.</p></div>
+      <button class="export-button" id="export-png" disabled>Exporter le personnage</button>
+    </div>
+
+    <section class="raster-workbench" id="workbench" aria-label="Personnalisation du personnage 2D" aria-busy="true" tabindex="-1">
+      <div class="wardrobe">
+        <fieldset class="style-picker">
+          <legend>Le personnage</legend>
+          <label class="style-choice"><input type="radio" name="style" value="peint" checked><span class="style-thumb"><img src="ranger-peint.png" width="1024" height="1536" alt=""></span><span><strong>Peint</strong><small>Lumière douce, matière visible</small></span></label>
+          <label class="style-choice"><input type="radio" name="style" value="illustre"><span class="style-thumb"><img src="ranger-illustre.png" width="1024" height="1536" alt=""></span><span><strong>Illustré</strong><small>Couleurs franches, traits nets</small></span></label>
+          <label class="style-choice imported-choice" id="custom-choice" hidden><input type="radio" name="style" value="custom"><span><strong>Personnage importé</strong><small id="custom-name"></small></span></label>
+        </fieldset>
+        <label class="file-button">Importer un personnage<input type="file" id="base-file" accept="image/png,image/webp" aria-label="Importer un personnage PNG ou WebP transparent"></label>
+        <p class="control-note">Deux rendus du même personnage. Tu peux aussi essayer ta propre base.</p>
+
+        <fieldset class="tunic-picker" id="tunic-picker">
+          <legend>La tunique</legend>
+          <div class="color-options">
+            <label><input type="radio" name="tunic" value="foret" checked><span class="color-chip forest"></span><span>Forêt</span></label>
+            <label><input type="radio" name="tunic" value="ardoise"><span class="color-chip slate"></span><span>Ardoise</span></label>
+            <label><input type="radio" name="tunic" value="grenat"><span class="color-chip garnet"></span><span>Grenat</span></label>
+            <label><input type="radio" name="tunic" value="sable"><span class="color-chip sand"></span><span>Sable</span></label>
+          </div>
+        </fieldset>
+        <p class="control-note" id="tunic-note">La couleur change. Les plis, les ombres et le visage restent en place.</p>
+        <div class="layer-explanation"><strong>Un personnage, plusieurs calques.</strong><p>Base, tenue, puis équipement : chaque pièce peut être changée séparément.</p><a href="#equipment-section">Essayer un équipement</a></div>
+      </div>
+
+      <div class="character-stage" id="character-stage" data-background="night" data-view="full">
+        <div class="stage-toolbar"><span>Illustration 2D</span><div class="segment-control" role="group" aria-label="Cadrage de l’aperçu"><button data-view="full" aria-pressed="true">Silhouette</button><button data-view="portrait" aria-pressed="false">Portrait</button></div></div>
+        <div class="sprite-frame">
+          <img class="raster-fallback" src="ranger-peint.png" width="1024" height="1536" alt="Rôdeur peint, cheveux bruns, tunique verte et bottes de cuir." fetchpriority="high">
+          <canvas id="character-canvas" width="1024" height="1536" role="img" aria-label="Rôdeur peint, tunique Forêt" hidden></canvas>
+        </div>
+        <div class="stage-bottom"><span id="outfit-caption">Rendu peint · Tunique Forêt</span><div class="background-picker" role="group" aria-label="Fond de vérification de la transparence"><button data-background="night" aria-pressed="true">Nuit</button><button data-background="light" aria-pressed="false">Clair</button><button data-background="checker" aria-pressed="false">Damier</button></div></div>
+      </div>
+
+      <aside class="game-preview" aria-labelledby="preview-title">
+        <h2 id="preview-title">Dans le jeu</h2>
+        <div class="raster-pupil-card">
+          <span class="card-class">Rôdeur</span>
+          <div class="card-sprite"><img class="raster-fallback" src="ranger-peint.png" width="1024" height="1536" alt="Alex, aperçu du personnage sur une carte."><canvas id="card-canvas" width="360" height="540" role="img" aria-label="Aperçu du personnage sur une carte" hidden></canvas></div>
+          <strong class="card-name">Alex</strong><span class="card-level">Niveau 5 · Éclaireur</span>
+          <div class="card-progress"><span>340 / 500 XP</span><progress max="500" value="340" aria-label="Progression de démonstration : 340 points sur 500">68 %</progress></div>
+        </div>
+        <p class="demo-note">Personnage et progression de démonstration.</p>
+        <dl class="raster-spec"><div><dt>Format</dt><dd>PNG transparent</dd></div><div><dt>Résolution</dt><dd>1 024 × 1 536 px</dd></div><div><dt>Assemblage</dt><dd id="layer-count">1 calque</dd></div></dl>
+        <a class="kit-link" href="ranger-png-kit.zip" download>Télécharger le kit de calques</a>
+        <button class="settings-link" id="export-settings" disabled>Exporter les réglages JSON</button>
+      </aside>
+    </section>
+    <p class="render-status" id="render-status" role="status">Préparation du personnage…</p>
+    <p class="error-message" id="error-message" role="alert" hidden></p>
+
+    <section class="equipment-section" id="equipment-section" aria-labelledby="equipment-title">
+      <div class="equipment-intro"><h2 id="equipment-title">Une place pour chaque pièce.</h2><p>Ajoute une cape, une coiffe ou un accessoire en PNG ou WebP transparent. Ajuste sa place sur le personnage, puis exporte l’ensemble.</p><p class="control-note">Ces trois images ne contiennent pas d’équipements séparés. Les emplacements ci-dessous sont prêts à les recevoir. Imports conservés uniquement dans cet onglet.</p></div>
+      <div class="equipment-editor">
+        <div class="equipment-heading"><label for="equipment-slot">Emplacement<select id="equipment-slot"><option value="cape">Cape</option><option value="headwear">Coiffe</option><option value="accessory">Accessoire</option></select></label><label class="file-button equipment-upload">Importer la pièce<input type="file" id="equipment-file" accept="image/png,image/webp" aria-label="Importer un équipement PNG ou WebP transparent"></label></div>
+        <p class="equipment-empty" id="equipment-empty">Aucune cape équipée. Importe une pièce détourée pour voir la superposition.</p>
+        <div id="equipment-adjustments" hidden>
+          <div class="equipment-file-name"><strong id="equipment-name"></strong><button class="settings-link" id="remove-equipment">Retirer cette pièce</button></div>
+          <div class="equipment-sliders">
+            <label for="equipment-x">Horizontal <output id="x-value" for="equipment-x">50 %</output><input type="range" id="equipment-x" min="-25" max="125" step="0.5" value="50"></label>
+            <label for="equipment-y">Vertical <output id="y-value" for="equipment-y">50 %</output><input type="range" id="equipment-y" min="-25" max="125" step="0.5" value="50"></label>
+            <label for="equipment-scale">Taille <output id="scale-value" for="equipment-scale">100 %</output><input type="range" id="equipment-scale" min="10" max="250" step="1" value="100"></label>
+          </div>
+          <div class="equipment-bottom"><label class="check-label"><input type="checkbox" id="equipment-behind">Derrière le personnage</label><button class="settings-link" id="reset-equipment">Replacer la pièce</button></div>
+        </div>
+        <p class="file-note">12 Mo maximum par image · 4 096 px maximum par côté · transparence réelle requise</p>
+      </div>
+    </section>
+
+    <details class="raster-details"><summary>Ce que ce format permet</summary><div><p><strong>Changer une tenue sans redessiner le personnage.</strong> Les variantes de tunique sont des calques colorimétriques tirés des PNG fournis. La tenue verte reste incluse dans la base.</p><p><strong>Équiper et remplacer une base.</strong> Les pièces importées se superposent devant ou derrière. Une image déjà alignée sur 1 024 × 1 536 px conserve son cadrage. Une nouvelle base utilise ses propres équipements.</p><p><strong>Préparer le jeu.</strong> Le kit fournit les PNG et un manifeste d’assemblage. L’export PNG est aplati ; l’export JSON conserve les références, les positions et les images importées. Ce test utilise une seule pose fixe.</p><p>Images sources : exports ChatGPT fournis par l’utilisateur. Détourage et couleurs préparés localement. Le nom exact du modèle de génération n’est pas disponible.</p></div></details>
+    <footer><span>GAME OF MORE <span class="footer-divider">/</span> Laboratoire visuel</span><a href="/character-lab.html">Revenir aux autres versions</a></footer>
+  </main>
+  <noscript><p class="no-script">Le personnage est visible et le kit peut être téléchargé. Active JavaScript pour changer la tenue, importer des pièces et exporter l’assemblage.</p></noscript>
+</body>
+</html>

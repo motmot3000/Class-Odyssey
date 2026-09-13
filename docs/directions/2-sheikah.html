@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction 2 — La Tablette Sheikah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Saira:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DIRECTION 2 — « LA TABLETTE SHEIKAH »   (sombre / tech ancienne)
+   Le plateau devient la dalle d'un artefact ancien : pierre gravée,
+   courbes de niveau incisées, lignes d'énergie cyan, sceau ambré.
+   La profondeur vient de la lumière contenue dans la matière, jamais
+   d'un néon de cyberpunk. Le sombre actuel est conservé, mais il est
+   structuré, sculpté et hiérarchisé.
+   ============================================================ */
+:root{
+  --void:#060a0e; --stone:#0b1218; --panel:#0e1921; --panel-2:#122230;
+  --ink:#dbe8ee; --ink-2:#93abb6; --muted:#5d7480;
+  --line:rgba(122,192,208,.15); --line-2:rgba(122,192,208,.34);
+  --cyan:#4fd9e8; --cyan-soft:rgba(79,217,232,.13); --cyan-glow:rgba(79,217,232,.4);
+  --amber:#e2a04a; --amber-soft:rgba(226,160,74,.14);
+  --ember:#e5604a; --ember-soft:rgba(229,96,74,.14);
+  --violet:#9c8cff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"Saira",system-ui,sans-serif;color:var(--ink);
+  background:
+    radial-gradient(900px 420px at 50% -6%, rgba(79,217,232,.13), transparent 62%),
+    radial-gradient(700px 500px at 88% 105%, rgba(79,217,232,.07), transparent 60%),
+    repeating-radial-gradient(circle at 16% 26%, transparent 0 44px, rgba(79,217,232,.05) 44px 45px),
+    repeating-radial-gradient(circle at 82% 74%, transparent 0 60px, rgba(79,217,232,.04) 60px 61px),
+    linear-gradient(180deg,#081017,var(--void));
+  -webkit-font-smoothing:antialiased;
+}
+.ic{width:18px;height:18px;display:block;flex:none}
+.fig{display:block;width:100%;height:100%}
+
+.review-band{max-width:1440px;margin:0 auto;padding:26px 26px 14px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.review-band .n{font-family:"Saira Condensed";font-weight:700;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan)}
+.review-band h1{font-family:"Saira Condensed";font-weight:700;font-size:28px;letter-spacing:.02em;text-transform:uppercase;margin:0}
+.review-band p{margin:0;color:var(--ink-2);max-width:70ch;font-size:14px}
+
+.app{max-width:1440px;margin:0 auto 60px;background:linear-gradient(180deg,#0a131a,#070d12);
+     border:1px solid var(--line-2);border-radius:14px;overflow:hidden;
+     box-shadow:0 24px 70px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.02)}
+
+.topbar{display:flex;align-items:center;gap:22px;height:66px;padding:0 20px;
+        background:linear-gradient(180deg,rgba(19,34,48,.9),rgba(10,19,26,.9));
+        border-bottom:1px solid var(--line-2);box-shadow:0 1px 0 rgba(79,217,232,.18)}
+.brand{display:flex;align-items:center;gap:11px}
+.brand .mark{width:30px;height:30px;filter:drop-shadow(0 0 8px rgba(79,217,232,.35))}
+.brand-name{font-family:"Saira Condensed";font-weight:700;font-size:19px;letter-spacing:.05em;text-transform:uppercase}
+.brand-name em{font-style:normal;color:var(--cyan)}
+.tabs,.seg{display:flex;padding:3px;background:rgba(8,16,23,.8);border:1px solid var(--line);border-radius:6px}
+.tabs button,.seg button{font:inherit;font-weight:600;font-size:13px;letter-spacing:.03em;color:var(--ink-2);background:none;border:0;
+  padding:7px 15px;border-radius:4px;cursor:pointer}
+.tabs button.on,.seg button.on{background:linear-gradient(180deg,rgba(79,217,232,.18),rgba(79,217,232,.06));
+  color:#eafcff;box-shadow:inset 0 0 0 1px var(--line-2)}
+.top-end{margin-left:auto;display:flex;align-items:center;gap:14px}
+.ghost{display:flex;align-items:center;gap:7px;font:inherit;font-weight:600;font-size:13px;color:var(--ink-2);
+  background:none;border:0;cursor:pointer;padding:8px 6px}
+.who{font-size:12.5px;color:var(--muted);border-left:1px solid var(--line);padding-left:14px}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 352px;align-items:start}
+.board{padding:22px 22px 26px;display:flex;flex-direction:column;gap:18px}
+.board-bar{display:flex;flex-direction:column;gap:14px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.board-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.board-title{font-family:"Saira Condensed";font-weight:700;font-size:34px;letter-spacing:.04em;text-transform:uppercase;margin:0;line-height:.9}
+.board-sub{color:var(--muted);font-size:13px;margin:5px 0 0}
+.legend{margin-left:auto;display:flex;gap:8px}
+.chip{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);
+  background:var(--cyan-soft);border:1px solid var(--line);border-radius:6px;padding:5px 12px}
+.chip b{font-family:"Saira Condensed";font-weight:700;font-size:16px;color:#eafcff}
+.chip.danger{background:var(--ember-soft)}.chip.danger b{color:#ff8b74}
+.board-tools{display:flex;align-items:center;gap:12px}
+.search{flex:1;max-width:330px;display:flex;align-items:center;gap:9px;background:rgba(8,15,21,.85);border:1px solid var(--line-2);
+        border-radius:6px;padding:9px 12px;color:var(--muted)}
+.search input{border:0;outline:0;font:inherit;font-size:13.5px;width:100%;color:var(--ink);background:none}
+.note{margin-left:auto;font-size:12.5px;color:var(--cyan);font-weight:600;letter-spacing:.02em}
+
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+.card{position:relative;background:linear-gradient(180deg,var(--panel),#0b141b);border:1px solid var(--line);
+      border-radius:10px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:11px}
+.card::before{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(79,217,232,.22),transparent 3px) top/100% 3px no-repeat}
+.card::after{content:"";position:absolute;inset:7px;pointer-events:none;border-radius:6px;
+  background:
+    linear-gradient(var(--line-2),var(--line-2)) left top/12px 1.5px no-repeat,
+    linear-gradient(var(--line-2),var(--line-2)) left top/1.5px 12px no-repeat,
+    linear-gradient(var(--line-2),var(--line-2)) right bottom/12px 1.5px no-repeat,
+    linear-gradient(var(--line-2),var(--line-2)) right bottom/1.5px 12px no-repeat}
+.card.sel{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan-soft), 0 0 34px rgba(79,217,232,.14)}
+.card.out{opacity:.55;filter:saturate(.4)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-name{font-family:"Saira Condensed";font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase}
+.lvl{display:flex;align-items:center;gap:5px;font-family:"Saira Condensed";font-weight:700;font-size:13px;color:var(--amber);
+     background:var(--amber-soft);border:1px solid rgba(226,160,74,.3);border-radius:4px;padding:2px 8px}
+.art{position:relative;height:150px;border-radius:6px;border:1px solid var(--line);overflow:hidden;
+  background:
+    radial-gradient(52% 40% at 50% 60%, rgba(79,217,232,.14), transparent 70%),
+    repeating-radial-gradient(circle at 50% 78%, transparent 0 22px, rgba(79,217,232,.14) 22px 23px),
+    linear-gradient(180deg,#0c1a23,#081119)}
+.art .fig{position:absolute;inset:6% 20% 0;height:100%;width:60%;color:#8fc9d3;
+  filter:drop-shadow(0 0 12px rgba(79,217,232,.45))}
+.art .ped{position:absolute;left:12%;right:12%;bottom:15px;height:24px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(79,217,232,.4),transparent 72%);filter:blur(2px)}
+.art .tag{position:absolute;top:8px;left:9px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);font-weight:700}
+.out-badge{position:absolute;top:8px;right:9px;font-family:"Saira Condensed";font-weight:700;font-size:10.5px;letter-spacing:.12em;
+  color:#fff;background:var(--ember);border-radius:4px;padding:2px 6px}
+.title{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);font-weight:600}
+.stats{display:flex;flex-direction:column;gap:8px}
+.hearts{display:flex;gap:4px;color:var(--ember)}
+.hearts .ic{width:15px;height:15px;filter:drop-shadow(0 0 5px rgba(229,96,74,.5))}
+.hearts .off{color:#2b3b44;filter:none}
+.xp .track{height:8px;border-radius:2px;background:rgba(79,217,232,.10);overflow:hidden;position:relative}
+.xp .track::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,transparent 0 11px,rgba(6,10,14,.85) 11px 12px)}
+.xp .fill{display:block;height:100%;width:var(--p);background:linear-gradient(90deg,#2a97a6,#5fe3f0);
+  box-shadow:0 0 12px rgba(79,217,232,.6)}
+.xp .lab{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:600;margin-top:4px}
+.foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:9px}
+.coin{display:flex;align-items:center;gap:6px;font-family:"Saira Condensed";font-weight:700;font-size:15px;color:var(--amber)}
+
+.console{background:linear-gradient(180deg,rgba(16,29,40,.6),rgba(8,15,21,.6));border-left:1px solid var(--line-2);
+         padding:20px 18px 28px;display:flex;flex-direction:column;gap:18px;min-height:100%}
+.console h2{font-family:"Saira Condensed";font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;margin:0;
+  display:flex;align-items:center;justify-content:space-between}
+.label{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 8px}
+.seg-wide button{flex:1;text-align:center;font-size:12.5px}
+.seg-wide b{margin-left:7px;color:var(--cyan)}
+.target-names{font-size:12.5px;color:var(--ink-2);margin:9px 0 0}
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.award{text-align:left;background:rgba(79,217,232,.05);border:1px solid var(--line);border-radius:6px;padding:9px 11px;cursor:pointer}
+.award strong{display:block;font-family:"Saira Condensed";font-weight:700;font-size:18px;color:#eafcff}
+.award span{font-size:11px;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:600;font-size:12.5px;border-radius:6px;padding:9px 12px;cursor:pointer;
+  border:1px solid var(--line-2);background:rgba(79,217,232,.06);color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.btn.pri{background:linear-gradient(180deg,#5fe3f0,#2a97a6);border-color:#5fe3f0;color:#052226;font-weight:700}
+.btn.dng{color:#ff8b74;border-color:rgba(229,96,74,.4)}
+.btn.ok{color:#6fe3c4;border-color:rgba(111,227,196,.4)}
+.panel{border-top:1px solid var(--line);padding-top:36px;position:relative}
+.panel .pl{position:absolute;top:14px;left:0;font-family:"Saira Condensed";font-weight:700;font-size:14px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink)}
+.panel small{display:block;font-size:11.5px;color:var(--muted);line-height:1.55}
+@media (max-width:1080px){.stage{grid-template-columns:1fr}.console{border-left:0;border-top:1px solid var(--line-2)}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="hero" viewBox="0 0 120 230">
+    <circle cx="60" cy="30" r="18"/>
+    <path d="M60 46C44 46 36 57 33 79L25 151h70l-8-72C84 57 76 46 60 46Z"/>
+    <path d="M40 151l-4 62h18l5-58Z"/><path d="M80 151l4 62H66l-5-58Z"/>
+  </symbol>
+  <symbol id="i-heart" viewBox="0 0 20 20"><path d="M10 17S3.5 12.8 3.5 8.6A3.9 3.9 0 0 1 10 5.9a3.9 3.9 0 0 1 6.5 2.7C16.5 12.8 10 17 10 17Z"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><circle cx="10" cy="10" r="3.6" fill="none" stroke="#06131f" stroke-width="1.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13.2 13.2 17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 20 20"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-list" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="2.4" rx="1.2"/><rect x="2" y="9" width="16" height="2.4" rx="1.2"/><rect x="2" y="14" width="16" height="2.4" rx="1.2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 20 20"><path d="M3 4h6v13H3Z"/><path d="M11 4h6v13h-6Z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 20 20"><path d="M10 2l2 5.4 5.8.3-4.5 3.7 1.5 5.6L10 14l-4.8 3 1.5-5.6L2.2 7.7l5.8-.3Z"/></symbol>
+</svg>
+
+<div class="review-band">
+  <span class="n">Direction 02 / sombre</span>
+  <h1>La Tablette Sheikah</h1>
+  <p>La dalle d'un artefact ancien : pierre gravée, courbes de niveau incisées, énergie cyan contenue, sceau ambré. Le bleu nuit est conservé mais sculpté — la lumière vient de la matière, pas d'un néon.</p>
+</div>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <img class="mark" src="../../assets/emblem.svg" alt="">
+      <span class="brand-name">Game <em>of</em> More</span>
+    </div>
+    <nav class="tabs"><button class="on">7P</button><button>8P</button></nav>
+    <div class="top-end">
+      <div class="tabs"><button class="on">Teacher</button><button>Students</button></div>
+      <button class="ghost"><svg class="ic"><use href="#i-book"/></svg>Rules</button>
+      <span class="who">Mme Roy</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <section class="board">
+      <div class="board-bar">
+        <div class="board-top">
+          <div>
+            <h2 class="board-title">7P</h2>
+            <p class="board-sub">Tuesday lesson · 14 heroes · session 12</p>
+          </div>
+          <div class="legend">
+            <span class="chip"><b>14</b> heroes</span>
+            <span class="chip danger"><b>2</b> out</span>
+            <span class="chip">avg level <b>3.4</b></span>
+          </div>
+        </div>
+        <div class="board-tools">
+          <label class="search"><svg class="ic"><use href="#i-search"/></svg><input placeholder="Find a hero" value=""></label>
+          <div class="seg"><button class="on"><svg class="ic"><use href="#i-grid"/></svg></button><button><svg class="ic"><use href="#i-list"/></svg></button></div>
+          <span class="note">Vocabulary quiz · 9 min</span>
+        </div>
+      </div>
+
+      <div class="roster">
+        <article class="card">
+          <div class="card-head"><span class="card-name">Alex</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>5</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Pathfinder</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:62%"></i></div><div class="lab"><span>310 / 500 XP</span><span>lvl 6</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>120</span></div>
+        </article>
+
+        <article class="card sel">
+          <div class="card-head"><span class="card-name">Mia</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>7</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Star</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:88%"></i></div><div class="lab"><span>740 / 840 XP</span><span>lvl 8</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>305</span></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head"><span class="card-name">Noah</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>3</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Apprentice</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:40%"></i></div><div class="lab"><span>160 / 400 XP</span><span>lvl 4</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>60</span></div>
+        </article>
+
+        <article class="card out">
+          <div class="card-head"><span class="card-name">Lina</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>4</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="out-badge">OUT</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Scout</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:55%"></i></div><div class="lab"><span>330 / 600 XP</span><span>lvl 5</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>40</span></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head"><span class="card-name">Emma</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>6</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Champion</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg><svg class="ic"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:74%"></i></div><div class="lab"><span>520 / 700 XP</span><span>lvl 7</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>230</span></div>
+        </article>
+
+        <article class="card out">
+          <div class="card-head"><span class="card-name">Niko</span><span class="lvl"><svg class="ic" style="width:12px;height:12px"><use href="#i-star"/></svg>2</span></div>
+          <div class="art"><span class="tag">3D hero</span><span class="out-badge">OUT</span><span class="ped"></span><svg class="fig"><use href="#hero"/></svg></div>
+          <span class="title">Novice</span>
+          <div class="stats">
+            <div class="hearts"><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg><svg class="ic off"><use href="#i-heart"/></svg></div>
+            <div class="xp"><div class="track"><i class="fill" style="--p:25%"></i></div><div class="lab"><span>75 / 300 XP</span><span>lvl 3</span></div></div>
+          </div>
+          <div class="foot"><span class="coin"><svg class="ic"><use href="#i-coin"/></svg>15</span></div>
+        </article>
+      </div>
+    </section>
+
+    <aside class="console">
+      <h2>Teacher console <button class="btn">Undo</button></h2>
+
+      <section>
+        <p class="label">Give to</p>
+        <div class="seg seg-wide"><button class="on">Selected <b>1</b></button><button>Whole class</button></div>
+        <p class="target-names">Mia</p>
+      </section>
+
+      <section>
+        <p class="label">Experience</p>
+        <div class="awards">
+          <button class="award"><strong>+100</strong><span>Homework</span></button>
+          <button class="award"><strong>+150</strong><span>Vocabulary</span></button>
+          <button class="award"><strong>+50</strong><span>Nice</span></button>
+          <button class="award"><strong>+500</strong><span>Bonus</span></button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="btn" style="flex:1;justify-content:center">−50 · 100 · +50</div>
+          <button class="btn pri">Give XP</button>
+        </div>
+      </section>
+
+      <section>
+        <p class="label">Hit points</p>
+        <div class="row"><button class="btn dng">−1 HP</button><button class="btn ok">+1 HP</button><button class="btn">Restore class</button></div>
+      </section>
+
+      <section>
+        <p class="label">Coins</p>
+        <div class="row"><button class="btn">+10</button><button class="btn">+20</button><button class="btn">+30</button><button class="btn">+50</button></div>
+      </section>
+
+      <section class="panel">
+        <span class="pl">Hero details</span>
+        <small>Tap a hero on the board to read their sheet, rename them or open their shop.</small>
+      </section>
+      <section class="panel">
+        <span class="pl">Add student</span>
+        <small>Their hero appears on the board straight away, ready for the first reward.</small>
+      </section>
+      <section class="panel">
+        <span class="pl">Activity</span>
+        <small>14:02 · Vocabulary · +150 to Mia<br>13:58 · Homework · +100 to Alex, Emma</small>
+      </section>
+    </aside>
+  </div>
+</div>
+</body>
+</html>

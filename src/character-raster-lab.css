@@ -1,0 +1,74 @@
+/* An extension of the existing midnight-blue character lab. */
+.raster-lab { --forest: #597442; --slate: #4f748b; --garnet: #9a5864; --sand: #b49a68; }
+.raster-lab .intro { gap: 28px; }
+.raster-lab h1 { font-size: clamp(28px, 2.6vw, 38px); }
+.export-button { background: var(--gold); color: #18252c; padding: 14px 20px; border-radius: 6px; font-weight: 650; font-size: 13px; white-space: nowrap; min-height: 46px; }
+.export-button:hover:not(:disabled) { background: #ebd3a7; }
+.raster-workbench { display: grid; grid-template-columns: 258px minmax(0, 1fr) 234px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); outline: none; }
+.wardrobe { padding: 27px 22px; border-right: 1px solid var(--line); }
+.raster-lab fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.raster-lab legend, .game-preview h2 { margin-bottom: 16px; font-size: 15px; font-weight: 650; }
+.style-choice { display: flex; align-items: center; position: relative; gap: 12px; padding: 9px 10px; border: 1px solid transparent; border-radius: 7px; cursor: pointer; min-height: 78px; }
+.style-choice + .style-choice { margin-top: 6px; }
+.style-choice:has(input:checked) { background: #203347; border-color: #61768a; }
+.style-choice:hover { background: #1a2d40; }
+.style-choice input, .color-options input, .file-button input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.style-choice:has(input:focus-visible), .color-options label:has(input:focus-visible), .file-button:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 3px; }
+.style-thumb { width: 46px; height: 58px; flex-shrink: 0; overflow: hidden; background: #2a3c48; border-radius: 4px; }
+.style-thumb img { width: 158px; max-width: none; height: auto; transform: translate(-55px, -3px); }
+.style-choice strong { display: block; font-size: 13px; font-weight: 600; }
+.style-choice small { display: block; color: var(--muted); font-size: 11px; line-height: 1.55; margin-top: 3px; overflow-wrap: anywhere; }
+.file-button { display: inline-flex; align-items: center; justify-content: center; position: relative; min-height: 42px; border: 1px solid #415770; border-radius: 5px; padding: 9px 12px; cursor: pointer; font-size: 12px; font-weight: 550; }
+.file-button:hover { background: #25394b; border-color: #7b8fa5; }
+.wardrobe > .file-button { width: 100%; margin-top: 17px; }
+.control-note { color: var(--muted); font-size: 12px; line-height: 1.7; margin-top: 12px; }
+.raster-lab .tunic-picker { margin-top: 29px; }
+.color-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.color-options label { display: flex; position: relative; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; padding: 4px 0; border-radius: 4px; font-size: 11px; color: var(--muted); }
+.color-chip { width: 31px; height: 31px; border-radius: 50%; border: 2px solid #102033; outline: 1px solid transparent; outline-offset: 3px; }
+.forest { background: var(--forest); }.slate { background: var(--slate); }.garnet { background: var(--garnet); }.sand { background: var(--sand); }
+.color-options label:has(input:checked) { color: var(--ink); }
+.color-options input:checked + .color-chip { outline-color: var(--gold); }
+.tunic-picker:disabled { opacity: .45; }.tunic-picker:disabled label { cursor: default; }
+.layer-explanation { margin-top: 30px; padding-top: 23px; border-top: 1px solid var(--line); }
+.layer-explanation strong { font-size: 12px; font-weight: 600; }.layer-explanation p { font-size: 12px; color: var(--muted); margin: 8px 0 15px; line-height: 1.7; }.layer-explanation a { font-size: 12px; color: var(--gold); }
+.character-stage { min-height: 658px; position: relative; overflow: hidden; background: #172a39; color: var(--ink); }
+.stage-toolbar, .stage-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: absolute; left: 22px; right: 22px; z-index: 1; font-size: 11px; }
+.stage-toolbar { top: 19px; }.stage-bottom { bottom: 20px; }
+.segment-control { display: flex; gap: 3px; background: #102033; padding: 3px; border: 1px solid var(--line); border-radius: 5px; }
+.segment-control button { padding: 7px 9px; border-radius: 3px; font-size: 11px; background: transparent; color: var(--muted); min-height: 32px; }
+.segment-control button[aria-pressed="true"] { background: #30465b; color: var(--ink); }
+.background-picker { display: flex; gap: 3px; }
+.background-picker button { min-height: 32px; padding: 5px 7px; font-size: 11px; color: inherit; background: transparent; border-bottom: 2px solid transparent; }
+.background-picker button[aria-pressed="true"] { border-bottom-color: currentColor; }
+.sprite-frame { position: absolute; inset: 67px 0 55px; overflow: hidden; display: flex; justify-content: center; }
+.sprite-frame > img, .sprite-frame > canvas { height: 100%; width: auto; max-width: none; object-fit: contain; align-self: flex-start; }
+.character-stage[data-view="portrait"] .sprite-frame > img, .character-stage[data-view="portrait"] .sprite-frame > canvas { height: 205%; }
+.character-stage[data-background="light"] { background: #e4ebf0; color: #233b4b; }
+/* A transparency-inspection canvas: this checkerboard is UI, never PNG pixels. */
+.character-stage[data-background="checker"] { background-color: #e4ebf0; background-image: conic-gradient(#c4cfd8 25%, transparent 0 50%, #c4cfd8 0 75%, transparent 0); background-size: 22px 22px; color: #233b4b; }
+.game-preview { border-left: 1px solid var(--line); padding: 27px 23px; }
+.raster-pupil-card { padding: 16px; border: 1px solid #425b6b; border-radius: 12px; background: #152b3b; }
+.card-class { font-size: 10px; color: var(--gold); }.card-sprite { height: 240px; display: flex; justify-content: center; margin: 6px -8px 10px; }.card-sprite > img, .card-sprite > canvas { height: 100%; width: auto; max-width: none; }
+.card-name { font-size: 17px; font-weight: 650; display: block; }.card-level { color: #b3c7d9; font-size: 11px; }
+.card-progress { color: #b3c7d9; font-size: 10px; margin-top: 13px; font-variant-numeric: tabular-nums; }
+.card-progress progress { appearance: none; width: 100%; height: 4px; display: block; margin-top: 7px; border: 0; border-radius: 2px; background: #30485c; overflow: hidden; }
+.card-progress progress::-webkit-progress-bar { background: #30485c; }.card-progress progress::-webkit-progress-value { background: var(--blue); }.card-progress progress::-moz-progress-bar { background: var(--blue); }
+.game-preview .demo-note { color: var(--muted); font-size: 11px; line-height: 1.6; margin-top: 12px; }
+.raster-spec { display: grid; gap: 9px; padding-top: 19px; margin: 20px 0; border-top: 1px solid var(--line); font-size: 11px; }
+.raster-spec > div { display: flex; justify-content: space-between; gap: 8px; }.raster-spec dt { color: var(--muted); }.raster-spec dd { margin: 0; font-variant-numeric: tabular-nums; }
+.kit-link { color: var(--gold); font-size: 12px; line-height: 1.7; }.settings-link { display: inline-block; background: none; padding: 5px 0; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }.settings-link:hover { color: var(--ink); }
+.game-preview > .settings-link { margin-top: 8px; text-align: left; }
+.render-status { min-height: 20px; font-size: 11px; color: var(--muted); margin-top: 11px; }.error-message { margin-top: 12px; color: #ffd1c6; background: #422c30; padding: 14px 18px; border: 1px solid #886061; border-radius: 6px; font-size: 13px; }
+.equipment-section { display: grid; grid-template-columns: 1fr 1.35fr; gap: 56px; padding: 35px 0 38px; border-bottom: 1px solid var(--line); scroll-margin-top: 25px; }
+.equipment-intro h2 { font-size: 23px; line-height: 1.3; font-weight: 600; letter-spacing: -.015em; }.equipment-intro > p { max-width: 52ch; color: var(--muted); font-size: 13px; line-height: 1.8; margin-top: 13px; }.equipment-intro > .control-note { font-size: 12px; }
+.equipment-editor { padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.equipment-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 22px; }.equipment-heading > label:first-child { flex: 1; max-width: 230px; font-size: 12px; color: var(--muted); }.equipment-heading select { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid #50677f; border-radius: 5px; background: #192c40; color: var(--ink); font: inherit; font-size: 13px; min-height: 42px; }
+.equipment-empty { font-size: 13px; color: var(--muted); margin: 24px 0; line-height: 1.7; }.file-note { font-size: 11px; color: var(--muted); margin-top: 21px; line-height: 1.7; }
+.equipment-file-name { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 21px 0; }.equipment-file-name strong { font-weight: 500; font-size: 12px; overflow-wrap: anywhere; min-width: 0; }.equipment-file-name button { flex-shrink: 0; }
+.equipment-sliders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }.equipment-sliders label { font-size: 11px; color: var(--muted); }.equipment-sliders output { float: right; color: var(--ink); font-variant-numeric: tabular-nums; }.equipment-sliders input { display: block; width: 100%; margin: 12px 0 0; accent-color: var(--gold); cursor: pointer; min-height: 24px; }
+.equipment-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 17px; }.check-label { font-size: 12px; display: inline-flex; align-items: center; gap: 7px; }.check-label input { accent-color: var(--gold); }
+.raster-details { margin: 25px 0 30px; }.raster-details summary { cursor: pointer; font-size: 13px; color: var(--gold); padding: 8px 0; }.raster-details > div { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 40px; padding: 18px 0; }.raster-details p { font-size: 12px; color: var(--muted); max-width: 70ch; line-height: 1.8; }.raster-details strong { color: var(--ink); font-weight: 550; }
+@media (max-width: 1120px) { .raster-workbench { grid-template-columns: 220px minmax(0, 1fr) 205px; }.wardrobe, .game-preview { padding: 22px 17px; }.stage-toolbar, .stage-bottom { left: 16px; right: 16px; }.stage-bottom { flex-direction: column; gap: 8px; }.sprite-frame { bottom: 82px; }.style-thumb { width: 38px; }.style-choice { gap: 9px; padding: 8px; }.equipment-section { gap: 30px; }.card-sprite { height: 220px; } }
+@media (max-width: 900px) { .raster-workbench { grid-template-columns: 1fr 1fr; }.character-stage { grid-column: 1 / -1; grid-row: 1; min-height: 600px; border-bottom: 1px solid var(--line); }.wardrobe { border-right: 1px solid var(--line); }.game-preview { border-left: 0; }.style-choice { max-width: 100%; }.raster-pupil-card { max-width: 230px; margin: auto; }.game-preview .demo-note { max-width: 230px; margin: 12px auto 0; }.raster-spec { max-width: 280px; }.stage-bottom { flex-direction: row; }.sprite-frame { bottom: 55px; }.equipment-section { grid-template-columns: 1fr; gap: 23px; }.equipment-intro > p { max-width: 70ch; }.equipment-editor { padding: 23px; } }
+@media (max-width: 600px) { .raster-lab .intro { padding-top: 24px; }.raster-lab .intro p { max-width: 32ch; }.export-button { width: 100%; margin-top: 20px; }.character-stage { min-height: 495px; }.sprite-frame { inset: 68px 0 77px; }.stage-toolbar > span { font-size: 10px; }.stage-toolbar, .stage-bottom { left: 14px; right: 14px; }.stage-bottom { flex-direction: column; gap: 8px; bottom: 13px; }.wardrobe { padding: 23px 14px; }.game-preview { padding: 23px 14px; }.raster-workbench { grid-template-columns: 1fr; }.wardrobe { border-right: 0; border-bottom: 1px solid var(--line); }.style-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }.style-choice + .style-choice { margin-top: 0; }.style-choice { padding: 7px; gap: 8px; }.style-choice small { font-size: 10px; }.style-thumb { width: 36px; }.imported-choice { grid-column: 1 / -1; }.raster-lab .tunic-picker { margin-top: 24px; }.color-options { gap: 15px; }.color-options label { font-size: 12px; }.layer-explanation { margin-top: 22px; }.raster-pupil-card { max-width: 245px; }.card-sprite { height: 260px; }.game-preview > h2 { text-align: center; }.raster-spec { max-width: none; }.game-preview > .settings-link { display: block; }.equipment-intro h2 { font-size: 22px; }.equipment-heading { gap: 14px; }.equipment-upload { padding: 9px 10px; white-space: nowrap; }.equipment-editor { padding: 18px; }.equipment-sliders { grid-template-columns: 1fr; gap: 16px; }.equipment-file-name { flex-direction: column; align-items: flex-start; gap: 4px; }.raster-details > div { grid-template-columns: 1fr; }.raster-lab footer { align-items: flex-start; }.raster-lab footer > a { text-align: right; } }

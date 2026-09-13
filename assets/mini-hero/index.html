@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f4ee">
+  <meta name="description" content="Un petit aventurier 3D lumineux, créé dans Blender à partir de la référence de style fournie.">
+  <title>Petit aventurier — Studio 3D · Game of More</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/mini-hero.css">
+  <script type="module" src="/assets/mini-hero/mini.js"></script>
+</head>
+<body>
+  <!-- THESIS: Let the actual rounded Blender character lead a clear, daylight studio.
+  WORLD: Same Game of More identity; the requested clarity becomes warm paper, sage and dark green, with restrained gold from the hair and shield.
+  STORY: See the real rendered figure, switch to its full 3D volume, inspect a chosen angle, download the editable scene.
+  MODE: Experience. User-supplied character reference governs proportions and the bright, toy-like material treatment. -->
+  <a class="skip-link" href="#studio">Aller au personnage</a>
+  <header class="mini-header">
+    <a class="mini-brand" href="/character-lab.html"><img src="/assets/emblem.svg" alt="" width="30" height="35"><span>GAME <small>OF</small> MORE</span></a>
+    <span class="header-label">Atelier de personnages</span>
+    <a class="back-link" href="/character-lab.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg>Le comparateur</a>
+  </header>
+  <main class="mini-layout">
+    <section class="studio" id="studio" aria-label="Aperçu du petit aventurier" tabindex="-1">
+      <div class="studio-toolbar"><span class="studio-label">Étude de personnage</span><div class="mode-switch" role="group" aria-label="Type de présentation"><button id="mode-render" aria-pressed="true">Rendu Blender</button><button id="mode-live" aria-pressed="false">Modèle 3D</button></div></div>
+      <div class="figure-stage">
+        <div class="viewer" id="mini-viewer" role="img" aria-label="Petit aventurier blond en tunique verte, aperçu du modèle Blender">
+          <img class="viewer-fallback" src="/assets/mini-hero/sunlit-portrait.webp" width="1200" height="1400" alt="Petit aventurier 3D aux yeux noirs ovales, cheveux dorés, bonnet vert, bouclier bleu et petite épée." fetchpriority="high">
+        </div>
+        <button class="portrait-hotspot" id="portrait-open" aria-label="Explorer le volume du petit aventurier en 3D"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Explorer le volume</span></button>
+        <p class="viewer-status" id="mini-status" role="status" aria-live="polite" hidden></p>
+        <button class="retry-button" id="mini-retry" hidden>Réessayer le chargement</button>
+      </div>
+      <div class="studio-bottom"><span id="mode-caption">Portrait rendu dans Blender</span><span id="mesh-count">Éclairage doux · fond transparent</span></div>
+      <div class="view-controls" id="view-controls" hidden><div role="group" aria-label="Angle de vue"><button data-mini-angle="front" aria-pressed="false">Face</button><button data-mini-angle="quarter" aria-pressed="true">Trois quarts</button><button data-mini-angle="back" aria-pressed="false">Dos</button><button data-mini-angle="detail" aria-pressed="false">Visage</button></div><button id="mini-rotate" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></svg>Rotation</button></div>
+    </section>
+    <aside class="character-info">
+      <h1>Petit format.<br>Grand aventurier.</h1>
+      <p class="lead">Des volumes arrondis, un regard simple et des couleurs qui prennent la lumière.</p>
+      <button class="primary-action" id="primary-open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Voir le personnage en 3D<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+      <dl class="study-details"><div><dt>Silhouette</dt><dd>Volumes doux, proportions plus élancées</dd></div><div><dt>Palette</dt><dd><span class="color-sample leaf"></span>Vert feuille <span class="color-sample gold"></span>Blond doré</dd></div><div><dt>Finitions</dt><dd>Yeux brillants, mèches sculptées,<br>bouclier-boussole et métal satiné</dd></div></dl>
+      <p class="study-description">Une nouvelle interprétation à partir de ta référence. L’aperçu est le rendu du véritable modèle : tu peux aussi le regarder de dos et en rotation.</p>
+      <div class="asset-links"><a href="/assets/mini-hero/sunlit-adventurer.blend" download><span>Scène Blender<small>.blend · modèle éditable</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></a><a href="/assets/mini-hero/sunlit-adventurer.glb" download><span>Modèle 3D<small>.glb · géométrie et matériaux</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></a></div>
+    </aside>
+  </main>
+  <footer><span>GAME OF MORE <span class="divider">/</span> Laboratoire visuel</span><a href="/assets/mini-hero/sunlit-portrait.webp" download>Télécharger l’aperçu</a><span>Modèle statique · étude de style</span></footer>
+  <noscript><p class="noscript">Le rendu Blender est visible. Active JavaScript pour explorer le modèle 3D.</p></noscript>
+</body>
+</html>

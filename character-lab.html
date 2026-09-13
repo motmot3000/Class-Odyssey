@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a1220">
+  <meta name="description" content="Trois pistes pour le rôdeur Game of More : SVG retravaillé, 3D aventure et alternative Blender stylisée et simplifiée. Comparez les portraits, les volumes et les cartes.">
+  <title>SVG ou 3D ? — Le rôdeur · Game of More</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/character-lab.css">
+  <link rel="stylesheet" href="/src/character-vector-lab.css">
+  <link rel="stylesheet" href="/src/character-playful-lab.css">
+  <link rel="stylesheet" href="/src/character-svg-variants.css">
+  <script type="module" src="/assets/character-lab/lab.js"></script>
+  <script type="module" src="/src/character-svg-variants.mjs"></script>
+</head>
+<body>
+  <!-- THESIS: Compare the detailed SVG ranger, the adventure Blender reconstruction and a simpler stylized young adventurer; retain access to the incumbent SVG.
+  OWN-WORLD: Incumbent midnight-blue game UI, pale blue type, restrained brass borrowed from the ranger's lantern; quiet rectangular studio stages.
+  STORY: Compare three art directions, inspect SVG details or either real 3D volume, then compare the four classroom cards.
+  FIRST VIEWPORT: Compact masthead, direct title, three equal stages: SVG, adventure 3D, stylized 3D. Each portrait opens its own detail view.
+  FORM: User-specified before/after character study, a local extension of the established Game of More world. No concept seed required.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->
+  <a class="skip-link" href="#presentations">Aller aux personnages</a>
+  <header class="topbar">
+    <a class="brand" data-game-link href="http://localhost:5180/" aria-label="Game of More, le jeu"><img src="/assets/emblem.svg" width="34" height="38" alt=""><span>GAME <small>OF</small> MORE</span></a>
+    <span class="studio-name">Atelier de personnages</span>
+    <a class="prototype" href="/assets/character-lab/raster/index.html">Tester la version PNG</a>
+    <a class="back-link" data-game-link href="http://localhost:5180/">Retour au jeu <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div><h1>Trois façons de prendre vie.</h1><p>SVG, 3D aventure ou 3D stylisée : le même rôdeur, trois caractères.</p></div>
+      <div class="view-tabs" role="group" aria-label="Mode de présentation">
+        <button data-mode="compare" aria-pressed="true">Comparer</button>
+        <button data-mode="vector" aria-pressed="false">Détails du SVG</button>
+        <button data-mode="model" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Explorer en 3D</button>
+      </div>
+    </div>
+
+    <div id="presentations" tabindex="-1">
+    <section class="comparison" id="comparison" aria-label="Comparaison du SVG, de la 3D aventure et de la 3D stylisée">
+      <article class="vector-stage">
+        <div class="stage-heading"><h2 id="vector-stage-title">Base neutre</h2><span class="vector-label">SVG 2.0</span></div>
+        <div class="svg-options" role="group" aria-label="Personnage et tenue du SVG">
+          <label><span class="svg-option-label">Version du personnage</span><select id="svg-gender"><option value="male">Masculin</option><option value="female">Féminin</option></select></label>
+          <label><span class="svg-option-label">Tenue du personnage</span><select id="svg-outfit"><option value="base">Base neutre</option><option value="ranger">Rôdeur</option></select></label>
+        </div>
+        <button class="vector-portrait-button" id="open-vector" aria-label="Examiner le dessin SVG en détail">
+          <img src="/assets/character-lab/character-base-male.svg" data-svg-asset="character-base-male.svg" data-svg-title="Base neutre" width="560" height="940" alt="Personnage masculin 2.0 en tenue simple : haut vert grisé, pantalon ardoise et chaussures sobres." fetchpriority="high">
+          <span class="portrait-action vector-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3H3v7m11-7h7v7M3 14v7h7m11-7v7h-7"/></svg>Examiner le dessin<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span>
+        </button>
+        <div id="original-hero" class="original-hero" hidden></div>
+        <div class="source-switch"><button id="toggle-original" aria-pressed="false">Voir le SVG actuel</button></div>
+      </article>
+      <article class="new-stage">
+        <div class="stage-heading"><h2>3D aventure</h2><span class="new-label">Blender</span></div>
+        <button class="portrait-button" id="open-model" data-open-model="adventure" aria-label="Explorer le rôdeur aventure en 3D">
+          <img class="hero-portrait" src="/assets/character-lab/ranger-portrait.webp" width="1100" height="1400" alt="Nouvelle interprétation du rôdeur en 3D : capuche verte, cape de laine, cuir patiné et lanterne." fetchpriority="high">
+          <span class="portrait-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Explorer en 3D<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span>
+        </button>
+        <div class="portrait-note"><span>Laine, cuir & laiton</span><span>Rendu Blender</span></div>
+      </article>
+      <article class="new-stage playful-stage">
+        <div class="stage-heading"><h2>3D stylisée</h2><span class="new-label">Blender</span></div>
+        <button class="portrait-button" id="open-playful-model" data-open-model="playful" aria-label="Explorer le Jeune éclaireur, alternative simplifiée en 3D">
+          <img class="hero-portrait" src="/assets/character-lab/ranger-playful-portrait.webp" width="1100" height="1400" alt="Jeune éclaireur 3D stylisé : proportions élancées, expression calme, tunique verte simple et lanterne en laiton.">
+          <span class="portrait-action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg>Explorer en 3D<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span>
+        </button>
+        <p class="playful-caption">Jeune éclaireur · une aventure plus simple</p>
+      </article>
+    </section>
+
+    <section class="model-stage vector-detail-stage" id="vector-stage" aria-labelledby="vector-title" hidden>
+      <div class="model-info">
+        <button class="text-button" id="return-vector-comparison"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg>La comparaison</button>
+        <div><h2 id="vector-title" tabindex="-1">Le rôdeur, dessiné.</h2><p>Des lignes précises.<br>Une présence plus affirmée.</p></div>
+        <dl class="model-details"><div><dt>Silhouette</dt><dd>Vue de face, posture équilibrée</dd></div><div><dt>Visage</dt><dd>Traits alignés, expression calme</dd></div><div><dt>Finitions</dt><dd>Coutures régulières, cuir et laiton</dd></div></dl>
+        <p class="model-explanation">Chaque pièce est dessinée avec des tracés vectoriels éditables. Les gros plans montrent les mêmes formes, à une autre échelle.</p>
+        <div class="downloads"><a id="svg-download" href="/assets/character-lab/character-base-male.svg" download>Télécharger le SVG <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></a></div>
+      </div>
+      <div class="vector-detail-wrap">
+        <div class="viewport-top"><span>Illustration vectorielle éditable</span><span>SVG natif</span></div>
+        <img id="vector-detail-image" src="/assets/character-lab/character-base-male.svg?view=full" width="560" height="940" alt="Silhouette complète du personnage de base">
+        <div class="viewer-controls"><div class="angle-controls" role="group" aria-label="Détail à examiner dans le SVG"><button data-vector-view="full" aria-pressed="true">Silhouette</button><button data-vector-view="face" aria-pressed="false">Visage</button><button data-vector-view="materials" aria-pressed="false">Coutures</button><button data-vector-view="lantern" aria-pressed="false">Lanterne</button></div></div>
+      </div>
+    </section>
+
+    <section class="model-stage" id="model-stage" aria-labelledby="model-title" hidden>
+      <div class="model-info">
+        <button class="text-button" id="return-comparison"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg>La comparaison</button>
+        <div class="model-variants" role="group" aria-label="Direction du modèle 3D"><button data-model-variant="adventure" aria-pressed="true">Aventure</button><button data-model-variant="playful" aria-pressed="false">Stylisée</button></div>
+        <div><h2 id="model-title" tabindex="-1">Le rôdeur</h2><p id="model-description">Une silhouette d’aventurier, pensée pour Game of More.</p></div>
+        <dl class="model-details"><div><dt>Tenue</dt><dd id="model-outfit">Éclaireur des sous-bois</dd></div><div><dt>Matières</dt><dd id="model-materials">Laine · cuir · laiton</dd></div><div><dt>Accessoire</dt><dd id="model-accessory">Lanterne du savoir</dd></div></dl>
+        <p class="model-explanation">Le personnage est présenté au repos. Les vues ci-dessous permettent de découvrir son volume.</p>
+        <div class="downloads"><a id="model-glb-download" href="/assets/character-lab/ranger.glb" download>Modèle .glb <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></a><a id="model-blend-download" href="/assets/character-lab/ranger.blend" download>Scène Blender <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></a></div>
+      </div>
+      <div class="viewport-wrap">
+        <div class="viewer" id="viewer" role="img" aria-label="Modèle 3D du rôdeur, vue de trois quarts">
+          <img class="viewer-fallback" src="/assets/character-lab/ranger-portrait.webp" width="1100" height="1400" alt="Rendu fixe du rôdeur, disponible pendant le chargement 3D.">
+        </div>
+        <div class="viewer" id="viewer-playful" role="img" aria-label="Modèle 3D du Jeune éclaireur, vue de trois quarts" hidden>
+          <img class="viewer-fallback" src="/assets/character-lab/ranger-playful-portrait.webp" width="1100" height="1400" alt="Rendu fixe du Jeune éclaireur, disponible pendant le chargement 3D.">
+        </div>
+        <div class="viewer-status" id="viewer-status" role="status" aria-live="polite">Préparation de la scène…</div>
+        <button class="retry-button" id="retry-viewer" hidden>Réessayer le chargement 3D</button>
+        <div class="viewport-top"><span>Modèle 3D complet</span><span id="model-size"></span></div>
+        <div class="viewer-controls">
+          <div class="angle-controls" role="group" aria-label="Angle de vue"><button data-angle="front" aria-pressed="false">Face</button><button data-angle="quarter" aria-pressed="true">¾</button><button data-angle="back" aria-pressed="false">Dos</button><button data-angle="detail" aria-pressed="false">Détail</button></div>
+          <button class="rotation-button" id="rotate-model" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></svg>Rotation</button>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <div class="study-note"><span class="note-mark" aria-hidden="true"></span><p>Trois pistes à comparer. La version stylisée garde l’aventurier, avec une silhouette et une tenue plus simples.</p><a href="#card-test">Comparer les cartes <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></a></div>
+
+    <section class="card-test" id="card-test" aria-labelledby="card-title">
+      <div class="card-test-copy"><h2 id="card-title">Le test de la carte.</h2><p>Dessin actuel, nouveau SVG, 3D aventure ou stylisée : quelle silhouette reste la plus lisible en petit ?</p><p class="demo-note">Personnage fictif · valeurs de démonstration</p></div>
+      <div class="pupil-card"><span class="pupil-version">Aujourd’hui</span><div id="card-original" class="card-figure"></div><div class="pupil-identity"><strong>Alex</strong><span>Niveau 5 · Rôdeur</span></div><div class="pupil-progress"><span>340 / 500 XP</span><div><i></i></div></div></div>
+      <button class="pupil-card vector-pupil-card" id="card-open-vector" aria-label="Alex en SVG retravaillé, examiner le dessin"><span class="pupil-version">SVG retravaillé <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3H3v7m11-7h7v7M3 14v7h7m11-7v7h-7"/></svg></span><div class="card-figure"><img src="/assets/character-lab/ranger-vector.svg" width="560" height="940" alt="Alex, nouvelle illustration SVG" loading="lazy"></div><div class="pupil-identity"><strong>Alex</strong><span>Niveau 5 · Rôdeur</span></div><div class="pupil-progress"><span>340 / 500 XP</span><div><i></i></div></div></button>
+      <button class="pupil-card new-pupil-card" id="card-open-model" data-open-model="adventure" aria-label="Alex en 3D aventure, ouvrir le personnage complet"><span class="pupil-version">3D aventure <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span><div class="card-figure"><img src="/assets/character-lab/ranger-portrait.webp" width="1100" height="1400" alt="Alex, rôdeur en 3D aventure" loading="lazy"></div><div class="pupil-identity"><strong>Alex</strong><span>Niveau 5 · Rôdeur</span></div><div class="pupil-progress"><span>340 / 500 XP</span><div><i></i></div></div></button>
+      <button class="pupil-card new-pupil-card playful-pupil-card" id="card-open-playful-model" data-open-model="playful" aria-label="Alex en 3D stylisée, ouvrir le Jeune éclaireur"><span class="pupil-version">3D stylisée <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span><div class="card-figure"><img src="/assets/character-lab/ranger-playful-portrait.webp" width="1100" height="1400" alt="Alex, Jeune éclaireur en 3D stylisée" loading="lazy"></div><div class="pupil-identity"><strong>Alex</strong><span>Niveau 5 · Rôdeur</span></div><div class="pupil-progress"><span>340 / 500 XP</span><div><i></i></div></div></button>
+    </section>
+    <footer><span>GAME OF MORE <span class="footer-divider">/</span> Laboratoire visuel</span><a href="/assets/wardrobe/index.html">Essayer le vestiaire 3D</a><a href="/assets/mini-hero/index.html">Petit aventurier 3D · studio clair</a><span>SVG dessiné · rendu Blender · modèle WebGL</span></footer>
+  </main>
+  <noscript><p class="no-script">Les aperçus sont visibles sans JavaScript. Activez JavaScript pour la comparaison SVG et le modèle 3D interactif.</p></noscript>
+</body>
+</html>

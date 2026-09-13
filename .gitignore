@@ -15,3 +15,8 @@ var/
 
 # Verrous LibreOffice sur les .docx
 .~lock.*#
+
+# Character-lab review captures and Blender transient files.
+.impeccable/review/
+*.blend1
+__pycache__/
