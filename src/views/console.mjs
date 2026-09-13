@@ -8,12 +8,13 @@ import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../do
 import { renderHero } from "../avatar.mjs";
 import { escapeHtml, gearOf, heroStageAttributes, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
+import { getLang, t, tItem } from "../i18n.mjs";
 
 const XP_PRESETS = [
-  { amount: 100, reason: "Homework" },
-  { amount: 150, reason: "Vocabulary" },
-  { amount: 50, reason: "Nice" },
-  { amount: 500, reason: "Bonus" }
+  { amount: 100, reason: "console.preset.homework" },
+  { amount: 150, reason: "console.preset.vocabulary" },
+  { amount: 50, reason: "console.preset.nice" },
+  { amount: 500, reason: "console.preset.bonus" }
 ];
 
 const COIN_PRESETS = [10, 20, 30, 50];
@@ -23,9 +24,9 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
 
   return `
     <div class="console-head">
-      <h2>Teacher console</h2>
-      <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="Undo last change (Ctrl+Z)">
-        ${icon("undo")}<span>Undo</span>
+      <h2>${t("console.title")}</h2>
+      <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="${t("console.undoHint")}">
+        ${icon("undo")}<span>${t("console.undo")}</span>
       </button>
     </div>
 
@@ -40,21 +41,22 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
 }
 
 function renderAccountPanel(open, unlockedUntil, account) {
+  const locale = getLang() === "fr" ? "fr-FR" : "en-GB";
   const endsAt = Number.isFinite(unlockedUntil)
-    ? new Date(unlockedUntil).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(unlockedUntil).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
     : null;
   return `
     <details class="panel" data-panel="account" ${open("account")}>
-      <summary>${icon("lock")}<span>Account</span></summary>
+      <summary>${icon("lock")}<span>${t("console.account")}</span></summary>
       <p class="account-line"><strong>${escapeHtml(account?.displayName || "")}</strong><span>@${escapeHtml(account?.username || "")}</span></p>
-      <p class="panel-note">The account password also unlocks this console.${endsAt ? ` It is open here until ${endsAt}.` : ""}</p>
+      <p class="panel-note">${t("console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
       <form class="access-form" data-action="change-password">
-        <label class="field"><span>Current password</span><input name="current" type="password" autocomplete="current-password" /></label>
-        <label class="field"><span>New password</span><input name="next" type="password" autocomplete="new-password" /></label>
-        <label class="field"><span>Repeat new password</span><input name="confirm" type="password" autocomplete="new-password" /></label>
-        <button class="btn btn-primary btn-sm" type="submit">Change password</button>
+        <label class="field"><span>${t("console.account.current")}</span><input name="current" type="password" autocomplete="current-password" /></label>
+        <label class="field"><span>${t("console.account.new")}</span><input name="next" type="password" autocomplete="new-password" /></label>
+        <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" /></label>
+        <button class="btn btn-primary btn-sm" type="submit">${t("console.account.change")}</button>
       </form>
-      <hr class="rule" /><div class="button-row"><button class="btn btn-sm" data-action="lock-adult">${icon("lock")}Lock console</button><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">Sign out</button></div>
+      <hr class="rule" /><div class="button-row"><button class="btn btn-sm" data-action="lock-adult">${icon("lock")}${t("console.account.lock")}</button><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button></div>
     </details>`;
 }
 
@@ -70,27 +72,27 @@ function renderTarget(classroom, ui, targets) {
     .map((pupil) => pupil.name);
 
   const summary = ui.scope === "class"
-    ? `Everyone in ${escapeHtml(classroom.name)} — ${classroom.pupils.length} heroes.`
+    ? t("console.target.everyone", { name: escapeHtml(classroom.name), count: classroom.pupils.length })
     : names.length
       ? escapeHtml(names.join(", "))
-      : "Tap heroes on the board to pick who gets the reward.";
+      : t("console.target.tap");
 
   return `
     <section class="target ${targets.length ? "" : "is-empty"}">
-      <h3 class="section-label">Give to</h3>
-      <div class="segmented segmented-lg" role="group" aria-label="Reward target">
+      <h3 class="section-label">${t("console.target.giveTo")}</h3>
+      <div class="segmented segmented-lg" role="group" aria-label="${t("console.target.aria")}">
         <button type="button" class="${ui.scope === "selection" ? "is-active" : ""}" data-action="scope" data-scope="selection" aria-pressed="${ui.scope === "selection"}">
-          Selected<b>${selectedCount}</b>
+          ${t("console.target.selected")}<b>${selectedCount}</b>
         </button>
         <button type="button" class="${ui.scope === "class" ? "is-active" : ""}" data-action="scope" data-scope="class" aria-pressed="${ui.scope === "class"}">
-          Whole class
+          ${t("console.target.whole")}
         </button>
       </div>
       <p class="target-names">${summary}</p>
       ${ui.scope === "selection" ? `
         <div class="target-actions">
-          <button class="btn btn-sm" type="button" data-action="select-all">Select all</button>
-          <button class="btn btn-sm" type="button" data-action="clear-selection" ${targets.length ? "" : "disabled"}>Clear selection</button>
+          <button class="btn btn-sm" type="button" data-action="select-all">${t("console.target.selectAll")}</button>
+          <button class="btn btn-sm" type="button" data-action="clear-selection" ${targets.length ? "" : "disabled"}>${t("console.target.clear")}</button>
         </div>
       ` : ""}
     </section>
@@ -102,45 +104,45 @@ function renderAward(ui, targets) {
 
   return `
     <section class="award">
-      <h3 class="section-label">Experience</h3>
+      <h3 class="section-label">${t("console.award.experience")}</h3>
       <div class="award-grid">
         ${XP_PRESETS.map((preset) => `
           <button class="award-btn" type="button" data-action="award-xp" data-amount="${preset.amount}" data-reason="${preset.reason}" ${off}>
             <strong>+${preset.amount}</strong>
-            <span>${preset.reason}</span>
+            <span>${t(preset.reason)}</span>
           </button>
         `).join("")}
       </div>
       <form class="stepper-row stepper-xp" data-action="custom-xp">
         <div class="stepper">
-          <button class="stepper-btn" type="button" data-action="step" data-field="xp-amount" data-step="-50" aria-label="Lower XP amount">${icon("minus")}</button>
-          <input id="xp-amount" name="amount" type="number" min="1" step="1" value="${ui.xpAmount}" aria-label="Custom XP amount" />
-          <button class="stepper-btn" type="button" data-action="step" data-field="xp-amount" data-step="50" aria-label="Raise XP amount">${icon("plus")}</button>
+          <button class="stepper-btn" type="button" data-action="step" data-field="xp-amount" data-step="-50" aria-label="${t("console.award.lowerXp")}">${icon("minus")}</button>
+          <input id="xp-amount" name="amount" type="number" min="1" step="1" value="${ui.xpAmount}" aria-label="${t("console.award.customXp")}" />
+          <button class="stepper-btn" type="button" data-action="step" data-field="xp-amount" data-step="50" aria-label="${t("console.award.raiseXp")}">${icon("plus")}</button>
         </div>
-        <button class="btn btn-primary" type="submit" ${off}>Give XP</button>
+        <button class="btn btn-primary" type="submit" ${off}>${t("console.award.giveXp")}</button>
       </form>
 
-      <h3 class="section-label">Hit points</h3>
+      <h3 class="section-label">${t("console.award.hitPoints")}</h3>
       <div class="hp-row">
-        <button class="btn btn-danger" type="button" data-action="hp-minus" ${off}>&minus;1 HP</button>
-        <button class="btn btn-ok" type="button" data-action="hp-plus" ${off}>+1 HP</button>
-        <button class="btn" type="button" data-action="heal-all">Restore class</button>
+        <button class="btn btn-danger" type="button" data-action="hp-minus" ${off}>${t("console.award.minusHp")}</button>
+        <button class="btn btn-ok" type="button" data-action="hp-plus" ${off}>${t("console.award.plusHp")}</button>
+        <button class="btn" type="button" data-action="heal-all">${t("console.award.restore")}</button>
       </div>
 
-      <h3 class="section-label">Coins</h3>
+      <h3 class="section-label">${t("console.award.coins")}</h3>
       <form class="coin-row" data-action="custom-money">
         ${COIN_PRESETS.map((amount) => `
           <button class="btn btn-coin" type="button" data-action="award-money" data-amount="${amount}" ${off}>+${amount}</button>
         `).join("")}
         <div class="stepper">
-          <button class="stepper-btn" type="button" data-action="step" data-field="coin-amount" data-step="-10" aria-label="Lower coin amount">${icon("minus")}</button>
-          <input id="coin-amount" name="amount" type="number" min="1" step="1" value="${ui.coinAmount}" aria-label="Custom coin amount" />
-          <button class="stepper-btn" type="button" data-action="step" data-field="coin-amount" data-step="10" aria-label="Raise coin amount">${icon("plus")}</button>
+          <button class="stepper-btn" type="button" data-action="step" data-field="coin-amount" data-step="-10" aria-label="${t("console.award.lowerCoin")}">${icon("minus")}</button>
+          <input id="coin-amount" name="amount" type="number" min="1" step="1" value="${ui.coinAmount}" aria-label="${t("console.award.customCoin")}" />
+          <button class="stepper-btn" type="button" data-action="step" data-field="coin-amount" data-step="10" aria-label="${t("console.award.raiseCoin")}">${icon("plus")}</button>
         </div>
-        <button class="btn btn-primary" type="submit" ${off}>Give coins</button>
+        <button class="btn btn-primary" type="submit" ${off}>${t("console.award.giveCoins")}</button>
       </form>
 
-      ${targets.length ? "" : `<p class="award-hint">Pick a target above to unlock these buttons.</p>`}
+      ${targets.length ? "" : `<p class="award-hint">${t("console.award.hint")}</p>`}
     </section>
   `;
 }
@@ -153,8 +155,8 @@ function renderHeroPanel(pupil, ui, open) {
   if (!pupil) {
     return `
       <details class="panel" data-panel="hero" ${open("hero")}>
-        <summary>${icon("user")}<span>Hero details</span></summary>
-        <p class="panel-note">Tap a hero on the board to read their sheet, rename them or open their shop.</p>
+        <summary>${icon("user")}<span>${t("console.hero.details")}</span></summary>
+        <p class="panel-note">${t("console.hero.hint")}</p>
       </details>
     `;
   }
@@ -170,7 +172,7 @@ function renderHeroPanel(pupil, ui, open) {
       <summary>${icon("user")}<span>${escapeHtml(pupil.name)}</span></summary>
 
       <div class="hero-sheet">
-        <button class="hero-sheet-art" type="button" data-action="zoom-pupil" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="Show ${escapeHtml(pupil.name)} full size" ${heroStageAttributes(pupil)}>
+        <button class="hero-sheet-art" type="button" data-action="zoom-pupil" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}" ${heroStageAttributes(pupil)}>
           ${renderHero(pupil)}
         </button>
         <div class="hero-sheet-facts">
@@ -179,7 +181,7 @@ function renderHeroPanel(pupil, ui, open) {
             ${renderMoney(pupil.money)}
           </div>
           ${renderHearts(pupil)}
-          <p class="hero-sheet-xp"><strong>${progress.current}</strong>/${progress.needed} XP to level ${pupil.level + 1}</p>
+          <p class="hero-sheet-xp">${t("console.hero.xp", { current: `<strong>${progress.current}</strong>`, needed: progress.needed, next: pupil.level + 1 })}</p>
         </div>
       </div>
 
@@ -191,22 +193,22 @@ function renderHeroPanel(pupil, ui, open) {
       <div class="rewards">
         ${unlocked.length ? unlocked.map((reward) => `<span class="reward-tag">${escapeHtml(reward)}</span>`).join("") : ""}
         <p class="panel-note">${next
-          ? `Level ${next.level} unlocks ${next.rewards.map(escapeHtml).join(", ")}.`
-          : "Every reward is unlocked."}</p>
+          ? t("console.hero.unlocks", { next: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+          : t("console.hero.allUnlocked")}</p>
       </div>
 
       <form class="inline-form" data-action="rename-pupil">
-        <input name="name" value="${escapeHtml(pupil.name)}" aria-label="Rename ${escapeHtml(pupil.name)}" />
-        <button class="btn btn-sm" type="submit">Rename</button>
+        <input name="name" value="${escapeHtml(pupil.name)}" aria-label="${t("console.hero.renameAria", { name: escapeHtml(pupil.name) })}" />
+        <button class="btn btn-sm" type="submit">${t("console.hero.rename")}</button>
       </form>
 
       <button class="btn btn-sm btn-quiet-danger" type="button" data-action="remove-pupil" data-pupil-id="${escapeHtml(pupil.id)}">
-        ${icon("trash")}<span>Remove ${escapeHtml(pupil.name)}</span>
+        ${icon("trash")}<span>${t("console.hero.remove", { name: escapeHtml(pupil.name) })}</span>
       </button>
     </details>
 
     <details class="panel" data-panel="shop" ${open("shop")}>
-      <summary>${icon("shop")}<span>Shop — ${escapeHtml(pupil.name)}</span></summary>
+      <summary>${icon("shop")}<span>${t("console.shop.summary", { name: escapeHtml(pupil.name) })}</span></summary>
       ${renderShop(pupil, ui.shopCategory)}
     </details>
   `;
@@ -215,28 +217,28 @@ function renderHeroPanel(pupil, ui, open) {
 function renderRosterPanel(classroom, open) {
   return `
     <details class="panel" data-panel="add" ${open("add")}>
-      <summary>${icon("plus")}<span>Add student</span></summary>
+      <summary>${icon("plus")}<span>${t("console.roster.add")}</span></summary>
       <form class="add-form" data-action="add-pupil">
         <div class="inline-form">
-          <input id="pupil-name" name="name" autocomplete="off" placeholder="First name" aria-label="First name" />
-          <button class="btn btn-primary btn-sm" type="submit">Add</button>
+          <input id="pupil-name" name="name" autocomplete="off" placeholder="${t("console.roster.firstName")}" aria-label="${t("console.roster.firstName")}" />
+          <button class="btn btn-primary btn-sm" type="submit">${t("console.roster.addBtn")}</button>
         </div>
         <div class="field-row">
           <label class="field">
-            <span>Character</span>
+            <span>${t("console.roster.character")}</span>
             <select name="gender">
-              <option value="boy">Boy</option>
-              <option value="girl">Girl</option>
+              <option value="boy">${t("console.roster.boy")}</option>
+              <option value="girl">${t("console.roster.girl")}</option>
             </select>
           </label>
           <label class="field">
-            <span>Skin tone</span>
+            <span>${t("console.roster.skinTone")}</span>
             <select name="skinTone">
-              ${SKIN_TONES.filter((tone) => !tone.price).map((tone) => `<option value="${tone.id}">${tone.name}</option>`).join("")}
+              ${SKIN_TONES.filter((tone) => !tone.price).map((tone) => `<option value="${tone.id}">${escapeHtml(tItem(tone, "name"))}</option>`).join("")}
             </select>
           </label>
         </div>
-        <p class="panel-note">Joining ${escapeHtml(classroom.name)}. Everything can be changed later.</p>
+        <p class="panel-note">${t("console.roster.joining", { name: escapeHtml(classroom.name) })}</p>
       </form>
     </details>
   `;
@@ -245,18 +247,19 @@ function renderRosterPanel(classroom, open) {
 function renderActivityPanel(events, open) {
   return `
     <details class="panel" data-panel="activity" ${open("activity")}>
-      <summary>${icon("clock")}<span>Activity</span></summary>
+      <summary>${icon("clock")}<span>${t("console.activity")}</span></summary>
       ${events.length ? `
         <ol class="events">
           ${events.slice(0, 8).map(renderEvent).join("")}
         </ol>
-      ` : `<p class="panel-note">Rewards you hand out show up here.</p>`}
+      ` : `<p class="panel-note">${t("console.activity.empty")}</p>`}
     </details>
   `;
 }
 
 function renderEvent(event) {
-  const time = new Date(event.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const locale = getLang() === "fr" ? "fr-FR" : "en-GB";
+  const time = new Date(event.at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   const amount = Number(event.amount) || 0;
   const positive = amount > 0;
   return `
@@ -271,14 +274,14 @@ function renderEvent(event) {
 function renderDataPanel(open, armedReset) {
   return `
     <details class="panel" data-panel="data" ${open("data")}>
-      <summary>${icon("download")}<span>Data</span></summary>
-      <p class="panel-note">The class is saved on the server. Export a copy before a holiday, or import one to restore it.</p>
+      <summary>${icon("download")}<span>${t("console.data")}</span></summary>
+      <p class="panel-note">${t("console.data.note")}</p>
       <div class="button-row">
-        <button class="btn btn-sm" type="button" data-action="export">${icon("download")}<span>Export</span></button>
-        <button class="btn btn-sm" type="button" data-action="import">${icon("upload")}<span>Import</span></button>
+        <button class="btn btn-sm" type="button" data-action="export">${icon("download")}<span>${t("console.data.export")}</span></button>
+        <button class="btn btn-sm" type="button" data-action="import">${icon("upload")}<span>${t("console.data.import")}</span></button>
       </div>
       <hr class="rule" />
-      <button class="btn btn-sm btn-quiet-danger ${armedReset ? "is-armed" : ""}" type="button" data-action="reset-all">${icon("trash")}<span>${armedReset ? "Tap again to erase everything" : "Erase every class"}</span></button>
+      <button class="btn btn-sm btn-quiet-danger ${armedReset ? "is-armed" : ""}" type="button" data-action="reset-all">${icon("trash")}<span>${armedReset ? t("console.data.armed") : t("console.data.erase")}</span></button>
     </details>
   `;
 }

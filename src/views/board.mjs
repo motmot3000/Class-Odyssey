@@ -18,6 +18,7 @@ import {
   renderXpBar,
   statusClass
 } from "../ui.mjs";
+import { t } from "../i18n.mjs";
 
 const LIST_THRESHOLD = 24;
 
@@ -26,7 +27,7 @@ export function renderBoard(classroom, ui, selectedIds) {
   const density = resolveDensity(ui.density, pupils.length);
 
   return `
-    <section class="board" aria-label="${escapeHtml(classroom.name)} roster">
+    <section class="board" aria-label="${t("board.roster", { name: escapeHtml(classroom.name) })}">
       ${renderBoardBar(classroom, ui, density, pupils.length)}
       ${renderRoster(classroom, pupils, ui, selectedIds, density)}
     </section>
@@ -53,9 +54,9 @@ function renderBoardBar(classroom, ui, density, shown) {
     <div class="board-bar">
       <div class="board-bar-stats">
         <h2 class="board-title">${escapeHtml(classroom.name)}</h2>
-        <p class="chip"><strong>${total}</strong> heroes</p>
-        <p class="chip ${out ? "chip-danger" : ""}"><strong>${out}</strong> out</p>
-        <p class="chip"><span>avg level</span><strong>${average}</strong></p>
+        <p class="chip"><strong>${total}</strong> ${t("board.heroes", { n: total })}</p>
+        <p class="chip ${out ? "chip-danger" : ""}"><strong>${out}</strong> ${t("board.out", { n: out })}</p>
+        <p class="chip"><span>${t("board.avgLevel")}</span><strong>${average}</strong></p>
       </div>
       <div class="board-bar-tools">
         <div class="search">
@@ -65,17 +66,17 @@ function renderBoardBar(classroom, ui, density, shown) {
             id="roster-search"
             data-action="search"
             value="${escapeHtml(ui.query)}"
-            placeholder="Find a hero"
-            aria-label="Find a hero by name"
+            placeholder="${t("board.searchPlaceholder")}"
+            aria-label="${t("board.searchAria")}"
             autocomplete="off"
           />
         </div>
-        <div class="segmented" role="group" aria-label="Board density">
-          <button type="button" class="${density === "grid" ? "is-active" : ""}" data-action="density" data-density="grid" aria-pressed="${density === "grid"}">${icon("grid")}<span>Grid</span></button>
-          <button type="button" class="${density === "list" ? "is-active" : ""}" data-action="density" data-density="list" aria-pressed="${density === "list"}">${icon("list")}<span>List</span></button>
+        <div class="segmented" role="group" aria-label="${t("board.density")}">
+          <button type="button" class="${density === "grid" ? "is-active" : ""}" data-action="density" data-density="grid" aria-pressed="${density === "grid"}">${icon("grid")}<span>${t("board.grid")}</span></button>
+          <button type="button" class="${density === "list" ? "is-active" : ""}" data-action="density" data-density="list" aria-pressed="${density === "list"}">${icon("list")}<span>${t("board.list")}</span></button>
         </div>
       </div>
-      ${ui.query.trim() ? `<p class="board-bar-note">${shown} of ${total} heroes match “${escapeHtml(ui.query.trim())}”.</p>` : ""}
+      ${ui.query.trim() ? `<p class="board-bar-note">${t("board.match", { shown, total, query: escapeHtml(ui.query.trim()) })}</p>` : ""}
     </div>
   `;
 }
@@ -84,9 +85,9 @@ function renderRoster(classroom, pupils, ui, selectedIds, density) {
   if (classroom.pupils.length === 0) {
     return `
       <div class="empty-state">
-        <h3>No heroes in ${escapeHtml(classroom.name)} yet</h3>
-        <p>Open <strong>Add student</strong> in the console and type a first name. Their hero appears here straight away.</p>
-        <button class="btn btn-primary" type="button" data-action="focus-add">Add the first hero</button>
+        <h3>${t("board.emptyTitle", { name: escapeHtml(classroom.name) })}</h3>
+        <p>${t("board.emptyBody")}</p>
+        <button class="btn btn-primary" type="button" data-action="focus-add">${t("board.emptyAction")}</button>
       </div>
     `;
   }
@@ -94,9 +95,9 @@ function renderRoster(classroom, pupils, ui, selectedIds, density) {
   if (pupils.length === 0) {
     return `
       <div class="empty-state">
-        <h3>No hero named “${escapeHtml(ui.query.trim())}”</h3>
-        <p>Check the spelling, or clear the search to see the whole class.</p>
-        <button class="btn" type="button" data-action="clear-search">Clear search</button>
+        <h3>${t("board.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h3>
+        <p>${t("board.noMatchBody")}</p>
+        <button class="btn" type="button" data-action="clear-search">${t("board.clearSearch")}</button>
       </div>
     `;
   }
@@ -128,7 +129,7 @@ function renderCard(pupil, selected) {
         data-action="toggle-pupil"
         data-pupil-id="${escapeHtml(pupil.id)}"
         aria-pressed="${selected}"
-        aria-label="Select ${escapeHtml(pupil.name)}"
+        aria-label="${t("board.select", { name: escapeHtml(pupil.name) })}"
       ></button>
 
       <header class="hero-card-head">
@@ -144,7 +145,7 @@ function renderCard(pupil, selected) {
           type="button"
           data-action="zoom-pupil"
           data-pupil-id="${escapeHtml(pupil.id)}"
-          aria-label="Show ${escapeHtml(pupil.name)} full size"
+          aria-label="${t("board.show", { name: escapeHtml(pupil.name) })}"
         >${icon("expand")}</button>
       </div>
 
@@ -173,7 +174,7 @@ function renderRow(pupil, selected) {
         data-action="toggle-pupil"
         data-pupil-id="${escapeHtml(pupil.id)}"
         aria-pressed="${selected}"
-        aria-label="Select ${escapeHtml(pupil.name)}"
+        aria-label="${t("board.select", { name: escapeHtml(pupil.name) })}"
       ></button>
       <span class="row-check" aria-hidden="true">${icon("check")}</span>
       <div class="row-art" ${heroStageAttributes(pupil)}>${renderHero(pupil)}</div>
@@ -187,7 +188,7 @@ function renderRow(pupil, selected) {
         type="button"
         data-action="zoom-pupil"
         data-pupil-id="${escapeHtml(pupil.id)}"
-        aria-label="Show ${escapeHtml(pupil.name)} full size"
+        aria-label="${t("board.show", { name: escapeHtml(pupil.name) })}"
       >${icon("expand")}</button>
     </article>
   `;

@@ -5,6 +5,7 @@
    ============================================================ */
 
 import { getNextReward, isEliminated, xpProgress } from "../domain.mjs";
+import { t } from "../i18n.mjs";
 import { renderHero } from "../avatar.mjs";
 import {
   escapeHtml,
@@ -27,8 +28,8 @@ export function renderStudentPicker(classroom, ui) {
     return `
       <section class="student-view">
         <div class="empty-state">
-          <h3>No heroes in ${escapeHtml(classroom.name)} yet</h3>
-          <p>Your teacher has not created the heroes for this class. Check the other class tab, or come back next lesson.</p>
+          <h3>${t("student.noHeroesTitle", { name: escapeHtml(classroom.name) })}</h3>
+          <p>${t("student.noHeroesBody")}</p>
         </div>
       </section>
     `;
@@ -42,8 +43,8 @@ export function renderStudentPicker(classroom, ui) {
   return `
     <section class="student-view">
       <header class="picker-head">
-        <h2>Which hero is yours?</h2>
-        <p>Tap your name. This device remembers you next time.</p>
+        <h2>${t("student.whichHero")}</h2>
+        <p>${t("student.tapName")}</p>
         <div class="search">
           ${icon("search")}
           <input
@@ -51,8 +52,8 @@ export function renderStudentPicker(classroom, ui) {
             id="roster-search"
             data-action="search"
             value="${escapeHtml(ui.query)}"
-            placeholder="Find your name"
-            aria-label="Find your name"
+            placeholder="${t("student.findName")}"
+            aria-label="${t("student.findName")}"
             autocomplete="off"
           />
         </div>
@@ -64,8 +65,8 @@ export function renderStudentPicker(classroom, ui) {
         </div>
       ` : `
         <div class="empty-state">
-          <h3>No name matches “${escapeHtml(ui.query.trim())}”</h3>
-          <button class="btn" type="button" data-action="clear-search">Clear search</button>
+          <h3>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h3>
+          <button class="btn" type="button" data-action="clear-search">${t("student.clearSearch")}</button>
         </div>
       `}
     </section>
@@ -80,7 +81,7 @@ function renderPickCard(pupil) {
         type="button"
         data-action="student-pick"
         data-pupil-id="${escapeHtml(pupil.id)}"
-        aria-label="Open ${escapeHtml(pupil.name)}'s hero"
+        aria-label="${t("student.open", { name: escapeHtml(pupil.name) })}"
       ></button>
       <header class="hero-card-head">
         <h3>${escapeHtml(pupil.name)}</h3>
@@ -108,9 +109,9 @@ export function renderStudentLocker(pupil, ui) {
     <section class="student-view">
       <div class="student-back">
         <button class="btn btn-primary" type="button" data-action="change-hero">
-          ${icon("back")}<span>Change hero</span>
+          ${icon("back")}<span>${t("student.changeHero")}</span>
         </button>
-        <p class="panel-note">This device is showing <strong>${escapeHtml(pupil.name)}</strong>. Tap the button if this is not you.</p>
+        <p class="panel-note">${t("student.showing", { name: escapeHtml(pupil.name) })}</p>
       </div>
 
       <div class="locker ${statusClass(pupil)}">
@@ -128,18 +129,18 @@ export function renderStudentLocker(pupil, ui) {
           ${renderTitle(pupil)}
 
           <div class="locker-stat">
-            <h3 class="section-label">Hit points</h3>
+            <h3 class="section-label">${t("student.hitPoints")}</h3>
             ${renderHearts(pupil)}
           </div>
 
           <div class="locker-stat">
-            <h3 class="section-label">Experience</h3>
+            <h3 class="section-label">${t("student.experience")}</h3>
             ${renderXpBar(pupil)}
-            <p class="panel-note">${progress.needed - progress.current} XP to reach level ${pupil.level + 1}.</p>
+            <p class="panel-note">${t("student.xpToLevel", { xp: progress.needed - progress.current, level: pupil.level + 1 })}</p>
           </div>
 
           <div class="locker-stat">
-            <h3 class="section-label">Coins</h3>
+            <h3 class="section-label">${t("student.coins")}</h3>
             ${renderMoney(pupil.money)}
           </div>
 
@@ -149,18 +150,18 @@ export function renderStudentLocker(pupil, ui) {
           ${renderCustomOrders(pupil)}
 
           ${isEliminated(pupil)
-            ? `<p class="alert alert-danger">You are out of HP. Level up or ask your teacher to restore hit points to get back in the game.</p>`
+            ? `<p class="alert alert-danger">${t("student.outOfHp")}</p>`
             : ""}
 
           <p class="panel-note">${next
-            ? `Level ${next.level} unlocks ${next.rewards.map(escapeHtml).join(", ")}.`
-            : "You have unlocked every reward."}</p>
+            ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+            : t("student.allUnlocked")}</p>
         </div>
       </div>
 
       <div class="locker-shop">
-        <h2 class="section-heading">Shop</h2>
-        <p class="panel-note">Buy once, then equip and swap whenever you like.</p>
+        <h2 class="section-heading">${t("student.shop")}</h2>
+        <p class="panel-note">${t("student.shopHint")}</p>
         ${renderShop(pupil, ui.shopCategory)}
       </div>
       </div>

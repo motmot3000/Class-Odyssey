@@ -55,6 +55,7 @@ import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
+import { t, getLang, setLang } from "./i18n.mjs";
 
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
