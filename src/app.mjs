@@ -143,9 +143,9 @@ let theme = (() => {
 
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#e7e9df" : "#101b20");
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* stockage bloqué */ }
   setSheikahTheme(theme);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f6f1e3" : "#080e16");
 }
 
 /* ---------- Routage ---------- */

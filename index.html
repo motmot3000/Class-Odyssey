@@ -11,6 +11,13 @@
       if (last && !last.includes(".")) {
         location.replace(location.pathname + "/" + location.search + location.hash);
       }
+      // Light on first visit; preserve an explicit choice before styles load.
+      try {
+        const savedTheme = localStorage.getItem("classquest:theme");
+        if (savedTheme === "light" || savedTheme === "dark") {
+          document.documentElement.dataset.theme = savedTheme;
+        }
+      } catch { /* Storage may be unavailable in private browsing. */ }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="ClassQuest" />
