@@ -9,6 +9,7 @@ import { createHeroViewer } from './viewer.mjs';
 const GLB_URL = new URL('../assets/wardrobe.glb', import.meta.url).href;
 const STORE_KEY = 'gom-sheikah-demo-v1';
 const THEME_KEY = 'gom-sheikah-theme';
+const SESSION_KEY = 'gom-sheikah-session';
 
 const OUTFITS = [
   { id: 'base', name: 'Essentiel' },
@@ -59,7 +60,7 @@ function pupil(id, name, gender, level, xp, hp, money, outfit, dye, belt, pack) 
 function fixture() {
   return {
     activeClassId: '7p',
-    ui: { mode: 'teacher', view: 'board', focusId: null, selected: [], query: '', scope: 'selection' },
+    ui: { mode: 'teacher', view: 'board', focusId: null, selected: [], query: '', scope: 'selection', gateTab: 'signin', gateError: '', gateValues: {} },
     classes: [
       {
         id: '7p',
@@ -98,6 +99,24 @@ let viewer = null;
 let viewerReady = null;
 let toastTimer = null;
 let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+let session = loadSession();
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+function saveSession() {
+  try {
+    if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    else localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
 
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
@@ -206,6 +225,63 @@ const actions = {
   'toggle-theme'() {
     theme = theme === 'light' ? 'dark' : 'light';
     applyTheme();
+    render();
+  },
+  'gate-tab'(el) {
+    state.ui.gateTab = el.dataset.tab;
+    state.ui.gateError = '';
+    render();
+  },
+  'sign-in'(form) {
+    const data = new FormData(form);
+    const username = String(data.get('username') || '').trim();
+    const password = String(data.get('password') || '');
+    state.ui.gateValues = { username };
+    if (!username || !password) {
+      state.ui.gateError = 'Renseignez l’identifiant et le mot de passe.';
+      render();
+      return;
+    }
+    session = { username, displayName: username };
+    saveSession();
+    state.ui.gateError = '';
+    state.ui.gateValues = {};
+    announce(`Bienvenue, ${username}.`);
+    render();
+  },
+  'sign-up'(form) {
+    const data = new FormData(form);
+    const displayName = String(data.get('displayName') || '').trim();
+    const username = String(data.get('username') || '').trim();
+    const password = String(data.get('password') || '');
+    const confirm = String(data.get('confirm') || '');
+    state.ui.gateValues = { username, displayName };
+    if (!username || !password) state.ui.gateError = 'Renseignez l’identifiant et le mot de passe.';
+    else if (password.length < 6) state.ui.gateError = 'Le mot de passe doit faire au moins 6 caractères.';
+    else if (password !== confirm) state.ui.gateError = 'Les deux mots de passe ne correspondent pas.';
+    else state.ui.gateError = '';
+    if (state.ui.gateError) {
+      render();
+      return;
+    }
+    session = { username, displayName: displayName || username };
+    saveSession();
+    state.ui.gateValues = {};
+    announce(`${session.displayName} est prête.`);
+    render();
+  },
+  'toggle-password'(el) {
+    const input = el.closest('.field-pass')?.querySelector('input');
+    if (!input) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    el.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+    el.innerHTML = ico(show ? 'eye-off' : 'eye');
+  },
+  'sign-out'() {
+    session = null;
+    saveSession();
+    state.ui.view = 'board';
     render();
   },
   'toggle-pupil'(el) {
@@ -378,6 +454,12 @@ function render({ keepViewer = false } = {}) {
   const before = document.querySelector('[data-viewer-host]');
   if (before && viewer) before.replaceChildren();
 
+  if (!session) {
+    app.innerHTML = renderLogin();
+    updateClock();
+    return;
+  }
+
   let view;
   if (state.ui.mode === 'student') view = state.ui.view === 'personalize' ? renderPersonalize() : renderSheet(true);
   else if (state.ui.view === 'sheet') view = renderSheet(false);
@@ -387,6 +469,66 @@ function render({ keepViewer = false } = {}) {
   app.innerHTML = `${renderTopbar()}${view}`;
   updateClock();
   syncViewer();
+}
+
+function renderLogin() {
+  const signup = state.ui.gateTab === 'signup';
+  const values = state.ui.gateValues || {};
+  const error = state.ui.gateError || '';
+  const passField = (name, label, autocomplete) => `
+    <label class="field"><span>${label}</span>
+      <span class="field-pass">
+        <input name="${name}" type="password" autocomplete="${autocomplete}" />
+        <button type="button" class="pass-toggle" data-action="toggle-password" aria-label="Afficher le mot de passe">${ico('eye')}</button>
+      </span>
+    </label>`;
+  return `
+    <main class="gate">
+      <header class="gate-top">
+        <div class="brand">
+          <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
+          <span class="brand-name">Game <em>of</em> More</span>
+          <span class="brand-sub">Tablette Sheikah</span>
+        </div>
+        <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${theme === 'light'}" title="${theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}">${ico(theme === 'light' ? 'moon' : 'sun')}<span>${theme === 'light' ? 'Sombre' : 'Clair'}</span></button>
+      </header>
+
+      <div class="gate-stage">
+        <section class="gate-pitch">
+          <svg class="gate-seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
+          <p class="eyebrow">Aventure d'anglais</p>
+          <h1>Ouvrez la tablette de la classe</h1>
+          <p class="gate-lede">Progression, expérience et vestiaire des héros réunis sur une seule dalle.</p>
+          <ul class="gate-points">
+            <li>XP, cœurs et pièces distribués en un geste</li>
+            <li>Héros 3D personnalisables en direct</li>
+            <li>Chaque classe garde sa progression</li>
+          </ul>
+        </section>
+
+        <section class="gate-card" aria-labelledby="gate-title">
+          <span class="gate-badge">${ico(signup ? 'rune' : 'lock')}</span>
+          <h2 id="gate-title">${signup ? 'Créer la classe' : 'Bon retour'}</h2>
+          <p class="gate-sub">${signup ? 'Un compte privé pour vos classes, votre progression et vos sauvegardes.' : 'Connectez-vous pour ouvrir vos classes.'}</p>
+
+          <div class="tabs gate-tabs" role="group" aria-label="Connexion ou nouveau compte">
+            <button type="button" class="${signup ? '' : 'on'}" data-action="gate-tab" data-tab="signin" aria-pressed="${!signup}">Connexion</button>
+            <button type="button" class="${signup ? 'on' : ''}" data-action="gate-tab" data-tab="signup" aria-pressed="${signup}">Nouveau compte</button>
+          </div>
+
+          <form class="gate-form" data-action="${signup ? 'sign-up' : 'sign-in'}" novalidate>
+            ${signup ? `<label class="field"><span>Nom de la classe</span><input name="displayName" autocomplete="organization" value="${escapeAttr(values.displayName || '')}" /></label>` : ''}
+            <label class="field"><span>Identifiant</span><input name="username" autocomplete="username" value="${escapeAttr(values.username || '')}" /></label>
+            ${passField('password', 'Mot de passe', signup ? 'new-password' : 'current-password')}
+            ${signup ? passField('confirm', 'Répéter le mot de passe', 'new-password') : ''}
+            <button class="btn btn-primary btn-lg" type="submit">${ico(signup ? 'rune' : 'exit')}<span>${signup ? 'Créer la classe' : 'Ouvrir la tablette'}</span></button>
+          </form>
+
+          ${error ? `<p class="gate-error" role="alert">${escapeHtml(error)}</p>` : ''}
+          <p class="gate-note">Démo : n'importe quel identifiant et mot de passe ouvrent la tablette.</p>
+        </section>
+      </div>
+    </main>`;
 }
 
 function renderTopbar() {
@@ -409,6 +551,8 @@ function renderTopbar() {
         ${student ? '' : `<button type="button" class="ghost ${state.ui.view === 'board' ? 'on' : ''}" data-action="view" data-view="board">${ico('board')}<span>Plateau</span></button>`}
         <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${theme === 'light'}" title="${theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}">${ico(theme === 'light' ? 'moon' : 'sun')}<span>${theme === 'light' ? 'Sombre' : 'Clair'}</span></button>
         <button type="button" class="ghost" data-action="reset" title="Réinitialiser la démo">${ico('refresh')}<span>Réinitialiser</span></button>
+        <span class="who" title="Connecté en tant que ${escapeAttr(session?.username || '')}">${escapeHtml(session?.displayName || session?.username || '')}</span>
+        <button type="button" class="ghost" data-action="sign-out" title="Se déconnecter">${ico('exit')}<span>Déconnexion</span></button>
       </div>
     </header>`;
 }
@@ -665,6 +809,13 @@ app.addEventListener('click', (event) => {
     event.preventDefault();
     handler(el);
   }
+});
+
+app.addEventListener('submit', (event) => {
+  const form = event.target.closest('form[data-action]');
+  if (!form) return;
+  event.preventDefault();
+  actions[form.dataset.action]?.(form);
 });
 
 app.addEventListener('input', (event) => {
