@@ -1,0 +1,1320 @@
+{
+  "revision": "base-v2-2026-09",
+  "units": "metres",
+  "up": "+Y",
+  "forward": "+Z",
+  "quaternionOrder": "xyzw",
+  "origin": "ground between feet",
+  "originToleranceMetres": 0.0001,
+  "sourceCredit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and hair: Game of More study.",
+  "pose": {
+    "armsFromT": 82,
+    "elbowFlexion": 8,
+    "fingerFlexion": 10,
+    "palms": "toward thighs"
+  },
+  "characters": {
+    "boy": {
+      "defaultHairId": "short",
+      "anchors": {
+        "skull_center": {
+          "local": {
+            "position": [
+              0.0,
+              1.636,
+              0.015
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.636,
+              0.015
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "skull_top": {
+          "local": {
+            "position": [
+              0.0,
+              1.735352,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.735352,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "hair_top": {
+          "local": {
+            "position": [
+              0.0,
+              1.763998,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.763998,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "hat_seat": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root",
+          "ellipse": {
+            "rx": 0.110165,
+            "rz": 0.115161
+          },
+          "planeNormal": [
+            0,
+            1,
+            0
+          ]
+        },
+        "forehead": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              0.131611
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              0.131611
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "temple_left": {
+          "local": {
+            "position": [
+              0.110165,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.110165,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "temple_right": {
+          "local": {
+            "position": [
+              -0.110165,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              -0.110165,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "occiput": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              -0.098712
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              -0.098712
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "neck": {
+          "local": {
+            "position": [
+              0.0,
+              1.443,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.443,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "nape": {
+          "local": {
+            "position": [
+              0.0,
+              1.47,
+              -0.046
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.47,
+              -0.046
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "waist": {
+          "local": {
+            "position": [
+              0.0,
+              0.943,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              0.943,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "back": {
+          "local": {
+            "position": [
+              0.0,
+              1.19,
+              -0.135
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.19,
+              -0.135
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "shoulder_left": {
+          "local": {
+            "position": [
+              0.182909,
+              1.359135,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0,
+              -1e-07,
+              -0.997564,
+              0.0697565
+            ]
+          },
+          "world": {
+            "position": [
+              0.182909,
+              1.359135,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0,
+              -1e-07,
+              -0.997564,
+              0.0697565
+            ]
+          },
+          "parent": "character-root"
+        },
+        "elbow_left": {
+          "local": {
+            "position": [
+              0.21631,
+              1.12147,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.004865,
+              -0.0689028,
+              -0.9951341,
+              0.0702638
+            ]
+          },
+          "world": {
+            "position": [
+              0.21631,
+              1.12147,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.004865,
+              -0.0689028,
+              -0.9951341,
+              0.0702638
+            ]
+          },
+          "parent": "character-root"
+        },
+        "wrist_left": {
+          "local": {
+            "position": [
+              0.254887,
+              0.849655,
+              0.038185
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "world": {
+            "position": [
+              0.254887,
+              0.849655,
+              0.038185
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "parent": "character-root"
+        },
+        "grip_left": {
+          "local": {
+            "position": [
+              0.264987,
+              0.788431,
+              0.041134
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "world": {
+            "position": [
+              0.264987,
+              0.788431,
+              0.041134
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "parent": "character-root"
+        },
+        "shoulder_right": {
+          "local": {
+            "position": [
+              -0.182909,
+              1.35913,
+              -1.6e-05
+            ],
+            "quaternion": [
+              -0.0,
+              -3e-07,
+              0.9975641,
+              0.0697562
+            ]
+          },
+          "world": {
+            "position": [
+              -0.182909,
+              1.35913,
+              -1.6e-05
+            ],
+            "quaternion": [
+              -0.0,
+              -3e-07,
+              0.9975641,
+              0.0697562
+            ]
+          },
+          "parent": "character-root"
+        },
+        "elbow_right": {
+          "local": {
+            "position": [
+              -0.21631,
+              1.121465,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0048651,
+              0.0689024,
+              0.9951339,
+              0.0702651
+            ]
+          },
+          "world": {
+            "position": [
+              -0.21631,
+              1.121465,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0048651,
+              0.0689024,
+              0.9951339,
+              0.0702651
+            ]
+          },
+          "parent": "character-root"
+        },
+        "wrist_right": {
+          "local": {
+            "position": [
+              -0.254887,
+              0.84965,
+              0.038185
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "world": {
+            "position": [
+              -0.254887,
+              0.84965,
+              0.038185
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "parent": "character-root"
+        },
+        "grip_right": {
+          "local": {
+            "position": [
+              -0.264991,
+              0.788427,
+              0.041133
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "world": {
+            "position": [
+              -0.264991,
+              0.788427,
+              0.041133
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "parent": "character-root"
+        }
+      },
+      "axisConventions": {
+        "head": "+Y up, +Z face forward",
+        "limbs": "+Y along limb away from torso, +Z anterior",
+        "hands": "+Y wrist to fingers, +Z palm normal, +X completing right-handed frame"
+      },
+      "variants": {
+        "light": {
+          "model": "boy-light.glb",
+          "portrait": "boy-light.webp",
+          "portraitSmall": "boy-light-small.webp"
+        },
+        "medium": {
+          "model": "boy-medium.glb",
+          "portrait": "boy-medium.webp",
+          "portraitSmall": "boy-medium-small.webp"
+        },
+        "tan": {
+          "model": "boy-tan.glb",
+          "portrait": "boy-tan.webp",
+          "portraitSmall": "boy-tan-small.webp"
+        },
+        "brown": {
+          "model": "boy-brown.glb",
+          "portrait": "boy-brown.webp",
+          "portraitSmall": "boy-brown-small.webp"
+        },
+        "dark": {
+          "model": "boy-dark.glb",
+          "portrait": "boy-dark.webp",
+          "portraitSmall": "boy-dark-small.webp"
+        }
+      },
+      "height": 1.763998,
+      "triangles": 51108
+    },
+    "girl": {
+      "defaultHairId": "long",
+      "anchors": {
+        "skull_center": {
+          "local": {
+            "position": [
+              0.0,
+              1.636,
+              0.015
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.636,
+              0.015
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "skull_top": {
+          "local": {
+            "position": [
+              0.0,
+              1.735352,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.735352,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "hair_top": {
+          "local": {
+            "position": [
+              0.0,
+              1.763998,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.763998,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "hat_seat": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root",
+          "ellipse": {
+            "rx": 0.104155,
+            "rz": 0.115161
+          },
+          "planeNormal": [
+            0,
+            1,
+            0
+          ]
+        },
+        "forehead": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              0.131611
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              0.131611
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "temple_left": {
+          "local": {
+            "position": [
+              0.104155,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.104155,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "temple_right": {
+          "local": {
+            "position": [
+              -0.104155,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              -0.104155,
+              1.676,
+              0.01645
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "occiput": {
+          "local": {
+            "position": [
+              0.0,
+              1.676,
+              -0.098712
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.676,
+              -0.098712
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "neck": {
+          "local": {
+            "position": [
+              0.0,
+              1.443,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.443,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "nape": {
+          "local": {
+            "position": [
+              0.0,
+              1.47,
+              -0.046
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.47,
+              -0.046
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "waist": {
+          "local": {
+            "position": [
+              0.0,
+              0.943,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              0.943,
+              0.0
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "back": {
+          "local": {
+            "position": [
+              0.0,
+              1.19,
+              -0.135
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "world": {
+            "position": [
+              0.0,
+              1.19,
+              -0.135
+            ],
+            "quaternion": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "parent": "character-root"
+        },
+        "shoulder_left": {
+          "local": {
+            "position": [
+              0.182909,
+              1.359135,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0,
+              -1e-07,
+              -0.997564,
+              0.0697565
+            ]
+          },
+          "world": {
+            "position": [
+              0.182909,
+              1.359135,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0,
+              -1e-07,
+              -0.997564,
+              0.0697565
+            ]
+          },
+          "parent": "character-root"
+        },
+        "elbow_left": {
+          "local": {
+            "position": [
+              0.21631,
+              1.12147,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.004865,
+              -0.0689028,
+              -0.9951341,
+              0.0702638
+            ]
+          },
+          "world": {
+            "position": [
+              0.21631,
+              1.12147,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.004865,
+              -0.0689028,
+              -0.9951341,
+              0.0702638
+            ]
+          },
+          "parent": "character-root"
+        },
+        "wrist_left": {
+          "local": {
+            "position": [
+              0.254887,
+              0.849655,
+              0.038185
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "world": {
+            "position": [
+              0.254887,
+              0.849655,
+              0.038185
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "parent": "character-root"
+        },
+        "grip_left": {
+          "local": {
+            "position": [
+              0.264987,
+              0.788431,
+              0.041134
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "world": {
+            "position": [
+              0.264987,
+              0.788431,
+              0.041134
+            ],
+            "quaternion": [
+              0.6945018,
+              0.0397898,
+              -0.7144535,
+              0.0751018
+            ]
+          },
+          "parent": "character-root"
+        },
+        "shoulder_right": {
+          "local": {
+            "position": [
+              -0.182909,
+              1.35913,
+              -1.6e-05
+            ],
+            "quaternion": [
+              -0.0,
+              -3e-07,
+              0.9975641,
+              0.0697562
+            ]
+          },
+          "world": {
+            "position": [
+              -0.182909,
+              1.35913,
+              -1.6e-05
+            ],
+            "quaternion": [
+              -0.0,
+              -3e-07,
+              0.9975641,
+              0.0697562
+            ]
+          },
+          "parent": "character-root"
+        },
+        "elbow_right": {
+          "local": {
+            "position": [
+              -0.21631,
+              1.121465,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0048651,
+              0.0689024,
+              0.9951339,
+              0.0702651
+            ]
+          },
+          "world": {
+            "position": [
+              -0.21631,
+              1.121465,
+              -1.6e-05
+            ],
+            "quaternion": [
+              0.0048651,
+              0.0689024,
+              0.9951339,
+              0.0702651
+            ]
+          },
+          "parent": "character-root"
+        },
+        "wrist_right": {
+          "local": {
+            "position": [
+              -0.254887,
+              0.84965,
+              0.038185
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "world": {
+            "position": [
+              -0.254887,
+              0.84965,
+              0.038185
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "parent": "character-root"
+        },
+        "grip_right": {
+          "local": {
+            "position": [
+              -0.264991,
+              0.788427,
+              0.041133
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "world": {
+            "position": [
+              -0.264991,
+              0.788427,
+              0.041133
+            ],
+            "quaternion": [
+              0.6944786,
+              -0.0398085,
+              0.7144728,
+              0.0751228
+            ]
+          },
+          "parent": "character-root"
+        }
+      },
+      "axisConventions": {
+        "head": "+Y up, +Z face forward",
+        "limbs": "+Y along limb away from torso, +Z anterior",
+        "hands": "+Y wrist to fingers, +Z palm normal, +X completing right-handed frame"
+      },
+      "variants": {
+        "light": {
+          "model": "girl-light.glb",
+          "portrait": "girl-light.webp",
+          "portraitSmall": "girl-light-small.webp"
+        },
+        "medium": {
+          "model": "girl-medium.glb",
+          "portrait": "girl-medium.webp",
+          "portraitSmall": "girl-medium-small.webp"
+        },
+        "tan": {
+          "model": "girl-tan.glb",
+          "portrait": "girl-tan.webp",
+          "portraitSmall": "girl-tan-small.webp"
+        },
+        "brown": {
+          "model": "girl-brown.glb",
+          "portrait": "girl-brown.webp",
+          "portraitSmall": "girl-brown-small.webp"
+        },
+        "dark": {
+          "model": "girl-dark.glb",
+          "portrait": "girl-dark.webp",
+          "portraitSmall": "girl-dark-small.webp"
+        }
+      },
+      "height": 1.763998,
+      "triangles": 55460
+    }
+  },
+  "appearanceRevision": "surface-v3",
+  "geometryRevision": "base-v2-2026-09",
+  "surfaceValidation": {
+    "boy": {
+      "geometryUnchanged": true,
+      "parts": {
+        "skin": {
+          "sha256": "d7c9ee716c12198051c2ff2d0f7a908328b24b071c064d7872fbbecdbbab1b4c",
+          "vertices": 2520
+        },
+        "eyes": {
+          "sha256": "df9fe112d1ab0259fa37e1ff6c78be032baeb83a32063a78c39d3f312b7b8f03",
+          "vertices": 418
+        },
+        "clothes": {
+          "sha256": "829101582ee6f8a6475e29faa0a6c58f8683404f270f0e22d93833cc9f4a4db0",
+          "vertices": 7499
+        },
+        "hair": {
+          "sha256": "d17415726f22b43d8774bcacf1af0c46cf821f0d92c1213885c37c7b2324baf9",
+          "vertices": 15758
+        }
+      }
+    },
+    "girl": {
+      "geometryUnchanged": true,
+      "parts": {
+        "skin": {
+          "sha256": "9cced504514c4d610d81316c837f28e8b0c8bebd3ea99cd689e487eb71d65f54",
+          "vertices": 2520
+        },
+        "eyes": {
+          "sha256": "05dcc604210e5b4820a02dba710b7c4f7157739413fce0313454bb4d84db43ac",
+          "vertices": 418
+        },
+        "clothes": {
+          "sha256": "829101582ee6f8a6475e29faa0a6c58f8683404f270f0e22d93833cc9f4a4db0",
+          "vertices": 7499
+        },
+        "hair": {
+          "sha256": "fdbb350dcee612e14591be49bcc001822c5c662314c0d8970c972c098849e503",
+          "vertices": 17940
+        }
+      }
+    }
+  }
+}

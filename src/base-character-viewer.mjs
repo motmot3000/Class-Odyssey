@@ -66,6 +66,7 @@ export async function createBaseViewer(container, { url, signal, onContextLost }
     front: { yaw: 0, target: .91, distance: 4.25, elevation: .12 },
     quarter: { yaw: .22, target: .91, distance: 4.25, elevation: .16 },
     back: { yaw: Math.PI, target: .91, distance: 4.25, elevation: .16 },
+    outfit: { yaw: .12, target: 1.16, distance: 2.45, elevation: .08 },
     face: { yaw: .10, target: 1.60, distance: 1.18, elevation: .025 }
   };
   function render() {

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-13T00:00:00Z",
+  "title": "Design System: Game of More — étude de matières",
+  "extensions": {
+    "colorMeta": {
+      "bg": {"role": "neutral", "displayName": "Papier sauge", "tonalRamp": ["oklch(15% 0.008 115)", "oklch(27% 0.008 115)", "oklch(38% 0.008 115)", "oklch(49% 0.008 115)", "oklch(61% 0.008 115)", "oklch(72% 0.008 115)", "oklch(84% 0.008 115)", "oklch(95% 0.008 115)"]},
+      "ink": {"role": "neutral", "displayName": "Encre végétale", "tonalRamp": ["oklch(15% 0.025 165)", "oklch(27% 0.025 165)", "oklch(38% 0.025 165)", "oklch(49% 0.025 165)", "oklch(61% 0.025 165)", "oklch(72% 0.025 165)", "oklch(84% 0.025 165)", "oklch(95% 0.025 165)"]},
+      "muted": {"role": "neutral", "displayName": "Sauge secondaire", "tonalRamp": ["oklch(15% 0.02 155)", "oklch(27% 0.02 155)", "oklch(38% 0.02 155)", "oklch(49% 0.02 155)", "oklch(61% 0.02 155)", "oklch(72% 0.02 155)", "oklch(84% 0.02 155)", "oklch(95% 0.02 155)"]},
+      "line": {"role": "neutral", "displayName": "Contour sauge", "tonalRamp": ["oklch(15% 0.02 135)", "oklch(27% 0.02 135)", "oklch(38% 0.02 135)", "oklch(49% 0.02 135)", "oklch(61% 0.02 135)", "oklch(72% 0.02 135)", "oklch(84% 0.02 135)", "oklch(95% 0.02 135)"]},
+      "green": {"role": "primary", "displayName": "Vert de reprise", "tonalRamp": ["oklch(15% 0.045 155)", "oklch(27% 0.045 155)", "oklch(38% 0.045 155)", "oklch(49% 0.045 155)", "oklch(61% 0.045 155)", "oklch(72% 0.045 155)", "oklch(84% 0.045 155)", "oklch(95% 0.045 155)"]}
+    },
+    "typographyMeta": {
+      "display": {"displayName": "Titre de l’étude", "purpose": "Titre compact ; 29px à 800px et moins."},
+      "body": {"displayName": "Lecture système", "purpose": "Inter avec repli système ; aucun chargement de police dédié."},
+      "label": {"displayName": "Repères discrets", "purpose": "Labels des sélecteurs et informations secondaires."}
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [{"name": "mobile", "value": "800px"}]
+  },
+  "components": [
+    {
+      "name": "Réessayer la 3D", "kind": "button", "refersTo": "retry",
+      "description": "Reprise après erreur ; focus explicite, aucun survol spécifique dans la source.",
+      "html": "<button class=\"ds-retry\">Réessayer la 3D</button>",
+      "css": ".ds-retry{font:11px Inter,ui-sans-serif,system-ui,sans-serif;background:var(--green,#315e48);color:#fff;border:0;border-radius:4px;padding:8px 11px;white-space:nowrap;cursor:pointer}.ds-retry:focus-visible{outline:2px solid #388357;outline-offset:4px}.ds-retry:disabled{opacity:.5;cursor:wait}"
+    },
+    {
+      "name": "Vue inactive", "kind": "button", "refersTo": "view-button",
+      "description": "Commande de cadrage partagé, état non sélectionné.",
+      "html": "<button class=\"ds-view\" aria-pressed=\"false\">Visage</button>",
+      "css": ".ds-view{font:12px Inter,ui-sans-serif,system-ui,sans-serif;border:0;background:none;color:var(--muted,#617168);border-radius:4px;padding:8px 13px;cursor:pointer}.ds-view:focus-visible{outline:2px solid #388357;outline-offset:4px}"
+    },
+    {
+      "name": "Vue sélectionnée", "kind": "button", "refersTo": "view-button-active",
+      "description": "Aplat sauge et aria-pressed ; état persistant de sélection.",
+      "html": "<button class=\"ds-selected\" aria-pressed=\"true\">Tenue</button>",
+      "css": ".ds-selected{font:12px Inter,ui-sans-serif,system-ui,sans-serif;border:0;background:#dbe7d3;color:#274a35;border-radius:4px;padding:8px 13px;cursor:pointer}.ds-selected:focus-visible{outline:2px solid #388357;outline-offset:4px}"
+    },
+    {
+      "name": "Choix du personnage", "kind": "input", "refersTo": "select",
+      "description": "Sélecteur natif étiqueté, partagé par les deux versions.",
+      "html": "<label class=\"ds-choice\">Personnage<select><option>Noa · garçon</option><option>Mila · fille</option></select></label>",
+      "css": ".ds-choice{display:flex;flex-direction:column;font:11px Inter,ui-sans-serif,system-ui,sans-serif;color:var(--muted,#617168);gap:5px}.ds-choice select{font:12px Inter,ui-sans-serif,system-ui,sans-serif;height:36px;min-width:140px;padding:0 10px;border:1px solid #c5d2bf;border-radius:5px;background:#fafcf6;color:var(--ink,#253d34)}.ds-choice select:focus-visible{outline:2px solid #388357;outline-offset:4px}"
+    },
+    {
+      "name": "Panneau de comparaison", "kind": "card",
+      "description": "Cadre statique surface-v3 ; aperçu du contenant, sans simulation du viewer 3D.",
+      "html": "<article class=\"ds-stage\"><div class=\"ds-title\"><h2>Détails retravaillés</h2><span>surface-v3</span></div><p class=\"ds-caption\">Reliefs · rugosité · fibres · détails des yeux</p></article>",
+      "css": ".ds-stage{position:relative;height:630px;border:1px solid #a5b99b;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 36%,#fffef9,#e6ecde 85%);font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:var(--ink,#253d34)}.ds-title{position:absolute;left:24px;right:24px;top:22px;display:flex;justify-content:space-between;align-items:center;gap:8px}.ds-title h2{margin:0;font-size:15px;font-weight:600}.ds-title span{font-size:10px;color:#416642}.ds-caption{position:absolute;bottom:17px;left:20px;right:20px;margin:0;text-align:center;color:var(--muted,#617168);font-size:11px}@media(max-width:800px){.ds-stage{height:490px}.ds-title{top:18px;left:19px;right:19px}.ds-title h2{font-size:14px}.ds-caption{font-size:10px}}"
+    },
+    {
+      "name": "Retour au jeu", "kind": "nav",
+      "description": "Lien de navigation discret dans l’en-tête.",
+      "html": "<nav aria-label=\"Navigation\"><a class=\"ds-return\" href=\"../../\">Retour au jeu</a></nav>",
+      "css": ".ds-return{font:12px Inter,ui-sans-serif,system-ui,sans-serif;color:var(--ink,#253d34);text-decoration:none;text-underline-offset:4px}.ds-return:focus-visible{outline:2px solid #388357;outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Le monde papier sauge de Game of More",
+    "overview": "Une présentation calme et accueillante laisse les personnages stylisés au premier plan. Les commandes discrètes et les surfaces claires facilitent une comparaison honnête des matières.",
+    "keyCharacteristics": ["Papier sauge, encre végétale, contours fins.", "Personnages dominants, commandes compactes, comparaison explicite."],
+    "rules": [],
+    "dos": [
+      "**Do** préserver la version matières séparée, la pose et les ancrages base-v2 ; comparer à caméra et lumière communes en 3D.",
+      "**Do** créditer Nintendo / The Models Resource, dépôt de Trikeboy, pour la morphologie et les cartes sources ; Game of More pour l’adaptation et la passe matières, conformément à la provenance."
+    ],
+    "donts": [
+      "**Don't** revendiquer une qualité AAA, une transformation majeure ou un objectif de réalisme pleinement atteint.",
+      "**Don't** masquer l’effet mou résiduel des cheveux et du shirt, ni confondre validation technique et gain visuel."
+    ]
+  }
+}
