@@ -1,3 +1,8 @@
+thomaswunsche.com {
+	import security_headers
+	redir https://www.thomaswunsche.com{uri} permanent
+}
+
 www.thomaswunsche.com {
 	import security_headers
 	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
