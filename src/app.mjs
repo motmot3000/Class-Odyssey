@@ -56,6 +56,20 @@ import { renderRules } from "./views/rules.mjs";
 import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
+import {
+  renderSheikahTopbar,
+  renderSheikahTeacher,
+  renderSheikahStudent,
+  renderSheikahSheet,
+  renderSheikahPersonalize
+} from "./views/sheikah.mjs";
+import {
+  mountSheikahViewer,
+  unmountSheikahViewer,
+  setSheikahAngle,
+  setSheikahRotation,
+  setSheikahTheme
+} from "./sheikah-runtime.mjs";
 
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
@@ -98,8 +112,51 @@ const ui = {
   gateValues: {},
   adminAccounts: [],
   adminPending: false,
-  adminError: ""
+  adminError: "",
+  /* Interface Sheikah */
+  sheikahView: "board",
+  angle: "quarter",
+  rotating: false,
+  draft: null,
+  classicShop: false
 };
+
+/* ---------- Thème ---------- */
+
+const THEME_KEY = "game-of-more:theme";
+let theme = (() => {
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch { /* stockage bloqué */ }
+  return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+})();
+
+function applyTheme() {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem(THEME_KEY, theme); } catch { /* stockage bloqué */ }
+  setSheikahTheme(theme);
+}
+
+/* Bascule d'habillage : une seule feuille à la fois, pour que Sheikah et
+   l'ancien système visuel ne se marchent jamais dessus. */
+function setSkin(sheikah) {
+  let link = document.getElementById("ui-skin");
+  if (!link) {
+    link = document.createElement("link");
+    link.id = "ui-skin";
+    link.rel = "stylesheet";
+    document.head.append(link);
+  }
+  const href = sheikah ? "./src/sheikah.css" : "./styles.css";
+  if (link.getAttribute("href") !== href) link.setAttribute("href", href);
+}
+
+function usesSheikah(view) {
+  if (view !== "board" && view !== "student") return false;
+  if (ui.classicShop && view === "student") return false;
+  return true;
+}
 
 /* ---------- Routage ---------- */
 
@@ -130,15 +187,60 @@ window.addEventListener("hashchange", () => {
 function render() {
   const view = currentView();
   const memory = captureUiMemory();
+  const sheikah = usesSheikah(view);
 
-  app.innerHTML = `
+  if (sheikah) {
+    const student = view === "student";
+    const html = `
+      ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked(), student })}
+      ${renderConflict()}
+      ${renderSheikahBody(view)}
+    `;
+    setSkin(true);
+    app.innerHTML = html;
+    restoreUiMemory(memory);
+    flushFlash();
+    syncSheikahRuntime();
+    return;
+  }
+
+  const html = `
     ${renderTopbar(view)}
     ${renderConflict()}
     ${renderViewBody(view)}
   `;
+  setSkin(false);
+  app.innerHTML = html;
 
   restoreUiMemory(memory);
   flushFlash();
+  unmountSheikahViewer();
+}
+
+function renderSheikahBody(view) {
+  const classroom = getCurrentClass(state);
+  if (view === "student") {
+    const pupil = studentPupilId ? getPupilById(state, studentPupilId) : null;
+    if (studentPupilId && !pupil) rememberStudent(null);
+    if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
+    return renderSheikahStudent({ classroom, ui, pupil });
+  }
+  const targets = getTargets();
+  const focused = state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
+  if (focused && ui.sheikahView === "sheet") return renderSheikahSheet(focused, ui);
+  if (focused && ui.sheikahView === "personalize") return renderSheikahPersonalize(focused, ui);
+  return renderSheikahTeacher({ classroom, ui, targets, focused, canUndo: history.length > 0, account, selectedIds: state.selectedPupilIds });
+}
+
+function syncSheikahRuntime() {
+  const host = app.querySelector("[data-viewer-host]");
+  if (!host) {
+    unmountSheikahViewer();
+    return;
+  }
+  let look = {};
+  try { look = JSON.parse(host.dataset.look || "{}"); } catch { /* valeur par défaut */ }
+  mountSheikahViewer(host, look);
 }
 
 function renderViewBody(view) {
@@ -387,9 +489,68 @@ window.addEventListener("storage", (event) => {
 });
 
 const ACTIONS = {
-  "show-board": () => navigate("#board"),
+  "show-board": () => {
+    ui.classicShop = false;
+    navigate("#board");
+  },
   "show-student": () => navigate("#student"),
   "show-rules": () => navigate("#rules"),
+
+  /* ---------- interface Sheikah ---------- */
+  "toggle-theme": () => {
+    theme = theme === "light" ? "dark" : "light";
+    applyTheme();
+    render();
+  },
+  "sheikah-open": (el) => {
+    state = { ...state, selectedPupilId: el.dataset.pupilId };
+    ui.sheikahView = "sheet";
+    ui.draft = null;
+    render();
+  },
+  "sheikah-back": () => {
+    ui.sheikahView = "board";
+    ui.draft = null;
+    render();
+  },
+  "sheikah-personalize": (el) => {
+    const id = el.dataset.pupilId || (studentPupilId || state.selectedPupilId);
+    if (id) state = { ...state, selectedPupilId: id };
+    ui.sheikahView = "personalize";
+    ui.draft = null;
+    render();
+  },
+  "sheikah-set": (el) => {
+    ui.draft = { ...(ui.draft || {}), [el.dataset.field]: el.dataset.value };
+    render();
+  },
+  "sheikah-angle": (el) => {
+    ui.angle = el.dataset.value;
+    ui.rotating = false;
+    setSheikahAngle(ui.angle);
+    setSheikahRotation(false);
+    render();
+  },
+  "sheikah-rotate": () => {
+    ui.rotating = !ui.rotating;
+    setSheikahRotation(ui.rotating);
+    render();
+  },
+  "sheikah-equip": (el) => {
+    if (ui.draft && el.dataset.pupilId) commit(updateCosmetics(state, el.dataset.pupilId, ui.draft));
+    ui.draft = null;
+    ui.sheikahView = "sheet";
+    toast("Tenue scellée.", "success");
+    render();
+  },
+  "sheikah-shop": () => {
+    const pupilId = studentPupilId || state.selectedPupilId;
+    if (!pupilId) return;
+    rememberStudent(pupilId);
+    ui.classicShop = true;
+    ui.sheikahView = "board";
+    navigate("#student");
+  },
   "show-admin": () => {
     if (account?.role !== "admin") return;
     navigate("#admin");
@@ -1231,5 +1392,6 @@ window.addEventListener("pagehide", () => {
   }
 });
 
+applyTheme();
 render();
 bootstrapFromServer();

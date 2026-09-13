@@ -10,6 +10,7 @@
     "build:items-3d": "node tools/build-items-viewer.mjs",
     "dev:items-3d": "node tools/serve-items-3d.mjs",
     "build:characters": "esbuild src/base-character-viewer.mjs --bundle --format=esm --minify --outfile=assets/characters-base/runtime/viewer.js",
+    "build:sheikah": "esbuild src/sheikah-viewer.mjs --bundle --format=esm --minify --outfile=assets/sheikah/viewer.js",
     "build:svg": "python3 tools/svg/build-character-variants.py",
     "build:mini": "esbuild src/mini-hero.mjs --bundle --format=esm --splitting --minify --outdir=assets/mini-hero --entry-names=mini --chunk-names=mini-viewer",
     "build:wardrobe": "node tools/build-wardrobe.mjs",
