@@ -487,7 +487,7 @@ function renderLogin() {
       <header class="gate-top">
         <div class="brand">
           <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-          <span class="brand-name">Game <em>of</em> More</span>
+          <span class="brand-name">ClassQuest</span>
           <span class="brand-sub">Tablette Sheikah</span>
         </div>
         <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${theme === 'light'}" title="${theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}">${ico(theme === 'light' ? 'moon' : 'sun')}<span>${theme === 'light' ? 'Sombre' : 'Clair'}</span></button>

@@ -3840,7 +3840,7 @@ void main() {
       <header class="gate-top">
         <div class="brand">
           <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-          <span class="brand-name">Game <em>of</em> More</span>
+          <span class="brand-name">ClassQuest</span>
           <span class="brand-sub">Tablette Sheikah</span>
         </div>
         <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${Vt==="light"}" title="${Vt==="light"?"Passer au th\xE8me sombre":"Passer au th\xE8me clair"}">${ot(Vt==="light"?"moon":"sun")}<span>${Vt==="light"?"Sombre":"Clair"}</span></button>

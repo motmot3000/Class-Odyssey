@@ -58,7 +58,7 @@ export function mountSheikahViewer(host, look) {
   host.classList.add("is-loading");
   getInstance(host, look)
     .then((instance) => {
-      if (!instance) return;
+      if (!instance || currentHost !== host || !host.isConnected) return;
       if (instance.element.parentElement !== host) host.append(instance.element);
       instance.applyState(look);
       instance.setVisible(true);
@@ -74,6 +74,7 @@ export function mountSheikahViewer(host, look) {
 }
 
 export function unmountSheikahViewer() {
+  currentHost = null;
   viewer?.setVisible(false);
 }
 

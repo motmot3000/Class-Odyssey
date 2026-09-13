@@ -316,7 +316,11 @@ export function createGameServer({
     if (dataRelative === "" || (!dataRelative.startsWith("..") && !path.isAbsolute(dataRelative))) return true;
     const parts = relative.split(path.sep);
     if (["server", ".git", "node_modules"].includes(parts[0])) return true;
-    return relative !== "index.html" && relative !== "styles.css" && parts[0] !== "assets" && parts[0] !== "src";
+    const entry = ["index.html", "styles.css", "items-3d.html", "character-lab.html"].includes(relative);
+    const prototype = parts[0] === "prototype" && parts[1] === "sheikah"
+      && !parts.some((part) => part.startsWith("."))
+      && [".html", ".css", ".js", ".mjs", ".glb", ".webp"].includes(path.extname(relative));
+    return !entry && !prototype && parts[0] !== "assets" && parts[0] !== "src";
   }
 
   function serveStatic(req, res, pathname) {

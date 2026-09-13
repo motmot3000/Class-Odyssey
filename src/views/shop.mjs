@@ -7,17 +7,18 @@
 import { canBuyItem, getShopItems, isItemOwned } from "../domain.mjs";
 import { renderItemArt } from "../avatar.mjs";
 import { escapeHtml, getItemRarity, getItemTier, renderMoney } from "../ui.mjs";
+import { t, tItem } from "../i18n.mjs";
 
 export const SHOP_CATEGORIES = [
-  { type: "outfit", label: "Outfits" },
-  { type: "hat", label: "Hats" },
-  { type: "weapon", label: "Items" },
-  { type: "hair", label: "Hair Cut" },
-  { type: "hairColor", label: "Hair Color" },
-  { type: "face", label: "Faces" },
-  { type: "title", label: "Titles" },
-  { type: "tone", label: "Skins" },
-  { type: "bespoke", label: "Custom" }
+  { type: "outfit", label: () => t("shop.cat.outfit") },
+  { type: "hat", label: () => t("shop.cat.hat") },
+  { type: "weapon", label: () => t("shop.cat.item") },
+  { type: "hair", label: () => t("shop.cat.hair") },
+  { type: "hairColor", label: () => t("shop.cat.hairColor") },
+  { type: "face", label: () => t("shop.cat.face") },
+  { type: "title", label: () => t("shop.cat.title") },
+  { type: "tone", label: () => t("shop.cat.skin") },
+  { type: "bespoke", label: () => t("shop.cat.custom") }
 ];
 
 export function renderShop(pupil, activeType) {
@@ -27,7 +28,7 @@ export function renderShop(pupil, activeType) {
   return `
     <div class="shop">
       <div class="shop-head">
-        <div class="shop-tabs" role="tablist" aria-label="Shop categories">
+        <div class="shop-tabs" role="tablist" aria-label="${t("shop.categories")}">
           ${SHOP_CATEGORIES.map((category) => `
             <button
               type="button"
@@ -36,10 +37,10 @@ export function renderShop(pupil, activeType) {
               data-action="shop-category"
               data-category="${category.type}"
               aria-selected="${category.type === active.type}"
-            >${category.label}</button>
+            >${category.label()}</button>
           `).join("")}
         </div>
-        <p class="shop-balance">${renderMoney(pupil.money)}<span>to spend</span></p>
+        <p class="shop-balance">${renderMoney(pupil.money)}<span>${t("shop.toSpend")}</span></p>
       </div>
       <div class="shop-items">
         ${items.map((item) => renderShopItem(item, pupil)).join("")}
@@ -58,44 +59,44 @@ function renderShopItem(item, pupil) {
   const locked = pupil.level < item.minLevel;
   const affordable = canBuyItem(pupil, item);
 
-  let label = `Buy ${item.price}`;
+  let label = t("shop.buy", { price: item.price });
   let state = "buy";
   let disabled = "";
   if (bespoke && locked) {
-    label = `Level ${item.minLevel}`;
+    label = t("shop.level", { level: item.minLevel });
     state = "locked";
     disabled = "disabled";
   } else if (bespoke && !affordable) {
-    label = `Need ${item.price}`;
+    label = t("shop.need", { price: item.price });
     state = "poor";
     disabled = "disabled";
   } else if (bespoke) {
-    label = `Order ${item.price}`;
+    label = t("shop.order", { price: item.price });
     state = "buy";
   } else if (equipped) {
-    label = "Equipped";
+    label = t("shop.equipped");
     state = "equipped";
     disabled = "disabled";
   } else if (owned) {
-    label = "Equip";
+    label = t("shop.equip");
     state = "equip";
   } else if (locked) {
-    label = `Level ${item.minLevel}`;
+    label = t("shop.level", { level: item.minLevel });
     state = "locked";
     disabled = "disabled";
   } else if (!affordable) {
-    label = `Need ${item.price}`;
+    label = t("shop.need", { price: item.price });
     state = "poor";
     disabled = "disabled";
   } else if (!item.price) {
-    label = "Equip";
+    label = t("shop.equip");
     state = "equip";
   }
 
   // Un article verrouillé annonce aussi son prix : un élève économise pour
   // ce qu'il convoite, il doit savoir combien avant d'y avoir droit.
-  const price = item.price ? `${item.price} coins` : "Free";
-  const meta = locked ? `Level ${item.minLevel} · ${price}` : price;
+  const price = item.price ? t("shop.coins", { price: item.price }) : t("shop.free");
+  const meta = locked ? `${t("shop.level", { level: item.minLevel })} · ${price}` : price;
 
   return `
     <article class="shop-item rarity-${getItemRarity(item)} ${bespoke ? "is-bespoke" : ""} ${equipped ? "is-equipped" : ""} ${locked ? "is-locked" : ""}">
@@ -104,12 +105,12 @@ function renderShopItem(item, pupil) {
         type="button"
         data-action="preview-item"
         data-item-id="${escapeHtml(item.id)}"
-        aria-label="Preview ${escapeHtml(item.name)}"
+        aria-label="${t("shop.preview", { name: escapeHtml(tItem(item, "name")) })}"
       >${renderThumb(item, pupil)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
       <div class="shop-item-text">
-        <strong>${escapeHtml(item.name)}</strong>
+        <strong>${escapeHtml(tItem(item, "name"))}</strong>
         <small>${meta}</small>
-        ${item.description ? `<span class="shop-item-description">${escapeHtml(item.description)}</span>` : ""}
+        ${item.description ? `<span class="shop-item-description">${escapeHtml(tItem(item, "description"))}</span>` : ""}
       </div>
       <button
         class="btn btn-sm ${state === "buy" ? "btn-primary" : ""}"
@@ -124,7 +125,7 @@ function renderShopItem(item, pupil) {
 
 function renderThumb(item, pupil) {
   if (item.type === "title") {
-    return `<span class="title-chip title-${item.id}">${escapeHtml(item.name)}</span>`;
+    return `<span class="title-chip title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>`;
   }
   return renderItemArt(item, pupil);
 }

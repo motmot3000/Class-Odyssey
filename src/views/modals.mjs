@@ -22,17 +22,18 @@ import {
   renderXpBar,
   statusClass
 } from "../ui.mjs";
+import { t, tItem } from "../i18n.mjs";
 
 const TYPE_LABEL = {
-  outfit: "Outfit",
-  hat: "Hat",
-  weapon: "Item",
-  face: "Face",
-  hair: "Hair Cut",
-  hairColor: "Hair Color",
-  title: "Title",
-  tone: "Skin",
-  bespoke: "Custom"
+  outfit: () => t("modal.type.outfit"),
+  hat: () => t("modal.type.hat"),
+  weapon: () => t("modal.type.weapon"),
+  face: () => t("modal.type.face"),
+  hair: () => t("modal.type.hair"),
+  hairColor: () => t("modal.type.hairColor"),
+  title: () => t("modal.type.title"),
+  tone: () => t("modal.type.tone"),
+  bespoke: () => t("modal.type.bespoke")
 };
 
 /* Vue « plein tableau » d'un héros : lecture seule. On montre un élève à
@@ -43,7 +44,7 @@ export function renderPupilDialog(pupil) {
 
   return `
     <dialog class="dialog dialog-hero ${statusClass(pupil)}" aria-label="${escapeHtml(pupil.name)}">
-      <button class="dialog-close" type="button" data-action="close-dialog" aria-label="Close">${icon("close")}</button>
+      <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
       <div class="dialog-hero-art dialog-hero-art-3d" ${baseStageAttributes(pupil)}>
         ${renderBaseCharacterViewer(pupil)}
         ${renderOutBadge(pupil)}
@@ -56,15 +57,15 @@ export function renderPupilDialog(pupil) {
         ${renderTitle(pupil)}
         ${renderHearts(pupil)}
         ${renderXpBar(pupil)}
-        <p class="panel-note">${progress.needed - progress.current} XP to level ${pupil.level + 1}.</p>
+        <p class="panel-note">${t("modal.xpToLevel", { n: progress.needed - progress.current, level: pupil.level + 1 })}</p>
         ${renderMoney(pupil.money)}
         <dl class="gear">
           ${gearOf(pupil).map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
         </dl>
         ${renderCustomOrders(pupil)}
         <p class="panel-note">${next
-          ? `Level ${next.level} unlocks ${next.rewards.map(escapeHtml).join(", ")}.`
-          : "Every reward is unlocked."}</p>
+          ? t("modal.levelUnlocks", { level: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+          : t("modal.allUnlocked")}</p>
       </div>
     </dialog>
   `;
@@ -79,41 +80,41 @@ export function renderItemDialog(item, pupil) {
 
   const status = bespoke
     ? locked
-      ? `Unlocks at level ${item.minLevel}.`
+      ? t("modal.unlocksAt", { level: item.minLevel })
       : canBuyItem(pupil, item)
-        ? "Ready to order. Describe what should be created."
-        : `Costs ${item.price} coins. You have ${pupil.money}.`
+        ? t("modal.readyOrder")
+        : t("modal.costs", { price: item.price, money: pupil.money })
     : equipped
-    ? "Worn right now."
+    ? t("modal.worn")
     : owned
-      ? "Owned. Equip it whenever you like."
+      ? t("modal.owned")
       : locked
-        ? `Unlocks at level ${item.minLevel}.`
-        : `Costs ${item.price} coins. You have ${pupil.money}.`;
+        ? t("modal.unlocksAt", { level: item.minLevel })
+        : t("modal.costs", { price: item.price, money: pupil.money });
 
   const previewPupil = bespoke
     ? pupil
     : { ...pupil, [field]: item.id };
   const visual = bespoke
     ? renderItemArt(item)
-    : `${renderHero(previewPupil)}${item.type === "title" ? `<span class="preview-title title-${item.id}">${escapeHtml(item.name)}</span>` : ""}`;
+    : `${renderHero(previewPupil)}${item.type === "title" ? `<span class="preview-title title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>` : ""}`;
 
   return `
-    <dialog class="dialog dialog-item" aria-label="${escapeHtml(item.name)}">
-      <button class="dialog-close" type="button" data-action="close-dialog" aria-label="Close">${icon("close")}</button>
+    <dialog class="dialog dialog-item" aria-label="${escapeHtml(tItem(item, "name"))}">
+      <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
       <div class="dialog-item-art ${bespoke ? "" : "is-hero-preview"}" ${bespoke ? "" : heroStageAttributes(previewPupil)}>${visual}</div>
-      <h2>${escapeHtml(item.name)}</h2>
-      <p class="panel-note item-meta"><span class="rarity-label rarity-${getItemRarity(item)}">${getItemRarity(item)}</span>${TYPE_LABEL[item.type] || "Item"} · level ${item.minLevel} · ${item.price ? `${item.price} coins` : "free"}</p>
-      ${item.description ? `<p class="dialog-item-description">${escapeHtml(item.description)}</p>` : ""}
+      <h2>${escapeHtml(tItem(item, "name"))}</h2>
+      <p class="panel-note item-meta"><span class="rarity-label rarity-${getItemRarity(item)}">${getItemRarity(item)}</span>${t("modal.meta", { type: TYPE_LABEL[item.type]?.() || t("modal.type.weapon"), level: item.minLevel, price: item.price ? t("shop.coins", { price: item.price }) : t("shop.free") })}</p>
+      ${item.description ? `<p class="dialog-item-description">${escapeHtml(tItem(item, "description"))}</p>` : ""}
       <p class="dialog-status">${status}</p>
       ${bespoke && canBuyItem(pupil, item) ? `
         <form class="bespoke-order-form" data-action="order-bespoke">
           <input type="hidden" name="itemId" value="${escapeHtml(item.id)}" />
           <label class="field">
-            <span>Describe your custom item</span>
-            <textarea name="note" rows="4" required maxlength="500" placeholder="Shape, colors, powers..."></textarea>
+            <span>${t("modal.describe")}</span>
+            <textarea name="note" rows="4" required maxlength="500" placeholder="${t("modal.placeholder")}"></textarea>
           </label>
-          <button class="btn btn-primary" type="submit">Order for ${item.price} coins</button>
+          <button class="btn btn-primary" type="submit">${t("modal.orderFor", { price: item.price })}</button>
         </form>
       ` : ""}
     </dialog>

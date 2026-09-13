@@ -72,6 +72,7 @@ import {
   setSheikahTheme,
   setSheikahFreeViewHandler
 } from "./sheikah-runtime.mjs";
+import { t, getLang, setLang, initLanguage } from "./i18n.mjs";
 
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
@@ -446,7 +447,7 @@ function flushFlash() {
 
 function updateClock() {
   const clock = app.querySelector("#clock");
-  if (clock) clock.textContent = new Date().toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" });
+  if (clock) clock.textContent = new Date().toLocaleTimeString(getLang() === "fr" ? "fr-CH" : "en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
 /* ---------- Événements ----------
@@ -578,7 +579,7 @@ const ACTIONS = {
     toast("Tenue scellée.", "success");
   },
   "sheikah-shop": () => {
-    const pupilId = studentPupilId || state.selectedPupilId;
+    const pupilId = currentView() === "student" ? studentPupilId : state.selectedPupilId;
     if (!pupilId) return;
     rememberStudent(pupilId);
     ui.classicShop = true;
@@ -1426,6 +1427,12 @@ window.addEventListener("pagehide", () => {
   }
 });
 
+initLanguage();
+document.getElementById("lang-toggle")?.addEventListener("click", () => {
+  setLang(getLang() === "fr" ? "en" : "fr");
+  closeDialog();
+  render();
+});
 applyTheme();
 render();
 bootstrapFromServer();

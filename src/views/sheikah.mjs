@@ -8,6 +8,7 @@
 import { SKINS, WEAPONS, HAIR_COLORS, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
+import { t, tItem } from "../i18n.mjs";
 
 const ico = (name, cls = "") => {
   const paths = {
@@ -65,7 +66,10 @@ export function cosmeticChangesFromDraft(draft = {}) {
   };
 }
 
-const nameOf = (list, id) => list.find((item) => item.id === id)?.name || "";
+const nameOf = (list, id) => {
+  const item = list.find((item) => item.id === id);
+  return item ? tItem(item, "name") : "";
+};
 
 /* ---------- barre supérieure ---------- */
 
@@ -86,14 +90,15 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
       </nav>
       <div class="top-end">
         <div class="tabs" role="group" aria-label="Interface">
-          <button type="button" class="${teacherTab ? "on" : ""}" data-action="show-board" aria-pressed="${teacherTab}" aria-label="Espace enseignant${unlocked ? "" : ", verrouillé"}">Enseignant${unlocked ? "" : " " + ico("lock")}</button>
-          <button type="button" class="${student ? "on" : ""}" data-action="show-student" aria-pressed="${student}">Élèves</button>
+          <button type="button" class="${teacherTab ? "on" : ""}" data-action="show-board" aria-pressed="${teacherTab}">${t("app.aria.teacher")}${unlocked ? "" : " " + ico("lock")}</button>
+          <button type="button" class="${student ? "on" : ""}" data-action="show-student" aria-pressed="${student}">${t("app.aria.students")}</button>
         </div>
-        ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-label="Gérer les comptes">${ico("rune")}<span>Comptes</span></button>` : ""}
-        ${unlocked ? `<button type="button" class="ghost" data-action="lock-adult" aria-label="Verrouiller l'espace enseignant">${ico("lock")}<span>Verrouiller</span></button>` : ""}
-        <button type="button" class="ghost" data-action="show-rules" aria-label="Afficher les règles">${ico("book")}<span>Règles</span></button>
+        ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-label="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}
+        ${unlocked ? `<button type="button" class="ghost" data-action="lock-adult" aria-label="${t("console.account.lock")}">${ico("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
+        <button type="button" class="ghost" data-action="show-rules" aria-label="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         <button type="button" class="ghost" data-action="toggle-theme" aria-label="Changer de thème" title="Changer de thème">${ico(document.documentElement.dataset.theme === "light" ? "moon" : "sun")}<span>Thème</span></button>
         <span class="account-tag" title="Connecté : ${escapeHtml(account?.username || "")}">${escapeHtml(account?.displayName || "")}</span>
+        ${unlocked ? `<a class="ghost" href="./assets/labs/index.html">${t("app.labs")}</a>` : ""}
       </div>
     </header>`;
 }
