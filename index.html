@@ -20,9 +20,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="./src/shell.css" />
     <link rel="stylesheet" href="./src/characters.css" />
   </head>
   <body>
@@ -40,6 +41,7 @@
     <div id="app"></div>
     <div id="toasts" aria-live="polite"></div>
     <div id="dialog-root"></div>
+    <input type="file" id="import-file" accept="application/json,.json" hidden />
     <div id="language-switcher">
       <button id="lang-toggle" aria-label="Changer de langue" title="Changer de langue">
         <span id="current-lang">FR</span>

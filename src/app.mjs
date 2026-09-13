@@ -61,14 +61,16 @@ import {
   renderSheikahTeacher,
   renderSheikahStudent,
   renderSheikahSheet,
-  renderSheikahPersonalize
+  renderSheikahPersonalize,
+  cosmeticChangesFromDraft
 } from "./views/sheikah.mjs";
 import {
   mountSheikahViewer,
   unmountSheikahViewer,
   setSheikahAngle,
   setSheikahRotation,
-  setSheikahTheme
+  setSheikahTheme,
+  setSheikahFreeViewHandler
 } from "./sheikah-runtime.mjs";
 
 const app = document.querySelector("#app");
@@ -120,6 +122,13 @@ const ui = {
   draft: null,
   classicShop: false
 };
+
+setSheikahFreeViewHandler(() => {
+  ui.rotating = false;
+  const control = app.querySelector('[data-action="sheikah-rotate"]');
+  control?.classList.remove("on");
+  control?.setAttribute("aria-pressed", "false");
+});
 
 /* ---------- Thème ---------- */
 
@@ -201,6 +210,7 @@ function render() {
     restoreUiMemory(memory);
     flushFlash();
     syncSheikahRuntime();
+    updateClock();
     return;
   }
 
@@ -220,8 +230,7 @@ function render() {
 function renderSheikahBody(view) {
   const classroom = getCurrentClass(state);
   if (view === "student") {
-    const pupil = studentPupilId ? getPupilById(state, studentPupilId) : null;
-    if (studentPupilId && !pupil) rememberStudent(null);
+    const pupil = getStudentPupil(classroom);
     if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
     return renderSheikahStudent({ classroom, ui, pupil });
   }
@@ -264,8 +273,7 @@ function renderViewBody(view) {
   }
 
   if (view === "student") {
-    const pupil = studentPupilId ? getPupilById(state, studentPupilId) : null;
-    if (studentPupilId && !pupil) rememberStudent(null);
+    const pupil = getStudentPupil(classroom);
     return `
       <main class="page page-narrow">
         ${renderBanner()}
@@ -307,8 +315,15 @@ function renderViewBody(view) {
         </div>
       </aside>
     </main>
-    <input type="file" id="import-file" accept="application/json,.json" hidden />
   `;
+}
+
+function getStudentPupil(classroom) {
+  const pupil = studentPupilId
+    ? classroom.pupils.find((item) => item.id === studentPupilId) || null
+    : null;
+  if (studentPupilId && !pupil) rememberStudent(null);
+  return pupil;
 }
 
 function renderTopbar(view) {
@@ -381,8 +396,14 @@ function getShopPupil() {
 
 function captureUiMemory() {
   const active = document.activeElement;
+  const focusAction = active?.dataset?.action || null;
+  const actionControls = focusAction
+    ? [...app.querySelectorAll(`[data-action="${CSS.escape(focusAction)}"]`)]
+    : [];
   return {
     focusId: active && active.id ? active.id : null,
+    focusAction,
+    focusActionIndex: actionControls.indexOf(active),
     caret: active && typeof active.selectionStart === "number" ? active.selectionStart : null,
     consoleScroll: app.querySelector(".console")?.scrollTop ?? 0,
     pageScroll: window.scrollY
@@ -393,16 +414,17 @@ function restoreUiMemory(memory) {
   const console_ = app.querySelector(".console");
   if (console_) console_.scrollTop = memory.consoleScroll;
 
-  if (memory.focusId) {
-    const next = document.getElementById(memory.focusId);
-    if (next) {
-      next.focus({ preventScroll: true });
-      if (memory.caret !== null && typeof next.setSelectionRange === "function") {
-        try {
-          next.setSelectionRange(memory.caret, memory.caret);
-        } catch {
-          // Les champs number refusent setSelectionRange : sans importance.
-        }
+  let next = memory.focusId ? document.getElementById(memory.focusId) : null;
+  if (!next && memory.focusAction && memory.focusActionIndex >= 0) {
+    next = [...app.querySelectorAll(`[data-action="${CSS.escape(memory.focusAction)}"]`)][memory.focusActionIndex];
+  }
+  if (next) {
+    next.focus({ preventScroll: true });
+    if (memory.caret !== null && typeof next.setSelectionRange === "function") {
+      try {
+        next.setSelectionRange(memory.caret, memory.caret);
+      } catch {
+        // Les champs number refusent setSelectionRange : sans importance.
       }
     }
   }
@@ -414,12 +436,17 @@ function flushFlash() {
   if (!pendingFlash.size) return;
   for (const id of pendingFlash) {
     const safe = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : String(id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".hero-card, .hero-row");
+    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".hero-card, .hero-row, .rune-card");
     if (!card) continue;
     card.classList.add("is-flash");
     card.addEventListener("animationend", () => card.classList.remove("is-flash"), { once: true });
   }
   pendingFlash.clear();
+}
+
+function updateClock() {
+  const clock = app.querySelector("#clock");
+  if (clock) clock.textContent = new Date().toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" });
 }
 
 /* ---------- Événements ----------
@@ -540,11 +567,15 @@ const ACTIONS = {
     render();
   },
   "sheikah-equip": (el) => {
-    if (ui.draft && el.dataset.pupilId) commit(updateCosmetics(state, el.dataset.pupilId, ui.draft));
+    const draft = ui.draft;
+    const next = draft && el.dataset.pupilId
+      ? updateCosmetics(state, el.dataset.pupilId, cosmeticChangesFromDraft(draft))
+      : state;
     ui.draft = null;
     ui.sheikahView = "sheet";
+    if (draft) commit(next);
+    else render();
     toast("Tenue scellée.", "success");
-    render();
   },
   "sheikah-shop": () => {
     const pupilId = studentPupilId || state.selectedPupilId;
@@ -1398,3 +1429,4 @@ window.addEventListener("pagehide", () => {
 applyTheme();
 render();
 bootstrapFromServer();
+setInterval(updateClock, 30_000);
