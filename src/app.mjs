@@ -229,7 +229,7 @@ function renderSheikahBody(view) {
   const focused = state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
   if (focused && ui.sheikahView === "sheet") return renderSheikahSheet(focused, ui);
   if (focused && ui.sheikahView === "personalize") return renderSheikahPersonalize(focused, ui);
-  return renderSheikahTeacher({ classroom, ui, targets, focused, canUndo: history.length > 0, account, selectedIds: state.selectedPupilIds });
+  return renderSheikahTeacher({ classroom, ui, targets, focused, canUndo: history.length > 0, account, selectedIds: state.selectedPupilIds, events: state.events, armedReset: armedDanger === "reset", unlockedUntil: unlockUntil() });
 }
 
 function syncSheikahRuntime() {
@@ -493,7 +493,10 @@ const ACTIONS = {
     ui.classicShop = false;
     navigate("#board");
   },
-  "show-student": () => navigate("#student"),
+  "show-student": () => {
+    ui.classicShop = false;
+    navigate("#student");
+  },
   "show-rules": () => navigate("#rules"),
 
   /* ---------- interface Sheikah ---------- */

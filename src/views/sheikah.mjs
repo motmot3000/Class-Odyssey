@@ -7,6 +7,7 @@
 
 import { SKINS, WEAPONS, HAIR_COLORS, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf } from "../ui.mjs";
+import { renderConsole } from "./console.mjs";
 
 const ico = (name, cls = "") => {
   const paths = {
@@ -91,11 +92,13 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
 
 /* ---------- plateau enseignant ---------- */
 
-export function renderSheikahTeacher({ classroom, ui, targets, focused, canUndo, account, selectedIds = [] }) {
+export function renderSheikahTeacher({ classroom, ui, targets, focused, canUndo, account, selectedIds = [], events = [], armedReset = false, unlockedUntil = null }) {
   return `
     <main class="layout">
       ${renderSheikahBoard(classroom, ui, selectedIds)}
-      ${renderSheikahConsole({ classroom, ui, targets, focused, canUndo, account })}
+      <aside class="console" aria-label="Console de l'enseignant">
+        ${renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset, unlockedUntil, account })}
+      </aside>
     </main>`;
 }
 
@@ -158,60 +161,6 @@ function renderRuneCard(pupil, index, selectedIds) {
         <button class="rune-act" type="button" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>Atelier</span></button>
       </footer>
     </article>`;
-}
-
-function renderSheikahConsole({ classroom, ui, targets, focused, canUndo, account }) {
-  const off = targets.length ? "" : "disabled";
-  const names = ui.scope === "class"
-    ? `Toute la classe — ${classroom.pupils.length} héros.`
-    : targets.length ? targets.map((pupil) => escapeHtml(pupil.name)).join(", ") : "Touchez des héros sur le plateau pour choisir qui reçoit.";
-  const xpPresets = [
-    { amount: 100, reason: "Devoirs" },
-    { amount: 150, reason: "Vocabulaire" },
-    { amount: 50, reason: "Bravo" },
-    { amount: 500, reason: "Bonus" }
-  ];
-  const coinPresets = [10, 20, 30, 50];
-  return `
-    <aside class="console" aria-label="Console de l'enseignant">
-      <div class="console-head">
-        <h2>Console</h2>
-        <span class="console-hint">${escapeHtml(account?.displayName || classroom.name)}</span>
-      </div>
-
-      <section class="panel-block">
-        <p class="label">Destinataires</p>
-        <div class="seg seg-wide">
-          <button type="button" class="${ui.scope === "selection" ? "on" : ""}" data-action="scope" data-scope="selection">Sélection <b>${targets.length}</b></button>
-          <button type="button" class="${ui.scope === "class" ? "on" : ""}" data-action="scope" data-scope="class">Classe entière</button>
-        </div>
-        <p class="target-names">${names}</p>
-        ${ui.scope === "selection" ? `<div class="row"><button class="btn btn-sm" data-action="select-all">Tout sélectionner</button><button class="btn btn-sm" data-action="clear-selection" ${targets.length ? "" : "disabled"}>Effacer</button></div>` : ""}
-      </section>
-
-      <section class="panel-block">
-        <p class="label">Expérience</p>
-        <div class="awards">
-          ${xpPresets.map((preset) => `<button class="award" type="button" data-action="award-xp" data-amount="${preset.amount}" data-reason="${preset.reason}" ${off}><strong>+${preset.amount}</strong><span>${preset.reason}</span></button>`).join("")}
-        </div>
-      </section>
-
-      <section class="panel-block">
-        <p class="label">Points de vie</p>
-        <div class="row"><button class="btn btn-danger" data-action="hp-minus" ${off}>−1 PV</button><button class="btn btn-ok" data-action="hp-plus" ${off}>+1 PV</button><button class="btn" data-action="heal-all">Restaurer</button></div>
-      </section>
-
-      <section class="panel-block">
-        <p class="label">Pièces</p>
-        <div class="row">${coinPresets.map((amount) => `<button class="btn btn-coin" data-action="award-money" data-amount="${amount}" ${off}>+${amount}</button>`).join("")}</div>
-      </section>
-
-      <section class="panel-block">
-        <p class="label">Élève</p>
-        ${focused ? `<p class="target-names">${escapeHtml(focused.name)} — niveau ${focused.level}, ${focused.money} pièces.</p>` : `<p class="target-names">Touchez une plaque pour lire la fiche.</p>`}
-        <div class="row"><button class="btn btn-sm" data-action="undo" ${canUndo ? "" : "disabled"}>Annuler</button><button class="btn btn-sm" data-action="sheikah-shop" ${focused ? "" : "disabled"}>Boutique</button></div>
-      </section>
-    </aside>`;
 }
 
 /* ---------- espace élève ---------- */
