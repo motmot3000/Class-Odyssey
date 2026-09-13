@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "anchor": {
+    "name": "feet",
+    "x": 512,
+    "y": 1484
+  },
+  "layerOrder": [
+    "cape",
+    "base",
+    "tunic",
+    "headwear",
+    "accessory"
+  ],
+  "styles": {
+    "illustre": {
+      "label": "Illustré",
+      "base": "ranger-illustre.png",
+      "tunics": {
+        "foret": null,
+        "ardoise": "tunique-illustre-ardoise.png",
+        "grenat": "tunique-illustre-grenat.png",
+        "sable": "tunique-illustre-sable.png"
+      }
+    },
+    "peint": {
+      "label": "Peint",
+      "base": "ranger-peint.png",
+      "tunics": {
+        "foret": null,
+        "ardoise": "tunique-peint-ardoise.png",
+        "grenat": "tunique-peint-grenat.png",
+        "sable": "tunique-peint-sable.png"
+      }
+    }
+  },
+  "equipmentSlots": {
+    "cape": {
+      "label": "Cape",
+      "center": [
+        505,
+        735
+      ],
+      "fit": [
+        630,
+        1000
+      ],
+      "behind": true
+    },
+    "headwear": {
+      "label": "Coiffe",
+      "center": [
+        500,
+        136
+      ],
+      "fit": [
+        260,
+        250
+      ],
+      "behind": false
+    },
+    "accessory": {
+      "label": "Accessoire",
+      "center": [
+        750,
+        860
+      ],
+      "fit": [
+        240,
+        400
+      ],
+      "behind": false
+    }
+  },
+  "notes": [
+    "One character, two rendering styles, one fixed pose; these are not two different people.",
+    "The forest tunic is baked into each base. Colored tunics are replacement overlays.",
+    "Equipment artwork must be supplied as separate transparent PNG or WebP images.",
+    "No unseen anatomy, alternate pose, cape, headwear or accessory has been generated."
+  ]
+}

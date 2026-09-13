@@ -1,0 +1,8 @@
+{
+  "origin": "Actual Blender 4.5.3 Cycles render of ranger-playful.blend, not a generated concept image.",
+  "source": "tools/blender/playful_ranger.py",
+  "direction": "A simple stylized adolescent adventurer: more natural proportions, relaxed asymmetric stance, calm expression, matte fern tunic, small ochre scarf and brass lantern. Revised after the first mascot-like version was rejected as too playful.",
+  "conversion": "PNG to WebP, ImageMagick quality 88, method 6, transparent background.",
+  "provenance": "ranger-playful-provenance.json",
+  "date": "2026-09-12"
+}

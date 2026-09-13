@@ -1,0 +1,59 @@
+/* A third art direction, inside the existing character studio. */
+.comparison{grid-template-columns:repeat(3,minmax(0,1fr))}
+.comparison .stage-heading{left:20px;right:20px;top:20px}
+.comparison .stage-heading h2{font-size:14px}
+.comparison .stage-heading>span{font-size:10px}
+.comparison .portrait-note{display:none}
+.comparison .portrait-button{padding:55px 10px 60px}
+.comparison .vector-portrait-button{padding:63px 16px 68px}
+.comparison .portrait-action{font-size:12px;padding:12px 14px;gap:8px;bottom:32px}
+.comparison .vector-action{bottom:38px}
+.playful-stage{background:radial-gradient(ellipse at 50% 43%,#436453,#203e36 48%,#142b29 85%)}
+.playful-stage .stage-heading .new-label{color:#cee1b4;border-color:#68805e}
+.playful-stage .portrait-action{background:#cee1b4;color:#203523}
+.playful-stage .portrait-button:hover .portrait-action{background:#e0edcd}
+.playful-caption{position:absolute;bottom:11px;left:10px;right:10px;text-align:center;color:#b8cbb7;font-size:10px;pointer-events:none}
+.model-variants{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px}
+.model-variants button{flex:1;min-height:40px;background:none;border-radius:5px;color:var(--muted);font-size:12px}
+.model-variants button[aria-pressed="true"]{background:#334d3c;color:#e7f0db}
+.model-variants button:hover{background:#283e38;color:var(--ink)}
+#model-stage[data-variant="playful"] .viewport-wrap{background:radial-gradient(ellipse at 52% 45%,#436453,#142b29 78%)}
+#model-stage[data-variant="playful"] .downloads a{color:#cee1b4}
+.card-test{grid-template-columns:minmax(220px,1fr) repeat(4,minmax(0,180px));gap:18px}
+.playful-pupil-card{background:#1e352e;border-color:#62795a}
+.playful-pupil-card .pupil-version{color:#cee1b4}
+.playful-pupil-card:hover{background:#294639;border-color:#b5cd98}
+@media(max-width:1200px){
+  .card-test{grid-template-columns:repeat(4,minmax(0,190px));justify-content:center}
+  .card-test-copy{grid-column:1/-1;max-width:650px;padding:0}
+  .card-test-copy .demo-note{margin-top:10px}
+}
+@media(min-width:701px) and (max-width:1000px){
+  .comparison{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .comparison .new-stage,.comparison .vector-stage{height:445px}
+  .comparison .stage-heading{left:14px;right:14px;display:block}
+  .comparison .stage-heading>span{display:inline-block;margin-top:6px}
+  .comparison .portrait-button{padding:83px 6px 69px}
+  .comparison .vector-portrait-button{padding:88px 9px 77px}
+  .comparison .portrait-action{font-size:11px;padding:10px;gap:6px}
+  .comparison .portrait-action>svg{width:15px}
+  .playful-caption{font-size:9px;bottom:7px;padding:0 6px}
+}
+@media(max-width:700px){
+  .comparison{grid-template-columns:1fr}
+  .comparison .portrait-button{padding:49px 10px 60px}
+  .comparison .vector-portrait-button{padding:49px 16px 65px}
+  .comparison .stage-heading h2{font-size:15px}
+  .playful-caption{font-size:11px}
+  .card-test{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .card-test-copy{margin-bottom:8px}
+  .card-test .pupil-card{height:302px;padding:12px}
+  .card-test .pupil-version{font-size:11px;min-height:25px}
+  .card-test .card-figure{height:164px;min-height:164px}
+  .card-test .card-figure>img,.card-test .card-figure>svg{height:160px}
+  .card-test .pupil-identity strong{font-size:14px}
+  .card-test .pupil-identity>span,.card-test .pupil-progress{font-size:10px}
+  #model-stage .viewport-wrap{order:1}
+  #model-stage .model-info{order:2}
+  .model-variants{max-width:320px;width:100%}
+}

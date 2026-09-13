@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 940" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">Personnage masculin 2.0 — base neutre</title>
+  <desc id="description">Personnage masculin debout de face, visage naturel, cheveux châtains. Haut simple vert grisé, pantalon ardoise et chaussures sobres. Sans équipement, capuche, cape ni accessoire.</desc>
+  <metadata>Original Game of More 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=base; feminine=false</metadata>
+  <view id="face" viewBox="219 86 122 159" />
+  <view id="materials" viewBox="193 237 174 278" />
+  <defs>
+    <radialGradient id="skin-color" cx=".46" cy=".36" r=".77">
+      <stop stop-color="#E7BE94" />
+      <stop offset=".63" stop-color="#D6A87D" />
+      <stop offset="1" stop-color="#BC885F" />
+    </radialGradient>
+    <linearGradient id="neck-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#A67450" />
+      <stop offset="1" stop-color="#D4A57A" />
+    </linearGradient>
+    <linearGradient id="hand-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#DDB48A" />
+      <stop offset="1" stop-color="#BA895F" />
+    </linearGradient>
+    <linearGradient id="hair-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#5F4732" />
+      <stop offset="1" stop-color="#352E24" />
+    </linearGradient>
+    <clipPath id="eye-opening">
+      <path d="M249 152C255 146 263 146 270 151C264 157 256 158 249 152Z" />
+    </clipPath>
+    <g id="eye-template" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M247 149C254 142 264 143 272 148L270 152Q257 147 249 154Z" fill="#B68A64" opacity=".18" />
+      <path d="M249 152C255 146 263 146 270 151C264 157 256 158 249 152Z" fill="#E7DCC5" stroke="#947352" stroke-width=".65" />
+      <g clip-path="url(#eye-opening)">
+        <circle cx="259.5" cy="151.5" r="4.05" fill="#697556" stroke="#495B43" stroke-width=".6" />
+        <circle cx="259.5" cy="151.5" r="2.1" fill="#2C3628" />
+      </g>
+      <path d="M249 152C255 146 263 146 270 151" stroke="#654D37" stroke-width="1.25" />
+      <path d="M252 158Q260 160 267 155" stroke="#B58A64" stroke-width=".65" opacity=".65" />
+      <path d="M251 145Q258 142 266 145" stroke="#B58A64" stroke-width=".6" opacity=".6" />
+      <path id="eyebrow-shape" d="M247 140C253 136 261 136 270 140L269 142C261 139 253 139 248 142Z" fill="#5B4530" />
+    </g>
+    <linearGradient id="base-shirt-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#809D93" />
+      <stop offset=".55" stop-color="#6A8A80" />
+      <stop offset="1" stop-color="#54736B" />
+    </linearGradient>
+    <linearGradient id="base-trouser-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#515D5D" />
+      <stop offset="1" stop-color="#374749" />
+    </linearGradient>
+    <linearGradient id="base-shoe-color" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#78654E" />
+      <stop offset="1" stop-color="#4B4438" />
+    </linearGradient>
+    <g id="base-leg" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M218 478L280 483L274 557C272 650 261 730 255 831V850H206L210 797L213 680C218 607 211 535 218 478Z" fill="url(#base-trouser-color)" stroke="#314143" stroke-width="1.6" />
+      <path d="M226 536C232 601 226 662 221 718L218 821H229L242 702L251 545Z" fill="#A2AD9E" opacity=".10" />
+      <path d="M218 696Q233 690 252 695M215 812Q235 817 255 811" stroke="#2E4141" stroke-width="1.3" />
+      <path d="M211 835Q233 839 255 834V848Q231 852 208 848Z" fill="#465756" stroke="#647570" stroke-width=".8" />
+    </g>
+    <g id="base-shoe" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M209 839H253L255 854C260 862 265 870 264 882V890Q230 899 195 892C187 890 187 884 192 879L207 861Z" fill="url(#base-shoe-color)" stroke="#33413A" stroke-width="1.6" />
+      <path d="M214 846H248L247 860L224 865L211 860Z" fill="#695A46" stroke="#9A896C" stroke-width=".8" />
+      <path d="M222 850L243 858M242 850L221 858M222 859L243 867M242 859L223 867" stroke="#B7A88B" stroke-width="1.3" />
+      <path d="M204 872Q225 878 250 872" stroke="#9D8B6C" stroke-width=".95" />
+      <path d="M192 882Q225 891 264 882V891Q229 900 194 894Z" fill="#3D453C" stroke="#324039" stroke-width="1.2" />
+      <path d="M195 887Q227 894 260 887" stroke="#ACAA8B" stroke-width=".8" />
+    </g>
+    <g id="base-sleeve" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M218 261C198 264 185 282 183 310L177 390L169 473V509L194 511L204 446L216 390L235 299Z" fill="url(#base-shirt-color)" stroke="#405F57" stroke-width="1.6" />
+      <path d="M201 284C191 314 197 350 189 392L183 462L191 470L203 390L215 293Z" fill="#D3DBC6" opacity=".12" />
+      <path d="M178 389Q188 397 205 395M177 402Q187 407 201 404M173 484L195 487" stroke="#4D6E63" stroke-width="1.2" />
+      <path d="M169 495L196 498L194 511L169 509Z" fill="#59796E" stroke="#89A392" stroke-width=".85" />
+    </g>
+    <g id="base-hand" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M170 508L192 510L193 520C198 524 200 529 198 533C196 536 193 534 190 530V542C190 547 186 549 182 546L174 544C168 542 167 537 167 531Z" fill="url(#hand-color)" stroke="#9C7754" stroke-width="1" />
+      <path d="M174 531L176 540M180 532L182 542M186 532L187 540M191 523L195 529" stroke="#AC815B" stroke-width=".8" />
+      <path d="M174 518Q181 521 188 519" stroke="#E9C198" stroke-width="1" opacity=".5" />
+    </g>
+  </defs>
+  <g id="ground">
+    <ellipse cx="280" cy="895" rx="111" ry="9" fill="#10221D" opacity=".24" />
+  </g>
+  <g id="base-body" stroke-linecap="round" stroke-linejoin="round">
+    <g id="plain-trousers">
+      <use href="#base-leg" />
+      <use href="#base-leg" transform="translate(560 0) scale(-1 1)" />
+      <path d="M280 492V538" stroke="#2F4242" stroke-width="1" />
+    </g>
+    <g id="plain-shoes">
+      <use href="#base-shoe" />
+      <use href="#base-shoe" transform="translate(560 0) scale(-1 1)" />
+    </g>
+    <g id="plain-sleeves">
+      <use href="#base-sleeve" />
+      <use href="#base-sleeve" transform="translate(560 0) scale(-1 1)" />
+    </g>
+    <g id="bare-neck">
+      <path d="M262 203H298V235L313 251L280 268L247 251L262 235Z" fill="url(#neck-color)" stroke="#AE845D" stroke-width=".8" />
+      <path d="M264 213Q280 223 296 213V226Q280 237 264 226Z" fill="#A77A54" opacity=".38" />
+    </g>
+    <g id="plain-shirt">
+      <path d="M225 256Q244 248 261 244Q280 261 299 244Q316 248 335 256L345 323L337 388L346 486Q280 500 214 486L223 388L215 323Z" fill="url(#base-shirt-color)" stroke="#405F57" stroke-width="1.7" />
+      <path d="M228 280C230 330 239 366 230 414L222 480L239 483L249 410L247 278Z" fill="#D8DECC" opacity=".11" />
+      <path d="M332 280C330 330 321 366 330 414L338 480L323 483L311 410L313 278Z" fill="#284A42" opacity=".12" />
+      <path d="M259 247Q280 267 301 247" stroke="#4F7062" stroke-width="3.5" />
+      <path d="M259 244Q280 261 301 244" stroke="#AEC2A8" stroke-width="1.1" />
+      <path d="M233 394L226 426M327 394L334 426M220 480Q280 492 340 480" stroke="#527266" stroke-width="1.1" />
+      <path d="M221 484Q280 496 339 484" stroke="#A1B4A1" stroke-width=".7" />
+    </g>
+    <g id="bare-hands">
+      <use href="#base-hand" />
+      <use href="#base-hand" transform="translate(560 0) scale(-1 1)" />
+    </g>
+  </g>
+  <g id="frontal-face" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M240 151C230 148 229 157 233 170L240 182L244 173ZM320 151C330 148 331 157 327 170L320 182L316 173Z" fill="#C18E65" stroke="#9F7752" stroke-width=".9" />
+    <path d="M235 157Q233 164 239 171M325 157Q327 164 321 171" stroke="#9C704E" stroke-width="1" />
+    <path id="face-outline" d="M280 104C254 104 240 124 238 150C236 166 240 180 247 191C252 201 261 208 270 212Q280 216 290 212C299 208 308 201 313 191C320 180 324 166 322 150C320 124 306 104 280 104Z" fill="url(#skin-color)" stroke="#AA825D" stroke-width=".9" />
+    <path id="face-volume" d="M241 149C240 174 252 194 269 203Q280 210 291 203C308 194 320 174 319 149C326 171 316 197 290 212Q280 216 270 212C244 197 234 171 241 149Z" fill="#AE8059" opacity=".12" />
+    <path d="M246 126Q280 108 314 126L315 136Q280 125 245 136Z" fill="#9B704F" opacity=".07" />
+    <use href="#eye-template" />
+    <use href="#eye-template" transform="translate(560 0) scale(-1 1)" />
+    <g fill="#FFF1D5">
+      <circle cx="258.3" cy="149.9" r=".9" />
+      <circle cx="299.3" cy="149.9" r=".9" />
+    </g>
+    <path d="M278 155C277 163 278 165 274 169C271 172 275 175 280 175C285 175 289 172 286 169C282 165 283 161 282 155Z" fill="#BD8C63" opacity=".24" />
+    <ellipse cx="280" cy="170.5" rx="3.6" ry="2.2" fill="#E8BA90" opacity=".4" />
+    <path d="M280 155Q279 161 279 166" stroke="#F0CCA3" stroke-width="1.1" opacity=".65" />
+    <path d="M274.5 171.5Q276 171 277.5 172M283 172Q285 172 286 170.5" stroke="#9D7352" stroke-width=".7" opacity=".65" />
+    <path id="upper-lip" d="M268 188Q274 186 278 187L280 188L282 187Q286 186 292 188Q280 191 268 188Z" fill="#AC795C" opacity=".55" />
+    <path id="lower-lip" d="M270 189Q280 191 290 189Q285 194 280 194Q275 194 270 189Z" fill="#D49F78" opacity=".55" />
+    <path id="mouth-line" d="M268 188Q280 191 292 188" stroke="#8F6549" stroke-width=".85" />
+    <path d="M275 194Q280 195 285 194" stroke="#F0C49D" stroke-width=".85" opacity=".5" />
+    <path d="M255 172Q261 176 267 173M305 172Q299 176 293 173" stroke="#E6B58A" stroke-width="2" opacity=".22" />
+  </g>
+  <g id="tidy-hair" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M240 151C234 132 241 116 254 108C269 98 291 98 306 108C320 117 326 134 320 153L313 163L312 140C299 139 289 130 279 120C270 130 259 135 247 139L247 162Z" fill="url(#hair-color)" stroke="#34422E" stroke-width="1.2" />
+    <path d="M247 132C253 116 266 110 278 109C271 120 260 127 247 132ZM283 108C296 110 308 119 313 132C300 128 291 118 283 108Z" fill="#97734B" opacity=".27" />
+    <path d="M274 110C267 120 257 125 248 130M286 112C294 121 302 126 310 130M243 141L244 150M317 141L316 150" stroke="#A27E50" stroke-width=".95" opacity=".65" />
+  </g>
+</svg>

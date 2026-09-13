@@ -5,10 +5,9 @@
    ============================================================ */
 
 import { isEliminated } from "../domain.mjs";
-import { renderHero } from "../avatar.mjs";
+import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
 import {
   escapeHtml,
-  heroStageAttributes,
   icon,
   renderHearts,
   renderLevel,

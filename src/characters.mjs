@@ -1,0 +1,50 @@
+/* Lightweight base-character markup. No WebGL is started on the class board. */
+import { escapeHtml } from "./ui.mjs";
+
+const ROOT = new URL("../assets/characters-base/", import.meta.url);
+const TONES = new Set(["light", "medium", "tan", "brown", "dark"]);
+
+export function characterAppearance(pupil = {}) {
+  return {
+    gender: pupil.gender === "girl" ? "girl" : "boy",
+    tone: TONES.has(pupil.skinTone) ? pupil.skinTone : "light"
+  };
+}
+
+export function characterAssets(pupil = {}) {
+  const { gender, tone } = characterAppearance(pupil);
+  const stem = `${gender}-${tone}`;
+  return {
+    gender,
+    tone,
+    model: new URL(`${stem}.glb`, ROOT).href,
+    portrait: new URL(`${stem}.webp`, ROOT).href,
+    thumbnail: new URL(`${stem}-small.webp`, ROOT).href
+  };
+}
+
+export function renderBaseCharacter(pupil, { large = false } = {}) {
+  const assets = characterAssets(pupil);
+  return `<img class="avatar avatar-base3d" data-character-gender="${assets.gender}" data-character-tone="${assets.tone}" src="${escapeHtml(large ? assets.portrait : assets.thumbnail)}" srcset="${escapeHtml(assets.thumbnail)} 256w, ${escapeHtml(assets.portrait)} 512w" sizes="${large ? "(max-width: 700px) 75vw, 340px" : "180px"}" width="512" height="896" alt="${escapeHtml(pupil?.name || "Hero")}'s base character" loading="${large ? "eager" : "lazy"}" decoding="async" />`;
+}
+
+export function baseStageAttributes() {
+  return 'data-outfit="starter" data-gear="no-weapon" data-character-stage="base-v2"';
+}
+
+export function renderBaseCharacterViewer(pupil) {
+  const assets = characterAssets(pupil);
+  return `<div class="base-character-viewer" data-base-character-viewer data-model-url="${escapeHtml(assets.model)}" data-character-name="${escapeHtml(pupil.name)}">
+    <div class="base-character-canvas" role="img" aria-label="${escapeHtml(pupil.name)}'s base character, three-quarter view">
+      ${renderBaseCharacter(pupil, { large: true })}
+    </div>
+    <p class="base-character-status" role="status" aria-live="polite">Loading 3D character…</p>
+    <button type="button" class="btn btn-sm base-character-retry" data-character-retry hidden>Retry 3D</button>
+    <div class="base-character-controls" role="group" aria-label="Character view">
+      <button type="button" data-character-angle="front" aria-pressed="false" disabled>Front</button>
+      <button type="button" data-character-angle="quarter" aria-pressed="true" disabled>¾</button>
+      <button type="button" data-character-angle="back" aria-pressed="false" disabled>Back</button>
+      <button type="button" data-character-angle="face" aria-pressed="false" disabled>Face</button>
+    </div>
+  </div>`;
+}

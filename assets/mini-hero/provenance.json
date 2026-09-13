@@ -1,0 +1,14 @@
+{
+  "title": "Game of More — Petit aventurier lumineux",
+  "date": "2026-09-12",
+  "userReference": "User-supplied image of a compact, blond, green-clad elf adventurer in the style of Zelda: Link's Awakening. The saved imgres.html is a Google Images page, not an imported character asset.",
+  "revisionRequest": "c'est bien mais il est un peu bizare et court sur patte tu arrive à le fair un peu plus classe stp",
+  "method": "Original meshes, rounded primitives and elliptical swept surfaces authored directly in Blender 4.5.3 via Blender MCP. No image-to-3D service, downloaded character or bitmap texture is used.",
+  "sourceScript": "tools/blender/sunlit_adventurer.py",
+  "design": "Rounded-square face, simple black oval eyes, broad golden hair locks, folded green cap, green tunic, pale leggings, chestnut boots, blue enamel shield with original compass badge, short fantasy blade.",
+  "refinements": "Legs lengthened by 0.18 Blender units, head reduced to 89%, ear reach reduced to 76%, boot width reduced to 88% and depth to 90%. Boot volumes voxel-fused; leggings taper inside cuffs. Face and leather changed to satin materials. Body equipment moves rigidly with the torso.",
+  "model": { "file": "sunlit-adventurer.glb", "pieces": 59, "triangles": 202350, "bytes": 4034376, "static": true, "rigged": false },
+  "scene": { "file": "sunlit-adventurer.blend", "activeScene": "Petit aventurier • daylight study", "materials": "Named, self-contained PBR colors with no external image dependencies." },
+  "portrait": { "file": "sunlit-portrait.png", "derivedWebAsset": "sunlit-portrait.webp", "origin": "Actual Cycles render of the exported character, 64 samples, three large area lights, transparent film, AgX Medium High Contrast, exposure 0.15.", "dimensions": [1200, 1400] },
+  "web": "A separate daylight studio with a static Blender portrait and an on-demand WebGL model. The lighting in the browser is intentionally a separate real-time studio."
+}

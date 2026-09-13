@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-12T17:53:59Z",
+  "title": "Design System: Petit aventurier — studio clair",
+  "extensions": {
+    "colorMeta": {
+      "forest": {
+        "role": "primary",
+        "displayName": "Vert forêt",
+        "tonalRamp": ["oklch(15% 0.0698 156.9)", "oklch(26% 0.0698 156.9)", "oklch(38% 0.0698 156.9)", "oklch(49% 0.0698 156.9)", "oklch(61% 0.0698 156.9)", "oklch(72% 0.0698 156.9)", "oklch(84% 0.0698 156.9)", "oklch(95% 0.0698 156.9)"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Papier clair",
+        "tonalRamp": ["oklch(15% 0.0080 114.2)", "oklch(26% 0.0080 114.2)", "oklch(38% 0.0080 114.2)", "oklch(49% 0.0080 114.2)", "oklch(61% 0.0080 114.2)", "oklch(72% 0.0080 114.2)", "oklch(84% 0.0080 114.2)", "oklch(95% 0.0080 114.2)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Encre verte",
+        "tonalRamp": ["oklch(15% 0.0414 165.6)", "oklch(26% 0.0414 165.6)", "oklch(38% 0.0414 165.6)", "oklch(49% 0.0414 165.6)", "oklch(61% 0.0414 165.6)", "oklch(72% 0.0414 165.6)", "oklch(84% 0.0414 165.6)", "oklch(95% 0.0414 165.6)"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Texte atténué",
+        "tonalRamp": ["oklch(15% 0.0288 152.4)", "oklch(26% 0.0288 152.4)", "oklch(38% 0.0288 152.4)", "oklch(49% 0.0288 152.4)", "oklch(61% 0.0288 152.4)", "oklch(72% 0.0288 152.4)", "oklch(84% 0.0288 152.4)", "oklch(95% 0.0288 152.4)"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Filet sauge",
+        "tonalRamp": ["oklch(15% 0.0207 131.5)", "oklch(26% 0.0207 131.5)", "oklch(38% 0.0207 131.5)", "oklch(49% 0.0207 131.5)", "oklch(61% 0.0207 131.5)", "oklch(72% 0.0207 131.5)", "oklch(84% 0.0207 131.5)", "oklch(95% 0.0207 131.5)"]
+      },
+      "on-forest": {
+        "role": "neutral",
+        "displayName": "Blanc sur forêt",
+        "tonalRamp": ["oklch(15% 0.0000 0.0)", "oklch(26% 0.0000 0.0)", "oklch(38% 0.0000 0.0)", "oklch(49% 0.0000 0.0)", "oklch(61% 0.0000 0.0)", "oklch(72% 0.0000 0.0)", "oklch(84% 0.0000 0.0)", "oklch(95% 0.0000 0.0)"]
+      }
+    },
+    "tonalRampOrigin": "Visualisations synthétiques OKLCH à teinte et chroma constantes, de 15 % à 95 % de clarté ; elles ne constituent pas une palette utilisée par la page.",
+    "typographyMeta": {
+      "display": { "displayName": "Titre éditorial", "purpose": "Petit format. Grand aventurier. ; taille adaptée aux paliers responsive." },
+      "body": { "displayName": "Texte courant", "purpose": "Pile Inter puis système ; aucun chargement de fonte déclaré dans cette surface." },
+      "label": { "displayName": "Commandes discrètes", "purpose": "Libellés secondaires du studio et des boutons segmentés." }
+    },
+    "shadows": [
+      { "name": "portrait", "value": "drop-shadow(0 15px 9px #30422614)", "purpose": "Filtre CSS du portrait transparent ; pas une ombre de carte." }
+    ],
+    "motion": [
+      { "name": "primary-hover", "value": "background 160ms", "purpose": "Assombrissement du bouton principal." },
+      { "name": "portrait-hint", "value": "opacity 160ms", "purpose": "Invitation à explorer au survol ou au focus ; visible au repos sur mobile." },
+      { "name": "model-rotation", "value": "0.28 rad/s", "purpose": "Rotation volontaire du groupe portant le modèle statique ; choix d’angle et masquage interrompent le mouvement visible." }
+    ],
+    "reducedMotion": "Les transitions CSS et animations CSS sont supprimées, le défilement redevient automatique. La rotation WebGL reste une commande volontaire, arrêtée au départ.",
+    "breakpoints": [
+      { "name": "wide-min", "value": "1550px" },
+      { "name": "compact-max", "value": "1100px" },
+      { "name": "mobile-max", "value": "760px" },
+      { "name": "narrow-max", "value": "380px" }
+    ],
+    "focus": { "outline": "2px solid #37784c", "outlineOffset": "4px", "purpose": "Focus visible commun aux commandes et liens." },
+    "studio": {
+      "background": "radial-gradient(ellipse at 49% 41%,#fffefa 6%,#edf2e4 60%,#e4ebdc 100%)",
+      "border": "1px solid #d9e0d1",
+      "daylight": {
+        "toneMapping": "ACESFilmicToneMapping",
+        "exposure": 1.1,
+        "environmentIntensity": 0.75,
+        "pixelRatioCap": 1.75,
+        "plinthColor": "#d3dcc6",
+        "purpose": "Studio temps réel autonome, avec socle sauge et ombres douces ; apparence distincte du portrait Cycles."
+      }
+    },
+    "evidence": {
+      "pathBase": "repository-root",
+      "scope": ["assets/mini-hero/index.html", "src/mini-hero.css", "src/mini-hero.mjs", "src/character-viewer.mjs#daylight"],
+      "sources": ["docs/mini-hero/README.md", "assets/mini-hero/provenance.json"],
+      "referenceAuthority": "Référence utilisateur de personnage compact et clair, de type Zelda, suivie d’une demande de jambes plus longues et d’une allure plus classe ; aucun comp approuvé.",
+      "model": { "authoring": "Blender 4.5.3 via MCP", "pieces": 59, "triangles": 202350, "static": true, "rigged": false, "portraitOrigin": "Cycles ; WebP dérivé du PNG" },
+      "captures": [
+        { "path": ".impeccable/review/mini-desktop.png", "state": "Portrait bureau" },
+        { "path": ".impeccable/review/mini-live-desktop.png", "state": "Modèle 3D bureau, trois quarts" },
+        { "path": ".impeccable/review/mini-back.png", "state": "Modèle 3D bureau, dos" },
+        { "path": ".impeccable/review/mini-live-mobile.png", "state": "Modèle 3D mobile" },
+        { "path": ".impeccable/review/mini-mobile.png", "state": "Portrait mobile" }
+      ],
+      "finalReview": {
+        "verdict": "ship",
+        "origin": "Verdict indépendant final rapporté dans le bilan fourni par l’utilisateur.",
+        "corrections": ["Retrait du titre signalé en revue.", "Libellé ARIA synchronisé entre rendu et 3D, avec l’angle courant."],
+        "reportedChecks": ["Quatre vues", "Rotation", "Bascule vers le portrait", "Activation clavier Entrée", "Aucun débordement à 390px", "Chargement GLB différé", "Échec GLB simulé : retry disponible, poster préservé, puis récupération", "Provenance PNG/WebP embarquée et sidecar ; scan de 2 images, 0 manquante"],
+        "documentationPass": "Lecture des quatre sources de surface, du README, de la provenance et des cinq captures ; les essais interactifs rapportés n’ont pas été rejoués."
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Action principale",
+      "kind": "button",
+      "refersTo": "primary-action",
+      "description": "Bascule vers le volume ; son libellé devient Revenir au rendu Blender en mode 3D. Extrait visuel sans logique d’interaction.",
+      "html": "<button class=\"ds-primary\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9\"/></svg>Voir le personnage en 3D<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 12h15m-6-6 6 6-6 6\"/></svg></button>",
+      "css": ".ds-primary{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--forest,#28583d);color:#fff;border:1px solid var(--forest,#28583d);border-radius:7px;padding:14px 15px;width:100%;font:600 12px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer;touch-action:manipulation;transition:background 160ms}.ds-primary svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}.ds-primary svg:last-child{margin-left:auto}.ds-primary:hover{background:#1e4930}.ds-primary:focus-visible{outline:2px solid #37784c;outline-offset:4px}.ds-primary:disabled{cursor:wait;opacity:.55}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Type de présentation",
+      "kind": "custom",
+      "refersTo": "mode-switch",
+      "description": "Groupe de deux boutons natifs à état aria-pressed ; aucun effet de survol distinct dans la source.",
+      "html": "<div class=\"ds-mode\" role=\"group\" aria-label=\"Type de présentation\"><button type=\"button\" aria-pressed=\"true\">Rendu Blender</button><button type=\"button\" aria-pressed=\"false\">Modèle 3D</button></div>",
+      "css": ".ds-mode{display:inline-flex;border:1px solid #cbd5c4;border-radius:6px;background:#f9fbf4d9;padding:3px;gap:3px}.ds-mode button{font:400 11px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;padding:8px 12px;border:0;border-radius:3px;color:var(--muted,#5c6d60);background:none;white-space:nowrap;cursor:pointer;touch-action:manipulation}.ds-mode button[aria-pressed=true]{background:#dce7d2;color:#284633}.ds-mode button:hover{cursor:pointer}.ds-mode button:focus-visible{outline:2px solid #37784c;outline-offset:4px}"
+    },
+    {
+      "name": "Angles et rotation",
+      "kind": "custom",
+      "refersTo": "view-controls",
+      "description": "Quatre cadrages et une rotation séparée ; la sélection d’un cadrage arrête la rotation. Extrait visuel sans moteur 3D.",
+      "html": "<div class=\"ds-views\"><div class=\"ds-angles\" role=\"group\" aria-label=\"Angle de vue\"><button type=\"button\" aria-pressed=\"false\">Face</button><button type=\"button\" aria-pressed=\"true\">Trois quarts</button><button type=\"button\" aria-pressed=\"false\">Dos</button><button type=\"button\" aria-pressed=\"false\">Visage</button></div><button class=\"ds-rotate\" type=\"button\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 8a8 8 0 1 0 0 8M20 3v5h-5\"/></svg>Rotation</button></div>",
+      "css": ".ds-views{display:flex;justify-content:center;gap:10px;align-items:center}.ds-angles{display:flex;border:1px solid #c4d3bd;border-radius:6px;padding:3px;background:#f8fbf3ed}.ds-views button{border:0;background:none;color:var(--muted,#5c6d60);padding:8px 12px;font:400 11px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;border-radius:3px;cursor:pointer;touch-action:manipulation}.ds-views button[aria-pressed=true]{color:#224a31;background:#d6e4cb}.ds-views .ds-rotate{border:1px solid #c4d3bd;border-radius:6px;background:#f8fbf3ed;display:flex;align-items:center;gap:6px;padding:11px}.ds-views .ds-rotate[aria-pressed=true]{background:#d6e4cb}.ds-rotate svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}.ds-views button:hover{cursor:pointer}.ds-views button:focus-visible{outline:2px solid #37784c;outline-offset:4px}"
+    },
+    {
+      "name": "Reprise du chargement",
+      "kind": "button",
+      "refersTo": "retry-button",
+      "description": "Commande révélée après un échec de chargement GLB ; le poster reste disponible. Aucun effet de survol distinct dans la source.",
+      "html": "<button class=\"ds-retry\" type=\"button\">Réessayer le chargement</button>",
+      "css": ".ds-retry{background:var(--forest,#28583d);color:#fff;border:0;border-radius:5px;padding:10px 14px;font:400 14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;white-space:nowrap;cursor:pointer;touch-action:manipulation}.ds-retry:hover{cursor:pointer}.ds-retry:focus-visible{outline:2px solid #37784c;outline-offset:4px}.ds-retry:disabled{cursor:wait;opacity:.55}"
+    },
+    {
+      "name": "Téléchargement secondaire",
+      "kind": "custom",
+      "refersTo": "asset-link",
+      "description": "Nom de fichier utile, sous-libellé de format et pictogramme discret ; même vocabulaire pour Blender et GLB.",
+      "html": "<a class=\"ds-asset\" href=\"/assets/mini-hero/sunlit-adventurer.blend\" download><span>Scène Blender<small>.blend · modèle éditable</small></span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4\"/></svg></a>",
+      "css": ".ds-asset{display:inline-flex;align-items:center;gap:13px;color:var(--ink,#213e32);text-decoration:none;text-underline-offset:4px;font:400 11px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}.ds-asset small{font-size:9px;display:block;color:var(--muted,#5c6d60)}.ds-asset svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}.ds-asset:hover>span{text-decoration:underline}.ds-asset:focus-visible{outline:2px solid #37784c;outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "L’atelier papier-sauge",
+    "overview": "Le personnage conduit cette surface en mode **Experience** : studio clair, interface discrète, volumes lisibles.\nLa référence fournie évoque un aventurier Zelda compact et lumineux ; aucune maquette de composition (« comp ») n’a été approuvée.\nLe retour utilisateur demande ensuite des jambes plus longues et une allure plus classe ; la version finale affine cette direction.",
+    "keyCharacteristics": [
+      "Papier clair, sauge et vert profond ; l’or et le bleu viennent surtout du personnage.",
+      "Silhouette arrondie plus élancée, finitions satinées, dos complet et équipement lisible.",
+      "Portrait immédiat, exploration 3D volontaire et commandes secondaires sobres."
+    ],
+    "rules": [
+      { "name": "The Portrait Rule", "body": "Le portrait reste une présentation complète et le repli visible tant que le volume 3D n’est pas disponible.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** Laisser le modèle conduire la composition et conserver ses proportions affinées et ses matières satinées.",
+      "**Do** Maintenir le portrait disponible et synchroniser état visible, commandes et nom accessible.",
+      "**Do** Présenter les fichiers et leur provenance comme ceux d’une étude de style statique réalisée dans Blender."
+    ],
+    "donts": [
+      "**Don't** Présenter la référence de personnage comme une composition approuvée ou un modèle téléchargé.",
+      "**Don't** Promettre un rig, des animations de personnage, une identité parfaite entre Cycles et WebGL ou une perfection absolue."
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "character": "Game of More — Le rôdeur",
+  "date": "2026-09-12",
+  "vectorProposal": {
+    "file": "ranger-vector.svg",
+    "method": "Original SVG authored directly with editable Bezier paths, named garment groups, material gradients and reusable rivets. No automatic raster tracing or embedded image.",
+    "brief": "fais une proposition améliorer en svg en utilisant le max de tes capacités pour voir la différence avec rendu 3d",
+    "revisionBrief": "Super mais tu me refais le svg en plus symétrique et moins bizare. tu retravailles les détails pour avoir un rendu parfait. c'est bien là mais trop étrange et pas assez clean",
+    "revision": "Frontal redraw centered on x=280; mirrored cape folds, sleeves, legs, boots and eyes; centered belt and clasp; softer facial shading; simplified seams; no textile pattern. Upright lantern and balanced stance.",
+    "faceRefinement": "Round clipped pupils/irises, compact jaw, softer eyelids, refined nose and lips. The same face construction is reused across outfit variants.",
+    "variantBrief": "et fais moi la version feminine et tu me garde une version basique sans équipement une version de base sans rien, pas capuche rodeur. juste perso neutre 2.0",
+    "variants": {
+      "baseMale": "character-base-male.svg",
+      "baseFemale": "character-base-female.svg",
+      "rangerMale": "ranger-vector.svg",
+      "rangerFemale": "ranger-feminine.svg"
+    },
+    "variantSources": ["ranger-vector.svg", "../../tools/svg/base-parts.svg"],
+    "variantGenerator": "tools/svg/build-character-variants.py",
+    "source": "Same ranger archetype from src/avatar.mjs and the prior 3D study; a distinct illustrated interpretation, not a geometrically identical render.",
+    "views": ["full silhouette", "face", "materials", "lantern"]
+  },
+  "sourceCostume": {
+    "file": "src/avatar.mjs",
+    "skin": "vocab-ranger",
+    "hat": "shadow-hood",
+    "weapon": "lore-lantern",
+    "skinTone": "medium",
+    "hair": "short",
+    "note": "Artistic reinterpretation of the existing costume, not a literal extrusion of the SVG. Alex is fictional demonstration data."
+  },
+  "reference": {
+    "file": "ranger-reference.png",
+    "method": "Local SDXL generation, then U2Net background removal via rembg",
+    "model": "Juggernaut-XI-v11.safetensors",
+    "seed": 312509,
+    "dimensions": [832, 1216],
+    "prompt": "Full body character concept of a young teenage fantasy forest ranger, age 14, slender realistic adolescent anatomy, confident relaxed contrapposto stance, handsome thoughtful face, natural subtle expression, short tousled dark chestnut hair with fine individual strands, wearing a weathered dark forest green hooded wool cloak draped over one shoulder, fitted moss green medieval linen tunic with split hem, understated layered brown leather shoulder guards, stitched leather crossbody belt, small worn satchel at hip, fitted charcoal trousers, beautifully detailed leather travelling boots, leather bracers and fingerless gloves, holding a small antique brass glowing amber lantern in his right hand. High end AAA adventure video game character, cinematic semi realistic 3D rendering, intricate believable fabric folds, physically based materials, worn leather grain, finely sculpted expressive face, beautiful coherent silhouette, art direction of an expensive fantasy game, entire character visible head to toe, front three-quarter view, isolated on plain muted gray background, soft studio lighting, high detail, balanced proportions, no weapons, no text",
+    "negativePrompt": "child, chibi, cartoon, toy, doll, plastic, clay, low poly, cylinders, big head, baby face, bulging eyes, bodybuilder, adult muscular warrior, armor suit, photoreal human photograph, oversaturated, neon, oversized boots, long neck, bald, stiff pose, symmetrical pose, text, watermark, extra fingers, missing hands, extra arms, cropped feet, collage"
+  },
+  "model": {
+    "file": "ranger.glb",
+    "method": "Hyper3D Rodin image-to-3D via Blender MCP",
+    "tier": "Sketch, built-in trial",
+    "input": "ranger-reference.png",
+    "refinement": "Front reference projected onto real geometry, blended with the original side/back atlas, then baked to a self-contained 2048x2048 base-color texture. Coarse generated normal/metal maps removed to avoid plastic-looking wool and skin.",
+    "refinementScript": "tools/blender/refine_texture.py",
+    "triangles": 23332,
+    "note": "Static textured prototype, not rigged for animation. Fine accessories and profile detail remain reconstruction approximations. No GPT Image endpoint was available in this session."
+  },
+  "portrait": {
+    "files": ["ranger-portrait.png", "ranger-portrait.webp"],
+    "origin": "Actual Blender Cycles render of ranger.blend, transparent film, three studio area lights. WebP is derived from the PNG, not from the generated reference.",
+    "script": "tools/blender/studio.py"
+  }
+}

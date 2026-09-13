@@ -1,0 +1,9 @@
+/* The variant selectors belong to the SVG portrait, independent of the 3D studies. */
+.svg-options{position:absolute;z-index:3;top:52px;left:20px;right:20px;display:flex;justify-content:center;gap:8px}
+.svg-options label{display:block;min-width:0}
+.svg-options select{max-width:100%;height:33px;border:1px solid #456051;border-radius:5px;background:#172c26;color:#dbe8d7;font:inherit;font-size:11px;padding:0 26px 0 10px;cursor:pointer;accent-color:#c0d0a8}
+.svg-option-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.comparison .vector-stage .vector-portrait-button{padding-top:93px}
+.vector-stage .stage-heading .vector-label{white-space:nowrap}
+@media(min-width:701px) and (max-width:1000px){.svg-options{top:76px;left:12px;right:12px;gap:5px}.svg-options select{height:31px;font-size:10px;padding:0 17px 0 6px}.comparison .vector-stage .vector-portrait-button{padding-top:118px}}
+@media(max-width:700px){.svg-options{top:54px}.svg-options select{height:34px;font-size:12px}.comparison .vector-stage .vector-portrait-button{padding-top:97px}}

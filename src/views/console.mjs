@@ -5,8 +5,8 @@
    ============================================================ */
 
 import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
-import { renderHero } from "../avatar.mjs";
-import { escapeHtml, gearOf, heroStageAttributes, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney } from "../ui.mjs";
+import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
+import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
 
 const XP_PRESETS = [

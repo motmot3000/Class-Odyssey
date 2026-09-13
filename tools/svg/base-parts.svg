@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 940" fill="none">
+  <defs>
+    <linearGradient id="base-shirt-color" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#809D93"/><stop offset=".55" stop-color="#6A8A80"/><stop offset="1" stop-color="#54736B"/></linearGradient>
+    <linearGradient id="base-trouser-color" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#515D5D"/><stop offset="1" stop-color="#374749"/></linearGradient>
+    <linearGradient id="base-shoe-color" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#78654E"/><stop offset="1" stop-color="#4B4438"/></linearGradient>
+    <g id="base-leg" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M218 478L280 483L274 557C272 650 261 730 255 831V850H206L210 797L213 680C218 607 211 535 218 478Z" fill="url(#base-trouser-color)" stroke="#314143" stroke-width="1.6"/>
+      <path d="M226 536C232 601 226 662 221 718L218 821H229L242 702L251 545Z" fill="#A2AD9E" opacity=".10"/>
+      <path d="M218 696Q233 690 252 695M215 812Q235 817 255 811" stroke="#2E4141" stroke-width="1.3"/>
+      <path d="M211 835Q233 839 255 834V848Q231 852 208 848Z" fill="#465756" stroke="#647570" stroke-width=".8"/>
+    </g>
+    <g id="base-shoe" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M209 839H253L255 854C260 862 265 870 264 882V890Q230 899 195 892C187 890 187 884 192 879L207 861Z" fill="url(#base-shoe-color)" stroke="#33413A" stroke-width="1.6"/>
+      <path d="M214 846H248L247 860L224 865L211 860Z" fill="#695A46" stroke="#9A896C" stroke-width=".8"/>
+      <path d="M222 850L243 858M242 850L221 858M222 859L243 867M242 859L223 867" stroke="#B7A88B" stroke-width="1.3"/>
+      <path d="M204 872Q225 878 250 872" stroke="#9D8B6C" stroke-width=".95"/>
+      <path d="M192 882Q225 891 264 882V891Q229 900 194 894Z" fill="#3D453C" stroke="#324039" stroke-width="1.2"/>
+      <path d="M195 887Q227 894 260 887" stroke="#ACAA8B" stroke-width=".8"/>
+    </g>
+    <g id="base-sleeve" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M218 261C198 264 185 282 183 310L177 390L169 473V509L194 511L204 446L216 390L235 299Z" fill="url(#base-shirt-color)" stroke="#405F57" stroke-width="1.6"/>
+      <path d="M201 284C191 314 197 350 189 392L183 462L191 470L203 390L215 293Z" fill="#D3DBC6" opacity=".12"/>
+      <path d="M178 389Q188 397 205 395M177 402Q187 407 201 404M173 484L195 487" stroke="#4D6E63" stroke-width="1.2"/>
+      <path d="M169 495L196 498L194 511L169 509Z" fill="#59796E" stroke="#89A392" stroke-width=".85"/>
+    </g>
+    <g id="base-hand" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M170 508L192 510L193 520C198 524 200 529 198 533C196 536 193 534 190 530V542C190 547 186 549 182 546L174 544C168 542 167 537 167 531Z" fill="url(#hand-color)" stroke="#9C7754" stroke-width="1"/>
+      <path d="M174 531L176 540M180 532L182 542M186 532L187 540M191 523L195 529" stroke="#AC815B" stroke-width=".8"/>
+      <path d="M174 518Q181 521 188 519" stroke="#E9C198" stroke-width="1" opacity=".5"/>
+    </g>
+  </defs>
+  <g id="base-body" stroke-linecap="round" stroke-linejoin="round">
+    <g id="plain-trousers"><use href="#base-leg"/><use href="#base-leg" transform="translate(560 0) scale(-1 1)"/><path d="M280 492V538" stroke="#2F4242" stroke-width="1"/></g>
+    <g id="plain-shoes"><use href="#base-shoe"/><use href="#base-shoe" transform="translate(560 0) scale(-1 1)"/></g>
+    <g id="plain-sleeves"><use href="#base-sleeve"/><use href="#base-sleeve" transform="translate(560 0) scale(-1 1)"/></g>
+    <g id="bare-neck"><path d="M262 203H298V235L313 251L280 268L247 251L262 235Z" fill="url(#neck-color)" stroke="#AE845D" stroke-width=".8"/><path d="M264 213Q280 223 296 213V226Q280 237 264 226Z" fill="#A77A54" opacity=".38"/></g>
+    <g id="plain-shirt">
+      <path d="M225 256Q244 248 261 244Q280 261 299 244Q316 248 335 256L345 323L337 388L346 486Q280 500 214 486L223 388L215 323Z" fill="url(#base-shirt-color)" stroke="#405F57" stroke-width="1.7"/>
+      <path d="M228 280C230 330 239 366 230 414L222 480L239 483L249 410L247 278Z" fill="#D8DECC" opacity=".11"/>
+      <path d="M332 280C330 330 321 366 330 414L338 480L323 483L311 410L313 278Z" fill="#284A42" opacity=".12"/>
+      <path d="M259 247Q280 267 301 247" stroke="#4F7062" stroke-width="3.5"/>
+      <path d="M259 244Q280 261 301 244" stroke="#AEC2A8" stroke-width="1.1"/>
+      <path d="M233 394L226 426M327 394L334 426M220 480Q280 492 340 480" stroke="#527266" stroke-width="1.1"/>
+      <path d="M221 484Q280 496 339 484" stroke="#A1B4A1" stroke-width=".7"/>
+    </g>
+    <g id="bare-hands"><use href="#base-hand"/><use href="#base-hand" transform="translate(560 0) scale(-1 1)"/></g>
+  </g>
+  <g id="feminine-back-hair" stroke-linejoin="round">
+    <path d="M278 97C251 95 234 114 232 140C226 171 237 202 229 235L244 252L263 245L280 227L297 245L316 252L331 235C323 202 334 171 328 140C326 114 309 95 278 97Z" fill="url(#hair-color)" stroke="#403C2D" stroke-width="1.4"/>
+    <path d="M241 139C236 174 247 207 239 235L250 242C257 211 244 180 251 148ZM319 139C324 174 313 207 321 235L310 242C303 211 316 180 309 148Z" fill="#916C47" opacity=".2"/>
+    <path d="M238 171C239 192 245 211 242 231M322 171C321 192 315 211 318 231" stroke="#A18053" stroke-width="1" opacity=".5"/>
+  </g>
+  <g id="feminine-front-hair" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M238 153C233 132 240 112 257 103C270 96 289 96 305 103C323 112 329 133 322 156L318 178L312 170L314 144C302 142 287 126 282 113C272 132 254 137 246 146L248 170L242 178Z" fill="url(#hair-color)" stroke="#403C2D" stroke-width="1.3"/>
+    <path d="M275 106C263 110 247 123 244 138C257 130 269 122 275 106ZM288 106C299 110 314 122 317 138C304 132 295 119 288 106Z" fill="#A07A4E" opacity=".24"/>
+    <path d="M277 105C269 119 255 126 247 136M288 109C296 121 306 130 315 134M242 147L244 167M318 148L316 166" stroke="#AC8558" stroke-width="1" opacity=".65"/>
+  </g>
+</svg>
