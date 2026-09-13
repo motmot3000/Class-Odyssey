@@ -56,7 +56,7 @@ function renderAccountPanel(open, unlockedUntil, account) {
         <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" /></label>
         <button class="btn btn-primary btn-sm" type="submit">${t("console.account.change")}</button>
       </form>
-      <hr class="rule" /><div class="button-row"><button class="btn btn-sm" data-action="lock-adult">${icon("lock")}${t("console.account.lock")}</button><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button></div>
+       <hr class="rule" /><div class="button-row"><button class="btn btn-sm" data-action="lock-adult">${icon("lock")}${t("console.account.lock")}</button><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button><a class="btn btn-sm" href="./assets/labs/index.html">${t("app.labs")}</a></div>
     </details>`;
 }
 

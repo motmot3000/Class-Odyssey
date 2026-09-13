@@ -329,6 +329,12 @@ export function createGameServer({
       res.writeHead(403).end("Forbidden");
       return;
     }
+    // Validate the requested path before the SPA fallback; a missing private
+    // file must not be turned into a successful HTML response.
+    if (isBlockedPath(resolved)) {
+      res.writeHead(404).end("Not found");
+      return;
+    }
     let target = resolved;
     if (!fs.existsSync(target) || fs.statSync(target).isDirectory()) target = path.join(publicDir, "index.html");
     if (!fs.existsSync(target) || isBlockedPath(target)) {

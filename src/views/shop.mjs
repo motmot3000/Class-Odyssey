@@ -28,15 +28,14 @@ export function renderShop(pupil, activeType) {
   return `
     <div class="shop">
       <div class="shop-head">
-        <div class="shop-tabs" role="tablist" aria-label="${t("shop.categories")}">
+        <div class="shop-tabs" role="group" aria-label="${t("shop.categories")}">
           ${SHOP_CATEGORIES.map((category) => `
             <button
               type="button"
-              role="tab"
               class="shop-tab ${category.type === active.type ? "is-active" : ""}"
               data-action="shop-category"
               data-category="${category.type}"
-              aria-selected="${category.type === active.type}"
+              aria-pressed="${category.type === active.type}"
             >${category.label()}</button>
           `).join("")}
         </div>
