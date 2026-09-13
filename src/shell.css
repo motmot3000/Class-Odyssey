@@ -61,7 +61,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .rune-card.is-out .hero-fig { filter: grayscale(1); }
 .out-tag { color: var(--void); font-weight: 700; }
 :root[data-theme="light"] .out-tag { color: white; }
-.picker-portrait { height: 96px; width: 100%; object-fit: contain; }
 .picker { padding: var(--s5) 0; }
 .picker-card strong { overflow-wrap: anywhere; max-width: 100%; }
 .picker-card .level { font-size: 13px; }
@@ -153,18 +152,18 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .admin-empty { padding-block: var(--s5); color: var(--ink-2); }
 
 @media (min-width: 1021px) and (max-width: 1480px) {
-  .brand-sub, .account-tag { display: none; }
+  .brand-sub { display: none; }
 }
 @media (min-width: 1021px) and (max-width: 1250px) {
-  .topbar .ghost span { display: none; }
-  .topbar .ghost { min-width: 44px; justify-content: center; }
+  .topbar .top-end > .ghost span { display: none; }
+  .topbar .top-end > .ghost { min-width: 44px; justify-content: center; }
 }
 @media (max-width: 1020px) {
   .topbar .top-end > .tabs { flex: 1; }
   .topbar [data-action="show-rules"] span, .topbar [data-action="show-admin"] span { display: inline; }
 }
 @media (min-width: 800px) and (max-width: 1180px) {
-  .sheet, .atelier { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); }
+  .sheet, .atelier { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); grid-template-rows: auto 1fr; grid-template-areas: "stage heading" "stage info"; }
 }
 @media (max-width: 800px) {
   .gate-page { grid-template-columns: minmax(0, 1fr); gap: var(--s5); max-width: 540px; min-height: 0; padding-top: var(--s5); }
@@ -195,6 +194,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   input, select, textarea, .search input { font-size: 16px; }
 }
 @media (max-width: 520px) {
+  .topbar .top-end { flex-wrap: wrap; justify-content: flex-end; }
   .topbar .top-end > .tabs { flex: 1 0 100%; }
   .topbar-welcome .top-end { flex: 0; }
   .gate-card, .rules, .admin-card { padding: var(--s4); }

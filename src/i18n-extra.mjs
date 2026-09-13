@@ -21,6 +21,8 @@ export const messages = {
   "sheikah.brand": ["Tablette Sheikah", "Sheikah tablet"],
   "sheikah.classroom": ["Salle de classe", "Classroom"],
   "sheikah.board": ["Plateau {name}", "{name} board"],
+  "sheikah.roster": ["Héros de la classe", "Class heroes"],
+  "sheikah.tools": ["Options de la tablette", "Tablet options"],
   "sheikah.noResults": ["Aucun héros trouvé", "No heroes found"],
   "sheikah.noResultsHint": ["Essayez un autre prénom ou effacez la recherche.", "Try another name or clear the search."],
   "sheikah.noHeroes": ["Pas encore de héros", "No heroes yet"],

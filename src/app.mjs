@@ -138,7 +138,7 @@ let theme = (() => {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch { /* stockage bloqué */ }
-  return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return "light";
 })();
 
 function applyTheme() {
