@@ -4,6 +4,8 @@
    visible à chaque rendu. Aucun rechargement du GLB au changement de vue.
    ============================================================ */
 
+import { t } from "./i18n.mjs";
+
 const GLB_URL = new URL("../assets/wardrobe/wardrobe.glb", import.meta.url).href;
 let runtime;
 let viewer;
@@ -31,7 +33,13 @@ function fail(error, host) {
   console.warn("Sheikah viewer:", error);
   host?.classList.remove("is-loading");
   const loader = host?.querySelector("[data-load-bar]");
-  if (loader) loader.outerHTML = '<p class="viewer-error" role="status">Le vestiaire 3D est indisponible.</p>';
+  if (loader) {
+    const message = document.createElement("p");
+    message.className = "viewer-error";
+    message.setAttribute("role", "status");
+    message.textContent = t("view.wardrobeUnavailable");
+    loader.replaceWith(message);
+  }
 }
 
 function getInstance(host, look) {
@@ -60,6 +68,7 @@ export function mountSheikahViewer(host, look) {
     .then((instance) => {
       if (!instance || currentHost !== host || !host.isConnected) return;
       if (instance.element.parentElement !== host) host.append(instance.element);
+      instance.element.setAttribute("aria-label", t("view.keyboard"));
       instance.applyState(look);
       instance.setVisible(true);
       instance.setAngle(viewerAngle);

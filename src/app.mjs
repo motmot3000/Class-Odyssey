@@ -46,7 +46,7 @@ import {
   validateNewPassword,
   verifyPassword
 } from "./session.mjs";
-import { escapeHtml, icon } from "./ui.mjs";
+import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderBoard } from "./views/board.mjs";
 import { renderConsole } from "./views/console.mjs";
 import { renderAdmin } from "./views/admin.mjs";
@@ -72,7 +72,7 @@ import {
   setSheikahTheme,
   setSheikahFreeViewHandler
 } from "./sheikah-runtime.mjs";
-import { t, getLang, setLang, initLanguage } from "./i18n.mjs";
+import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i18n.mjs";
 
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
@@ -289,7 +289,7 @@ function renderViewBody(view) {
   return `
     <main class="page page-board">
       ${renderBoard(classroom, ui, state.selectedPupilIds)}
-      <aside class="console ${ui.consoleOpen ? "is-open" : ""}" aria-label="Teacher console">
+      <aside class="console ${ui.consoleOpen ? "is-open" : ""}" aria-label="${t("console.title")}">
         <button
           class="console-mobile-toggle"
           id="console-toggle"
@@ -298,8 +298,8 @@ function renderViewBody(view) {
           aria-expanded="${ui.consoleOpen}"
           aria-controls="teacher-console-body"
         >
-          <span>${icon("shop")}Teacher console</span>
-          <strong>${ui.consoleOpen ? "Close" : targets.length ? `${targets.length} selected` : "Open controls"}</strong>
+          <span>${icon("shop")}${t("console.title")}</span>
+          <strong>${ui.consoleOpen ? t("app.console.close") : targets.length ? t("app.selected", { n: targets.length }) : t("app.controls")}</strong>
         </button>
         <div class="console-body" id="teacher-console-body">
           ${renderConsole({
@@ -349,13 +349,13 @@ function renderTopbar(view) {
 
       <div class="topbar-end">
         <div class="segmented" role="group" aria-label="Interface">
-          <button type="button" class="${teacherTab ? "is-active" : ""}" data-action="show-board" aria-pressed="${teacherTab}">Teacher${unlocked ? "" : icon("lock", "icon-tab")}</button>
-          <button type="button" class="${view === "student" ? "is-active" : ""}" data-action="show-student" aria-pressed="${view === "student"}">Students</button>
+          <button type="button" class="${teacherTab ? "is-active" : ""}" data-action="show-board" aria-pressed="${teacherTab}">${t("app.aria.teacher")}${unlocked ? "" : icon("lock", "icon-tab")}</button>
+          <button type="button" class="${view === "student" ? "is-active" : ""}" data-action="show-student" aria-pressed="${view === "student"}">${t("app.aria.students")}</button>
         </div>
-        ${account?.role === "admin" ? `<button type="button" class="btn btn-sm btn-ghost ${view === "admin" ? "is-active" : ""}" data-action="show-admin">Accounts</button>` : ""}
-        ${unlocked ? `<button type="button" class="btn btn-sm btn-ghost" data-action="lock-adult">${icon("lock")}<span>Lock</span></button>` : ""}
-        <button type="button" class="btn btn-sm btn-ghost ${view === "rules" ? "is-active" : ""}" data-action="show-rules">${icon("book")}<span>Rules</span></button>
-        <span class="account-tag" title="Signed in as ${escapeHtml(account?.username || "")}">${escapeHtml(account?.displayName || "")}</span>
+        ${account?.role === "admin" ? `<button type="button" class="btn btn-sm btn-ghost ${view === "admin" ? "is-active" : ""}" data-action="show-admin">${t("app.aria.accounts")}</button>` : ""}
+        ${unlocked ? `<button type="button" class="btn btn-sm btn-ghost" data-action="lock-adult">${icon("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
+        <button type="button" class="btn btn-sm btn-ghost ${view === "rules" ? "is-active" : ""}" data-action="show-rules">${icon("book")}<span>${t("app.aria.rules")}</span></button>
+        <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
       </div>
     </header>
   `;
@@ -363,7 +363,7 @@ function renderTopbar(view) {
 
 function renderConflict() {
   if (!syncConflict || !account) return "";
-  return `<aside class="sync-conflict" role="alert"><strong>Sync paused:</strong> another device saved newer data. Your local changes are still on this device. <button class="btn btn-sm" data-action="export">Export local copy</button><button class="btn btn-sm" data-action="reload-server">Load server copy</button></aside>`;
+  return `<aside class="sync-conflict" role="alert"><strong>${t("app.conflict.title")} :</strong> ${t("app.conflict.body")} <button class="btn btn-sm" data-action="export">${t("app.conflict.export")}</button><button class="btn btn-sm" data-action="reload-server">${t("app.conflict.load")}</button></aside>`;
 }
 
 /* La grande bannière reste sur les écrans que la classe regarde ensemble ;
@@ -576,7 +576,7 @@ const ACTIONS = {
     ui.sheikahView = "sheet";
     if (draft) commit(next);
     else render();
-    toast("Tenue scellée.", "success");
+    toast(t("sheikah.savedLook"), "success");
   },
   "sheikah-shop": () => {
     const pupilId = currentView() === "student" ? studentPupilId : state.selectedPupilId;
@@ -608,7 +608,7 @@ const ACTIONS = {
     endSession();
     toast(unsynced
       ? "Signed out. Unsynced changes remain saved on this device."
-      : (name ? `Signed out of ${name}.` : "Signed out."), unsynced ? "warn" : "info");
+      : (name ? t("notice.signedOutNamed", { name }) : "Signed out."), unsynced ? "warn" : "info");
   },
 
   "lock-adult": () => {
@@ -705,7 +705,7 @@ const ACTIONS = {
     const pupil = getPupilById(state, el.dataset.pupilId);
     if (!pupil) return;
     commit(removePupil(state, pupil.id));
-    toast(`${pupil.name} removed.`, "warn", { undo: true });
+    toast(t("notice.removed", { name: pupil.name }), "warn", { undo: true });
   },
 
   "shop-category": (el) => {
@@ -783,7 +783,7 @@ const FORMS = {
       return;
     }
     openAccount(result.account);
-    toast(`Welcome back, ${result.account.displayName}.`, "success");
+    toast(t("notice.welcome", { name: result.account.displayName }), "success");
   },
 
   "sign-up": async (form) => {
@@ -812,7 +812,7 @@ const FORMS = {
       return;
     }
     openAccount(result.account);
-    toast(`${result.account.displayName} is ready.`, "levelup");
+    toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
   },
 
   unlock: async (form) => {
@@ -887,7 +887,7 @@ const FORMS = {
 
   "custom-xp": (form) => {
     const amount = Number(new FormData(form).get("amount"));
-    giveXp(amount, "Custom XP");
+    giveXp(amount, t("event.customXp"));
   },
 
   "custom-money": (form) => {
@@ -908,7 +908,7 @@ const FORMS = {
       gender: String(data.get("gender") || "boy"),
       skinTone: String(data.get("skinTone") || "light")
     }));
-    toast(`${name} joined ${getCurrentClass(state).name}.`, "success");
+    toast(t("notice.joined", { name, classroom: getCurrentClass(state).name }), "success");
     document.querySelector("#pupil-name")?.focus();
   },
 
@@ -927,13 +927,13 @@ const FORMS = {
     const note = String(data.get("note") || "").trim();
     if (!pupil || !item || item.type !== "bespoke" || !note) return;
     if (!canBuyItem(pupil, item)) {
-      toast(`This order requires level ${item.minLevel} and ${item.price} coins.`, "error");
+      toast(t("notice.orderRequires", { level: item.minLevel, price: item.price }), "error");
       return;
     }
     const next = purchaseItem(state, pupil.id, item.id, note);
     closeDialog();
     commit(next);
-    toast(`Custom order saved for ${pupil.name}.`, "levelup");
+    toast(t("notice.orderSaved", { name: pupil.name }), "levelup");
   }
 };
 
@@ -951,8 +951,8 @@ function giveMoney(amount) {
   const targets = getTargets();
   if (!targets.length || !Number.isFinite(amount) || amount < 1) return;
   targets.forEach((id) => pendingFlash.add(id));
-  commit(awardMoney(state, targets, amount, "Teacher coins"));
-  toast(`+${amount} coins · ${describeTargets(targets)}`, "coin");
+  commit(awardMoney(state, targets, amount, t("event.teacherCoins")));
+  toast(`+${amount} ${t("common.coins")} · ${describeTargets(targets)}`, "coin");
 }
 
 function changeTargetHp(delta) {
@@ -964,8 +964,8 @@ function changeTargetHp(delta) {
 
 function describeTargets(targets) {
   if (ui.scope === "class") return getCurrentClass(state).name;
-  if (targets.length === 1) return getPupilById(state, targets[0])?.name || "1 hero";
-  return `${targets.length} heroes`;
+  if (targets.length === 1) return getPupilById(state, targets[0])?.name || t("notice.oneHero");
+  return t("notice.heroes", { count: targets.length });
 }
 
 function buyOrEquip(itemId) {
@@ -980,20 +980,20 @@ function buyOrEquip(itemId) {
 
   if (isItemOwned(pupil, itemId) || !item.price) {
     commit(updateCosmetics(state, pupil.id, { [item.type]: itemId }));
-    toast(`${item.name} equipped.`, "success");
+    toast(t("notice.equipped", { name: tItem(item, "name") }), "success");
     return;
   }
 
   const next = purchaseItem(state, pupil.id, itemId);
   if (next === state) {
     const why = pupil.level < item.minLevel
-      ? `${item.name} unlocks at level ${item.minLevel}.`
-      : `${item.name} costs ${item.price} coins, you have ${pupil.money}.`;
+      ? t("notice.itemLevel", { name: tItem(item, "name"), level: item.minLevel })
+      : t("notice.itemPrice", { name: tItem(item, "name"), price: item.price, money: pupil.money });
     toast(why, "error");
     return;
   }
   commit(next);
-  toast(`${item.name} bought and equipped.`, "levelup");
+  toast(t("notice.bought", { name: tItem(item, "name") }), "levelup");
 }
 
 /* ---------- Dialogues ---------- */
@@ -1086,10 +1086,10 @@ function announce(previous, next) {
           rewards.push(...getRewardsForLevel(level));
         }
         const unique = [...new Set(rewards)];
-        toast(`${pupil.name} reached level ${pupil.level}.${unique.length ? ` Unlocked: ${unique.join(", ")}.` : ""}`, "levelup");
+        toast(t("notice.levelup", { name: pupil.name, level: pupil.level }) + (unique.length ? t("notice.unlocked", { rewards: unique.map(translateReward).join(", ") }) : ""), "levelup");
       }
-      if (before.hp > 0 && pupil.hp <= 0) toast(`${pupil.name} is out of HP.`, "warn");
-      if (before.hp <= 0 && pupil.hp > 0) toast(`${pupil.name} is back in the game.`, "success");
+      if (before.hp > 0 && pupil.hp <= 0) toast(t("notice.out", { name: pupil.name }), "warn");
+      if (before.hp <= 0 && pupil.hp > 0) toast(t("notice.back", { name: pupil.name }), "success");
     }
   }
 }
@@ -1221,7 +1221,7 @@ document.addEventListener("change", (event) => {
       const imported = importState(text);
       const total = imported.classes.reduce((sum, classroom) => sum + classroom.pupils.length, 0);
       commit({ ...imported, revision: state.revision }, { record: true, notify: false });
-      toast(`Import done: ${total} heroes restored.`, "success", { undo: true });
+      toast(t("notice.imported", { count: total }), "success", { undo: true });
     })
     .catch((error) => toast(error.message || "Could not read that file.", "error"));
 });
@@ -1232,13 +1232,13 @@ document.addEventListener("change", (event) => {
 function toast(message, kind = "info", { undo: withUndo = false } = {}) {
   const node = document.createElement("div");
   node.className = `toast toast-${kind}`;
-  node.innerHTML = `<p>${escapeHtml(message)}</p>`;
+  node.innerHTML = `<p>${escapeHtml(translateMessage(message))}</p>`;
 
   if (withUndo) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "toast-undo";
-    button.textContent = "Undo";
+    button.textContent = t("console.undo");
     button.addEventListener("click", () => {
       undo();
       dismiss(node);
@@ -1429,9 +1429,18 @@ window.addEventListener("pagehide", () => {
 
 initLanguage();
 document.getElementById("lang-toggle")?.addEventListener("click", () => {
+  const forms = [...app.querySelectorAll("form")].map(form => [...form.elements].map(input => ({ name: input.name, value: input.value, checked: input.checked })));
   setLang(getLang() === "fr" ? "en" : "fr");
   closeDialog();
   render();
+  [...app.querySelectorAll("form")].forEach((form, index) => {
+    for (const saved of forms[index] || []) {
+      const input = saved.name && form.elements.namedItem(saved.name);
+      if (!input || input.type === "file") continue;
+      input.value = saved.value;
+      if (typeof saved.checked === "boolean") input.checked = saved.checked;
+    }
+  });
 });
 applyTheme();
 render();

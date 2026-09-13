@@ -4,6 +4,8 @@
    sélecteur de langue (#lang-toggle) traduise réellement le contenu.
    ============================================================ */
 
+import { messages, frenchMessages } from "./i18n-extra.mjs";
+
 let lang = "en";
 const LANGUAGE_KEY = "classquest.lang";
 
@@ -668,6 +670,7 @@ export function setLang(next) {
     if (label) label.textContent = lang.toUpperCase();
     const toggle = document.getElementById("lang-toggle");
     toggle?.setAttribute("aria-label", lang === "fr" ? "Passer en anglais" : "Switch to French");
+    toggle?.setAttribute("title", lang === "fr" ? "Passer en anglais" : "Switch to French");
     try { localStorage.setItem(LANGUAGE_KEY, lang); } catch { /* private browsing */ }
   }
 }
@@ -683,11 +686,24 @@ export function getLang() {
 }
 
 export function t(key, params = {}) {
-  let text = dict[lang][key] ?? dict.fr[key] ?? key;
-  for (const [name, value] of Object.entries(params)) {
-    text = text.replaceAll(`{${name}}`, String(value));
-  }
-  return text;
+  const text = dict[lang][key] ?? messages[key]?.[lang === "fr" ? 0 : 1] ?? dict.fr[key] ?? key;
+  return text.replace(/\{(\w+)\}/g, (placeholder, name) => Object.hasOwn(params, name) ? String(params[name]) : placeholder);
+}
+
+export function hasTranslation(key, language = lang) {
+  return Object.hasOwn(dict[language], key) || Object.hasOwn(messages, key);
+}
+
+export function translateMessage(message = "") {
+  if (lang !== "fr") return message;
+  if (Object.hasOwn(frenchMessages, message)) return frenchMessages[message];
+  let match = message.match(/^the password needs at least (\d+) characters\.?$/i);
+  if (match) return `Le mot de passe doit contenir au moins ${match[1]} caractères.`;
+  match = message.match(/^The password cannot be longer than (\d+) characters\.$/);
+  if (match) return `Le mot de passe ne doit pas dépasser ${match[1]} caractères.`;
+  match = message.match(/^Too many tries\. Wait (\d+) minutes? and try again\.$/);
+  if (match) return `Trop de tentatives. Attends ${match[1]} minute(s) et réessaie.`;
+  return message;
 }
 
 /* Traduit un champ d'un objet de domaine (item/title/hat/...).
@@ -696,7 +712,7 @@ export function t(key, params = {}) {
 export function tItem(item, field) {
   if (lang === "fr") {
     const key = `domain.${item.id}.${field}`;
-    if (key in dict.fr) return dict.fr[key];
+    if (hasTranslation(key, "fr")) return t(key);
   }
   return item[field];
 }

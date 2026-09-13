@@ -21,6 +21,7 @@ import {
   statusClass
 } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
+import { translateReward } from "../ui.mjs";
 
 export function renderStudentPicker(classroom, ui) {
   if (classroom.pupils.length === 0) {
@@ -118,7 +119,7 @@ export function renderStudentLocker(pupil, ui) {
         <div class="locker-art" ${heroStageAttributes(pupil)}>
           ${renderHero(pupil, { large: true })}
           ${renderOutBadge(pupil)}
-          <button type="button" class="btn btn-sm base-character-open" data-action="zoom-pupil" data-pupil-id="${escapeHtml(pupil.id)}">${icon("expand")}<span>View in 3D</span></button>
+          <button type="button" class="btn btn-sm base-character-open" data-action="zoom-pupil" data-pupil-id="${escapeHtml(pupil.id)}">${icon("expand")}<span>${t("view.open")}</span></button>
         </div>
 
         <div class="locker-facts">
@@ -154,7 +155,7 @@ export function renderStudentLocker(pupil, ui) {
             : ""}
 
           <p class="panel-note">${next
-            ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+            ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") })
             : t("student.allUnlocked")}</p>
         </div>
       </div>

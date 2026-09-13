@@ -22,6 +22,7 @@ import {
   renderXpBar,
   statusClass
 } from "../ui.mjs";
+import { translateReward } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
 
 const TYPE_LABEL = {
@@ -64,7 +65,7 @@ export function renderPupilDialog(pupil) {
         </dl>
         ${renderCustomOrders(pupil)}
         <p class="panel-note">${next
-          ? t("modal.levelUnlocks", { level: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+          ? t("modal.levelUnlocks", { level: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") })
           : t("modal.allUnlocked")}</p>
       </div>
     </dialog>
@@ -96,7 +97,7 @@ export function renderItemDialog(item, pupil) {
     ? pupil
     : { ...pupil, [field]: item.id };
   const visual = bespoke
-    ? renderItemArt(item)
+    ? renderItemArt({ ...item, name: tItem(item, "name") })
     : `${renderHero(previewPupil)}${item.type === "title" ? `<span class="preview-title title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>` : ""}`;
 
   return `
@@ -104,7 +105,7 @@ export function renderItemDialog(item, pupil) {
       <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
       <div class="dialog-item-art ${bespoke ? "" : "is-hero-preview"}" ${bespoke ? "" : heroStageAttributes(previewPupil)}>${visual}</div>
       <h2>${escapeHtml(tItem(item, "name"))}</h2>
-      <p class="panel-note item-meta"><span class="rarity-label rarity-${getItemRarity(item)}">${getItemRarity(item)}</span>${t("modal.meta", { type: TYPE_LABEL[item.type]?.() || t("modal.type.weapon"), level: item.minLevel, price: item.price ? t("shop.coins", { price: item.price }) : t("shop.free") })}</p>
+      <p class="panel-note item-meta"><span class="rarity-label rarity-${getItemRarity(item)}">${t(`rarity.${getItemRarity(item)}`)}</span>${t("modal.meta", { type: TYPE_LABEL[item.type]?.() || t("modal.type.weapon"), level: item.minLevel, price: item.price ? t("shop.coins", { price: item.price }) : t("shop.free") })}</p>
       ${item.description ? `<p class="dialog-item-description">${escapeHtml(tItem(item, "description"))}</p>` : ""}
       <p class="dialog-status">${status}</p>
       ${bespoke && canBuyItem(pupil, item) ? `

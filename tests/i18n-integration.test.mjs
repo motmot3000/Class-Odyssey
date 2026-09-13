@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createInitialState, getCurrentClass, SHOP_ITEMS } from "../src/domain.mjs";
-import { setLang, t } from "../src/i18n.mjs";
+import { createInitialState, getCurrentClass, SHOP_ITEMS, getRewardsForLevel } from "../src/domain.mjs";
+import { setLang, t, tItem, hasTranslation, translateMessage } from "../src/i18n.mjs";
 import { renderWelcome } from "../src/views/welcome.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderShop } from "../src/views/shop.mjs";
 import { renderItemDialog, renderPupilDialog } from "../src/views/modals.mjs";
+import { renderAdmin } from "../src/views/admin.mjs";
+import { renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
+import { translateReward } from "../src/ui.mjs";
 
 test("FR/EN views retain all merged shop categories and 3D previews", () => {
   const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: '<img onerror="bad">' };
@@ -24,5 +27,40 @@ test("FR/EN views retain all merged shop categories and 3D previews", () => {
       }
       assert.match(renderPupilDialog(pupil), /data-base-character-viewer/);
     }
+  } finally { setLang("en"); }
+});
+
+test("every active catalogue item has French copy and English preserves domain data", () => {
+  try {
+    for (const item of SHOP_ITEMS) for (const field of ["name", "description"]) {
+      if (!item[field]) continue;
+      assert.ok(hasTranslation(`domain.${item.id}.${field}`, "fr"), `${item.id}.${field}`);
+      setLang("fr");
+      assert.ok(tItem(item, field).length > 0);
+      setLang("en");
+      assert.equal(tItem(item, field), item[field]);
+    }
+  } finally { setLang("en"); }
+});
+
+test("Sheikah, admin, validation errors and rewards follow the chosen language", () => {
+  const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: 'Alex <img onerror="bad">' };
+  try {
+    setLang("fr");
+    const sheet = renderSheikahSheet(pupil, { angle: "back" }, { student: true });
+    const workshop = renderSheikahPersonalize(pupil, { draft: null });
+    assert.ok(sheet.includes("Changer de héros"));
+    assert.ok(workshop.includes("Enregistrer la tenue"));
+    assert.doesNotMatch(sheet + workshop, /Hair color|Scout|Brown|HP restored|<img onerror=/);
+    assert.match(renderAdmin({ error: "Could not load accounts." }), /Impossible de charger les comptes/);
+    assert.match(renderWelcome({ error: "Wrong username or password." }), /incorrect/);
+    assert.equal(translateMessage("The password needs at least 4 characters."), "Le mot de passe doit contenir au moins 4 caractères.");
+    assert.doesNotMatch(getRewardsForLevel(3).map(translateReward).join(", "), /HP restored|hair color| title/);
+    // Parameters are replaced once: user data resembling a placeholder is kept.
+    assert.equal(t("notice.joined", { name: "{classroom}", classroom: "7P" }), "{classroom} a rejoint 7P.");
+    setLang("en");
+    assert.match(renderSheikahPersonalize(pupil, {}), /Save outfit/);
+    assert.doesNotMatch(renderSheikahSheet(pupil, {}, { student: true }), /Mon héros|pièces|Trois quarts|Tenue/);
+    assert.equal(translateMessage("Wrong username or password."), "Wrong username or password.");
   } finally { setLang("en"); }
 });

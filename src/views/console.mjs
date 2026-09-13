@@ -6,9 +6,9 @@
 
 import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
 import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
-import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney } from "../ui.mjs";
+import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney, translateReward } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
-import { getLang, t, tItem } from "../i18n.mjs";
+import { getLang, t, tItem, translateMessage } from "../i18n.mjs";
 
 const XP_PRESETS = [
   { amount: 100, reason: "console.preset.homework" },
@@ -191,9 +191,9 @@ function renderHeroPanel(pupil, ui, open) {
       ${renderCustomOrders(pupil)}
 
       <div class="rewards">
-        ${unlocked.length ? unlocked.map((reward) => `<span class="reward-tag">${escapeHtml(reward)}</span>`).join("") : ""}
+        ${unlocked.length ? unlocked.map((reward) => `<span class="reward-tag">${escapeHtml(translateReward(reward))}</span>`).join("") : ""}
         <p class="panel-note">${next
-          ? t("console.hero.unlocks", { next: next.level, rewards: next.rewards.map(escapeHtml).join(", ") })
+          ? t("console.hero.unlocks", { next: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") })
           : t("console.hero.allUnlocked")}</p>
       </div>
 
@@ -265,7 +265,7 @@ function renderEvent(event) {
   return `
     <li class="event">
       <time>${time}</time>
-      <span>${escapeHtml(event.reason)}</span>
+      <span>${escapeHtml(translateMessage(event.reason))}</span>
       <b class="${positive ? "is-gain" : "is-loss"}">${positive ? "+" : ""}${amount}</b>
     </li>
   `;

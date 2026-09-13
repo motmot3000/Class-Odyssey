@@ -1,4 +1,5 @@
 /* One renderer per open hero dialog, disposed on every close/navigation. */
+import { t } from "./i18n.mjs";
 let runtime;
 
 function loadRuntime() {
@@ -25,7 +26,7 @@ export function mountCharacterViewer(root) {
     pending = true;
     retry.hidden = true;
     status.hidden = false;
-    status.textContent = "Loading 3D character…";
+    status.textContent = t("view.loading");
     try {
       const { createBaseViewer } = await loadRuntime();
       if (!active || !root.isConnected) return;
@@ -36,7 +37,7 @@ export function mountCharacterViewer(root) {
           if (!active) return;
           poster.hidden = false;
           status.hidden = false;
-          status.textContent = "3D interrupted. Close and reopen the character to retry.";
+          status.textContent = t("view.interrupted");
           buttons.forEach(button => { button.disabled = true; });
         }
       });
@@ -49,7 +50,7 @@ export function mountCharacterViewer(root) {
       if (!active || abort.signal.aborted) return;
       console.warn("Base character viewer:", error);
       poster.hidden = false;
-      status.textContent = "The 3D view is unavailable. The character preview is still visible.";
+      status.textContent = t("view.unavailable");
       retry.hidden = false;
     } finally {
       pending = false;
@@ -60,8 +61,7 @@ export function mountCharacterViewer(root) {
     const button = event.currentTarget;
     instance?.setAngle(button.dataset.characterAngle);
     buttons.forEach(item => item.setAttribute("aria-pressed", String(item === button)));
-    const views = { front: "front view", quarter: "three-quarter view", back: "back view", face: "face detail" };
-    stage.setAttribute("aria-label", `${root.dataset.characterName}'s base character, ${views[button.dataset.characterAngle]}`);
+    stage.setAttribute("aria-label", t("view.label", { name: root.dataset.characterName, view: t(`view.${button.dataset.characterAngle}`) }));
   }
 
   buttons.forEach(button => button.addEventListener("click", chooseView));

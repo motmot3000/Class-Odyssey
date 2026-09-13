@@ -4,8 +4,9 @@
    avec ces briques. Une stat = une brique = une couleur, partout.
    ============================================================ */
 
-import { getShopItems, isEliminated, xpProgress } from "./domain.mjs";
+import { getShopItems, isEliminated, xpProgress, SHOP_ITEMS } from "./domain.mjs";
 import { renderCoinIcon, renderHeartIcon } from "./avatar.mjs";
+import { t, tItem, getLang, translateMessage } from "./i18n.mjs";
 
 export function escapeHtml(value) {
   return String(value)
@@ -54,14 +55,14 @@ export function icon(name, extraClass = "") {
 
 export function renderHearts(pupil) {
   const hearts = Array.from({ length: pupil.maxHp }, (_, index) => renderHeartIcon(index < pupil.hp)).join("");
-  return `<div class="hearts" role="img" aria-label="${pupil.hp} of ${pupil.maxHp} hit points">${hearts}</div>`;
+  return `<div class="hearts" role="img" aria-label="${t("app.aria.hp", { hp: pupil.hp, maxHp: pupil.maxHp })}">${hearts}</div>`;
 }
 
 export function renderXpBar(pupil, { showLabel = true } = {}) {
   const progress = xpProgress(pupil);
   return `
     <div class="xp">
-      <div class="xp-track" role="img" aria-label="${progress.current} of ${progress.needed} XP">
+      <div class="xp-track" role="img" aria-label="${t("app.aria.xp", { current: progress.current, needed: progress.needed })}">
         <span class="xp-fill" style="width:${progress.percent}%"></span>
       </div>
       ${showLabel ? `<p class="xp-label"><strong>${progress.current}</strong><span>/${progress.needed} XP</span></p>` : ""}
@@ -70,15 +71,16 @@ export function renderXpBar(pupil, { showLabel = true } = {}) {
 }
 
 export function renderMoney(amount) {
-  return `<span class="money" aria-label="${amount} coins">${renderCoinIcon()}<strong>${amount}</strong></span>`;
+  return `<span class="money" aria-label="${t("app.aria.coins", { amount })}">${renderCoinIcon()}<strong>${amount}</strong></span>`;
 }
 
 export function renderLevel(level) {
-  return `<span class="level" aria-label="Level ${level}"><span class="level-word">LVL</span><strong>${level}</strong></span>`;
+  return `<span class="level" aria-label="${t("app.aria.level", { level })}"><span class="level-word">${t("common.levelShort")}</span><strong>${level}</strong></span>`;
 }
 
 export function getItemName(type, id) {
-  return getShopItems(type).find((item) => item.id === id)?.name || "Rookie";
+  const item = getShopItems(type).find((item) => item.id === id);
+  return item ? tItem(item, "name") : tItem({ id: "rookie", name: "Rookie" }, "name");
 }
 
 /* Le titre par défaut n'apprend rien : on ne l'affiche que lorsqu'il a été
@@ -93,31 +95,31 @@ export function statusClass(pupil) {
 }
 
 export function renderOutBadge(pupil) {
-  return isEliminated(pupil) ? `<span class="out-badge">Out of HP</span>` : "";
+  return isEliminated(pupil) ? `<span class="out-badge">${t("app.aria.out")}</span>` : "";
 }
 
 export function gearOf(pupil) {
   return [
-    ["Outfit", getItemName("outfit", pupil.skin)],
-    ["Hat", getItemName("hat", pupil.hat)],
-    ["Item", getItemName("weapon", pupil.weapon)],
-    ["Hair cut", getItemName("hair", pupil.hair)],
-    ["Hair color", getItemName("hairColor", pupil.hairColor || "brown-hair")],
-    ["Face", getItemName("face", pupil.face)],
-    ["Skin", getItemName("tone", pupil.skinTone)]
+    [t("app.gear.outfit"), getItemName("outfit", pupil.skin)],
+    [t("app.gear.hat"), getItemName("hat", pupil.hat)],
+    [t("app.gear.item"), getItemName("weapon", pupil.weapon)],
+    [t("app.gear.hair"), getItemName("hair", pupil.hair)],
+    [t("app.gear.hairColor"), getItemName("hairColor", pupil.hairColor || "brown-hair")],
+    [t("app.gear.face"), getItemName("face", pupil.face)],
+    [t("app.gear.skin"), getItemName("tone", pupil.skinTone)]
   ];
 }
 
 export function renderCustomOrders(pupil) {
   if (!pupil.customOrders?.length) return "";
   return `
-    <section class="custom-orders" aria-label="Custom orders">
-      <h3 class="section-label">Custom orders</h3>
+    <section class="custom-orders" aria-label="${t("app.aria.custom")}">
+      <h3 class="section-label">${t("app.aria.custom")}</h3>
       <ul>
         ${pupil.customOrders.map((order) => `
           <li>
             <strong>${escapeHtml(order.note)}</strong>
-            <time datetime="${escapeHtml(order.orderedAt)}">${new Date(order.orderedAt).toLocaleDateString("en-GB")}</time>
+             <time datetime="${escapeHtml(order.orderedAt)}">${new Date(order.orderedAt).toLocaleDateString(getLang() === "fr" ? "fr-FR" : "en-GB")}</time>
           </li>
         `).join("")}
       </ul>
@@ -127,6 +129,17 @@ export function renderCustomOrders(pupil) {
 
 export function heroStageAttributes(pupil) {
   return `data-outfit="${escapeHtml(pupil.skin || "starter")}" data-gear="${escapeHtml(pupil.weapon || "no-weapon")}"`;
+}
+
+export function translateReward(reward) {
+  if (reward === "HP restored") return t("reward.hp");
+  for (const item of SHOP_ITEMS) {
+    const name = tItem(item, "name");
+    if (reward === item.name) return name;
+    if (reward === `${item.name} title`) return t("reward.title", { name });
+    if (reward === `${item.name} hair color`) return t("reward.hairColor", { name });
+  }
+  return translateMessage(reward);
 }
 
 export function getItemRarity(item) {

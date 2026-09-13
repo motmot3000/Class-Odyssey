@@ -1,5 +1,5 @@
 import { escapeHtml, icon } from "../ui.mjs";
-import { t } from "../i18n.mjs";
+import { t, translateMessage } from "../i18n.mjs";
 
 export function renderWelcome({ tab = "signin", error = "", pending = false, values = {} } = {}) {
   const signup = tab === "signup";
@@ -26,6 +26,6 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
           <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="current-password" ${off} /></label>
           <button class="btn btn-primary" type="submit" ${off}>${icon("unlock")}<span>${t(pending ? "welcome.submit.signing" : "welcome.submit.signin")}</span></button>
         </form>`}
-      ${error ? `<p class="gate-error" role="alert">${escapeHtml(error)}</p>` : ""}
+      ${error ? `<p class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
     </div></section>`;
 }

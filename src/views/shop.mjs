@@ -127,5 +127,5 @@ function renderThumb(item, pupil) {
   if (item.type === "title") {
     return `<span class="title-chip title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>`;
   }
-  return renderItemArt(item, pupil);
+  return renderItemArt({ ...item, name: tItem(item, "name") }, pupil);
 }
