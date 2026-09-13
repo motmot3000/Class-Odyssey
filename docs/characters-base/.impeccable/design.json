@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-13T00:00:00Z",
-  "title": "Design System: Game of More — personnages de base",
+  "title": "Design System: ClassQuest — personnages de base",
   "extensions": {
     "shadows": [
       { "name": "shadow-2", "value": "0 18px 44px rgba(3, 9, 20, 0.6)", "purpose": "Élévation du dialogue historique." }

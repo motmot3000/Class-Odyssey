@@ -234,7 +234,7 @@ for obj in character.objects:
 bpy.ops.export_scene.gltf(filepath=str(OUT/'ranger-playful.glb'), export_format='GLB', use_selection=True, export_apply=True, export_yup=True, export_animations=False)
 triangles = sum(len(obj.data.polygons) and sum(len(p.vertices)-2 for p in obj.data.polygons) for obj in character.objects)
 scene['art_direction'] = 'Jeune éclaireur: a simple stylized adolescent adventurer, approximately four heads tall, relaxed asymmetric stance, small calm eyes, subtle smile, matte fern-green tunic, understated ochre scarf and brass lantern. Approachable video-game character, neither epic realism nor a child mascot.'
-scene['source_costume'] = 'Game of More: vocab-ranger, shadow-hood, lore-lantern'
+scene['source_costume'] = 'ClassQuest: vocab-ranger, shadow-hood, lore-lantern'
 scene['prototype'] = 'Static, no rig. Independently modeled in Blender; no AI reconstruction.'
 
 # Transparent studio portrait, matching the existing comparison asset format.
@@ -281,7 +281,7 @@ bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'ranger-playful.blend'))
 bpy.ops.render.render(write_still=True)
 provenance = {
-    'character': 'Game of More — Jeune éclaireur',
+    'character': 'ClassQuest — Jeune éclaireur',
     'date': '2026-09-12',
     'method': 'Procedural Blender mesh modeling, no generated reference or reconstruction service',
     'blender': bpy.app.version_string,

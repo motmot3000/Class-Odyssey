@@ -1,10 +1,10 @@
-name: game-of-more
+name: classquest
 
 services:
   api:
     build:
       context: .
-    image: game-of-more-api:latest
+    image: classquest-api:latest
     restart: unless-stopped
     init: true
     read_only: true

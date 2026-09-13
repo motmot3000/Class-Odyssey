@@ -1,9 +1,9 @@
-# Game of More - Draft produit
+# ClassQuest - Draft produit
 
 Sources utilisées :
 
 - `decription.md`
-- `Game of More.docx`
+- `ClassQuest.docx`
 
 ## Périmètre du premier draft
 

@@ -4,6 +4,6 @@
   "revision": "base-v2-2026-09",
   "snapshots": ["boy-medium.glb", "girl-medium.glb", "manifest.json"],
   "purpose": "Local, reproducible snapshots of the delivered welded character bases and their attachment contract, used to rebuild the equipment catalogue.",
-  "credit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and source hair: Game of More study.",
+  "credit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and source hair: ClassQuest study.",
   "coordinates": "+Y up, +Z front, metres, origin on the ground between the feet; quaternions xyzw. Left and right are anatomical."
 }

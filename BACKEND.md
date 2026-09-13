@@ -1,4 +1,4 @@
-# Game of More — Backend
+# ClassQuest — Backend
 
 Le backend Node sauvegarde les comptes, classes, élèves, XP, niveaux, HP, skins
 et monnaie sur le VPS Infomaniak. Le `localStorage` du navigateur reste un cache
@@ -8,7 +8,7 @@ hors ligne isolé par compte. Aucun backend PHP n'est utilisé.
 
 ```text
 navigateur
-    │ https://game-of-more.lecagibi.ch
+    │ https://classquest.lecagibi.ch
     ▼
 Caddy sur le VPS
     │ reverse proxy vers 127.0.0.1:5180
@@ -16,13 +16,13 @@ Caddy sur le VPS
 conteneur Docker Node
     ├── frontend statique : index.html, styles.css, src/, assets/
     ├── API comptes et jeu : /api/*
-    └── volume persistant : /srv/apps/game-of-more/data
+    └── volume persistant : /srv/apps/classquest/data
 ```
 
 Le frontend, l'API et les données sont donc centralisés sur le VPS. Pendant la
 propagation DNS, l'ancien hébergement peut relayer provisoirement toutes les
-requêtes vers `www.thomaswunsche.com/_game-of-more-site/`. Le navigateur garde
-dans tous les cas l'URL Game of More.
+requêtes vers `www.thomaswunsche.com/_classquest-site/`. Le navigateur garde
+dans tous les cas l'URL ClassQuest.
 
 ## Configuration obligatoire
 
@@ -93,10 +93,10 @@ L'index des comptes possède également ses propres copies de récupération.
 
 ## Déploiement VPS
 
-Les fichiers d'exécution se trouvent dans `/srv/apps/game-of-more` :
+Les fichiers d'exécution se trouvent dans `/srv/apps/classquest` :
 
 ```text
-/srv/apps/game-of-more/
+/srv/apps/classquest/
 ├── Dockerfile
 ├── compose.yaml
 ├── server/
@@ -122,13 +122,13 @@ Depuis le dépôt local, copier la configuration avec la clé SSH du VPS :
 rsync -az \
   -e "ssh -i ~/.ssh/infomaniak_ssh/infomaniak_vps" \
   .dockerignore Dockerfile compose.yaml server index.html styles.css src assets \
-  debian@<IP_DU_VPS>:/srv/apps/game-of-more/
+  debian@<IP_DU_VPS>:/srv/apps/classquest/
 ```
 
 Puis reconstruire et contrôler le service :
 
 ```bash
-cd /srv/apps/game-of-more
+cd /srv/apps/classquest
 export FOUNDER_USERNAME
 export FOUNDER_PASSWORD
 docker compose config
@@ -140,7 +140,7 @@ curl -fsS http://127.0.0.1:5180/api/health
 
 Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
 Web exposé publiquement et utilise la configuration versionnée dans
-`deploy/vps/game-of-more.lecagibi.ch.caddy`.
+`deploy/vps/classquest.lecagibi.ch.caddy`.
 
 Après une modification Caddy :
 
@@ -151,7 +151,7 @@ sudo systemctl reload caddy
 
 ## Sauvegardes
 
-- Données actives : `/srv/apps/game-of-more/data/` sur le VPS.
+- Données actives : `/srv/apps/classquest/data/` sur le VPS.
 - Rotation applicative : 60 versions dans `data/backups/`.
 - Archive de la migration depuis le Pi conservée sur l'hébergement Infomaniak
   dans `~/cagipi_backup/`.

@@ -248,7 +248,7 @@ export function createGameServer({
     if (!Array.isArray(state.classes)
       || !state.classes.every((classroom) => classroom && typeof classroom === "object" && Array.isArray(classroom.pupils))
       || !Number.isSafeInteger(state.revision) || state.revision < 0) {
-      sendJson(res, 400, { error: "not a Game of More state" });
+      sendJson(res, 400, { error: "not a ClassQuest state" });
       return;
     }
     const current = api.readState(directory);
@@ -391,7 +391,7 @@ export function startServer(options = {}) {
   server.once("listening", () => {
     server.off("error", retryOnFreePort);
     const urlHost = host.includes(":") ? `[${host}]` : host;
-    console.log(`Game of More backend on http://${urlHost}:${server.address().port}`);
+    console.log(`ClassQuest backend on http://${urlHost}:${server.address().port}`);
   });
   server.listen(port, host);
   return server;

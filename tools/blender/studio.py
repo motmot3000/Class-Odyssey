@@ -1,4 +1,4 @@
-"""Presentation/export for the Rodin-reconstructed Game of More ranger.
+"""Presentation/export for the Rodin-reconstructed ClassQuest ranger.
 
 Run through Blender MCP after importing the image-to-3D result and orienting
 it upright (Z). Geometry comes from the documented reference in provenance.json.

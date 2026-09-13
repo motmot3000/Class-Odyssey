@@ -1,7 +1,7 @@
 import { createHeroViewer } from './viewer.mjs';
 
 /* ============================================================
-   Game of More — Tablette Sheikah (prototype complet)
+   ClassQuest — Tablette Sheikah (prototype complet)
    Le plateau, la fiche et le vestiaire partagent une seule dalle 3D :
    on ne recharge jamais le modèle, on change l'état du vestiaire.
    ============================================================ */
@@ -395,7 +395,7 @@ function renderTopbar() {
     <header class="topbar">
       <div class="brand">
         <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-name">Game <em>of</em> More</span>
+        <span class="brand-name">ClassQuest</span>
         <span class="brand-sub">Tablette Sheikah</span>
       </div>
       <nav class="tabs" aria-label="Classes">

@@ -14,7 +14,7 @@ for (const { name, autoPort, dynamicPort } of [
   { name: "normal startup preserves the configured port on a conflict", autoPort: false, dynamicPort: false }
 ]) {
   test(name, { timeout: 5000 }, async (t) => {
-    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "game-of-more-startup-"));
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-startup-"));
     const blocker = net.createServer();
     let server;
     t.after(async () => {
@@ -50,7 +50,7 @@ for (const { name, autoPort, dynamicPort } of [
     assert.ok(port > 0);
     assert.notEqual(port, occupiedPort);
     assert.deepEqual(log.mock.calls.map((call) => call.arguments), [
-      [`Game of More backend on http://127.0.0.1:${port}`]
+      [`ClassQuest backend on http://127.0.0.1:${port}`]
     ]);
     assert.equal(warn.mock.callCount(), autoPort ? 1 : 0);
     const response = await fetch(`http://127.0.0.1:${port}/api/health`);
@@ -60,7 +60,7 @@ for (const { name, autoPort, dynamicPort } of [
 }
 
 async function fixture({ legacyState, rateLimit } = {}) {
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "game-of-more-"));
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-"));
   if (legacyState) fs.writeFileSync(path.join(dataDir, "state.json"), JSON.stringify(legacyState));
   const server = createGameServer({
     dataDir,
@@ -111,7 +111,7 @@ async function signUp(request, username, password = "teacher-secret") {
 }
 
 test("first initialization requires environment-supplied founder credentials", () => {
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "game-of-more-init-"));
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-init-"));
   try {
     assert.throws(() => createGameServer({ dataDir }), /FOUNDER_USERNAME and FOUNDER_PASSWORD/);
     assert.equal(fs.existsSync(path.join(dataDir, "accounts.json")), false);

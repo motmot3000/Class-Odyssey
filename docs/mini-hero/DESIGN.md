@@ -118,7 +118,7 @@ Sa branche `daylight` emploie une exposition (1,1) et une intensité d’environ
 
 Grand cadre adouci, boutons modérément arrondis, segments plus petits et filets fins : la géométrie soutient le personnage.
 Visage arrondi, yeux ovales noirs, mèches dorées sculptées, bonnet plié et bottes continues constituent sa signature.
-Le bouclier bleu porte une boussole originale Game of More ; l’ensemble reste une étude de style statique, sans squelette d’animation.
+Le bouclier bleu porte une boussole originale ClassQuest ; l’ensemble reste une étude de style statique, sans squelette d’animation.
 
 ## Components
 

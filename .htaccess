@@ -12,5 +12,5 @@ RedirectMatch 404 \.(?:md|docx|json)$
 RewriteEngine On
 
 # Temporary cutover relay. Frontend and API both come from the VPS while DNS
-# for game-of-more.lecagibi.ch still points to this classic hosting.
-RewriteRule ^(.*)$ https://www.thomaswunsche.com/_game-of-more-site/$1 [P,L]
+# for classquest.lecagibi.ch still points to this classic hosting.
+RewriteRule ^(.*)$ https://www.thomaswunsche.com/_classquest-site/$1 [P,L]

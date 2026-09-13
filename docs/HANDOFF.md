@@ -1,4 +1,4 @@
-# Game of More — note de passation
+# ClassQuest — note de passation
 
 Dernière mise à jour : 20 août 2026 (passe bras / mains).
 

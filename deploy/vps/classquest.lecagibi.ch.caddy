@@ -1,4 +1,4 @@
-game-of-more.lecagibi.ch {
+classquest.lecagibi.ch {
 	import security_headers
 	encode zstd gzip
 

@@ -1,7 +1,7 @@
 import { apiUrl } from "./api.mjs";
 
-const SESSION_KEY = "game-of-more:session";
-const UNLOCK_KEY = "game-of-more:adult";
+const SESSION_KEY = "classquest:session";
+const UNLOCK_KEY = "classquest:adult";
 const UNLOCK_MS = 8 * 60 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;

@@ -3833,7 +3833,7 @@ void main() {
     <header class="topbar">
       <div class="brand">
         <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-name">Game <em>of</em> More</span>
+        <span class="brand-name">ClassQuest</span>
         <span class="brand-sub">Tablette Sheikah</span>
       </div>
       <nav class="tabs" aria-label="Classes">

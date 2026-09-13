@@ -21,7 +21,7 @@ COLLECTION=next(c for c in SOURCE.collection.children if c.name.startswith('Ward
 SKIN_COLORS=json.loads((TEXTURES/'skin-colors.json').read_text())
 TONES=os.environ.get('BASE_TONES',','.join(SKIN_COLORS)).split(',')
 C=Matrix(((1,0,0),(0,0,1),(0,-1,0)))
-RESULT={'revision':'base-v2-2026-09','units':'metres','up':'+Y','forward':'+Z','quaternionOrder':'xyzw','origin':'ground between feet','originToleranceMetres':.0001,'sourceCredit':'Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and hair: Game of More study.','pose':{'armsFromT':82,'elbowFlexion':8,'fingerFlexion':10,'palms':'toward thighs'},'characters':{}}
+RESULT={'revision':'base-v2-2026-09','units':'metres','up':'+Y','forward':'+Z','quaternionOrder':'xyzw','origin':'ground between feet','originToleranceMetres':.0001,'sourceCredit':'Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and hair: ClassQuest study.','pose':{'armsFromT':82,'elbowFlexion':8,'fingerFlexion':10,'palms':'toward thighs'},'characters':{}}
 SCENES={}
 
 

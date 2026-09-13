@@ -1,6 +1,6 @@
 ---
 name: "Le vestiaire 3D — Noa & Mila"
-description: "Atelier Game of More : choisir, examiner et exporter le personnage réellement habillé."
+description: "Atelier ClassQuest : choisir, examiner et exporter le personnage réellement habillé."
 colors:
   accent: "#31674f"
   bg: "#f3f3ed"

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-globalThis.document = { baseURI: "https://game-of-more.example/" };
+globalThis.document = { baseURI: "https://classquest.example/" };
 
 const store = new Map();
 globalThis.localStorage = {
@@ -53,7 +53,7 @@ test("captured session contexts prevent an old async response from clearing a ne
   const old = session.captureSessionContext();
 
   const nextAccount = { ...ACCOUNT, id: "account-b", username: "other" };
-  store.set("game-of-more:session", JSON.stringify({ token: "token-b", account: nextAccount }));
+  store.set("classquest:session", JSON.stringify({ token: "token-b", account: nextAccount }));
   assert.equal(session.isCurrentSession(old), false);
   assert.equal(session.forgetSession(old), false);
   assert.equal(session.getAccount().id, "account-b");
@@ -62,15 +62,15 @@ test("captured session contexts prevent an old async response from clearing a ne
 test("signout forgets authentication but does not delete account-scoped dirty state", async () => {
   respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
   await session.signIn("teacher", "class-password");
-  store.set("game-of-more:v1:account-a", JSON.stringify({ classes: [] }));
-  store.set("game-of-more:v1:account-a:dirty", "1");
+  store.set("classquest:v1:account-a", JSON.stringify({ classes: [] }));
+  store.set("classquest:v1:account-a:dirty", "1");
   respond = () => {
     throw new Error("offline");
   };
   await session.signOut();
   assert.equal(session.isSignedIn(), false);
-  assert.ok(store.has("game-of-more:v1:account-a"));
-  assert.equal(store.get("game-of-more:v1:account-a:dirty"), "1");
+  assert.ok(store.has("classquest:v1:account-a"));
+  assert.equal(store.get("classquest:v1:account-a:dirty"), "1");
 });
 
 test("password validation and API failures are reported safely", async () => {

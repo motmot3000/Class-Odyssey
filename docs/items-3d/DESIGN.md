@@ -67,7 +67,7 @@ Cette première proposition reprend le studio du vestiaire Noa/Mila : papier cha
 - Silhouettes médiévales-fantastiques lisibles et accueillantes pour les élèves de 7P–8P.
 - Lumière douce, choix explicites et inspection sans mouvement imposé.
 
-Périmètre : uniquement le prototype local `items-3d.html`, sans intégration d’animation. Le [contrat dans le commentaire body](../../items-3d.html) fixe cette extension ; [PRODUCT.md](../../PRODUCT.md) porte les contraintes de marque. La référence visuelle reste `/home/motmot3000/orca/workspaces/game-of-more/test-modelisation/docs/wardrobe/DESIGN.md` ; les corps courants proviennent désormais de la livraison `assets/characters-base/` de ce worktree.
+Périmètre : uniquement le prototype local `items-3d.html`, sans intégration d’animation. Le [contrat dans le commentaire body](../../items-3d.html) fixe cette extension ; [PRODUCT.md](../../PRODUCT.md) porte les contraintes de marque. La référence visuelle reste `/home/motmot3000/orca/workspaces/classquest/test-modelisation/docs/wardrobe/DESIGN.md` ; les corps courants proviennent désormais de la livraison `assets/characters-base/` de ce worktree.
 
 Sources locales : [CSS](../../src/items-3d.css), [interface](../../src/items-3d.mjs), [sélection des modèles](../../src/items-3d-model.mjs), [viewer](../../src/items-3d-viewer.mjs) et [construction Blender](../../tools/build-items-3d.py). Les tokens ci-dessus décrivent cette implémentation ; les petites extensions documentaires sont dans [.impeccable/design.json](.impeccable/design.json).
 

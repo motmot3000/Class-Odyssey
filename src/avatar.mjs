@@ -1,5 +1,5 @@
 /* ============================================================
-   Game of More — héros d'aventure
+   ClassQuest — héros d'aventure
    Figures vectorielles, ~5.5 têtes, palette sourde.
 
    Principe : la tenue de départ est SIMPLE (tunique, ceinture,

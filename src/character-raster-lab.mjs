@@ -217,7 +217,7 @@ function download(blob, filename) {
 }
 $('#export-png').addEventListener('click', async () => {
   if (!ready || workbench.getAttribute('aria-busy') === 'true') return;
-  const filename = `game-of-more-${state.style}-${state.style === 'custom' ? 'personnage' : state.tunic}.png`;
+  const filename = `classquest-${state.style}-${state.style === 'custom' ? 'personnage' : state.tunic}.png`;
   canvas.toBlob(blob => {
     if (!blob) { reportError('Le PNG n’a pas pu être créé. Réessaie l’export.'); return; }
     download(blob, filename);
@@ -235,7 +235,7 @@ $('#export-settings').addEventListener('click', () => {
   });
   const tunic = state.style === 'custom' ? null : manifest.styles[state.style].tunics[state.tunic];
   const configuration = { version: 1, canvas: manifest.canvas, anchor: manifest.anchor, base, tunic: tunic ? ASSETS + tunic : null, equipment, coordinates: 'Equipment x/y are center percentages of the canvas; dimensions = initialWidth/Height × scale/100. Draw behind equipment, base, tunic, then front equipment in listed order.' };
-  download(new Blob([JSON.stringify(configuration, null, 2)], { type: 'application/json' }), 'game-of-more-personnage.json');
+  download(new Blob([JSON.stringify(configuration, null, 2)], { type: 'application/json' }), 'classquest-personnage.json');
   status.textContent = 'Réglages exportés avec les images importées et leurs positions.';
 });
 

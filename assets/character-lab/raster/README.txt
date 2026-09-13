@@ -1,4 +1,4 @@
-# Game of More — kit de personnage PNG
+# ClassQuest — kit de personnage PNG
 
 Deux rendus du même personnage ChatGPT, détourés à 1024 × 1536 pixels.
 Le modèle exact et le prompt de génération ne sont pas connus.

@@ -80,7 +80,7 @@ def export(outfit, feminine):
     root.find(tag('desc')).text = (f'{label} debout de face, visage naturel, cheveux châtains. ' +
         ('Haut simple vert grisé, pantalon ardoise et chaussures sobres. Sans équipement, capuche, cape ni accessoire.' if outfit == 'base' else
          'Capuche verte, cape, cuir cousu, sacoche et lanterne en laiton.'))
-    root.find(tag('metadata')).text = 'Original Game of More 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=' + outfit + '; feminine=' + str(feminine).lower()
+    root.find(tag('metadata')).text = 'Original ClassQuest 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=' + outfit + '; feminine=' + str(feminine).lower()
     prune_defs(root)
     filename = ('character-base-female.svg' if feminine else 'character-base-male.svg') if outfit == 'base' else 'ranger-feminine.svg'
     ET.indent(root, space='  ')

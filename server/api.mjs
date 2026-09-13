@@ -150,7 +150,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     const state = readJsonFile(file);
     if (!state || !Array.isArray(state.classes)
       || !state.classes.every((classroom) => classroom && typeof classroom === "object" && Array.isArray(classroom.pupils))) {
-      throw new Error("not a Game of More state");
+      throw new Error("not a ClassQuest state");
     }
     const revision = Number.isSafeInteger(state.revision) && state.revision >= 0 ? state.revision : 0;
     return { ...state, revision };

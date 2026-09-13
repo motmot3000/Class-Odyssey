@@ -68,7 +68,7 @@ document.querySelector('#export-look').addEventListener('click', async () => {
     const url = URL.createObjectURL(new Blob([data], { type:'model/gltf-binary' }));
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `game-of-more-${names[exportedState.gender].toLowerCase()}-${exportedState.outfit}-${exportedState.item}${exportedState.pack ? '-backpack' : ''}.glb`;
+    anchor.download = `classquest-${names[exportedState.gender].toLowerCase()}-${exportedState.outfit}-${exportedState.item}${exportedState.pack ? '-backpack' : ''}.glb`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
     message.textContent = 'Le téléchargement de cette combinaison est lancé.';

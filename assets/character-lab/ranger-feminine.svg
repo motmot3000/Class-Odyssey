@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 940" fill="none" role="img" aria-labelledby="title description">
   <title id="title">Personnage féminin 2.0 — tenue de rôdeur</title>
   <desc id="description">Personnage féminin debout de face, visage naturel, cheveux châtains. Capuche verte, cape, cuir cousu, sacoche et lanterne en laiton.</desc>
-  <metadata>Original Game of More 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=ranger; feminine=true</metadata>
+  <metadata>Original ClassQuest 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=ranger; feminine=true</metadata>
   <view id="face" viewBox="209 80 142 169" />
   <view id="materials" viewBox="187 284 186 270" />
   <view id="lantern" viewBox="345 491 82 177" />

@@ -115,7 +115,7 @@ def prepare(illustrated, painted):
         opaque = int(np.count_nonzero(np.asarray(image.getchannel('A')) == 255))
         print(f'{base_name}: {image.size}, foreground={bbox}, opaque pixels={opaque}')
     (OUTPUT / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
-    readme = '''# Game of More — kit de personnage PNG
+    readme = '''# ClassQuest — kit de personnage PNG
 
 Deux rendus du même personnage ChatGPT, détourés à 1024 × 1536 pixels.
 Le modèle exact et le prompt de génération ne sont pas connus.

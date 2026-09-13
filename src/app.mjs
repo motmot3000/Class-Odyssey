@@ -78,7 +78,7 @@ let releaseCharacterViewer = null;
 
 // Mémorise le héros choisi sur CET appareil, pour rouvrir le casier
 // directement à la visite suivante. Jamais synchronisé au serveur.
-const STUDENT_KEY = "game-of-more:student";
+const STUDENT_KEY = "classquest:student";
 
 let account = getAccount();
 let state = account ? loadState(account.id) : createInitialState({ samples: false });
@@ -123,7 +123,7 @@ const ui = {
 
 /* ---------- Thème ---------- */
 
-const THEME_KEY = "game-of-more:theme";
+const THEME_KEY = "classquest:theme";
 let theme = (() => {
   try {
     const stored = localStorage.getItem(THEME_KEY);
@@ -315,7 +315,7 @@ function renderTopbar(view) {
   const brand = `
     <div class="brand">
       <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
-      <span class="brand-name">Game <em>of</em> More</span>
+      <span class="brand-name">ClassQuest</span>
     </div>`;
   if (view === "welcome") return `<header class="topbar">${brand}</header>`;
   const teacherTab = view === "board" || view === "lock";
@@ -356,7 +356,7 @@ function renderBanner() {
   return `
     <div class="banner">
       <img src="./assets/banner.png" alt="" width="1408" height="352" decoding="async" />
-      <h1 class="banner-title">Game <em>of</em> More</h1>
+      <h1 class="banner-title">ClassQuest</h1>
     </div>
   `;
 }
@@ -703,7 +703,7 @@ const ACTIONS = {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `game-of-more-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.download = `classquest-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
     toast("Backup file downloaded.", "success");

@@ -1,4 +1,4 @@
-export const STORAGE_KEY = "game-of-more:v1";
+export const STORAGE_KEY = "classquest:v1";
 
 export const SKINS = [
   {
@@ -295,7 +295,7 @@ export function importState(jsonText) {
   }
 
   if (!raw || !Array.isArray(raw.classes)) {
-    throw new Error("This file is not a Game of More backup.");
+    throw new Error("This file is not a ClassQuest backup.");
   }
 
   const state = normalizeState(raw);

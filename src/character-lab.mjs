@@ -11,7 +11,7 @@ document.querySelector('#card-original').innerHTML = renderHero(hero);
 const variants = {
   adventure: {
     file: 'ranger', container: '#viewer', title: 'Le rôdeur', label: 'du rôdeur aventure',
-    description: 'Une silhouette d’aventurier, pensée pour Game of More.',
+    description: 'Une silhouette d’aventurier, pensée pour ClassQuest.',
     outfit: 'Éclaireur des sous-bois', materials: 'Laine · cuir · laiton', accessory: 'Lanterne du savoir'
   },
   playful: {

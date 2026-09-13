@@ -5,7 +5,7 @@
    leur valeur d'origine, sans toucher aux scripts ni aux styles.
    ============================================================ */
 
-const STORAGE_KEY = "game-of-more.lang";
+const STORAGE_KEY = "classquest.lang";
 const DICTIONARY_URL = new URL("./translations.json", import.meta.url);
 const originals = new WeakMap();
 
