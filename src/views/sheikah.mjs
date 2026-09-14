@@ -5,9 +5,10 @@
    Les règles du jeu et les actions restent celles de l'app.
    ============================================================ */
 
-import { SKINS, WEAPONS, HAIR_COLORS, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf, translateReward } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
+import { renderShop } from "./shop.mjs";
 import { t, tItem } from "../i18n.mjs";
 
 const ico = (name, cls = "") => {
@@ -35,33 +36,41 @@ const ico = (name, cls = "") => {
   return `<svg class="ic ${cls}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 };
 
-export const SHEIKAH_OUTFITS = ["base", "explorer", "traveller"];
-export const SHEIKAH_DYES = ["sage", "mist", "sand"];
-export const SHEIKAH_ITEMS = ["none", "satchel", "lantern"];
+export const SHEIKAH_ANGLES = ["front", "quarter", "back", "head", "item"];
 
-/* Traduit les cosmétiques de l'app vers l'état du vestiaire 3D. La
-   correspondance est volontairement déterministe : un même élève garde
-   toujours la même allure. */
-export function wardrobeLook(pupil, draft = null) {
-  const skin = draft?.skin || pupil.skin;
-  const weapon = draft?.weapon || pupil.weapon;
-  const hairColor = draft?.hairColor || pupil.hairColor;
-  const skinIndex = Math.max(0, SKINS.findIndex((item) => item.id === skin));
-  const colorIndex = Math.max(0, HAIR_COLORS.findIndex((item) => item.id === hairColor));
-  const weaponIndex = Math.max(0, WEAPONS.findIndex((item) => item.id === weapon));
+/* Champs du look qui correspondent à un modèle du catalogue items-3d. */
+export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", hair: "hair", hairColor: "hairColor" };
+
+/* Traduit les cosmétiques de l'app vers le look du catalogue 3D. C'est la
+   source unique : la fiche, l'atelier et la boutique montrent tous le même
+   personnage équipé des objets réels du jeu. */
+export function gameLook(pupil, draft = null) {
+  const value = (field) => draft?.[field] || pupil[field];
   return {
-    gender: pupil.gender === "girl" ? "female" : "male",
-    outfit: SHEIKAH_OUTFITS[skinIndex % SHEIKAH_OUTFITS.length],
-    dye: SHEIKAH_DYES[colorIndex % SHEIKAH_DYES.length],
-    item: weapon === "no-weapon" ? "none" : SHEIKAH_ITEMS[1 + (weaponIndex % 2)],
-    pack: false
+    persona: pupil.gender === "girl" ? "female" : "male",
+    skin: value("skin"),
+    hat: value("hat"),
+    weapon: value("weapon"),
+    hair: value("hair"),
+    hairColor: value("hairColor")
   };
+}
+
+/* Aperçu boutique : le look du héros, avec l'article survolé/sélectionné
+   appliqué quand il a un modèle 3D. Les catégories sans modèle (teinte,
+   visage, titre) gardent la silhouette inchangée. */
+export function shopPreviewLook(pupil, ui = {}) {
+  const item = ui.shopPreview ? getShopItem(ui.shopPreview) : null;
+  const field = item ? SHOP_FIELD[item.type] : null;
+  return gameLook(pupil, field ? { [field]: item.id } : null);
 }
 
 export function cosmeticChangesFromDraft(draft = {}) {
   return {
     ...(draft.skin ? { outfit: draft.skin } : {}),
+    ...(draft.hat ? { hat: draft.hat } : {}),
     ...(draft.weapon ? { weapon: draft.weapon } : {}),
+    ...(draft.hair ? { hair: draft.hair } : {}),
     ...(draft.hairColor ? { hairColor: draft.hairColor } : {})
   };
 }
@@ -70,6 +79,22 @@ const nameOf = (list, id) => {
   const item = list.find((item) => item.id === id);
   return item ? tItem(item, "name") : "";
 };
+
+/* Barre d'angles partagée par la fiche, l'atelier et la boutique. Les vues
+   correspondent aux cadrages du catalogue items-3d. */
+function renderAngleBar(ui) {
+  const active = ui.angle || "quarter";
+  return `<div class="angle-bar">
+    ${SHEIKAH_ANGLES.map((angle) => `<button type="button" class="${active === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${active === angle}">${t(`view.${angle}`)}</button>`).join("")}
+    <button type="button" class="rot ${ui.rotating ? "on" : ""}" data-action="sheikah-rotate" aria-pressed="${ui.rotating}">${ico("rotate")}${t("view.rotation")}</button>
+  </div>`;
+}
+
+function renderViewerHost(look, { live = false } = {}) {
+  return `<div class="dais dais-lg${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
+    <span class="loader" data-load-bar style="--p:0%"><i></i></span>
+  </div>`;
+}
 
 /* ---------- barre supérieure ---------- */
 
@@ -201,6 +226,7 @@ export function renderSheikahStudent({ classroom, ui, pupil }) {
             ${classroom.pupils.map((item) => `
               <button type="button" class="picker-card" data-action="student-pick" data-pupil-id="${escapeHtml(item.id)}">
                 <span class="lvl-seal">${item.level}</span>
+                <img class="picker-fig" src="./assets/wardrobe/${item.gender === "girl" ? "mila" : "noa"}-portrait.webp" alt="" loading="lazy" />
                 <strong>${escapeHtml(item.name)}</strong>
                 <small>${escapeHtml(nameOf(SKINS, item.skin))}</small>
               </button>`).join("")}
@@ -214,18 +240,13 @@ export function renderSheikahStudent({ classroom, ui, pupil }) {
 export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
   const progress = xpProgress(pupil);
   const next = getNextReward(pupil.level);
-  const look = wardrobeLook(pupil);
+  const look = gameLook(pupil);
   return `
     <main class="single">
       <div class="sheet">
         <div class="sheet-stage">
-          <div class="dais dais-lg" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
-            <span class="loader" data-load-bar style="--p:0%"><i></i></span>
-          </div>
-          <div class="angle-bar">
-            ${["front", "quarter", "back", "outfit", "face"].map((angle) => `<button type="button" class="${(ui.angle || "quarter") === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${(ui.angle || "quarter") === angle}">${t(`view.${angle}`)}</button>`).join("")}
-            <button type="button" class="rot ${ui.rotating ? "on" : ""}" data-action="sheikah-rotate" aria-pressed="${ui.rotating}">${ico("rotate")}${t("view.rotation")}</button>
-          </div>
+          ${renderViewerHost(look)}
+          ${renderAngleBar(ui)}
         </div>
         <div class="sheet-info">
           <p class="eyebrow">${t(student ? "sheikah.myHero" : "sheikah.heroSheet")}</p>
@@ -241,7 +262,7 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
           <p class="sheet-role">${next ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") }) : t("student.allUnlocked")}</p>
           <div class="row">
             <button class="btn btn-primary" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.workshop")}</span></button>
-            <button class="btn" data-action="sheikah-shop">${ico("shop")}<span>${t("student.shop")}</span></button>
+            <button class="btn" data-action="sheikah-shop" data-pupil-id="${escapeHtml(pupil.id)}">${ico("shop")}<span>${t("student.shop")}</span></button>
             ${student ? `<button class="btn" data-action="change-hero">${t("student.changeHero")}</button>` : `<button class="btn" data-action="sheikah-back">${t("sheikah.back")}</button>`}
           </div>
         </div>
@@ -250,21 +271,23 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
 }
 
 export function renderSheikahPersonalize(pupil, ui) {
-  const draft = wardrobeLook(pupil, ui.draft);
+  const draft = gameLook(pupil, ui.draft);
   const owned = (list) => list.filter((item) => item.price === 0 || pupil.ownedItems.includes(item.id));
-  const option = (active, field, value, label, extra = "") =>
-    `<button type="button" class="rune-choice ${active ? "on" : ""} ${extra}" data-action="sheikah-set" data-field="${field}" data-value="${escapeHtml(value)}" aria-pressed="${active}">${label}</button>`;
+  const option = (active, field, value, label) =>
+    `<button type="button" class="rune-choice ${active ? "on" : ""}" data-action="sheikah-set" data-field="${field}" data-value="${escapeHtml(value)}" aria-pressed="${active}">${label}</button>`;
+  const section = (label, list, field) => `
+    <section class="rune-section">
+      <p class="label">${label}</p>
+      <div class="rune-row">
+        ${owned(list).map((item) => option((ui.draft?.[field] || pupil[field]) === item.id, field, item.id, escapeHtml(tItem(item, "name")))).join("")}
+      </div>
+    </section>`;
   return `
     <main class="single">
       <div class="atelier">
         <div class="atelier-stage">
-          <div class="dais dais-lg dais-live" data-viewer-host data-look='${escapeHtml(JSON.stringify(draft))}'>
-            <span class="loader" data-load-bar style="--p:0%"><i></i></span>
-          </div>
-          <div class="angle-bar">
-            ${["front", "quarter", "back", "outfit", "face"].map((angle) => `<button type="button" class="${(ui.angle || "quarter") === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${(ui.angle || "quarter") === angle}">${t(`view.${angle}`)}</button>`).join("")}
-            <button type="button" class="rot ${ui.rotating ? "on" : ""}" data-action="sheikah-rotate" aria-pressed="${ui.rotating}">${ico("rotate")}${t("view.rotation")}</button>
-          </div>
+          ${renderViewerHost(draft, { live: true })}
+          ${renderAngleBar(ui)}
         </div>
 
         <div class="atelier-panel">
@@ -272,30 +295,41 @@ export function renderSheikahPersonalize(pupil, ui) {
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="atelier-sub">${t("sheikah.workshopHint")}</p>
 
-          <section class="rune-section">
-            <p class="label">${t("app.gear.outfit")}</p>
-            <div class="rune-row">
-              ${owned(SKINS).map((item) => option((ui.draft?.skin || pupil.skin) === item.id, "skin", item.id, escapeHtml(tItem(item, "name")))).join("")}
-            </div>
-          </section>
-
-          <section class="rune-section">
-            <p class="label">${t("app.gear.item")}</p>
-            <div class="rune-row">
-              ${owned(WEAPONS).map((item) => option((ui.draft?.weapon || pupil.weapon) === item.id, "weapon", item.id, escapeHtml(tItem(item, "name")))).join("")}
-            </div>
-          </section>
-
-          <section class="rune-section">
-            <p class="label">${t("app.gear.hairColor")}</p>
-            <div class="rune-row">
-              ${owned(HAIR_COLORS).map((item) => option((ui.draft?.hairColor || pupil.hairColor) === item.id, "hairColor", item.id, escapeHtml(tItem(item, "name")))).join("")}
-            </div>
-          </section>
+          ${section(t("app.gear.outfit"), SKINS, "skin")}
+          ${section(t("app.gear.hat"), HATS, "hat")}
+          ${section(t("app.gear.item"), WEAPONS, "weapon")}
+          ${section(t("app.gear.hair"), HAIRS, "hair")}
+          ${section(t("app.gear.hairColor"), HAIR_COLORS, "hairColor")}
 
           <div class="atelier-actions">
             <button class="btn btn-primary btn-lg" data-action="sheikah-equip" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.saveLook")}</span></button>
             <button class="btn btn-lg" data-action="sheikah-back">${t("common.cancel")}</button>
+          </div>
+        </div>
+      </div>
+    </main>`;
+}
+
+/* ---------- boutique dans la tablette ---------- */
+
+export function renderSheikahShop(pupil, ui) {
+  const look = shopPreviewLook(pupil, ui);
+  const active = ui.shopCategory || "outfit";
+  return `
+    <main class="single">
+      <div class="atelier">
+        <div class="atelier-stage">
+          ${renderViewerHost(look)}
+          ${renderAngleBar(ui)}
+        </div>
+
+        <div class="atelier-panel">
+          <p class="eyebrow">${t("student.shop")}</p>
+          <h1>${escapeHtml(pupil.name)}</h1>
+          <p class="atelier-sub">${t("student.shopHint")}</p>
+          ${renderShop(pupil, active, ui.shopPreview)}
+          <div class="atelier-actions">
+            <button class="btn btn-lg" data-action="sheikah-back">${t("sheikah.back")}</button>
           </div>
         </div>
       </div>

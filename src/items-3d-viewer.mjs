@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { visiblePart, HAIR_PALETTE } from './items-3d-model.mjs';
 
-export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView }) {
+export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = '/assets/items-3d/catalogue.glb', theme = 'light' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -17,16 +17,32 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   scene.environment = environment.texture;
   scene.environmentIntensity = .65;
   room.dispose(); pmrem.dispose();
-  scene.add(new THREE.HemisphereLight(0xfff7e6, 0xb0bea5, .9));
-  for (const [color, intensity, position] of [[0xffeed6, 2.4, [-3, 6, 4]], [0xe4eeff, 1.3, [3, 2, -2]], [0xfff5e8, .7, [2, 2, 4]]]) {
+  const hemi = new THREE.HemisphereLight(0xfff7e6, 0xb0bea5, .9);
+  scene.add(hemi);
+  const lights = [[0xffeed6, 2.4, [-3, 6, 4]], [0xe4eeff, 1.3, [3, 2, -2]], [0xfff5e8, .7, [2, 2, 4]]].map(([color, intensity, position]) => {
     const light = new THREE.DirectionalLight(color, intensity);
     light.position.set(...position); scene.add(light);
-  }
+    return light;
+  });
   const ground = new THREE.Mesh(new THREE.CircleGeometry(.68, 64), new THREE.MeshBasicMaterial({ color: 0x829377, transparent: true, opacity: .065, depthWrite: false }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = -.008; scene.add(ground);
+  /* Deux ambiances, mêmes lumières : le studio garde le personnage lisible
+     en thème clair comme en thème sombre. Le clair est la référence. */
+  const THEMES = {
+    light: {
+      exposure: 1.02, env: .65, hemi: { color: 0xfff7e6, ground: 0xb0bea5, intensity: .9 },
+      lights: [[0xffeed6, 2.4], [0xe4eeff, 1.3], [0xfff5e8, .7]],
+      ground: { color: 0x829377, opacity: .065 }
+    },
+    dark: {
+      exposure: 1.12, env: .5, hemi: { color: 0xdff4ff, ground: 0x14242e, intensity: .6 },
+      lights: [[0xcfe9f2, 1.95], [0xffb765, 1.9], [0x6fe6ff, .5]],
+      ground: { color: 0x2b4a55, opacity: .16 }
+    }
+  };
   let model;
   try {
-    const gltf = await new GLTFLoader().loadAsync('/assets/items-3d/catalogue.glb', event => { if (event.total) onProgress(Math.round(event.loaded / event.total * 100)); });
+    const gltf = await new GLTFLoader().loadAsync(modelURL, event => { if (event.total) onProgress(Math.round(event.loaded / event.total * 100)); });
     model = gltf.scene;
   } catch (error) { environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
   scene.add(model);
@@ -110,8 +126,18 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   }
   function setRotation(value) { rotating = value; lastTime = 0; requestDraw(); }
   function setActive(value) { active = value; lastTime = 0; if (!value && frame) { cancelAnimationFrame(frame); frame = undefined; } if (value) requestDraw(); }
+  function setTheme(value) {
+    const rig = THEMES[value] || THEMES.light;
+    renderer.toneMappingExposure = rig.exposure;
+    scene.environmentIntensity = rig.env;
+    hemi.color.set(rig.hemi.color); hemi.groundColor.set(rig.hemi.ground); hemi.intensity = rig.hemi.intensity;
+    lights.forEach((light, index) => { light.color.set(rig.lights[index][0]); light.intensity = rig.lights[index][1]; });
+    ground.material.color.set(rig.ground.color); ground.material.opacity = rig.ground.opacity;
+    requestDraw();
+  }
   function resize() {
-    const { width, height } = container.getBoundingClientRect();
+    const host = canvas.parentElement || container;
+    const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
     renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix();
     // Resizing clears the drawing buffer. Repaint atomically, even while the
@@ -120,6 +146,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     requestDraw();
   }
   let pointer;
+  const canvas = renderer.domElement;
   renderer.domElement.addEventListener('pointerdown', event => { pointer = { id: event.pointerId, x: event.clientX }; renderer.domElement.setPointerCapture(event.pointerId); });
   renderer.domElement.addEventListener('pointermove', event => {
     if (pointer?.id !== event.pointerId) return;
@@ -137,7 +164,24 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     } finally { applyLook(look); }
   }
   applyLook(initialLook);
-  container.append(renderer.domElement);
-  const observer = new ResizeObserver(resize); observer.observe(container); resize();
-  return { applyLook, setAngle, setRotation, setActive, counts, exportLook };
+  setTheme(theme);
+  container.append(canvas);
+  const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
+  return {
+    element: canvas,
+    applyLook,
+    setAngle,
+    setRotation,
+    setActive,
+    setTheme,
+    counts,
+    resize,
+    exportLook,
+    destroy() {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      renderer.dispose();
+      canvas.remove();
+    }
+  };
 }
