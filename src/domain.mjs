@@ -406,6 +406,16 @@ export function selectAllInClass(state, classId) {
   return { ...state, selectedPupilIds: classroom.pupils.map((pupil) => pupil.id) };
 }
 
+// Whole-class selection is a reversible action: the first call selects every
+// pupil of the active class, the second clears the selection.
+export function toggleClassSelection(state, classId) {
+  const classroom = getClassById(state, classId);
+  if (!classroom) return state;
+  const all = classroom.pupils.map((pupil) => pupil.id);
+  const allSelected = all.length > 0 && all.every((id) => state.selectedPupilIds.includes(id));
+  return { ...state, selectedPupilIds: allSelected ? [] : all, selectedPupilId: allSelected ? null : state.selectedPupilId };
+}
+
 export function clearSelection(state) {
   if (state.selectedPupilIds.length === 0) return state;
   return { ...state, selectedPupilIds: [] };

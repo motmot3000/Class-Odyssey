@@ -62,17 +62,15 @@ function renderAccountPanel(open, unlockedUntil, account) {
     </details>`;
 }
 
-/* Reward targets stay named and pinned above the controls. Empty targets
- * disable awards so the teacher always knows who will receive the change.
- */
-
+/* "Whole class" is a real, reversible selection: the button selects every
+ * pupil and pressing it again clears the selection. The pupil picker covers
+ * the single-target case, so the console has no hidden scope mode. */
 function renderTarget(classroom, ui, targets) {
-  const selectedCount = ui.scope === "selection" ? targets.length : 0;
-  const names = classroom.pupils
-    .filter((pupil) => targets.includes(pupil.id))
-    .map((pupil) => pupil.name);
+  const allIds = classroom.pupils.map((pupil) => pupil.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => targets.includes(id));
+  const names = classroom.pupils.filter((pupil) => targets.includes(pupil.id)).map((pupil) => pupil.name);
 
-  const summary = ui.scope === "class"
+  const summary = allSelected
     ? t("console.target.everyone", { name: escapeHtml(classroom.name), count: classroom.pupils.length })
     : names.length
       ? escapeHtml(names.join(", "))
@@ -81,24 +79,17 @@ function renderTarget(classroom, ui, targets) {
   return `
     <section class="target ${targets.length ? "" : "is-empty"}">
       <h3 class="section-label">${t("console.target.giveTo")}</h3>
-      <div class="segmented segmented-lg" role="group" aria-label="${t("console.target.aria")}">
-        <button type="button" class="${ui.scope === "selection" ? "is-active" : ""}" data-action="scope" data-scope="selection" aria-pressed="${ui.scope === "selection"}">
-          ${t("console.target.selected")}<b>${selectedCount}</b>
+      <div class="target-actions">
+        <button class="btn btn-sm ${allSelected ? "is-active" : ""}" type="button" data-action="toggle-class-selection" aria-pressed="${allSelected}">
+          ${icon("heroes")}<span>${t("console.target.whole")}</span>
         </button>
-        <button type="button" class="${ui.scope === "class" ? "is-active" : ""}" data-action="scope" data-scope="class" aria-pressed="${ui.scope === "class"}">
-          ${t("console.target.whole")}
-        </button>
+        <button class="btn btn-sm" type="button" data-action="clear-selection" ${targets.length ? "" : "disabled"}>${t("console.target.clear")}</button>
       </div>
+      <label class="field teacher-target"><span>${t('console.target.choose')}</span><select id="teacher-target" data-action="teacher-target">
+        <option value="">${t('console.target.none')}</option>
+        ${classroom.pupils.map(pupil=>`<option value="${escapeHtml(pupil.id)}" ${targets.includes(pupil.id)&&!allSelected?'selected':''}>${escapeHtml(pupil.name)}</option>`).join('')}
+      </select></label>
       <p class="target-names">${summary}</p>
-      ${ui.scope === "selection" ? `
-        <label class="field teacher-target"><span>${t('console.target.choose')}</span><select id="teacher-target" data-action="teacher-target">
-          <option value="">${t('console.target.none')}</option>
-          ${classroom.pupils.map(pupil=>`<option value="${escapeHtml(pupil.id)}" ${targets.includes(pupil.id)?'selected':''}>${escapeHtml(pupil.name)}</option>`).join('')}
-        </select></label>
-        <div class="target-actions">
-          <button class="btn btn-sm" type="button" data-action="clear-selection" ${targets.length ? "" : "disabled"}>${t("console.target.clear")}</button>
-        </div>
-      ` : ""}
     </section>
   `;
 }

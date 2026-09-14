@@ -7,7 +7,7 @@ import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
-import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet } from "../src/views/sheikah.mjs";
+import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
 
 test("Students cards expose the full hero stats and direct Dressing/Shop actions", () => {
   const classroom = getCurrentClass(createInitialState());
@@ -78,6 +78,22 @@ test("an open teacher panel enables single-card selection and hero navigation st
   assert.doesNotMatch(dressing,/btn-primary|aria-pressed="true"|is-active/);
   assert.doesNotMatch(sheet,/equipment-details|Hero equipment/);
   assert.match(sheet,/hero-class-return/);
+  assert.doesNotMatch(sheet,/data-action="hero-back"/);
+});
+
+test("Dressing and Shop both return to the hero from the same header control", () => {
+  const classroom=getCurrentClass(createInitialState());
+  const pupil=classroom.pupils[0];
+  const dressing=renderSheikahPersonalize(pupil,{angle:'quarter'});
+  const shop=renderSheikahShop(pupil,{shopCategory:'outfit'});
+  for (const html of [dressing,shop]) {
+    const header=html.match(/<header class="sheet-heading">[\s\S]*?<\/header>/)[0];
+    assert.match(header,/class="btn btn-back"/);
+    assert.ok(header.indexOf('btn-back')<header.indexOf('<h1>'));
+    assert.match(header,/data-action="hero-back"/);
+  }
+  assert.doesNotMatch(dressing,/data-action="sheikah-back"|data-action="show-class"/);
+  assert.doesNotMatch(shop,/data-action="shop-back"/);
 });
 
 test("pupil search filters names, escapes user content and offers a recovery action", () => {
@@ -98,7 +114,7 @@ test("the shop names its pupil and returns to the hero without switching roles",
   const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: "Mila & Noa", money: 73 };
   const html = renderSheikahShop(pupil, { shopCategory: "outfit" });
   assert.match(html, /Mila &amp; Noa/);
-  assert.match(html, /data-action="shop-back"/);
+  assert.match(html, /data-action="hero-back"/);
   assert.match(html, /<strong>73<\/strong>/);
   assert.doesNotMatch(html, /data-action="show-student"|data-action="change-hero"/);
   assert.match(html, /data-category="outfit"\s+aria-pressed="true"/);

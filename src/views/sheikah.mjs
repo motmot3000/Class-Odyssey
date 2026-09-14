@@ -96,8 +96,11 @@ function renderViewerFallback(pupil, item = null) {
     <div class="viewer-recovery" hidden><p class="viewer-error" role="status"></p><button class="btn" type="button" data-action="retry-viewer">${t("view.retry")}</button></div>`;
 }
 
-function renderClassReturn() {
-  return `<div class="class-return-bar"><button class="btn btn-class-return" type="button" data-action="show-class">${ico('back')}<span>${t('class.back')}</span></button></div>`;
+/* Navigation hierarchy: Class → Hero sheet → Dressing / Shop.
+   Dressing and Shop are children of the hero, so their back control always
+   returns to the hero, in the same top-left spot on both screens. */
+function renderHeroBack() {
+  return `<button class="btn btn-back" type="button" data-action="hero-back">${ico('back')}<span>${t('shop.backHero')}</span></button>`;
 }
 
 /* ---------- Application navigation ---------- */
@@ -256,7 +259,6 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
   const look = gameLook(pupil);
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="sheet">
         <header class="sheet-heading">
           <h1>${escapeHtml(pupil.name)}</h1>
@@ -301,9 +303,9 @@ export function renderSheikahPersonalize(pupil, ui) {
     </section>`;
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="atelier">
         <header class="sheet-heading">
+          ${renderHeroBack()}
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="sheet-context">${t("sheikah.workshopTitle")}</p>
         </header>
@@ -324,7 +326,6 @@ export function renderSheikahPersonalize(pupil, ui) {
 
           <div class="atelier-actions">
             <button class="btn btn-primary btn-lg" data-action="sheikah-equip" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.saveLook")}</span></button>
-            <button class="btn btn-lg" data-action="sheikah-back">${t("common.cancel")}</button>
           </div>
         </div>
       </div>
@@ -339,12 +340,11 @@ export function renderSheikahShop(pupil, ui) {
   const active = ui.shopCategory || "outfit";
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="atelier atelier-shop">
         <header class="sheet-heading">
+          ${renderHeroBack()}
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="sheet-context">${t("student.shop")}</p>
-          <button class="btn" type="button" data-action="shop-back">${ico("back")}${t("shop.backHero")}</button>
         </header>
         <div class="atelier-stage">
           ${look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}

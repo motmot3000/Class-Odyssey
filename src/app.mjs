@@ -24,6 +24,7 @@ import {
   renamePupil,
   restoreHpAll,
   toggleSelection,
+  toggleClassSelection,
   updateCosmetics
 } from "./domain.mjs";
 import { BRAND } from "./brand.mjs";
@@ -101,7 +102,6 @@ const pendingFlash = new Set();
 
 /* Transient UI preferences. Resetting them must never change classroom data. */
 const ui = {
-  scope: "selection",
   query: "",
   density: "auto",
   shopCategory: "outfit",
@@ -265,12 +265,10 @@ function renderConflict() {
   return `<aside class="sync-conflict" role="alert"><strong>${t("app.conflict.title")} :</strong> ${t("app.conflict.body")} <button class="btn btn-sm" data-action="export">${t("app.conflict.export")}</button><button class="btn btn-sm" data-action="reload-server">${t("app.conflict.load")}</button></aside>`;
 }
 
-/* ---------- Reward targets ---------- */
-
+/* Reward targets are always the current selection. "Whole class" is a real
+ * selection action, not a hidden mode, so the cards show exactly who receives. */
 function getTargets() {
-  const classroom = getCurrentClass(state);
-  if (ui.scope === "class") return classroom.pupils.map((pupil) => pupil.id);
-  const inClass = new Set(classroom.pupils.map((pupil) => pupil.id));
+  const inClass = new Set(getCurrentClass(state).pupils.map((pupil) => pupil.id));
   return state.selectedPupilIds.filter((id) => inClass.has(id));
 }
 
@@ -400,7 +398,6 @@ function handleInput(event) {
     if (!allowTeacherAction()) return;
     const pupil = getCurrentClass(state).pupils.find(item => item.id === field.value);
     state = { ...state, selectedPupilId:pupil?.id || null, selectedPupilIds:pupil ? [pupil.id] : [] };
-    ui.scope = 'selection';
     render();
     return;
   }
@@ -477,7 +474,6 @@ function showClassRoster() {
 function chooseClassPupil(pupilId) {
   if (!getCurrentClass(state).pupils.some(pupil => pupil.id === pupilId)) return false;
   state = { ...state, selectedPupilId:pupilId, selectedPupilIds:[pupilId] };
-  ui.scope = 'selection';
   rememberStudent(pupilId);
   return true;
 }
@@ -509,9 +505,11 @@ const ACTIONS = {
     render();
     window.scrollTo({ top: 0 });
   },
-  "sheikah-back": () => {
+  // Both hero tools (Dressing, Shop) are children of the hero sheet, so every
+  // "back" from them returns to the hero — never straight to the class.
+  "hero-back": () => {
     resetHeroCamera();
-    ui.sheikahView = ui.sheikahView === "shop" ? "sheet" : "board";
+    ui.sheikahView = "sheet";
     ui.draft = null;
     ui.shopPreview = null;
     render();
@@ -561,14 +559,6 @@ const ACTIONS = {
     if (!chooseClassPupil(id)) return;
     resetHeroCamera();
     ui.sheikahView = "shop";
-    ui.draft = null;
-    ui.shopPreview = null;
-    render();
-    window.scrollTo({ top: 0 });
-  },
-  "shop-back": () => {
-    resetHeroCamera();
-    ui.sheikahView = "sheet";
     ui.draft = null;
     ui.shopPreview = null;
     render();
@@ -631,7 +621,6 @@ const ACTIONS = {
     disarmDanger();
     ui.sheikahView = "board";
     ui.draft = null;
-    ui.scope = "selection";
     if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
     rememberStudent(null);
     state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
@@ -642,7 +631,6 @@ const ACTIONS = {
   "toggle-pupil": (el) => {
     const pupilId = el.dataset.pupilId;
     const next = toggleSelection(state, pupilId);
-    ui.scope = "selection";
     if (next.selectedPupilIds.length) ui.openPanels.add("hero");
     commit(next, { record: false });
   },
@@ -652,10 +640,7 @@ const ACTIONS = {
   },
   "close-dialog": () => { closeDialog(); render(); },
 
-  scope: (el) => {
-    ui.scope = el.dataset.scope;
-    render();
-  },
+  "toggle-class-selection": () => commit(toggleClassSelection(state, state.activeClassId), { record: false }),
 
   "clear-selection": () => commit(clearSelection(state), { record: false }),
 
@@ -981,7 +966,7 @@ function changeTargetHp(delta) {
 }
 
 function describeTargets(targets) {
-  if (ui.scope === "class") return getCurrentClass(state).name;
+  if (targets.length === getCurrentClass(state).pupils.length) return getCurrentClass(state).name;
   if (targets.length === 1) return getPupilById(state, targets[0])?.name || t("notice.oneHero");
   return t("notice.heroes", { count: targets.length });
 }
