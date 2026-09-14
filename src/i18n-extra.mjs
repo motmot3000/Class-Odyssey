@@ -1,5 +1,14 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
+  "welcome.adventure": ["L’aventure commence en classe.", "The adventure starts in class."],
+  "welcome.adventureHint": ["Un héros pour chaque élève. Des progrès en anglais qui font grandir toute la classe.", "A hero for every pupil. Progress in English that helps the whole class grow."],
+  "welcome.usernameHint": ["3 à 32 caractères : lettres, chiffres, point, tiret ou tiret bas.", "3–32 characters: letters, numbers, dots, dashes or underscores."],
+  "welcome.passwordHint": ["Au moins 4 caractères.", "At least 4 characters."],
+  "shop.backHero": ["Retour au héros", "Back to hero"],
+  "sheikah.equipment": ["Équipement du héros", "Hero equipment"],
+  "view.simplified": ["Aperçu 3D simplifié. La boutique présente chaque équipement en détail.", "Simplified 3D preview. See each item in detail in the shop."],
+  "admin.empty": ["Aucun compte à afficher.", "No accounts to display."],
+  "admin.accountSettings": ["Ouvrir les paramètres du compte", "Open account settings"],
   "common.theme": ["Thème", "Theme"],
   "common.changeTheme": ["Changer de thème", "Change theme"],
   "common.open": ["Ouvrir", "Open"],

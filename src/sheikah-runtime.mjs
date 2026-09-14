@@ -34,13 +34,14 @@ function fail(error, host) {
   console.warn("Sheikah viewer:", error);
   host?.classList.remove("is-loading");
   const loader = host?.querySelector("[data-load-bar]");
-  if (loader) {
-    const message = document.createElement("p");
-    message.className = "viewer-error";
-    message.setAttribute("role", "status");
-    message.textContent = t("view.equipmentUnavailable");
-    loader.replaceWith(message);
+  if (loader) loader.hidden = true;
+  const recovery = host?.querySelector(".viewer-recovery");
+  if (recovery) {
+    recovery.hidden = false;
+    recovery.querySelector(".viewer-error").textContent = t("view.equipmentUnavailable");
   }
+  const fallback = host?.querySelector(".viewer-fallback");
+  if (fallback) fallback.hidden = false;
 }
 
 function getInstance(host, look) {
@@ -65,6 +66,10 @@ export function mountSheikahViewer(host, look) {
   if (!host) return;
   currentHost = host;
   host.classList.add("is-loading");
+  const recovery = host.querySelector(".viewer-recovery");
+  if (recovery) recovery.hidden = true;
+  const loader = host.querySelector("[data-load-bar]");
+  if (loader) loader.hidden = false;
   getInstance(host, look)
     .then((instance) => {
       if (!instance || currentHost !== host || !host.isConnected) return;
@@ -79,6 +84,8 @@ export function mountSheikahViewer(host, look) {
       host.classList.remove("is-loading");
       const loader = host.querySelector("[data-load-bar]");
       if (loader) loader.hidden = true;
+      const fallback = host.querySelector(".viewer-fallback");
+      if (fallback) fallback.hidden = true;
     })
     .catch((error) => fail(error, host));
 }

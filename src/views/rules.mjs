@@ -14,7 +14,7 @@ function renderRuleList(keys) {
   </ul>`;
 }
 
-export function renderRules() {
+export function renderRules({ unlocked = true } = {}) {
   return `
     <article class="rules">
       <header class="rules-head">
@@ -37,7 +37,7 @@ export function renderRules() {
       </section>
 
       <p class="rules-back">
-        <button class="btn btn-primary" type="button" data-action="show-board">${icon("back")}<span>${t("rules.back")}</span></button>
+          <button class="btn btn-primary" type="button" data-action="${unlocked ? "show-board" : "show-student"}">${icon("back")}<span>${t(unlocked ? "rules.back" : "lock.action.back")}</span></button>
       </p>
     </article>
   `;

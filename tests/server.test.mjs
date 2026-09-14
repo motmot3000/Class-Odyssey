@@ -109,7 +109,7 @@ test("merged workshop entry points are served without exposing private files", a
       assert.equal(response.status, 200, route);
       assert.match(response.headers.get("content-type"), /text\/html/);
     }
-    for (const route of ["/.git", "/.env", "/server/server.mjs", "/package.json"]) {
+    for (const route of ["/.git", "/.env", "/.env.missing", "/server/server.mjs", "/server/missing.mjs", "/package.json"]) {
       assert.equal((await app.request(route)).response.status, 404, route);
     }
   } finally { await app.close(); }
