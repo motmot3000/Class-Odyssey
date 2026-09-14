@@ -9,6 +9,10 @@ let instance;
 let observer;
 let host;
 
+export function cachedHeroPortrait(look) {
+  return cache.get(CATALOGUE_REVISION + JSON.stringify(look));
+}
+
 async function getRenderer() {
   if (!instance) {
     host = document.createElement('div');

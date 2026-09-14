@@ -78,11 +78,6 @@ export function cosmeticChangesFromDraft(draft = {}) {
   };
 }
 
-const nameOf = (list, id) => {
-  const item = list.find((item) => item.id === id);
-  return item ? tItem(item, "name") : "";
-};
-
 /* Barre d'angles partagée par la fiche, l'atelier et la boutique. Les vues
    correspondent aux cadrages du catalogue items-3d. */
 function renderAngleBar(ui, itemOnly = false) {
@@ -203,20 +198,20 @@ function renderRuneCard(pupil, selectedIds) {
   const selected = selectedIds.includes(pupil.id);
   const progress = xpProgress(pupil);
   const out = isEliminated(pupil);
-  const worth = nameOf(SKINS, pupil.skin);
   return `
     <article class="rune-card ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
       <button class="card-hit" type="button" data-action="toggle-pupil" data-pupil-id="${escapeHtml(pupil.id)}" aria-pressed="${selected}" aria-label="${t("board.select", { name: escapeHtml(pupil.name) })}"></button>
-      <header class="rune-card-head">
-        <div class="rune-card-name"><h2>${escapeHtml(pupil.name)}</h2><p class="hero-role">${escapeHtml(worth)}</p></div>
-        <span class="lvl-seal" aria-label="${t("app.aria.level", { level: pupil.level })}"><small>${t("common.levelShort")}</small><b>${pupil.level}</b></span>
-      </header>
       <div class="dais dais-card">
         ${renderHeroPortrait(pupil)}
         <span class="selection-mark" aria-hidden="true">${ico("check")}</span>
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
         <button class="card-open" type="button" data-action="sheikah-open" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
       </div>
+      <header class="rune-card-head">
+        <div class="rune-card-name"><h2>${escapeHtml(pupil.name)}</h2></div>
+        <span class="lvl-seal" aria-label="${t("app.aria.level", { level: pupil.level })}"><small>${t("common.levelShort")}</small><b>${pupil.level}</b></span>
+      </header>
+      <div class="rune-card-title">${renderTitle(pupil)}</div>
       <div class="rune-vitals">
         <div class="hearts" role="img" aria-label="${t("app.aria.hp", { hp: pupil.hp, maxHp: pupil.maxHp })}">
           ${Array.from({ length: pupil.maxHp }, (_, i) => `<span class="heart ${i < pupil.hp ? "" : "off"}">${ico("heart")}</span>`).join("")}
@@ -251,9 +246,10 @@ export function renderSheikahStudent({ classroom, ui, pupil }) {
             ${pupils.map((item) => `
               <button type="button" class="picker-card" data-action="student-pick" data-pupil-id="${escapeHtml(item.id)}">
                 ${renderHeroPortrait(item, { className:'picker-portrait' })}
-                <span class="lvl-seal" aria-label="${t("app.aria.level", { level: item.level })}"><small>${t("common.levelShort")}</small><b>${item.level}</b></span>
-                <strong>${escapeHtml(item.name)}</strong>
-                <small>${escapeHtml(nameOf(SKINS, item.skin))}</small>
+                <span class="picker-info">
+                  <span class="picker-identity"><strong>${escapeHtml(item.name)}</strong><span class="lvl-seal" aria-label="${t("app.aria.level", { level: item.level })}"><small>${t("common.levelShort")}</small><b>${item.level}</b></span></span>
+                  ${renderTitle(item)}
+                </span>
               </button>`).join("")}
           </div>` : `<div class="empty"><h2>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h2><button class="btn" data-action="clear-search">${t("student.clearSearch")}</button></div>`}
         </div>
@@ -279,8 +275,7 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
           ${renderAngleBar(ui)}
         </div>
         <div class="sheet-info">
-          ${renderTitle(pupil)}
-          <p class="sheet-role">${escapeHtml(nameOf(SKINS, pupil.skin))} · ${escapeHtml(nameOf(HAIR_COLORS, pupil.hairColor))}</p>
+          ${renderTitle(pupil, { labelled:true })}
           <div class="sheet-stats">
             <div class="stat"><span class="lvl-seal big">${pupil.level}</span><small>${t("common.level")}</small></div>
             <div class="stat">${ico("coin")}<b>${pupil.money}</b><small>${t("common.coins")}</small></div>
@@ -325,6 +320,7 @@ export function renderSheikahPersonalize(pupil, ui) {
         </div>
 
         <div class="atelier-panel">
+          <div class="workshop-identity">${renderTitle(pupil, { labelled:true })}${renderLevel(pupil.level)}</div>
           <p class="atelier-sub">${t("sheikah.workshopHint")}</p>
 
           ${section(t("app.gear.outfit"), SKINS, "skin")}

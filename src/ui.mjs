@@ -22,6 +22,9 @@ export function escapeHtml(value) {
    Mélanger des familles d'icônes est le premier signe d'une UI bricolée. */
 
 const PATHS = {
+  spark: `<path d="m10 2 2 5 5 3-5 2-2 6-2-6-5-2 5-3 2-5Z"/>`,
+  coin: `<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="4.5"/><path d="m10 6 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/>`,
+  palette: `<path d="M10 3a7 7 0 1 0 0 14h1a2 2 0 0 0 1-3.7 1.4 1.4 0 0 1 .8-2.6H15A3 3 0 0 0 18 8c0-3-4-5-8-5Z"/><circle cx="6" cy="9" r=".7"/><circle cx="8" cy="6" r=".7"/><circle cx="12" cy="6" r=".7"/>`,
   undo: `<path d="M4 9h9a4.5 4.5 0 0 1 0 9h-4"/><path d="M7.5 5.5 4 9l3.5 3.5"/>`,
   search: `<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/>`,
   check: `<path d="M4.5 10.5l3.8 3.8L15.5 6"/>`,
@@ -83,11 +86,22 @@ export function getItemName(type, id) {
   return item ? tItem(item, "name") : tItem({ id: "rookie", name: "Rookie" }, "name");
 }
 
-/* Le titre par défaut n'apprend rien : on ne l'affiche que lorsqu'il a été
-   gagné, sinon chaque carte porte le même mot gris. */
-export function renderTitle(pupil) {
-  if (!pupil.title || pupil.title === "rookie") return "";
-  return `<p class="hero-title-tag title-${pupil.title}">${escapeHtml(getItemName("title", pupil.title))}</p>`;
+/* Rank identity, independent of outfit and hair colour. Higher earned titles
+   receive richer heraldic decoration, without motion or changes to game rules. */
+export function renderTitle(pupil, { labelled = false } = {}) {
+  const titles=getShopItems('title');
+  const item=titles.find(item=>item.id===pupil.title) || titles[0];
+  const tier=item.minLevel>=8 ? 4 : item.minLevel>=5 ? 3 : item.minLevel>=3 ? 2 : 1;
+  const ornament=`<svg class="title-ornament" viewBox="0 0 48 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M2 16h24m2 0 5-5 5 5-5 5-5-5Z"/>
+    ${tier>=2 ? '<path d="M8 16c2-7 7-11 13-12M12 16c-4-3-5-6-4-9m10 3c-4-1-6-3-6-6M8 16c2 7 7 11 13 12m-9-12c-4 3-5 6-4 9m10-3c-4 1-6 3-6 6"/>' : ''}
+    ${tier>=3 ? '<path d="m23 3 2 3 3-2-1 6h-7l-1-6 3 2 1-3Z"/>' : ''}
+    ${tier>=4 ? '<path d="m38 6 2 3 4 1-4 1-2 3-1-3-4-1 4-1 1-3Zm0 12 2 3 4 1-4 1-2 3-1-3-4-1 4-1 1-3Z"/>' : ''}
+  </svg>`;
+  return `<span class="hero-title-tag title-${escapeHtml(item.id)}" data-title-tier="${tier}" ${labelled ? 'data-title-labelled' : ''}>
+    ${labelled ? `<span class="hero-title-label">${t('modal.type.title')}</span>` : ''}
+    <span class="hero-title-ribbon">${ornament}<span class="hero-title-name">${escapeHtml(tItem(item,'name'))}</span>${ornament}</span>
+  </span>`;
 }
 
 export function statusClass(pupil) {

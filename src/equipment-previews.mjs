@@ -2,6 +2,7 @@ import { getShopItem } from './domain.mjs';
 import { modeledItemIds, pupilLook, HAIR_PALETTE, CATALOGUE_REVISION } from './items-3d-model.mjs';
 import { escapeHtml, icon } from './ui.mjs';
 import { t, tItem } from './i18n.mjs';
+import { cachedHeroPortrait } from './portrait-runtime.mjs';
 
 const modeled = new Set(modeledItemIds());
 const root = new URL('../assets/items-3d/previews/', import.meta.url);
@@ -13,7 +14,8 @@ export function previewAsset(path) {
 
 export function renderHeroPortrait(pupil, { className = 'hero-fig', alt = '', large = false, dynamic = true } = {}) {
   const look = pupilLook(pupil);
-  return `<img class="${escapeHtml(className)}" ${dynamic ? 'data-hero-portrait' : ''} data-look='${escapeHtml(JSON.stringify(look))}' src="${previewAsset(`portraits/${look.persona}.webp`)}" alt="${escapeHtml(alt)}" width="256" height="384" loading="${large ? 'eager' : 'lazy'}" decoding="async" />`;
+  const cached = dynamic && cachedHeroPortrait(look);
+  return `<img class="${escapeHtml(className)}" ${dynamic ? 'data-hero-portrait' : ''} ${cached ? 'data-portrait-ready="true"' : ''} data-look='${escapeHtml(JSON.stringify(look))}' src="${cached || previewAsset(`portraits/${look.persona}.webp`)}" alt="${escapeHtml(alt)}" width="256" height="384" loading="${large ? 'eager' : 'lazy'}" decoding="async" />`;
 }
 
 export function renderEquippedCharacter(pupil, options = {}) {

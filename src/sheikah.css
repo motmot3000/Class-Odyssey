@@ -260,7 +260,7 @@ input { caret-color: var(--cyan); }
 
 /* ---------------- rune grid ---------------- */
 
-.rune-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(205px, 1fr)); gap: 20px; }
+.rune-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
 
 .rune-card {
   position: relative;
@@ -281,7 +281,7 @@ input { caret-color: var(--cyan); }
 .card-hit:focus-visible { outline: none; }
 .rune-card > *:not(.card-hit) { pointer-events: none; }
 .rune-card .card-open, .rune-card .rune-act { pointer-events: auto; }
-.rune-card-head { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding: 13px 15px; min-height: 72px; border-bottom: 1px solid var(--line); pointer-events: none; transition: background 180ms var(--ease), color 180ms var(--ease); }
+.rune-card-head { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); padding: 12px 15px 8px; min-height: 54px; border-top: 1px solid var(--line); pointer-events: none; transition: background 180ms var(--ease), color 180ms var(--ease); }
 .rune-card-name { min-width: 0; }
 .rune-card-head h2 { font-size: 23px; letter-spacing: -0.015em; overflow-wrap: anywhere; }
 .rune-card.is-selected .rune-card-head { background: var(--selected); color: var(--on-selected); }
@@ -328,7 +328,7 @@ input { caret-color: var(--cyan); }
   pointer-events: none;
 }
 .dais-lg::after { content: none; }
-.dais-card { height: 184px; background: var(--stage); }
+.dais-card { height: clamp(270px, 29vh, 340px); background: var(--stage); }
 .dais-card::before { content: ""; position: absolute; inset: 14px 22% -1px; border: 1px solid var(--stage-line); border-bottom: 0; border-radius: 100px 100px 0 0; }
 .selection-mark { position: absolute; z-index: 2; left: 12px; bottom: 12px; display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid var(--stage-line); background: var(--stage); color: var(--on-selected); transform: rotate(45deg); }
 .selection-mark .ic { transform: rotate(-45deg); visibility: hidden; }
@@ -337,10 +337,10 @@ input { caret-color: var(--cyan); }
 .hero-fig {
   position: relative;
   z-index: 2;
-  height: 188px;
-  width: auto;
+  height: 100%;
+  width: 100%;
   object-fit: contain;
-  transform: translateY(2px);
+  padding: 4px;
 }
 .out-tag {
   position: absolute;
@@ -659,8 +659,8 @@ input { caret-color: var(--cyan); }
   .board-tools { margin-left: 0; width: 100%; }
   .search { min-width: 0; }
   .rune-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); }
-  .hero-fig { height: 164px; }
-  .dais-card { height: 158px; }
+  .hero-fig { height: 100%; }
+  .dais-card { height: 240px; }
   .rune-card-head { padding: 12px 10px; gap: 5px; }
   .rune-card-head h2 { font-size: 20px; }
   .lvl-seal { min-width: 32px; }
@@ -854,14 +854,17 @@ input { caret-color: var(--cyan); }
 .item-tier, .title-chip { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); }
 
 /* --- sélecteur de héros (espace élève) --- */
-.picker { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--s4); padding: var(--s6) 0; }
+.picker { max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--s4); padding: var(--s6) 0; }
 .picker h1 { font-size: 38px; letter-spacing: -0.02em; }
-.picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); }
-.picker-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 0 14px 14px; overflow: hidden; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-md); color: var(--ink); cursor: pointer; font: inherit; text-align: left; transition: border-color 180ms var(--ease), background 180ms var(--ease); }
+.picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s4); }
+.picker-card { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-md); color: var(--ink); cursor: pointer; font: inherit; text-align: left; transition: border-color 180ms var(--ease), background 180ms var(--ease); }
 .picker-card:hover { border-color: var(--cyan); background: var(--cyan-soft); }
-.picker-portrait { height: 156px; width: calc(100% + 28px); max-width: none; margin: 0 -14px 10px; object-fit: contain; background: var(--stage); }
-.picker-card .lvl-seal { position: absolute; top: 10px; right: 10px; }
-.picker-card strong { font: 600 22px/1.2 var(--font-display); overflow-wrap: anywhere; }
+.picker-portrait { height: clamp(280px, 31vh, 350px); width: 100%; margin: 0; padding: 5px; object-fit: contain; background: var(--stage); }
+.picker-info { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 16px; border-top: 1px solid var(--line); }
+.picker-identity { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.picker-card .lvl-seal, .rune-card .lvl-seal { min-width: 30px; min-height: 34px; padding: 3px 5px; }
+.picker-card .lvl-seal b, .rune-card .lvl-seal b { font-size: 16px; }
+.picker-card strong { font: 600 24px/1.2 var(--font-display); overflow-wrap: anywhere; min-width: 0; }
 .picker-card small { color: var(--muted); }
 .picker-card .lvl-seal small { color: var(--amber); }
 .viewer-error { position: absolute; inset: auto 12% 22px; color: var(--muted); font-size: 12px; text-align: center; }
@@ -922,5 +925,8 @@ input { caret-color: var(--cyan); }
 
 @media (max-width: 520px) {
   .picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .picker-portrait { height: 245px; }
+  .picker-info { padding: 10px; }
+  .picker-card strong { font-size: 21px; }
   .picker h1 { font-size: 30px; }
 }

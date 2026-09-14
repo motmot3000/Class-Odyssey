@@ -1,12 +1,12 @@
 {
-  "revision": "catalogue-v4-fibres-fit",
-  "catalogueSha256": "3944d62140c2f9588203f701de23590ced866bf057c9d003b3e93c69e56ff710",
+  "revision": "catalogue-v5-tailored-armour",
+  "catalogueSha256": "b94648867a4b517f836be8a85465a93d8d7a56d79199df2251ffbbae6eb1852f",
   "renderSource": "catalogue.blend",
   "items": {
     "braided": {
       "slot": "hair",
       "file": "items/braided.webp",
-      "meshCount": 44,
+      "meshCount": 95,
       "containsBody": false
     },
     "curly": {
@@ -18,19 +18,19 @@
     "long": {
       "slot": "hair",
       "file": "items/long.webp",
-      "meshCount": 61,
+      "meshCount": 139,
       "containsBody": false
     },
     "royal-hair": {
       "slot": "hair",
       "file": "items/royal-hair.webp",
-      "meshCount": 75,
+      "meshCount": 165,
       "containsBody": false
     },
     "short": {
       "slot": "hair",
       "file": "items/short.webp",
-      "meshCount": 34,
+      "meshCount": 85,
       "containsBody": false
     },
     "celestial-crown": {
@@ -96,13 +96,13 @@
     "honor-knight": {
       "slot": "outfit",
       "file": "items/honor-knight.webp",
-      "meshCount": 21,
+      "meshCount": 73,
       "containsBody": false
     },
     "realm-sovereign": {
       "slot": "outfit",
       "file": "items/realm-sovereign.webp",
-      "meshCount": 39,
+      "meshCount": 91,
       "containsBody": false
     },
     "starter": {
@@ -114,7 +114,7 @@
     "story-keeper": {
       "slot": "outfit",
       "file": "items/story-keeper.webp",
-      "meshCount": 21,
+      "meshCount": 73,
       "containsBody": false
     },
     "vocab-ranger": {

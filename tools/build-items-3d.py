@@ -32,7 +32,7 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'catalogue-v4-fibres-fit'
+APPEARANCE_REVISION = 'catalogue-v5-tailored-armour'
 REFINED = ROOT / 'assets' / 'characters-refined' / 'textures'
 
 
@@ -94,10 +94,10 @@ def make_surface_textures():
     v, u = np.mgrid[0:size, 0:size].astype(np.float32) / size
     for kind in ['hair', 'cloth']:
         if kind == 'hair':
-            flow = u*93 + .16*np.sin(v*TAU*2) + .04*np.sin(v*TAU*7)
-            nx = .20*np.cos(flow*TAU) + .07*np.cos((u*207+v*.13)*TAU)
-            ny = .035*np.sin(v*TAU*5+u*TAU)
-            rough = .49 + .075*np.sin(flow*TAU) + .025*np.sin(v*TAU*3)
+            flow = u*143 + .23*np.sin(v*TAU*2+u*8) + .065*np.sin(v*TAU*9+u*19)
+            nx = .15*np.cos(flow*TAU) + .045*np.cos((u*231+v*.13)*TAU)
+            ny = .025*np.sin(v*TAU*7+u*TAU)
+            rough = .43 + .055*np.sin(flow*TAU) + .045*np.sin(v*TAU*3+u*11)
         else:
             nx = .09*np.sin(u*TAU*126)*np.cos(v*TAU*126)
             ny = .09*np.cos(u*TAU*126)*np.sin(v*TAU*126)
@@ -133,21 +133,23 @@ def cloth_uv(obj):
 
 
 def trim_under_belt(obj):
-    # Keep the lowered sleeves, but remove the hidden original tunic tail.
-    # Otherwise it pokes through the new close-cut skirt beneath the belt.
+    # Split at the waist, then remove only the lower component crossing the
+    # body's centreline. Below this plane the two sleeves are separate islands.
+    # This avoids both the retained hip flap and holes in the lowered sleeves.
     bm = bmesh.new(); bm.from_mesh(obj.data)
-    arms = [(anchor_position(f'elbow_{side}'), anchor_position(f'wrist_{side}')) for side in ['left','right']]
-    def outside_sleeves(point):
-        for start, end in arms:
-            direction = end-start
-            weight = max(0,min(1,(point-start).dot(direction)/direction.length_squared))
-            if (point-(start+direction*weight)).length < .085: return False
-        return True
-    faces = [face for face in bm.faces if all(abs(v.co.x) < .215 and outside_sleeves(v.co) for v in face.verts)]
-    edges = {edge for face in faces for edge in face.edges}
-    verts = {vertex for face in faces for vertex in face.verts}
-    bmesh.ops.bisect_plane(bm, geom=faces+list(edges)+list(verts),
-                          plane_co=(0,0,1.030), plane_no=(0,0,1), clear_inner=True, dist=.00001)
+    bmesh.ops.bisect_plane(bm,geom=list(bm.faces)+list(bm.edges)+list(bm.verts),plane_co=(0,0,1.030),plane_no=(0,0,1),dist=.000001)
+    remaining={f for f in bm.faces if all(v.co.z<=1.030001 for v in f.verts)}
+    removed=[]
+    while remaining:
+        first=remaining.pop();group={first};pending=[first]
+        while pending:
+            for edge in pending.pop().edges:
+                for face in edge.link_faces:
+                    if face in remaining: remaining.remove(face);group.add(face);pending.append(face)
+        xs=[v.co.x for f in group for v in f.verts]
+        if min(xs)<-.03 and max(xs)>.03: removed.extend(group)
+    if not removed: raise ValueError('Cannot identify the original tunic tail')
+    bmesh.ops.delete(bm,geom=removed,context='FACES')
     bm.to_mesh(obj.data); bm.free(); obj.data.update()
 
 
@@ -354,14 +356,128 @@ def fitted_ring(shirt, z, offset=.012):
     return points
 
 
-def fitted_plate(shirt, mat):
-    rows = [fitted_ring(shirt, z, .014) for z in [1.075, 1.13, 1.20, 1.27, 1.32, 1.35]]
-    n = len(rows[0])
-    obj = mesh('smooth fitted breastplate', [point for row in rows for point in row],
-               [(j * n + i, j * n + (i + 1) % n, (j + 1) * n + (i + 1) % n, (j + 1) * n + i)
-                for j in range(len(rows) - 1) for i in range(n)], mat)
-    solid = obj.modifiers.new('Solid breastplate edge', 'SOLIDIFY'); solid.thickness = .006
-    line('breastplate lower edge', rows[0], .004, GOLD, True)
+def fitted_skirt(shirt, hem, rx, ry, cloth):
+    """The upper edge follows the actual waist and sits INSIDE the belt.
+
+    The previous independent ellipse projected beyond it as a second rim.
+    Preserve the lower silhouette while blending from the real waist contour.
+    """
+    waist = [Vector(p) for p in fitted_ring(shirt, 1.035, -.001)]
+    n = len(waist)
+    heights = [hem, .92, .96, 1.00, 1.025, 1.04]
+    rows = []
+    for z in heights:
+        contour = [Vector(p) for p in fitted_ring(shirt,z,-.001 if z>=1.03 else .004)] if z>=.96 else waist
+        t = max(0,min(1,(1.025-z)/.105)); t = t*t*(3-2*t)
+        lower_t = max(0,min(1,(.92-z)/max(.001,.92-hem)))
+        row=[]
+        for i, p in enumerate(contour):
+            a=i*TAU/n
+            lower = Vector((rx*(.94+.06*lower_t)*math.cos(a), -.020+.005*lower_t+ry*(.98+.02*lower_t)*math.sin(a), z))
+            fitted=Vector((p.x,p.y,z))
+            row.append(tuple(fitted.lerp(lower,t)))
+        rows.append(row)
+    obj=mesh('continuous waist-fitted tunic skirt',[p for row in rows for p in row],
+             [(j*n+i,j*n+(i+1)%n,(j+1)*n+(i+1)%n,(j+1)*n+i) for j in range(len(rows)-1) for i in range(n)],cloth)
+    obj.modifiers.new('Inward cloth thickness','SOLIDIFY').thickness=.003
+    obj['waist_top_inset_metres']=.007
+    obj['waist_profile']='same anatomical contour as the belt'
+    cloth_uv(obj)
+    return obj
+
+
+CONTOUR_CACHE = {}
+
+def contour_point(shirt,z,a,offset=.009):
+    key=(shirt.as_pointer(),z,offset)
+    if key not in CONTOUR_CACHE: CONTOUR_CACHE[key]=fitted_ring(shirt,z,offset)
+    ring_points=CONTOUR_CACHE[key]
+    index=(a%TAU)/TAU*len(ring_points)
+    base=int(index)
+    return Vector(ring_points[base]).lerp(Vector(ring_points[(base+1)%len(ring_points)]),index-base)
+
+
+def armour_panel(shirt,name,heights,start,end,mat,edge,offset=.016):
+    n=44
+    heights=[heights[0]+(heights[-1]-heights[0])*i/24 for i in range(25)]
+    rows=[[contour_point(shirt,z,start+(end-start)*i/n,offset) for i in range(n+1)] for z in heights]
+    obj=mesh(name,[tuple(p) for row in rows for p in row],
+             [(j*(n+1)+i,j*(n+1)+i+1,(j+1)*(n+1)+i+1,(j+1)*(n+1)+i) for j in range(len(rows)-1) for i in range(n)],mat)
+    obj.modifiers.new('Forged plate thickness','SOLIDIFY').thickness=.003
+    outline=rows[0]+[r[-1] for r in rows[1:]]+list(reversed(rows[-1][:-1]))+[r[0] for r in reversed(rows[1:-1])]
+    line(name+' rolled edge',[tuple(p) for p in outline],.0015,edge,True)
+    obj['armour_construction']='anatomical fitted plate'
+    return rows
+
+
+def articulated_armour(shirt):
+    """Separate breast panels, overlapping lames and fitted limb plates."""
+    royal=item=='realm-sovereign'
+    warrior=item=='story-keeper'
+    plate=material(item+' / tempered plate', '#96866D' if warrior else '#8296A5' if not royal else '#83908E', .32, .78)
+    edge=GOLD if royal else STEEL
+    # Chest panels follow the existing shirt instead of enclosing it in a barrel.
+    for side,start,end in [('left',math.pi+.15,1.5*math.pi-.014),('right',1.5*math.pi+.014,TAU-.15)]:
+        armour_panel(shirt,side+' sculpted breast panel',[1.15,1.21,1.27,1.32,1.355],start,end,plate,edge)
+        for z in [1.18,1.30]:
+            p=contour_point(shirt,z,start+.08 if side=='left' else end-.08,.013)
+            ell('flush cuirass rivet',p,(.0028,.0028,.0028),GOLD,12)
+        a=1.5*math.pi+(-.37 if side=='left' else .37)
+        path=[tuple(contour_point(shirt,z,a,.013)) for z in [1.19,1.24,1.29,1.33]]
+        line('fine engraved breast flute',path,.0009,GOLD)
+    armour_panel(shirt,'fitted back plate',[1.15,1.23,1.31,1.35],.20,math.pi-.20,plate,edge)
+    for i in range(3):
+        z=1.068+i*.034
+        armour_panel(shirt,f'articulated abdominal lame {i+1}',[z,z+.027,z+.044],math.pi+.20,TAU-.20,plate,edge,.009+i*.0008)
+    # Small heraldic escutcheon with inset enamel, never a floating block.
+    front=contour_point(shirt,1.27,1.5*math.pi,.017)
+    outline=[(-.026,.034),(.026,.034),(.024,-.011),(0,-.037),(-.024,-.011)]
+    prism('heraldic shield surround',outline,front,.004,GOLD)
+    prism('inlaid heraldic enamel',[(x*.76,z*.76) for x,z in outline],front+Vector((0,-.003,0)),.002,RED if royal else ENAMEL)
+    line('engraved heraldic chevron',[(front.x-.013,front.y-.005,front.z+.008),(front.x,front.y-.005,front.z-.009),(front.x+.013,front.y-.005,front.z+.008)],.0012,IVORY)
+    for side in ['left','right']:
+        shoulder=anchor_position('shoulder_'+side); elbow=anchor_position('elbow_'+side)
+        axis=(elbow-shoulder).normalized()
+        forward=Vector((0,-1,0));forward=(forward-axis*forward.dot(axis)).normalized()
+        outward=axis.cross(forward).normalized()
+        if outward.x*(1 if side=='left' else -1)<0: outward=-outward
+        # Three thin, overlapping shells follow the shoulder and upper arm.
+        for layer in range(3):
+            rows=[]
+            for along,radius in [(0,.072-layer*.005),(.026,.076-layer*.005),(.052,.071-layer*.005)]:
+                center=shoulder+axis*(.004+layer*.038+along)
+                rows.append([center+forward*math.cos(a)*radius+outward*math.sin(a)*radius for a in [i*math.pi/20 for i in range(21)]])
+            obj=mesh(f'{side} articulated shoulder lame {layer+1}',[tuple(p) for r in rows for p in r],
+                     [(j*21+i,j*21+i+1,(j+1)*21+i+1,(j+1)*21+i) for j in range(2) for i in range(20)],plate)
+            obj.modifiers.new('Shoulder plate thickness','SOLIDIFY').thickness=.0025
+            obj['armour_construction']='articulated shoulder'
+            line(side+' shoulder rolled rim',[tuple(p) for p in rows[-1]],.0017,edge)
+            for p in [rows[1][2],rows[1][-3]]: ell('shoulder hinge rivet',p,(.003,.003,.003),GOLD,12)
+        sign=1 if side=='left' else -1
+        # Shin plates are shallow shaped shields, not solid ellipsoids.
+        heights=[.17,.23,.32,.40,.465]
+        widths=[.022,.030,.035,.034,.018]
+        rows=[]
+        for z,width in zip(heights,widths):
+            row=[]
+            for u in [-1+i*.1 for i in range(21)]:
+                x=sign*.128+width*u
+                hits=[]
+                for source in bases[persona]['surfaces']:
+                    hit,point,normal,index=source.ray_cast(Vector((x,-.5,z)),Vector((0,1,0)))
+                    if hit: hits.append(point.y)
+                y=min(hits)-.006 if hits else -.085
+                row.append((x,y,z))
+            rows.append(row)
+        greave=mesh(side+' contoured shin plate',[p for r in rows for p in r],
+                    [(j*21+i,j*21+i+1,(j+1)*21+i+1,(j+1)*21+i) for j in range(4) for i in range(20)],plate)
+        greave.modifiers.new('Shin plate thickness','SOLIDIFY').thickness=.003
+        greave['armour_construction']='contoured greave'
+        line(side+' shin centre flute',[(r[10][0],r[10][1]-.0016,r[10][2]) for r in rows[1:-1]],.0012,edge)
+        for edge_index in [0,-1]: line(side+' greave bound edge',[r[edge_index] for r in rows],.0015,GOLD)
+        for row in [rows[1],rows[-2]]:
+            for index in [2,-3]:
+                x,y,z=row[index];ell('greave fastening rivet',(x,y-.002,z),(.0025,.002,.0025),GOLD,12)
 
 
 def prepare():
@@ -400,7 +516,7 @@ def prepare():
                 obj['reference_skin_triangles'] = sum(len(p.vertices)-2 for p in obj.data.polygons)
             tag(obj, obj.name)
         if len(shirts) != 1: raise ValueError(f'{gender}: expected one fitted shirt, got {len(shirts)}')
-        bases[persona] = {'shirt': shirts[0]}
+        bases[persona] = {'shirt': shirts[0], 'surfaces':[obj for obj in objects if obj.get('fit_persona')==persona and obj.get('part') in ['skin','clothes']]}
     persona = None
     bpy.context.scene['character_revision'] = CONTRACT['revision']
     bpy.context.scene['character_source_credit'] = CONTRACT['sourceCredit']
@@ -422,8 +538,7 @@ def garments(shirt):
         # A close-cut tunic below the waist, not the previous rigid flared skirt.
         rx = .204 if persona == 'male' else .194
         ry = .169 if persona == 'male' else .160
-        skirt = shell('tailored tunic skirt', [(hem,rx,ry,-.015),(.92,rx*.94,ry*.98,-.020),(1.025,.175,.163,-.01)], cloth, thickness=.004)
-        cloth_uv(skirt)
+        fitted_skirt(shirt,hem,rx,ry,cloth)
         ring('bound hem', 0, -.015, hem, rx, ry, .002, GOLD if item != 'starter' else LEATHER)
         belt_points = fitted_ring(shirt, 1.035, .006)
         lower = fitted_ring(shirt, 1.018, .006)
@@ -453,14 +568,7 @@ def garments(shirt):
                     line('robe front embroidery', [(sign * .048, -.143, 1.375), (sign * .073, -.186, 1.21), (sign * .070, -.197, 1.045), (sign * .095, -.196, .78), (sign * .12, -.184, hem + .018)], .005, GOLD)
                 prism('arcane chest crystal', [(0, .04), (.025, 0), (0, -.04), (-.025, 0)], (0, -.192, 1.257), .018, GEM)
             if item in ['story-keeper', 'honor-knight', 'realm-sovereign']:
-                fitted_plate(shirt, STEEL if item != 'realm-sovereign' else GOLD)
-                star('chest crest', (0, -.202, 1.238), .05, GOLD if item != 'realm-sovereign' else ENAMEL)
-                for sign in [-1, 1]:
-                    shoulder = anchor_position('shoulder_left' if sign > 0 else 'shoulder_right')
-                    pauldron = ell('fitted shoulder plate', shoulder+Vector((sign*.027,-.004,-.003)), (.088,.116,.056), STEEL if item != 'realm-sovereign' else GOLD)
-                    pauldron.rotation_euler.y = sign*.12
-                    ell('steel greave', (sign * .128, -.070, .31), (.064, .081, .18), STEEL)
-                    line('greave centre ridge', [(sign * .128, -.148, .20), (sign * .128, -.154, .32), (sign * .128, -.137, .46)], .005, GOLD)
+                articulated_armour(shirt)
             if item == 'grand-archmage':
                 shell('high ceremonial mantle', [(1.30, .265, .166, 0), (1.385, .205, .14, 0), (1.435, .079, .082, 0)], cloth)
                 ring('mantle gold edge', 0, 0, 1.30, .265, .166, .007, GOLD)
@@ -485,7 +593,7 @@ def tress(name, control, widths, depths, mat, detail=False):
             ws.append(widths[j] * (1-t) + widths[j+1] * t)
             ds.append(depths[j] * (1-t) + depths[j+1] * t)
     centers.append(control[-1]); ws.append(widths[-1]); ds.append(depths[-1])
-    vertices, ridges = [], [[], []]
+    vertices, ridges = [], [[], [], [], [], []]
     n = 12
     for j, center in enumerate(centers):
         tangent = (centers[min(j+1, len(centers)-1)] - centers[max(0, j-1)]).normalized()
@@ -496,8 +604,9 @@ def tress(name, control, widths, depths, mat, detail=False):
         for i in range(n):
             a = i * TAU / n
             vertices.append(center + side * math.cos(a) * ws[j] + depth * math.sin(a) * ds[j])
-        for ridge, fraction in zip(ridges, [-.32, .30]):
-            ridge.append(center + side * ws[j] * fraction + depth * ds[j] * .96)
+        for r,(ridge, fraction) in enumerate(zip(ridges, [-.66,-.35,-.08,.26,.57])):
+            offset=fraction+.035*math.sin(j*.29+r*1.7)
+            ridge.append(center + side * ws[j] * offset + depth * ds[j] * math.sqrt(max(.1,1-offset*offset)))
     faces = [tuple(reversed(range(n)))]
     faces += [(j*n+i, j*n+(i+1)%n, (j+1)*n+(i+1)%n, (j+1)*n+i) for j in range(len(centers)-1) for i in range(n)]
     faces.append(tuple((len(centers)-1)*n+i for i in range(n)))
@@ -505,7 +614,7 @@ def tress(name, control, widths, depths, mat, detail=False):
     grid_uv(result,n,len(centers))
     if detail:
         for i, points in enumerate(ridges):
-            line(name + ' / fine strand ' + str(i), [tuple(p) for p in points[3:-4:3]], .00035, HAIR_LIGHT if i else HAIR_DARK)
+            line(name + ' / fine strand ' + str(i), [tuple(p) for p in points[3+i%3:-4:3]], .00022, HAIR_LIGHT if i%3 else HAIR_DARK)
     return result
 
 
@@ -529,12 +638,18 @@ def scalp(afro=False):
             # leaving eyebrows and the silhouette of both ears visible.
             end = (1.89 + .28*math.sin(a)) if afro else (1.69 + .28*math.sin(a))
             if afro: end += .023*math.sin(a*13)+.015*math.cos(a*21)
-            else: end += .024*math.sin(a*17)+.010*math.sin(a*31+.7)
+            else: end += .009*math.sin(a*23)+.006*math.sin(a*43+.7)
             theta = .002 + (end - .002) * j / (rows-1)
             vertices.append(scalp_point(a, theta, afro))
     obj = mesh('sculpted afro silhouette' if afro else 'fitted continuous hairline', vertices,
           [(j*n+i, (j+1)*n+i, (j+1)*n+(i+1)%n, j*n+(i+1)%n) for j in range(rows-1) for i in range(n)], HAIR)
     grid_uv(obj,n,rows)
+    if not afro:
+        for i in range(18):
+            a=i*TAU/18+.04*math.sin(i*2.1)
+            end=1.67+.28*math.sin(a)
+            points=[tuple(scalp_point(a+.07*math.sin(j*.24+i),.16+(end-.18)*j/20)+Vector((0,0,.0005))) for j in range(21)]
+            line('separate crown fibre '+str(i),points,.00024,HAIR_LIGHT if i%3 else HAIR_DARK)
 
 
 def parted_fringe(short=False):

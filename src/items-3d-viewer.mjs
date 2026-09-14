@@ -209,7 +209,24 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         }
         ground.visible=false;
         placeCamera(); renderer.render(scene,camera);
-        return canvas.toDataURL('image/webp', .85);
+        // Trim transparent camera margins, never anatomy or equipment. Fit the
+        // entire visible silhouette into the card with a small breathing margin.
+        const output=document.createElement('canvas');
+        output.width=canvas.width; output.height=canvas.height;
+        const context=output.getContext('2d');
+        context.drawImage(canvas,0,0);
+        const pixels=context.getImageData(0,0,output.width,output.height).data;
+        let minX=output.width,minY=output.height,maxX=-1,maxY=-1;
+        for(let y=0;y<output.height;y++) for(let x=0;x<output.width;x++) {
+          if(pixels[(y*output.width+x)*4+3]>16){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+        }
+        if(maxX>=minX){
+          const width=maxX-minX+1,height=maxY-minY+1;
+          const scale=Math.min(output.width*.94/width,output.height*.96/height);
+          context.clearRect(0,0,output.width,output.height);
+          context.drawImage(canvas,minX,minY,width,height,(output.width-width*scale)/2,(output.height-height*scale)/2,width*scale,height*scale);
+        }
+        return output.toDataURL('image/webp', .85);
       } finally {
         target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
         ground.visible=wasGroundVisible;

@@ -27,7 +27,7 @@ scene.view_settings.look = 'AgX - Medium High Contrast'
 camera.data.type = 'ORTHO'
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj.get('shop_slot')]
 report = {
-    'revision': 'catalogue-v4-fibres-fit',
+    'revision': 'catalogue-v5-tailored-armour',
     'catalogueSha256': hashlib.sha256((ROOT/'assets/items-3d/catalogue.glb').read_bytes()).hexdigest(),
     'renderSource': 'catalogue.blend',
     'items': {}, 'portraits': {}
@@ -92,6 +92,13 @@ for persona, hair in [('male','short'),('female','long')]:
     render(f'review/{persona}-head.png')
     frame(selected,600,600,'waist')
     render(f'review/{persona}-waist.png')
+
+for persona in ['male','female']:
+    for outfit in ['story-keeper','honor-knight','realm-sovereign']:
+        defaults={'core':'base','persona':persona,'outfit':outfit,'hair':'short' if persona=='male' else 'long'}
+        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open')
+        frame(selected,600,900)
+        render(f'review/{persona}-{outfit}.png')
 
 # Refresh the catalogue's fallback render with the current fitted equipment.
 defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','hat':'explorer-cap','weapon':'lore-lantern'}

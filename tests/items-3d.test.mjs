@@ -208,3 +208,36 @@ test('shareable looks validate item categories and preserve colour independently
   assert.equal(look.skin, DEFAULT_LOOK.skin);
   assert.equal(look.hat, DEFAULT_LOOK.hat);
 });
+
+test('every outfit hides its continuous waist edge inside the belt and has no old central tunic tail', () => {
+  const gltf=readGlb();
+  const skirts=new Set(), tops=new Set();
+  worldMeshes(gltf,(node,primitive,world,data)=>{
+    if(data.shop_slot!=='outfit') return;
+    const points=positions(gltf,gltf.accessors[primitive.attributes.POSITION],world);
+    const key=`${data.fit_persona}:${data.shop_id}`;
+    if(node.name.includes('continuous waist-fitted tunic skirt')){
+      skirts.add(key);
+      assert.ok(Math.max(...points.map(p=>p.y))<1.047,`${key}: upper rim must remain below belt top`);
+      assert.equal(data.waist_profile,'same anatomical contour as the belt');
+    }
+    if(node.name.includes('fitted long-sleeve tunic')){
+      tops.add(key);
+      assert.ok(points.every(p=>Math.abs(p.x)>=.10||p.y>=1.0299),`${key}: old torso tail remains below waist`);
+    }
+  });
+  assert.equal(skirts.size,14);
+  assert.equal(tops.size,14);
+});
+
+test('armoured outfits have fitted chest panels, articulated shoulders and contoured greaves',()=>{
+  const nodes=readGlb().nodes.filter(node=>node.mesh!==undefined);
+  for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight','realm-sovereign']){
+    const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id);
+    assert.ok(parts.filter(node=>node.extras.armour_construction==='anatomical fitted plate').length>=6);
+    assert.equal(parts.filter(node=>node.extras.armour_construction==='articulated shoulder').length,6);
+    assert.equal(parts.filter(node=>node.extras.armour_construction==='contoured greave').length,2);
+    assert.ok(parts.some(node=>node.name.includes('hinge rivet')));
+    assert.ok(!parts.some(node=>node.name.includes('fitted shoulder plate')||node.name.includes('steel greave')));
+  }
+});
