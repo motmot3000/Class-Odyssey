@@ -1,8 +1,6 @@
-/* ============================================================
-   ui.mjs — vocabulaire visuel partagé
-   Les trois vues (board, console, student) composent leurs écrans
-   avec ces briques. Une stat = une brique = une couleur, partout.
-   ============================================================ */
+/* Shared, escaped HTML components: stats, icons, titles and equipment labels.
+ * User-provided names and notes must pass through escapeHtml before insertion.
+ */
 
 import { getShopItems, isEliminated, xpProgress, SHOP_ITEMS } from "./domain.mjs";
 import { renderCoinIcon, renderHeartIcon } from "./avatar.mjs";
@@ -17,9 +15,7 @@ export function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-/* ---------- Icônes ----------
-   Un seul style : trait de 1.8, bouts arrondis, grille de 20.
-   Mélanger des familles d'icônes est le premier signe d'une UI bricolée. */
+/* Icons share a 20-unit grid, 1.8-unit strokes and rounded ends. */
 
 const PATHS = {
   spark: `<path d="m10 2 2 5 5 3-5 2-2 6-2-6-5-2 5-3 2-5Z"/>`,
@@ -52,9 +48,7 @@ export function icon(name, extraClass = "") {
   return `<svg class="icon ${extraClass}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 }
 
-/* ---------- Stats ----------
-   Chaque stat garde son gabarit d'une vue à l'autre : l'élève apprend
-   à lire sa carte une fois, pas trois. */
+/* Keep stat shapes and semantics stable across every view. */
 
 export function renderHearts(pupil) {
   const hearts = Array.from({ length: pupil.maxHp }, (_, index) => renderHeartIcon(index < pupil.hp)).join("");

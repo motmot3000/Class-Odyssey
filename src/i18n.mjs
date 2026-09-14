@@ -1,8 +1,6 @@
-/* ============================================================
-   i18n.mjs — dictionnaires FR/EN et helper de traduction
-   Chaque chaîne visible de l'interface passe par t() afin que le
-   sélecteur de langue (#lang-toggle) traduise réellement le contenu.
-   ============================================================ */
+/* Keyed FR/EN copy. Translate at render time, not once during module loading,
+ * so a language change updates existing screens and preserves domain IDs.
+ */
 
 import { messages, frenchMessages } from "./i18n-extra.mjs";
 
@@ -706,9 +704,7 @@ export function translateMessage(message = "") {
   return message;
 }
 
-/* Traduit un champ d'un objet de domaine (item/title/hat/...).
-   En mode FR, on cherche dict.fr["domain.<id>.<field>"] ; sinon on
-   retombe sur la donnée anglaise d'origine (item[field]). */
+/* Domain strings remain canonical English; presentation selects a translation. */
 export function tItem(item, field) {
   if (lang === "fr") {
     const key = `domain.${item.id}.${field}`;

@@ -1,5 +1,7 @@
 # ClassQuest
 
+For maintainers: [code map, data flow and build ownership](docs/code-map.md).
+
 Premier draft d'application web pour ludifier les cours d'anglais avec des personnages d'élèves, XP, niveaux, HP, skins et récompenses.
 
 ## Lancer (développement local)

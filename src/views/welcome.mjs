@@ -1,6 +1,7 @@
 import { escapeHtml, icon } from "../ui.mjs";
 import { t, translateMessage } from "../i18n.mjs";
 import { welcomeSceneState, WELCOME_HEROES } from "../welcome-scene.mjs";
+import { BRAND } from "../brand.mjs";
 
 export function renderWelcome({ tab = "signin", error = "", pending = false, values = {} } = {}) {
   const signup = tab === "signup";
@@ -30,7 +31,8 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         </div>
       </section>
       <section class="gate welcome-gate" aria-labelledby="gate-title"><div class="gate-card">
-        <svg class="welcome-gate-seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal" /></svg>
+        <img class="welcome-gate-seal welcome-gate-seal-light" src="${BRAND.assets.emblemLight}" alt="" width="48" height="48" />
+        <img class="welcome-gate-seal welcome-gate-seal-dark" src="${BRAND.assets.emblemDark}" alt="" width="48" height="48" />
         <h2 id="gate-title" tabindex="-1">${t(signup ? "welcome.createTitle" : "welcome.formTitle")}</h2>
         <p class="gate-lede">${t(signup ? "welcome.createHint" : "welcome.formHint")}</p>
         <div class="segmented gate-tabs" role="group" aria-label="${t("welcome.aria")}">

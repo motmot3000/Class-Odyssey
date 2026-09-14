@@ -1,25 +1,10 @@
-/* ============================================================
-   ClassQuest — héros d'aventure
-   Figures vectorielles, ~5.5 têtes, palette sourde.
-
-   Principe : la tenue de départ est SIMPLE (tunique, ceinture,
-   bottes). Ce sont les objets achetés qui ajoutent la cape, le
-   cuir, la maille, les armoiries — la progression se voit.
-
-   L'API publique est inchangée pour app.mjs : renderHero /
-   renderItemArt / renderCoinIcon / renderHeartIcon / renderMascot.
-
-   Chaque forme est déclarée UNE fois comme donnée ({tag, a, fill}),
-   puis émise DEUX fois — remplie pour le dessin, et géométrie nue
-   dans un <clipPath> — pour que les calques d'ombrage restent
-   confinés à la silhouette. Un nouvel accessoire prend donc la
-   lumière gratuitement : il suffit de l'ajouter à la liste.
-   Ne pas peindre d'ombres à la main, ça casserait cette propriété.
-
-   L'ORDRE DE LA LISTE EST L'ORDRE DE PROFONDEUR. Tout volume qui
-   entoure le crâne (capuche) se pousse AVANT l'ovale du visage,
-   son bord APRÈS.
-   ============================================================ */
+/* Legacy vector characters and shared stat icons.
+ * The active 3D portraits use equipment-previews.mjs, not renderHero().
+ * Shapes are declared once as data ({tag, a, fill}) and emitted twice: as
+ * filled artwork and as a clip-path silhouette. This keeps shading inside
+ * every accessory without hand-painted shadows for individual items.
+ * Array order is depth order: hood volumes go before the face, rims after it.
+ */
 
 export const INK = "#241D19";
 

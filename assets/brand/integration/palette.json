@@ -1,0 +1,30 @@
+{
+  "name": "ClassQuest",
+  "description": "Couleurs uniformisées depuis la proposition validée ; les palettes light/dark désignent le fond de destination.",
+  "themes": {
+    "light": {
+      "ink": "#101F25",
+      "teal": "#1C5B56",
+      "gold": "#AD7123",
+      "bg": "#E7E9DF"
+    },
+    "dark": {
+      "ink": "#E4F5FB",
+      "teal": "#8ADBD3",
+      "gold": "#F0B554",
+      "bg": "#101B20"
+    },
+    "mono-dark": {
+      "ink": "#101F25",
+      "teal": "#101F25",
+      "gold": "#101F25",
+      "bg": "#E7E9DF"
+    },
+    "mono-white": {
+      "ink": "#FFFFFF",
+      "teal": "#FFFFFF",
+      "gold": "#FFFFFF",
+      "bg": "#101B20"
+    }
+  }
+}

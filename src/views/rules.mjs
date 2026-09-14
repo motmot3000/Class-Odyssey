@@ -1,9 +1,6 @@
-/* ============================================================
-   rules.mjs — la page projetée en début d'année
-   Les règles du jeu sont celles du projet, mot pour mot ; seule leur
-   mise en page change, avec les composants réels du plateau pour que
-   l'élève apprenne à lire sa carte en lisant les règles.
-   ============================================================ */
+/* Classroom rules: layout can evolve, but the existing text and reading order
+ * are contractual. The bilingual copy regression test protects that constraint.
+ */
 
 import { icon } from "../ui.mjs";
 import { t } from "../i18n.mjs";

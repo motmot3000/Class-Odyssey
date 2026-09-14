@@ -138,3 +138,6 @@ select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radiu
   .choice { min-height: 66px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+.brand { display: flex; align-items: center; }
+.brand .brand-logo { height: 34px; width: auto; }
+@media (max-width: 760px) { .brand .brand-logo { height: 28px; } }

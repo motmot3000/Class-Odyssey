@@ -1,14 +1,12 @@
-/* ============================================================
-   sheikah.mjs — interface « Tablette Sheikah »
-   Le plateau, la console, la fiche et l'atelier partagent une seule
-   dalle 3D : on ne recharge jamais le modèle, on change son état.
-   Les règles du jeu et les actions restent celles de l'app.
-   ============================================================ */
+/* Active game views. Render only markup here: app.mjs dispatches actions,
+ * the domain enforces purchases, and the runtime owns the shared 3D canvas.
+ */
 
 import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
+import { BRAND } from "../brand.mjs";
 import { t, tItem } from "../i18n.mjs";
 import { pupilLook } from "../items-3d-model.mjs";
 import { renderHeroPortrait, renderItemThumbnail, isModeledItem } from "../equipment-previews.mjs";
@@ -42,12 +40,10 @@ const ico = (name, cls = "") => {
 
 export const SHEIKAH_ANGLES = ["front", "quarter", "back", "head", "item"];
 
-/* Champs du look qui correspondent à un modèle du catalogue items-3d. */
+// Map shop categories to persisted cosmetic fields (outfit is stored as skin).
 export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", hair: "hair", hairColor: "hairColor" };
 
-/* Traduit les cosmétiques de l'app vers le look du catalogue 3D. C'est la
-   source unique : la fiche, l'atelier et la boutique montrent tous le même
-   personnage équipé des objets réels du jeu. */
+// Portraits and the workshop must derive exactly the same equipped look.
 export function gameLook(pupil, draft = null) {
   return pupilLook(pupil, draft);
 }
@@ -78,11 +74,10 @@ export function cosmeticChangesFromDraft(draft = {}) {
   };
 }
 
-/* Barre d'angles partagée par la fiche, l'atelier et la boutique. Les vues
-   correspondent aux cadrages du catalogue items-3d. */
+// Camera controls correspond to catalogue presets. Isolated products have no head view.
 function renderAngleBar(ui, itemOnly = false) {
   const angles = itemOnly ? ['front', 'quarter', 'back'] : SHEIKAH_ANGLES;
-  const active = angles.includes(ui.angle) ? ui.angle : "quarter";
+  const active = ui.angle === "free" ? null : angles.includes(ui.angle) ? ui.angle : "quarter";
   return `<div class="angle-bar">
     ${angles.map((angle) => `<button type="button" class="${active === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${active === angle}">${t(`view.${angle}`)}</button>`).join("")}
     <button type="button" class="rot ${ui.rotating ? "on" : ""}" data-action="sheikah-rotate" aria-pressed="${ui.rotating}">${ico("rotate")}${t("view.rotation")}</button>
@@ -101,7 +96,7 @@ function renderViewerFallback(pupil, item = null) {
     <div class="viewer-recovery" hidden><p class="viewer-error" role="status"></p><button class="btn" type="button" data-action="retry-viewer">${t("view.retry")}</button></div>`;
 }
 
-/* ---------- barre supérieure ---------- */
+/* ---------- Application navigation ---------- */
 
 export function renderSheikahTopbar({ view, state, account, unlocked, student }) {
   const teacherTab = view === "board" || view === "lock";
@@ -109,8 +104,8 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
   return `
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
       <div class="brand">
-        <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-wordmark"><span class="brand-name">ClassQuest</span><span class="brand-sub">${t(view === "welcome" ? "welcome.brand" : "sheikah.brand")}</span></span>
+        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="ClassQuest" width="869" height="212" />
+        <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
       </div>
        ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a>${themeControl}</div>` : `
       <nav class="tabs" aria-label="Classes">
@@ -138,7 +133,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
     </header>`;
 }
 
-/* ---------- plateau enseignant ---------- */
+/* ---------- Teacher board ---------- */
 
 export function renderSheikahTeacher({ classroom, ui, targets, focused, canUndo, account, selectedIds = [], events = [], armedReset = false, unlockedUntil = null }) {
   return `
@@ -226,7 +221,7 @@ function renderRuneCard(pupil, selectedIds) {
     </article>`;
 }
 
-/* ---------- espace élève ---------- */
+/* ---------- Pupil picker and hero views ---------- */
 
 export function renderSheikahStudent({ classroom, ui, pupil }) {
   if (!pupil) {
@@ -338,7 +333,7 @@ export function renderSheikahPersonalize(pupil, ui) {
     </main>`;
 }
 
-/* ---------- boutique dans la tablette ---------- */
+/* ---------- Item-only shop ---------- */
 
 export function renderSheikahShop(pupil, ui) {
   const look = shopPreviewLook(pupil, ui);

@@ -1,10 +1,8 @@
-/* ============================================================
-   modals.mjs — les deux seules fenêtres de l'app
-   `<dialog>` natif : piège de focus, Esc et fond inerte gratuits, donc
-   rien à réinventer.
-   ============================================================ */
+/* Native dialogs provide focus containment, Escape handling and an inert
+ * background. app.mjs owns mounting and disposal of their optional 3D viewer.
+ */
 
-import { canBuyItem, getNextReward, isItemOwned, xpProgress } from "../domain.mjs";
+import { canBuyItem, cosmeticField, getNextReward, isItemOwned, xpProgress } from "../domain.mjs";
 import { renderItemThumbnail } from "../equipment-previews.mjs";
 import { renderBaseCharacterViewer, baseStageAttributes } from "../characters.mjs";
 import {
@@ -19,9 +17,9 @@ import {
   renderOutBadge,
   renderTitle,
   renderXpBar,
-  statusClass
+  statusClass,
+  translateReward
 } from "../ui.mjs";
-import { translateReward } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
 
 const TYPE_LABEL = {
@@ -36,8 +34,7 @@ const TYPE_LABEL = {
   bespoke: () => t("modal.type.bespoke")
 };
 
-/* Vue « plein tableau » d'un héros : lecture seule. On montre un élève à
-   toute la classe sans risquer de modifier ses stats d'un doigt posé. */
+// Read-only hero details remain safe to display on a classroom touch screen.
 export function renderPupilDialog(pupil) {
   const progress = xpProgress(pupil);
   const next = getNextReward(pupil.level);
@@ -72,9 +69,8 @@ export function renderPupilDialog(pupil) {
 }
 
 export function renderItemDialog(item, pupil) {
-  const field = item.type === "outfit" ? "skin" : item.type === "tone" ? "skinTone" : item.type;
   const bespoke = item.type === "bespoke";
-  const equipped = !bespoke && pupil[field] === item.id;
+  const equipped = !bespoke && pupil[cosmeticField(item.type)] === item.id;
   const owned = isItemOwned(pupil, item.id);
   const locked = pupil.level < item.minLevel;
 

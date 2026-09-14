@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION } from './items-3d-model.mjs';
+import { renderPortraitImage } from './portrait-image.mjs';
 
 export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = `/assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, theme = 'light' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
@@ -26,8 +27,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   });
   const ground = new THREE.Mesh(new THREE.CircleGeometry(.68, 64), new THREE.MeshBasicMaterial({ color: 0x829377, transparent: true, opacity: .065, depthWrite: false }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = -.008; scene.add(ground);
-  /* Deux ambiances, mêmes lumières : le studio garde le personnage lisible
-     en thème clair comme en thème sombre. Le clair est la référence. */
+  // Both themes share the same lighting layout; light is the reference rig.
   const THEMES = {
     light: {
       exposure: 1.02, env: .65, hemi: { color: 0xfff7e6, ground: 0xb0bea5, intensity: .9 },
@@ -53,6 +53,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   let rotating = false;
   let active = true;
   let lost = false;
+  let disposed = false;
   let frame;
   let lastTime = 0;
   const target = new THREE.Vector3(0, 1.02, 0);
@@ -142,7 +143,13 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     requestDraw();
   }
   function setRotation(value) { rotating = value; lastTime = 0; requestDraw(); }
-  function setActive(value) { active = value; lastTime = 0; if (!value && frame) { cancelAnimationFrame(frame); frame = undefined; } if (value) requestDraw(); }
+  function setActive(value) {
+    if (disposed) return;
+    active = value;
+    lastTime = 0;
+    if (!value && frame) { cancelAnimationFrame(frame); frame = undefined; }
+    if (value) requestDraw();
+  }
   function setTheme(value) {
     const rig = THEMES[value] || THEMES.light;
     renderer.toneMappingExposure = rig.exposure;
@@ -195,7 +202,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     resize,
     exportLook,
     snapshot() {
-      if (lost) return null;
+      if (lost || disposed) return null;
       const previousTarget=target.clone(), previousSize=previewSize, previousElevation=elevation;
       const wasGroundVisible=ground.visible;
       try {
@@ -209,30 +216,16 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         }
         ground.visible=false;
         placeCamera(); renderer.render(scene,camera);
-        // Trim transparent camera margins, never anatomy or equipment. Fit the
-        // entire visible silhouette into the card with a small breathing margin.
-        const output=document.createElement('canvas');
-        output.width=canvas.width; output.height=canvas.height;
-        const context=output.getContext('2d');
-        context.drawImage(canvas,0,0);
-        const pixels=context.getImageData(0,0,output.width,output.height).data;
-        let minX=output.width,minY=output.height,maxX=-1,maxY=-1;
-        for(let y=0;y<output.height;y++) for(let x=0;x<output.width;x++) {
-          if(pixels[(y*output.width+x)*4+3]>16){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
-        }
-        if(maxX>=minX){
-          const width=maxX-minX+1,height=maxY-minY+1;
-          const scale=Math.min(output.width*.94/width,output.height*.96/height);
-          context.clearRect(0,0,output.width,output.height);
-          context.drawImage(canvas,minX,minY,width,height,(output.width-width*scale)/2,(output.height-height*scale)/2,width*scale,height*scale);
-        }
-        return output.toDataURL('image/webp', .85);
+        return renderPortraitImage(canvas);
       } finally {
         target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
         ground.visible=wasGroundVisible;
       }
     },
     destroy() {
+      if (disposed) return;
+      disposed = true;
+      active = false;
       observer.disconnect();
       cancelAnimationFrame(frame);
       const geometries=new Set(), materials=new Set(), textures=new Set();

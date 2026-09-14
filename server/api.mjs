@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { isStateDocument } from "../src/state-schema.mjs";
 
 const MIN_PASSWORD_LENGTH = 4;
 const MAX_PASSWORD_LENGTH = 128;
@@ -24,6 +25,9 @@ function emptyState() {
 }
 
 export function createApi({ dataDir, founderUsername, founderPassword, maxBackups = DEFAULT_MAX_BACKUPS }) {
+  if (!Number.isSafeInteger(maxBackups) || maxBackups < 0) {
+    throw new Error("MAX_BACKUPS must be a non-negative safe integer");
+  }
   const accountsFile = path.join(dataDir, "accounts.json");
   const sessionsFile = path.join(dataDir, "sessions.json");
   const accountBackupsDir = path.join(dataDir, "account-backups");
@@ -116,7 +120,10 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
   }
 
   function validAccountsIndex(index) {
-    return index && typeof index === "object" && index.accounts && typeof index.accounts === "object" && !Array.isArray(index.accounts);
+    return index && typeof index === "object" && index.accounts && typeof index.accounts === "object" && !Array.isArray(index.accounts)
+      && Object.entries(index.accounts).every(([id, account]) => account && typeof account === "object"
+        && account.id === id && /^[0-9a-f]{24}$/.test(id)
+        && typeof account.username === "string" && typeof account.hash === "string");
   }
 
   function readAccounts() {
@@ -148,8 +155,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
 
   function parseStateFile(file) {
     const state = readJsonFile(file);
-    if (!state || !Array.isArray(state.classes)
-      || !state.classes.every((classroom) => classroom && typeof classroom === "object" && Array.isArray(classroom.pupils))) {
+    if (!isStateDocument(state)) {
       throw new Error("not a ClassQuest state");
     }
     const revision = Number.isSafeInteger(state.revision) && state.revision >= 0 ? state.revision : 0;
@@ -252,7 +258,9 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
 
   function liveSessions() {
     const now = Math.floor(Date.now() / 1000);
-    return Object.fromEntries(Object.entries(readSessions()).filter(([, session]) => Number(session.expiresAt) > now));
+    return Object.fromEntries(Object.entries(readSessions()).filter(([, session]) => session
+      && typeof session.accountId === "string" && Number.isFinite(Number(session.expiresAt))
+      && Number(session.expiresAt) > now));
   }
 
   function issueToken(accountId) {

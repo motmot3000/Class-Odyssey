@@ -1,4 +1,9 @@
+import { isStateDocument, isRecord } from "./state-schema.mjs";
+
 export const STORAGE_KEY = "classquest:v1";
+// Imported counters must remain renderable and exactly representable as numbers.
+const MAX_HEARTS = 100;
+const MAX_COUNTER = Number.MAX_SAFE_INTEGER;
 
 export const SKINS = [
   {
@@ -169,9 +174,8 @@ const CLASS_NAMES = ["7P", "8P"];
 // Maps the original class ids/names ("CP"/"VIP") to the renamed ones ("7P"/"8P").
 const LEGACY_CLASS_MAP = { cp: "7p", vip: "8p", CP: "7P", VIP: "8P" };
 
-/* `samples` donne le plateau de démonstration, celui qui montre à quoi
-   ressemble le jeu. Une classe qui vient d'être créée part vide : son
-   enseignant tape de vrais prénoms, il n'a pas à effacer des faux. */
+/* Demo fixtures are opt-in at the call site; new accounts and damaged caches
+   must never acquire fictional pupils as if they were saved classroom data. */
 export function createInitialState({ samples = true } = {}) {
   const pupilsOf = (classId, names) => (samples ? samplePupils(classId, names) : []);
 
@@ -190,14 +194,14 @@ export function createInitialState({ samples = true } = {}) {
 }
 
 export function normalizeState(rawState) {
-  if (!rawState || !Array.isArray(rawState.classes)) {
-    return createInitialState();
+  if (!isStateDocument(rawState)) {
+    return createInitialState({ samples: false });
   }
 
   const state = {
     ...rawState,
     revision: Number.isSafeInteger(rawState.revision) && rawState.revision >= 0 ? rawState.revision : 0,
-    activeClassId: LEGACY_CLASS_MAP[rawState.activeClassId] || rawState.activeClassId || rawState.classes[0]?.id || "7p",
+    activeClassId: migrateClassValue(rawState.activeClassId) || rawState.classes[0]?.id || "7p",
     selectedPupilId: rawState.selectedPupilId || null,
     selectMode: Boolean(rawState.selectMode),
     selectedPupilIds: Array.isArray(rawState.selectedPupilIds) ? [...new Set(rawState.selectedPupilIds)] : [],
@@ -205,8 +209,8 @@ export function normalizeState(rawState) {
       const fallbackId = CLASS_NAMES[index]?.toLowerCase() || cryptoId();
       const fallbackName = CLASS_NAMES[index] || "Class";
       return {
-        id: LEGACY_CLASS_MAP[classroom.id] || classroom.id || fallbackId,
-        name: LEGACY_CLASS_MAP[classroom.name] || classroom.name || fallbackName,
+        id: String(migrateClassValue(classroom.id) || fallbackId),
+        name: String(migrateClassValue(classroom.name) || fallbackName),
         pupils: Array.isArray(classroom.pupils)
           ? classroom.pupils.map(normalizePupil)
           : []
@@ -231,6 +235,10 @@ export function normalizeState(rawState) {
   state.selectedPupilIds = state.selectedPupilIds.filter((id) => getPupilById(state, id));
 
   return state;
+}
+
+function migrateClassValue(value) {
+  return Object.hasOwn(LEGACY_CLASS_MAP, value) ? LEGACY_CLASS_MAP[value] : value;
 }
 
 export function addPupil(state, classId, { name, gender, skinTone } = {}) {
@@ -294,7 +302,8 @@ export function importState(jsonText) {
     throw new Error("The file is not valid JSON.");
   }
 
-  if (!raw || !Array.isArray(raw.classes)) {
+  if (Array.isArray(raw?.classes) && !raw.classes.length) throw new Error("No classes found in the file.");
+  if (!isStateDocument(raw)) {
     throw new Error("This file is not a ClassQuest backup.");
   }
 
@@ -306,10 +315,11 @@ export function importState(jsonText) {
 }
 
 export function awardXp(state, pupilIds, amount, reason = "XP") {
-  const xpAmount = Number(amount);
-  if (!Number.isFinite(xpAmount) || xpAmount <= 0 || pupilIds.length === 0) return state;
+  const xpAmount = nonNegativeInteger(amount, 0);
+  if (xpAmount <= 0 || pupilIds.length === 0) return state;
 
-  const idSet = new Set(pupilIds);
+  const idSet = existingPupilIds(state, pupilIds);
+  if (!idSet.size) return state;
   const nextState = {
     ...state,
     classes: state.classes.map((classroom) => ({
@@ -330,7 +340,7 @@ export function awardXp(state, pupilIds, amount, reason = "XP") {
 
 export function changeHp(state, pupilId, delta) {
   const hpDelta = Number(delta);
-  if (!Number.isFinite(hpDelta) || hpDelta === 0) return state;
+  if (!Number.isFinite(hpDelta) || hpDelta === 0 || !getPupilById(state, pupilId)) return state;
 
   const nextState = mapPupil(state, pupilId, (pupil) => ({
     ...pupil,
@@ -349,7 +359,8 @@ export function changeHpMany(state, pupilIds, delta) {
   const hpDelta = Number(delta);
   if (!Number.isFinite(hpDelta) || hpDelta === 0 || pupilIds.length === 0) return state;
 
-  const idSet = new Set(pupilIds);
+  const idSet = existingPupilIds(state, pupilIds);
+  if (!idSet.size) return state;
   const nextState = {
     ...state,
     classes: state.classes.map((classroom) => ({
@@ -378,6 +389,7 @@ export function setSelectMode(state, enabled) {
 }
 
 export function toggleSelection(state, pupilId) {
+  if (!getPupilById(state, pupilId)) return state;
   const set = new Set(state.selectedPupilIds);
   if (set.has(pupilId)) set.delete(pupilId);
   else set.add(pupilId);
@@ -396,28 +408,32 @@ export function clearSelection(state) {
 }
 
 export function updateCosmetics(state, pupilId, changes) {
+  if (!isRecord(changes)) return state;
   return mapPupil(state, pupilId, (pupil) => {
     const next = { ...pupil };
+    let changed = false;
     for (const [type, itemId] of Object.entries(changes)) {
       const item = getShopItem(itemId);
-      if (item?.type === type && isItemOwned(pupil, item.id)) {
+      if (item?.type === type && type !== "bespoke" && isItemOwned(pupil, item.id) && next[cosmeticField(type)] !== item.id) {
         next[cosmeticField(type)] = item.id;
+        changed = true;
       }
     }
-    return next;
+    return changed ? next : pupil;
   });
 }
 
 export function awardMoney(state, pupilIds, amount, reason = "Money") {
-  const moneyAmount = Number(amount);
-  if (!Number.isFinite(moneyAmount) || moneyAmount <= 0 || pupilIds.length === 0) return state;
-  const idSet = new Set(pupilIds);
+  const moneyAmount = nonNegativeInteger(amount, 0);
+  if (moneyAmount <= 0 || pupilIds.length === 0) return state;
+  const idSet = existingPupilIds(state, pupilIds);
+  if (!idSet.size) return state;
   const nextState = {
     ...state,
     classes: state.classes.map((classroom) => ({
       ...classroom,
       pupils: classroom.pupils.map((pupil) => (
-        idSet.has(pupil.id) ? { ...pupil, money: pupil.money + Math.floor(moneyAmount) } : pupil
+        idSet.has(pupil.id) ? { ...pupil, money: Math.min(MAX_COUNTER, pupil.money + moneyAmount) } : pupil
       ))
     }))
   };
@@ -524,6 +540,15 @@ export function getRewardsForLevel(level) {
   return rewards;
 }
 
+export function getRewardsBetween(previousLevel, nextLevel) {
+  if (nextLevel <= previousLevel) return [];
+  // Only catalogue milestones matter; do not walk thousands of empty levels.
+  const levels = [...new Set(SHOP_ITEMS.map(item => item.minLevel))]
+    .filter(level => level > previousLevel && level <= nextLevel)
+    .sort((a, b) => a - b);
+  return [...new Set([...levels.flatMap(getRewardsForLevel), ...(nextLevel > 1 ? ["HP restored"] : [])])];
+}
+
 export function getNextReward(level) {
   const upcomingLevels = SHOP_ITEMS.map((item) => item.minLevel).filter((minLevel) => minLevel > level);
   if (!upcomingLevels.length) return null;
@@ -555,8 +580,8 @@ function samplePupils(prefix, entries) {
 }
 
 function normalizePupil(pupil) {
-  const level = positiveInteger(pupil.level, 1);
-  const maxHp = positiveInteger(pupil.maxHp, 5);
+  const level = Math.max(1, nonNegativeInteger(pupil.level, 1));
+  const maxHp = Math.min(MAX_HEARTS, Math.max(1, nonNegativeInteger(pupil.maxHp, 5)));
   const skin = SKINS.some((item) => item.id === pupil.skin) ? pupil.skin : "starter";
   const title = TITLES.some((item) => item.id === pupil.title) ? pupil.title : "rookie";
   const hat = HATS.some((item) => item.id === pupil.hat) ? pupil.hat : "no-hat";
@@ -587,17 +612,17 @@ function normalizePupil(pupil) {
         id: String(order.id || cryptoId()),
         orderedAt: Number.isNaN(Date.parse(order.orderedAt)) ? new Date().toISOString() : order.orderedAt,
         note: String(order.note || "Custom Item").trim() || "Custom Item",
-        cost: Math.max(0, positiveInteger(order.cost, 100))
+        cost: nonNegativeInteger(order.cost, 100)
       }))
     : [];
   return {
-    id: pupil.id || cryptoId(),
+    id: String(pupil.id || cryptoId()),
     name: String(pupil.name || "New hero").trim() || "New hero",
-    hp: clamp(positiveInteger(pupil.hp, maxHp), 0, maxHp),
+    hp: clamp(nonNegativeInteger(pupil.hp, maxHp), 0, maxHp),
     maxHp,
-    xp: Math.max(0, positiveInteger(pupil.xp, 0)),
+    xp: nonNegativeInteger(pupil.xp, 0),
     level,
-    money: Math.max(0, positiveInteger(pupil.money ?? pupil.coins, 0)),
+    money: nonNegativeInteger(pupil.money ?? pupil.coins, 0),
     ownedItems,
     customOrders,
     skin,
@@ -614,15 +639,20 @@ function normalizePupil(pupil) {
 }
 
 function applyXp(pupil, amount) {
-  let xp = pupil.xp + amount;
-  let level = pupil.level;
-  let didLevelUp = false;
-
-  while (xp >= xpNeededForLevel(level)) {
-    xp -= xpNeededForLevel(level);
-    level += 1;
-    didLevelUp = true;
+  const total = Math.min(MAX_COUNTER, pupil.xp + amount);
+  // Costs form an arithmetic series. Binary search avoids a potentially huge
+  // per-level loop for imported counters or large teacher awards.
+  const cost = count => count * xpNeededForLevel(pupil.level) + 250 * count * (count - 1);
+  let low = 0;
+  let high = Math.floor(total / xpNeededForLevel(pupil.level)) + 1;
+  while (high - low > 1) {
+    const mid = Math.floor((low + high) / 2);
+    if (cost(mid) <= total) low = mid;
+    else high = mid;
   }
+  const xp = total - cost(low);
+  const level = pupil.level + low;
+  const didLevelUp = low > 0;
 
   return {
     ...pupil,
@@ -633,13 +663,15 @@ function applyXp(pupil, amount) {
   };
 }
 
-function cosmeticField(type) {
+// Inventory category names differ from two persisted field names.
+export function cosmeticField(type) {
   if (type === "outfit") return "skin";
   if (type === "tone") return "skinTone";
   return type;
 }
 
 function updateClass(state, classId, updater) {
+  if (!getClassById(state, classId)) return state;
   return {
     ...state,
     classes: state.classes.map((classroom) =>
@@ -649,13 +681,21 @@ function updateClass(state, classId, updater) {
 }
 
 function mapPupil(state, pupilId, updater) {
-  return {
-    ...state,
-    classes: state.classes.map((classroom) => ({
-      ...classroom,
-      pupils: classroom.pupils.map((pupil) => (pupil.id === pupilId ? updater(pupil) : pupil))
-    }))
-  };
+  let changed = false;
+  const classes = state.classes.map(classroom => {
+    let classChanged = false;
+    const pupils = classroom.pupils.map(pupil => {
+      const next = pupil.id === pupilId ? updater(pupil) : pupil;
+      if (next !== pupil) classChanged = changed = true;
+      return next;
+    });
+    return classChanged ? { ...classroom, pupils } : classroom;
+  });
+  return changed ? { ...state, classes } : state;
+}
+
+function existingPupilIds(state, ids) {
+  return new Set(ids.filter(id => getPupilById(state, id)));
 }
 
 function appendEvent(state, event) {
@@ -684,9 +724,9 @@ function normalizeEvent(event) {
   };
 }
 
-function positiveInteger(value, fallback) {
+function nonNegativeInteger(value, fallback) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : fallback;
+  return Number.isFinite(parsed) && parsed <= MAX_COUNTER ? Math.max(0, Math.floor(parsed)) : fallback;
 }
 
 function clamp(value, min, max) {

@@ -1,6 +1,6 @@
-import { apiUrl } from "./api.mjs";
+import { requestApi } from "./api.mjs";
 
-const SESSION_KEY = "classquest:session";
+export const SESSION_KEY = "classquest:session";
 const UNLOCK_KEY = "classquest:adult";
 const UNLOCK_MS = 8 * 60 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
@@ -84,8 +84,10 @@ async function matchesVerifier(password, offline) {
 }
 
 export function isAdultUnlocked() {
-  if (!isSignedIn()) return false;
-  const until = Number(readStored(UNLOCK_KEY)?.until);
+  const session = getSession();
+  const unlock = readStored(UNLOCK_KEY);
+  if (!session || unlock?.accountId !== session.account.id) return false;
+  const until = Number(unlock?.until);
   if (!Number.isFinite(until)) return false;
   if (until <= Date.now()) {
     lockAdult();
@@ -94,8 +96,11 @@ export function isAdultUnlocked() {
   return true;
 }
 
-export const unlockUntil = () => Number(readStored(UNLOCK_KEY)?.until) || null;
-export const unlockAdult = () => writeStored(UNLOCK_KEY, { until: Date.now() + UNLOCK_MS });
+export const unlockUntil = () => isAdultUnlocked() ? Number(readStored(UNLOCK_KEY)?.until) : null;
+export const unlockAdult = () => {
+  const account = getAccount();
+  if (account) writeStored(UNLOCK_KEY, { accountId: account.id, until: Date.now() + UNLOCK_MS });
+};
 export const lockAdult = () => writeStored(UNLOCK_KEY, null);
 
 export function validateNewPassword(next, confirmation) {
@@ -126,7 +131,7 @@ function retryMessage(payload) {
 async function callApi(path, { method = "POST", body, context = captureSessionContext() } = {}) {
   let response;
   try {
-    response = await fetch(apiUrl(path), {
+    response = await requestApi(path, {
       method,
       headers: { "Content-Type": "application/json", ...(context ? { "X-Session-Token": context.token } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body)
@@ -174,11 +179,11 @@ export async function signOut() {
   writeStored(SESSION_KEY, null);
   lockAdult();
   if (!context) return;
-  try {
-    await fetch(apiUrl("session"), { method: "DELETE", headers: { "X-Session-Token": context.token } });
-  } catch {
-    // The server-side token expires by itself.
-  }
+  // Local sign-out is immediate even if token revocation is slow or offline.
+  // The request captures the old token, so it cannot revoke a subsequent login.
+  void requestApi("session", {
+    method: "DELETE", headers: { "X-Session-Token": context.token },
+  }, 8000).catch(() => {});
 }
 
 export function forgetSession(context = null) {
@@ -193,13 +198,19 @@ export async function verifyPassword(password) {
   const typed = String(password ?? "");
   if (!typed) return { ok: false, error: "Type the password first." };
   const result = await callApi("session/verify", { body: { password: typed } });
+  if (!isCurrentSession(result.context)) return { ok: false, stale: true, error: "The account changed while checking." };
   if (result.offline) {
-    if (await matchesVerifier(typed, getSession()?.offline)) return { ok: true, offline: true };
+    const matches = await matchesVerifier(typed, getSession()?.offline);
+    if (!isCurrentSession(result.context)) return { ok: false, stale: true, error: "The account changed while checking." };
+    if (matches) return { ok: true, offline: true };
     return { ok: false, error: getSession()?.offline ? "Wrong password." : OFFLINE };
   }
   if (!isCurrentSession(result.context)) return { ok: false, stale: true, error: "The account changed while checking." };
   if (result.response.status === 429) return { ok: false, error: retryMessage(result.payload) };
-  if (result.response.status === 401) return { ok: false, expired: true, error: "The session ended. Sign in again." };
+  if (result.response.status === 401) {
+    if (result.payload?.error === "not signed in") return { ok: false, expired: true, error: "The session ended. Sign in again." };
+    return { ok: false, error: "Wrong password." };
+  }
   if (!result.response.ok) return { ok: false, error: "The server could not check the password. Try again." };
   return { ok: true };
 }

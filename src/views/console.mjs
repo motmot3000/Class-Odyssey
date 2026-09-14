@@ -1,8 +1,6 @@
-/* ============================================================
-   console.mjs — console de l'enseignant
-   Règle de composition : ce qui sert à chaque minute de cours reste
-   toujours visible (cible + attribution), le reste se replie.
-   ============================================================ */
+/* Teacher controls: frequent rewards stay visible; administration is folded
+ * into details panels. All state changes are dispatched through app.mjs.
+ */
 
 import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
 import { baseStageAttributes as heroStageAttributes } from "../characters.mjs";
@@ -61,10 +59,9 @@ function renderAccountPanel(open, unlockedUntil, account) {
     </details>`;
 }
 
-/* ---------- Cible ----------
-   Le bug d'usage classique : cliquer « +100 XP » sans savoir qui reçoit.
-   La cible est donc épinglée en haut, nommée, et l'attribution se
-   désactive tant qu'elle est vide. */
+/* Reward targets stay named and pinned above the controls. Empty targets
+ * disable awards so the teacher always knows who will receive the change.
+ */
 
 function renderTarget(classroom, ui, targets) {
   const selectedCount = ui.scope === "selection" ? targets.length : 0;
@@ -148,9 +145,9 @@ function renderAward(ui, targets) {
   `;
 }
 
-/* ---------- Héros au point ----------
-   Distinct de la cible : on peut récompenser six élèves tout en gardant
-   la fiche d'un seul ouverte. Le dernier héros touché est celui qu'on lit. */
+/* Focus is independent from reward selection: a group may receive an award
+ * while the most recently selected pupil keeps its details panel open.
+ */
 
 function renderHeroPanel(pupil, ui, open) {
   if (!pupil) {
@@ -163,8 +160,7 @@ function renderHeroPanel(pupil, ui, open) {
   }
 
   const progress = xpProgress(pupil);
-  // Au niveau 1, « débloqué » listerait tout le catalogue de départ : sans
-  // information, donc masqué.
+  // Level one unlocks are only the starter catalogue, not a useful reward list.
   const unlocked = pupil.level > 1 ? getRewardsForLevel(pupil.level) : [];
   const next = getNextReward(pupil.level);
 

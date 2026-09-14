@@ -13,6 +13,7 @@ import {
   getNextReward,
   getPupilById,
   getRewardsForLevel,
+  getRewardsBetween,
   getShopItem,
   getShopItems,
   getUnlockedSkins,
@@ -29,6 +30,48 @@ import {
   updateCosmetics,
   xpNeededForLevel
 } from "../src/domain.mjs";
+
+test("malformed imports are rejected instead of crashing or duplicating identities", () => {
+  for (const classes of [[], [null], [{ id: "a", pupils: [null] }], [{ id: "a", pupils: [] }, { id: "a", pupils: [] }], [{ id: "a", pupils: [{ id: "same" }, { id: "same" }] }]]) {
+    assert.throws(() => importState(JSON.stringify({ classes })), /backup|classes/i);
+  }
+  const fallback = normalizeState({ classes: [] });
+  assert.equal(fallback.classes.length, 2);
+  assert.ok(fallback.classes.every(classroom => classroom.pupils.length === 0));
+});
+
+test("imported counters stay valid and cannot create an unbounded heart row", () => {
+  const raw = createInitialState();
+  Object.assign(raw.classes[0].pupils[0], { level: 0, maxHp: 1e9, hp: 1e9, xp: 1e100, money: 1e100 });
+  const pupil = normalizeState(raw).classes[0].pupils[0];
+  assert.equal(pupil.level, 1);
+  assert.equal(pupil.maxHp, 100);
+  assert.equal(pupil.hp, 100);
+  assert.equal(pupil.xp, 0);
+  assert.equal(pupil.money, 0);
+});
+
+test("large XP awards use bounded work and preserve the progression formula", () => {
+  const state = createInitialState();
+  const old = getCurrentClass(state).pupils[0];
+  const next = getPupilById(awardXp(state, [old.id], 1e12), old.id);
+  const gained = next.level - old.level;
+  const spent = gained * xpNeededForLevel(old.level) + 250 * gained * (gained - 1);
+  assert.equal(next.xp + spent, old.xp + 1e12);
+  assert.ok(next.xp >= 0 && next.xp < xpNeededForLevel(next.level));
+  assert.ok(getRewardsBetween(1, next.level).length < 100);
+  assert.equal(awardXp(state, [old.id], 1e100), state);
+});
+
+test("missing targets and zero-value fractional awards do not create phantom activity", () => {
+  const state = createInitialState();
+  assert.equal(awardXp(state, ["missing"], 10), state);
+  assert.equal(awardMoney(state, ["missing"], 10), state);
+  assert.equal(changeHp(state, "missing", -1), state);
+  assert.equal(changeHpMany(state, ["missing"], -1), state);
+  assert.equal(awardMoney(state, [state.classes[0].pupils[0].id], .5), state);
+  assert.equal(toggleSelection(state, "missing"), state);
+});
 
 test("creates the two documented classes", () => {
   const state = createInitialState();

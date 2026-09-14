@@ -5,7 +5,6 @@ export const messages = {
   "welcome.headlineStart": ["Rentrez dans", "Step into the"],
   "welcome.headlineEnd": ["l’aventure.", "adventure."],
   "welcome.adventureHint": ["Un monde à découvrir. Un héros à faire grandir. Et toute votre classe pour écrire la suite.", "A world to discover. A hero to grow. And your whole class to write the next chapter."],
-  "welcome.brand": ["L’anglais devient une aventure", "Turn English into an adventure"],
   "welcome.heroTitle": ["Quel héros sommeille en vous ?", "Which hero will you become?"],
   "welcome.ranger": ["L’Éclaireur", "The Ranger"],
   "welcome.mage": ["La Mage", "The Mage"],
