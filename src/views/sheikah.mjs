@@ -9,6 +9,7 @@ import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xp
 import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
+import { BRAND } from "../brand.mjs";
 import { t, tItem } from "../i18n.mjs";
 import { pupilLook } from "../items-3d-model.mjs";
 import { renderHeroPortrait, renderItemThumbnail, isModeledItem } from "../equipment-previews.mjs";
@@ -109,8 +110,8 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
   return `
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
       <div class="brand">
-        <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-wordmark"><span class="brand-name">ClassQuest</span><span class="brand-sub">${t("sheikah.brand")}</span></span>
+        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="ClassQuest" width="869" height="212" />
+        <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
       </div>
       ${view === "welcome" ? `<div class="top-end">${themeControl}</div>` : `
       <nav class="tabs" aria-label="Classes">

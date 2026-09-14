@@ -1,0 +1,30 @@
+/* ============================================================
+   brand.css — logo ClassQuest (assets/brand)
+   Le logo horizontal suit le thème explicite de l'app (data-theme),
+   avec un repli sur prefers-color-scheme quand aucun thème n'est fixé.
+   ============================================================ */
+
+.brand-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.brand-logo-dark { display: none; }
+
+:root[data-theme="dark"] .brand-logo-light { display: none; }
+:root[data-theme="dark"] .brand-logo-dark { display: block; }
+
+/* Repli système uniquement si aucun thème explicite n'est défini. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .brand-logo-light { display: none; }
+  :root:not([data-theme]) .brand-logo-dark { display: block; }
+}
+
+@media (max-width: 720px) {
+  .brand-logo { height: 32px; }
+}
+
+@media (max-width: 520px) {
+  .brand-logo { height: 28px; }
+}

@@ -1,0 +1,19 @@
+/* Les deux fichiers suivent le thème explicite de l'application. */
+.cq-brand {
+  display: inline-block;
+  width: min(260px, 100%);
+  vertical-align: middle;
+}
+.cq-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.cq-brand .cq-brand-dark { display: none; }
+:root[data-theme="dark"] .cq-brand-light { display: none; }
+:root[data-theme="dark"] .cq-brand-dark { display: block; }
+/* Repli système uniquement si aucun thème explicite n'est défini. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .cq-brand-light { display: none; }
+  :root:not([data-theme]) .cq-brand-dark { display: block; }
+}

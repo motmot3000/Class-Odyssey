@@ -138,7 +138,7 @@ input { caret-color: var(--cyan); }
   pointer-events: none;
 }
 .brand { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex: none; }
-.seal { width: 44px; height: 44px; color: var(--cyan); }
+.seal { display: block; width: 44px; height: 44px; object-fit: contain; color: var(--cyan); }
 .brand-wordmark { display: flex; flex-direction: column; gap: 1px; }
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.2; }
 .brand-name em { font-style: normal; color: var(--amber); }
