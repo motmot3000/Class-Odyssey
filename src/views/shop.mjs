@@ -21,7 +21,7 @@ export const SHOP_CATEGORIES = [
   { type: "bespoke", label: () => t("shop.cat.custom") }
 ];
 
-export function renderShop(pupil, activeType) {
+export function renderShop(pupil, activeType, previewId = null) {
   const active = SHOP_CATEGORIES.find((category) => category.type === activeType) || SHOP_CATEGORIES[0];
   const items = getShopItems(active.type);
 
@@ -42,7 +42,7 @@ export function renderShop(pupil, activeType) {
         <p class="shop-balance">${renderMoney(pupil.money)}<span>${t("shop.toSpend")}</span></p>
       </div>
       <div class="shop-items">
-        ${items.map((item) => renderShopItem(item, pupil)).join("")}
+        ${items.map((item) => renderShopItem(item, pupil, item.id === previewId)).join("")}
       </div>
     </div>
   `;
@@ -50,7 +50,7 @@ export function renderShop(pupil, activeType) {
 
 /* Un seul bouton par article, dont le libellé dit ce qui va se passer :
    « Buy 40 », « Equip », « Equipped ». Jamais « OK ». */
-function renderShopItem(item, pupil) {
+function renderShopItem(item, pupil, previewed = false) {
   const field = item.type === "outfit" ? "skin" : item.type === "tone" ? "skinTone" : item.type;
   const bespoke = item.type === "bespoke";
   const equipped = !bespoke && pupil[field] === item.id;
@@ -98,12 +98,13 @@ function renderShopItem(item, pupil) {
   const meta = locked ? `${t("shop.level", { level: item.minLevel })} · ${price}` : price;
 
   return `
-    <article class="shop-item rarity-${getItemRarity(item)} ${bespoke ? "is-bespoke" : ""} ${equipped ? "is-equipped" : ""} ${locked ? "is-locked" : ""}">
+    <article class="shop-item rarity-${getItemRarity(item)} ${bespoke ? "is-bespoke" : ""} ${equipped ? "is-equipped" : ""} ${locked ? "is-locked" : ""} ${previewed ? "is-preview" : ""}">
       <button
         class="shop-thumb"
         type="button"
         data-action="preview-item"
         data-item-id="${escapeHtml(item.id)}"
+        aria-pressed="${previewed}"
         aria-label="${t("shop.preview", { name: escapeHtml(tItem(item, "name")) })}"
       >${renderThumb(item, pupil)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
       <div class="shop-item-text">

@@ -120,7 +120,8 @@ const ui = {
   sheikahView: "board",
   angle: "quarter",
   rotating: false,
-  draft: null
+  draft: null,
+  shopPreview: null
 };
 
 setSheikahFreeViewHandler(() => {
@@ -435,8 +436,9 @@ const ACTIONS = {
     window.scrollTo({ top: 0 });
   },
   "sheikah-back": () => {
-    ui.sheikahView = "board";
+    ui.sheikahView = ui.sheikahView === "shop" ? "sheet" : "board";
     ui.draft = null;
+    ui.shopPreview = null;
     render();
     window.scrollTo({ top: 0 });
   },
@@ -477,16 +479,22 @@ const ACTIONS = {
     window.scrollTo({ top: 0 });
     toast(t("sheikah.savedLook"), "success");
   },
-  "sheikah-shop": () => {
-    const pupilId = currentView() === "student" ? studentPupilId : state.selectedPupilId;
-    if (!pupilId) return;
+  "sheikah-shop": (el) => {
+    const studentView = currentView() === "student";
+    const id = el.dataset.pupilId || (studentView ? studentPupilId : state.selectedPupilId);
+    if (!id) return;
+    state = { ...state, selectedPupilId: id };
+    if (studentView) rememberStudent(id);
     ui.sheikahView = "shop";
     ui.draft = null;
+    ui.shopPreview = null;
     render();
     window.scrollTo({ top: 0 });
   },
   "shop-back": () => {
     ui.sheikahView = "sheet";
+    ui.draft = null;
+    ui.shopPreview = null;
     render();
     window.scrollTo({ top: 0 });
   },
@@ -558,7 +566,16 @@ const ACTIONS = {
     commit(next, { record: false });
   },
 
-  "zoom-pupil": (el) => openPupilDialog(el.dataset.pupilId),
+  "zoom-pupil": (el) => {
+    if (["board", "student"].includes(currentView())) {
+      if (el.dataset.pupilId) state = { ...state, selectedPupilId: el.dataset.pupilId };
+      ui.sheikahView = "sheet";
+      ui.draft = null;
+      render();
+      return;
+    }
+    openPupilDialog(el.dataset.pupilId);
+  },
   "close-dialog": () => closeDialog(),
 
   scope: (el) => {
@@ -618,10 +635,18 @@ const ACTIONS = {
 
   "shop-category": (el) => {
     ui.shopCategory = el.dataset.category;
+    ui.shopPreview = null;
     render();
   },
 
-  "preview-item": (el) => openItemDialog(el.dataset.itemId),
+  "preview-item": (el) => {
+    if (["board", "student"].includes(currentView()) && ui.sheikahView === "shop") {
+      ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
+      render();
+      return;
+    }
+    openItemDialog(el.dataset.itemId);
+  },
   "shop-item": (el) => buyOrEquip(el.dataset.itemId),
 
   "student-pick": (el) => {

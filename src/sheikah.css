@@ -121,9 +121,10 @@ input { caret-color: var(--cyan); }
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: var(--s5);
-  height: var(--topbar-h);
-  padding: 0 var(--s6);
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  min-height: var(--topbar-h);
+  padding: 8px var(--s5);
   background: var(--slate);
   border-bottom: 1px solid var(--line-2);
   min-width: 0;
@@ -169,6 +170,7 @@ input { caret-color: var(--cyan); }
    position: relative;
   cursor: pointer;
   transition: color var(--ease) 160ms, background var(--ease) 160ms;
+  white-space: nowrap;
 }
 .tabs button:hover { color: var(--ink); }
 .tabs button.on {
@@ -176,7 +178,7 @@ input { caret-color: var(--cyan); }
   background: var(--cyan-soft);
 }
 .tabs button.on::after { content: ""; position: absolute; inset: auto 14px 0; height: 2px; background: var(--cyan); }
-.top-end { margin-left: auto; display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.top-end { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); min-width: 0; }
 .ghost {
   display: inline-flex;
   align-items: center;
@@ -189,6 +191,8 @@ input { caret-color: var(--cyan); }
   background: none;
   border: 0;
   cursor: pointer;
+  white-space: nowrap;
+  flex: none;
   min-width: 44px;
   min-height: 44px;
   padding: 8px;
@@ -832,15 +836,16 @@ input { caret-color: var(--cyan); }
 
 /* --- boutique --- */
 .shop { display: flex; flex-direction: column; gap: 12px; }
-.shop-head { display: flex; align-items: center; justify-content: space-between; }
-.shop-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.shop-tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
 .shop-tabs button { min-height: 44px; background: none; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink-2); padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
 .shop-tabs button.is-active, .shop-tabs button[aria-selected="true"] { background: var(--cyan-soft); border-color: var(--cyan-2); color: var(--ink); }
-.shop-balance { color: var(--amber); display: flex; align-items: center; gap: 6px; }
+.shop-balance { color: var(--amber); display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-left: auto; }
 .shop-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .shop-item { display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px; }
 .shop-item.is-owned { border-color: var(--line-2); }
 .shop-item.is-equipped { border-color: var(--cyan-2); }
+.shop-item.is-preview { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
 .shop-thumb { background: rgba(4, 7, 12, 0.4); border-radius: var(--r-sm); display: grid; place-items: center; min-height: 78px; }
 .shop-thumb svg, .shop-thumb img { max-width: 100%; height: auto; }
 .shop-item-text { display: flex; flex-direction: column; gap: 2px; }
@@ -860,6 +865,44 @@ input { caret-color: var(--cyan); }
 .picker-card small { color: var(--muted); }
 .picker-card .lvl-seal small { color: var(--amber); }
 .viewer-error { position: absolute; inset: auto 12% 22px; color: var(--muted); font-size: 12px; text-align: center; }
+
+/* --- dialogues (commande sur-mesure, aperçu article) ---
+   Sheikah ne charge pas styles.css : elle fournit son propre habillage,
+   dans les deux thèmes via les variables --panel / --ink. */
+.dialog {
+  position: relative;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: var(--s5);
+  background: var(--panel-solid);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+.dialog::backdrop { background: rgba(6, 12, 18, 0.62); backdrop-filter: blur(4px); }
+.dialog h2 { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin: var(--s3) 0; }
+.dialog-close {
+  position: absolute; top: var(--s3); right: var(--s3);
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink-2); cursor: pointer;
+}
+.dialog-close:hover { color: var(--ink); border-color: var(--line-2); }
+.dialog-item-art {
+  display: grid; place-items: center; min-height: 260px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.dialog-item-art svg, .dialog-item-art img { max-width: 220px; height: auto; }
+.dialog-item-description, .dialog-status { color: var(--ink-2); font-size: 13.5px; }
+.item-meta { color: var(--muted); font-size: 12px; }
+.bespoke-order-form { display: flex; flex-direction: column; gap: var(--s3); margin-top: var(--s3); }
+.bespoke-order-form textarea {
+  width: 100%; resize: vertical;
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--ink); padding: 8px 10px; font: inherit;
+}
 
 @media (max-width: 520px) {
   .picker-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

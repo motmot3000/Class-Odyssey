@@ -1,19 +1,20 @@
 /* ============================================================
    sheikah-runtime.mjs — une seule dalle 3D réutilisée
-   Le vestiaire est chargé une fois, puis déplacé dans le conteneur
-   visible à chaque rendu. Aucun rechargement du GLB au changement de vue.
+   Le catalogue d'équipements items-3d est chargé une fois, puis déplacé
+   dans le conteneur visible à chaque rendu. Aucun rechargement du GLB au
+   changement de vue.
    ============================================================ */
 
 import { t } from "./i18n.mjs";
 
-const GLB_URL = new URL("../assets/wardrobe/wardrobe.glb", import.meta.url).href;
+const GLB_URL = new URL("../assets/items-3d/catalogue.glb", import.meta.url).href;
 let runtime;
 let viewer;
 let instancePromise = null;
 let currentHost = null;
 let viewerAngle = "quarter";
 let viewerRotating = false;
-let currentTheme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+let currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 let onFreeView = () => {};
 
 function loadRuntime() {
@@ -37,7 +38,7 @@ function fail(error, host) {
   const recovery = host?.querySelector(".viewer-recovery");
   if (recovery) {
     recovery.hidden = false;
-    recovery.querySelector(".viewer-error").textContent = t("view.wardrobeUnavailable");
+    recovery.querySelector(".viewer-error").textContent = t("view.equipmentUnavailable");
   }
   const fallback = host?.querySelector(".viewer-fallback");
   if (fallback) fallback.hidden = false;
@@ -78,7 +79,7 @@ export function mountSheikahViewer(host, look) {
       instance.setVisible(true);
       instance.setAngle(viewerAngle);
       instance.setRotation(Boolean(viewerRotating));
-      instance.setTheme(currentTheme);
+      instance.setTheme?.(currentTheme);
       instance.resize?.();
       host.classList.remove("is-loading");
       const loader = host.querySelector("[data-load-bar]");
@@ -105,8 +106,8 @@ export function setSheikahRotation(rotating) {
 }
 
 export function setSheikahTheme(theme) {
-  currentTheme = theme;
-  viewer?.setTheme(theme);
+  currentTheme = theme === "dark" ? "dark" : "light";
+  viewer?.setTheme?.(currentTheme);
 }
 
 export function setSheikahFreeViewHandler(handler) {
