@@ -1,21 +1,18 @@
-/* ============================================================
-   sheikah-runtime.mjs — une seule dalle 3D réutilisée
-   Le catalogue d'équipements items-3d est chargé une fois, puis déplacé
-   dans le conteneur visible à chaque rendu. Aucun rechargement du GLB au
-   changement de vue.
-   ============================================================ */
+/* Reuse one visible viewer across sheet, workshop and shop renders.
+ * Host identity protects navigation; resource generations protect retries.
+ * These are separate races: changing a DOM host must not reload the GLB.
+ */
 
 import { t } from "./i18n.mjs";
 import { CATALOGUE_URL, CATALOGUE_REVISION } from "./items-3d-model.mjs";
+import { createSharedResource } from "./shared-resource.mjs";
 
 const GLB_URL = CATALOGUE_URL;
 let runtime;
-let viewer;
-let instancePromise = null;
 let currentHost = null;
 let viewerAngle = "quarter";
 let viewerRotating = false;
-let currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+let currentTheme = "light";
 let onFreeView = () => {};
 
 function loadRuntime() {
@@ -32,6 +29,7 @@ function updateProgress(percent) {
 }
 
 function fail(error, host) {
+  if (!host || currentHost !== host || !host.isConnected) return;
   console.warn("Sheikah viewer:", error);
   host?.classList.remove("is-loading");
   const loader = host?.querySelector("[data-load-bar]");
@@ -45,23 +43,25 @@ function fail(error, host) {
   if (fallback) fallback.hidden = false;
 }
 
-function getInstance(host, look) {
-  if (!instancePromise) {
-    instancePromise = loadRuntime()
-      .then(({ createHeroViewer }) => createHeroViewer(host, GLB_URL, look, {
-        theme: currentTheme,
-        onProgress: updateProgress,
-        onError: (message) => fail(new Error(message), currentHost),
-        onFreeView: () => {
-          viewerRotating = false;
-          onFreeView();
-        }
-      }))
-      .then((instance) => { viewer = instance; return instance; })
-      .catch((error) => { instancePromise = null; throw error; });
-  }
-  return instancePromise;
-}
+const resource = createSharedResource(async (host, look) => {
+  const { createHeroViewer } = await loadRuntime();
+  let instance;
+  instance = await createHeroViewer(host, GLB_URL, look, {
+    theme: currentTheme,
+    onProgress: updateProgress,
+    onError: message => {
+      if (resource.peek() !== instance) return;
+      resource.reset();
+      fail(new Error(message), currentHost);
+    },
+    onFreeView: () => {
+      viewerAngle = "free";
+      viewerRotating = false;
+      onFreeView();
+    }
+  });
+  return instance;
+});
 
 export function mountSheikahViewer(host, look) {
   if (!host) return;
@@ -71,14 +71,14 @@ export function mountSheikahViewer(host, look) {
   if (recovery) recovery.hidden = true;
   const loader = host.querySelector("[data-load-bar]");
   if (loader) loader.hidden = false;
-  getInstance(host, look)
+  resource.get(host, look)
     .then((instance) => {
       if (!instance || currentHost !== host || !host.isConnected) return;
       if (instance.element.parentElement !== host) host.append(instance.element);
       instance.element.setAttribute("aria-label", t("view.keyboard"));
       instance.applyState(look);
       instance.setVisible(true);
-      instance.setAngle(viewerAngle);
+      if (viewerAngle !== "free") instance.setAngle(viewerAngle);
       instance.setRotation(Boolean(viewerRotating));
       instance.setTheme?.(currentTheme);
       instance.resize?.();
@@ -93,22 +93,22 @@ export function mountSheikahViewer(host, look) {
 
 export function unmountSheikahViewer() {
   currentHost = null;
-  viewer?.setVisible(false);
+  resource.peek()?.setVisible(false);
 }
 
 export function setSheikahAngle(angle) {
   viewerAngle = angle;
-  viewer?.setAngle(angle);
+  resource.peek()?.setAngle(angle);
 }
 
 export function setSheikahRotation(rotating) {
   viewerRotating = rotating;
-  viewer?.setRotation(rotating);
+  resource.peek()?.setRotation(rotating);
 }
 
 export function setSheikahTheme(theme) {
   currentTheme = theme === "dark" ? "dark" : "light";
-  viewer?.setTheme?.(currentTheme);
+  resource.peek()?.setTheme?.(currentTheme);
 }
 
 export function setSheikahFreeViewHandler(handler) {
@@ -116,12 +116,10 @@ export function setSheikahFreeViewHandler(handler) {
 }
 
 export function retrySheikahViewer() {
-  viewer?.destroy?.();
-  viewer = null;
-  instancePromise = null;
+  resource.reset();
   if (currentHost) {
     let look = {};
-    try { look = JSON.parse(currentHost.dataset.look || "{}"); } catch { /* défaut */ }
+    try { look = JSON.parse(currentHost.dataset.look || "{}"); } catch { /* Keep the fallback look. */ }
     mountSheikahViewer(currentHost, look);
   }
 }

@@ -1,4 +1,6 @@
-/* Lightweight base-character markup. No WebGL is started on the class board. */
+/* Legacy base-character markup and dialog asset selection. Active equipped
+ * portraits use equipment-previews.mjs / portrait-runtime.mjs.
+ */
 import { escapeHtml } from "./ui.mjs";
 import { t } from "./i18n.mjs";
 

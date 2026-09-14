@@ -1,8 +1,7 @@
-/* ============================================================
-   app.mjs — coque, routage, état d'interface, persistance
-   Le rendu est délégué aux vues ; ce fichier ne décide que de « quoi
-   afficher » et « que faire quand on touche l'écran ».
-   ============================================================ */
+/* Application coordinator: routing, UI state, action dispatch and persistence.
+ * Views generate markup; domain.mjs owns game rules. Keep gameplay mutations
+ * in the domain so teacher controls, pupil shopping and tests share one policy.
+ */
 
 import {
   STORAGE_KEY,
@@ -15,7 +14,7 @@ import {
   createInitialState,
   getCurrentClass,
   getPupilById,
-  getRewardsForLevel,
+  getRewardsBetween,
   getShopItem,
   importState,
   isItemOwned,
@@ -28,8 +27,9 @@ import {
   toggleSelection,
   updateCosmetics
 } from "./domain.mjs";
-import { apiUrl } from "./api.mjs";
+import { requestApi } from "./api.mjs";
 import {
+  SESSION_KEY,
   captureSessionContext,
   changePassword,
   forgetSession,
@@ -79,11 +79,11 @@ const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 let releaseCharacterViewer = null;
 
-// Mémorise le héros choisi sur CET appareil, pour rouvrir le casier
-// directement à la visite suivante. Jamais synchronisé au serveur.
+// Remember the chosen pupil on this device only, never in shared server state.
 const STUDENT_KEY = "classquest:student";
 
 let account = getAccount();
+let activeSession = captureSessionContext();
 let state = account ? loadState(account.id) : createInitialState({ samples: false });
 let history = [];
 let studentPupilId = loadStudentId();
@@ -96,8 +96,7 @@ let gateRequest = 0;
 let armedDanger = null;
 const pendingFlash = new Set();
 
-/* État d'interface : préférences de la session, jamais persistées avec le
-   jeu. Les remettre à zéro ne doit rien coûter à personne. */
+/* Transient UI preferences. Resetting them must never change classroom data. */
 const ui = {
   scope: "selection",
   query: "",
@@ -132,25 +131,25 @@ setSheikahFreeViewHandler(() => {
   control?.setAttribute("aria-pressed", "false");
 });
 
-/* ---------- Thème ---------- */
+/* ---------- Theme preference ---------- */
 
 const THEME_KEY = "classquest:theme";
 let theme = (() => {
   try {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === "light" || stored === "dark") return stored;
-  } catch { /* stockage bloqué */ }
+  } catch { /* Storage may be blocked. */ }
   return "light";
 })();
 
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#e7e9df" : "#101b20");
-  try { localStorage.setItem(THEME_KEY, theme); } catch { /* stockage bloqué */ }
+  try { localStorage.setItem(THEME_KEY, theme); } catch { /* Keep the in-memory theme. */ }
   setSheikahTheme(theme);
 }
 
-/* ---------- Routage ---------- */
+/* ---------- Hash routing ---------- */
 
 function currentView() {
   if (!isSignedIn()) return "welcome";
@@ -178,7 +177,7 @@ window.addEventListener("hashchange", () => {
   else render();
 });
 
-/* ---------- Rendu ---------- */
+/* ---------- Rendering ---------- */
 
 function render() {
   const view = currentView();
@@ -231,7 +230,7 @@ function syncSheikahRuntime() {
     return;
   }
   let look = {};
-  try { look = JSON.parse(host.dataset.look || "{}"); } catch { /* valeur par défaut */ }
+  try { look = JSON.parse(host.dataset.look || "{}"); } catch { /* Retain the fallback look. */ }
   mountSheikahViewer(host, look);
 }
 
@@ -269,7 +268,7 @@ function renderConflict() {
   return `<aside class="sync-conflict" role="alert"><strong>${t("app.conflict.title")} :</strong> ${t("app.conflict.body")} <button class="btn btn-sm" data-action="export">${t("app.conflict.export")}</button><button class="btn btn-sm" data-action="reload-server">${t("app.conflict.load")}</button></aside>`;
 }
 
-/* ---------- Cible des récompenses ---------- */
+/* ---------- Reward targets ---------- */
 
 function getTargets() {
   const classroom = getCurrentClass(state);
@@ -283,9 +282,9 @@ function getShopPupil() {
   return state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
 }
 
-/* ---------- Mémoire d'interface entre deux rendus ----------
-   Un rendu complet est simple et sûr ; encore faut-il qu'il ne vole ni le
-   curseur de la recherche ni la position de la console. */
+/* Preserve focus, caret and scroll while rebuilding the view. A full DOM
+ * render must not interrupt typing in the search box or moving through controls.
+ */
 
 function captureUiMemory() {
   const active = document.activeElement;
@@ -317,7 +316,7 @@ function restoreUiMemory(memory) {
       try {
         next.setSelectionRange(memory.caret, memory.caret);
       } catch {
-        // Les champs number refusent setSelectionRange : sans importance.
+        // Number inputs do not implement text selection ranges.
       }
     }
   }
@@ -342,9 +341,22 @@ function updateClock() {
   if (clock) clock.textContent = new Date().toLocaleTimeString(getLang() === "fr" ? "fr-CH" : "en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-/* ---------- Événements ----------
-   Un seul écouteur par type sur #app : le DOM est reconstruit à chaque
-   rendu, donc rien à rebrancher, rien à oublier de débrancher. */
+/* Event delegation survives complete DOM replacement without accumulating
+ * per-control listeners or losing newly rendered controls.
+ */
+
+// The teacher gate controls classroom UI actions, not the server's account
+// authorization. Recheck it on each mutation because an open screen can expire.
+const TEACHER_ACTIONS = new Set([
+  "award-xp", "award-money", "hp-minus", "hp-plus", "heal-all",
+  "remove-pupil", "reset-all", "export", "import", "refresh-admin"
+]);
+const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset"]);
+function allowTeacherAction() {
+  if (isAdultUnlocked()) return true;
+  navigate("#board");
+  return false;
+}
 
 app.addEventListener("click", (event) => {
   const trigger = event.target.closest("[data-action]");
@@ -352,6 +364,7 @@ app.addEventListener("click", (event) => {
   const action = trigger.dataset.action;
   if (!ACTIONS[action]) return;
   event.preventDefault();
+  if (TEACHER_ACTIONS.has(action) && !allowTeacherAction()) return;
   ACTIONS[action](trigger);
 });
 
@@ -359,6 +372,7 @@ app.addEventListener("submit", (event) => {
   const form = event.target.closest("form[data-action]");
   if (!form) return;
   event.preventDefault();
+  if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
   const action = FORMS[form.dataset.action];
   if (action) action(form);
 });
@@ -367,6 +381,7 @@ dialogRoot.addEventListener("submit", (event) => {
   const form = event.target.closest("form[data-action]");
   if (!form) return;
   event.preventDefault();
+  if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
   const action = FORMS[form.dataset.action];
   if (action) action(form);
 });
@@ -401,13 +416,24 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("storage", (event) => {
+  if (event.key === SESSION_KEY || event.key === null) {
+    const next = captureSessionContext();
+    if (next?.token === activeSession?.token && next?.accountId === activeSession?.accountId && next?.accountId === account?.id) return;
+    ++gateRequest;
+    closeDialog();
+    lockAdult();
+    const nextAccount = getAccount();
+    if (nextAccount) openAccount(nextAccount);
+    else endSession();
+    return;
+  }
   if (!account || localDirty || event.key !== stateKey(account.id) || !event.newValue) return;
   try {
     state = normalizeState(JSON.parse(event.newValue));
     history = [];
     render();
   } catch {
-    // Écriture malformée venue d'un autre onglet : on ignore.
+    // Ignore malformed cache writes from another tab.
   }
 });
 
@@ -424,7 +450,7 @@ const ACTIONS = {
   },
   "show-rules": () => navigate("#rules"),
 
-  /* ---------- interface Sheikah ---------- */
+  /* ---------- Sheikah navigation and customization ---------- */
   "toggle-theme": () => {
     theme = theme === "light" ? "dark" : "light";
     applyTheme();
@@ -518,11 +544,14 @@ const ACTIONS = {
   },
 
   "sign-out": async () => {
+    const context = captureSessionContext();
     const name = account?.displayName || "";
     if (localDirty && !syncConflict) await saveToServer();
+    if (context && !isCurrentSession(context)) return;
     const unsynced = localDirty;
     ++gateRequest;
     await signOut();
+    if (getAccount()) return; // A newer sign-in must not be cleared by this logout.
     endSession();
     toast(unsynced
       ? "Signed out. Unsynced changes remain saved on this device."
@@ -551,8 +580,7 @@ const ACTIONS = {
     commit({ ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] }, { record: false });
   },
 
-  /* Toucher un héros le coche ET l'ouvre dans la console : deux besoins,
-     un seul geste, aucun mode à connaître. */
+  // Selecting a hero also focuses its details in the teacher console.
   "toggle-pupil": (el) => {
     const pupilId = el.dataset.pupilId;
     const wasSelected = state.selectedPupilIds.includes(pupilId);
@@ -687,8 +715,7 @@ const ACTIONS = {
 
   import: () => document.querySelector("#import-file")?.click(),
 
-  /* Effacement en deux temps plutôt qu'un confirm() natif : le second
-     appui est un choix, pas un réflexe, et la classe voit ce qui se passe. */
+  // The existing two-step reset keeps the pending destructive action visible.
   "reset-all": () => {
     if (armedDanger !== "reset") {
       armedDanger = "reset";
@@ -812,7 +839,7 @@ const FORMS = {
     const accountId = form.dataset.accountId;
     let response;
     try {
-      response = await fetch(apiUrl(`admin/accounts/${accountId}/password`), {
+      response = await requestApi(`admin/accounts/${accountId}/password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
         body: JSON.stringify({ password })
@@ -881,7 +908,7 @@ const FORMS = {
   }
 };
 
-/* ---------- Attribution ---------- */
+/* ---------- Classroom rewards ---------- */
 
 function giveXp(amount, reason) {
   const targets = getTargets();
@@ -940,7 +967,7 @@ function buyOrEquip(itemId) {
   toast(t("notice.bought", { name: tItem(item, "name") }), "levelup");
 }
 
-/* ---------- Dialogues ---------- */
+/* ---------- Native dialog lifecycle ---------- */
 
 function openPupilDialog(pupilId) {
   const pupil = getPupilById(state, pupilId);
@@ -977,9 +1004,9 @@ function showDialog(html) {
   dialog.showModal();
 }
 
-/* `close()` déclenche l'événement qui vide le conteneur, mais seulement au
-   tour suivant : on vide tout de suite pour qu'aucun dialogue fermé ne
-   traîne dans le DOM (ni dans l'arbre d'accessibilité). */
+/* Native close events arrive on the next turn. Clear immediately so a closed
+ * dialog cannot remain in the DOM or accessibility tree between renders.
+ */
 function closeDialog() {
   releaseCharacterViewer?.();
   releaseCharacterViewer = null;
@@ -994,9 +1021,10 @@ function disarmDanger() {
   if (armed) render();
 }
 
-/* ---------- Historique et persistance ---------- */
+/* ---------- Undo history and persistence ---------- */
 
 function commit(nextState, { record = true, notify = true } = {}) {
+  if (nextState === state) { render(); return; }
   const previous = state;
   if (record) {
     history.push(previous);
@@ -1026,11 +1054,7 @@ function announce(previous, next) {
       if (!before) continue;
 
       if (before.level < pupil.level) {
-        const rewards = [];
-        for (let level = before.level + 1; level <= pupil.level; level += 1) {
-          rewards.push(...getRewardsForLevel(level));
-        }
-        const unique = [...new Set(rewards)];
+        const unique = getRewardsBetween(before.level, pupil.level);
         toast(t("notice.levelup", { name: pupil.name, level: pupil.level }) + (unique.length ? t("notice.unlocked", { rewards: unique.map(translateReward).join(", ") }) : ""), "levelup");
       }
       if (before.hp > 0 && pupil.hp <= 0) toast(t("notice.out", { name: pupil.name }), "warn");
@@ -1093,7 +1117,11 @@ function loadState(accountId) {
 }
 
 function openAccount(next) {
+  clearTimeout(persistTimer);
+  persistTimer = null;
+  saveQueued = false;
   account = next;
+  activeSession = captureSessionContext();
   state = loadState(next.id);
   localDirty = loadDirty(next.id);
   syncConflict = false;
@@ -1101,6 +1129,9 @@ function openAccount(next) {
   ui.gateError = "";
   ui.gateValues = {};
   ui.adminAccounts = [];
+  ui.adminPending = false;
+  ui.lockPending = false;
+  ui.lockError = "";
   studentPupilId = loadStudentId();
   ui.sheikahView = "board";
   ui.draft = null;
@@ -1114,6 +1145,7 @@ function endSession(message = "", context = null) {
   if (context && !isCurrentSession(context)) return;
   forgetSession(context);
   account = null;
+  activeSession = null;
   state = createInitialState({ samples: false });
   history = [];
   localDirty = false;
@@ -1124,6 +1156,9 @@ function endSession(message = "", context = null) {
   ui.gateError = message;
   ui.gateTab = "signin";
   ui.gatePending = false;
+  ui.lockPending = false;
+  ui.adminPending = false;
+  ui.adminAccounts = [];
   ui.consoleOpen = false;
   ui.focusPanel = null;
   if (location.hash) historyReplaceWithoutHash();
@@ -1158,7 +1193,7 @@ function rememberStudent(pupilId) {
     if (pupilId) localStorage.setItem(studentKey(), pupilId);
     else localStorage.removeItem(studentKey());
   } catch {
-    // Stockage indisponible (navigation privée…) : le choix ne survivra pas.
+    // The current choice still works if private browsing prevents persistence.
   }
 }
 
@@ -1167,18 +1202,22 @@ document.addEventListener("change", (event) => {
   const file = event.target.files?.[0];
   event.target.value = "";
   if (!file) return;
+  if (!allowTeacherAction()) return;
+  const context = captureSessionContext();
   file.text()
     .then((text) => {
+      if (!isCurrentSession(context) || account?.id !== context.accountId || !isAdultUnlocked()) return;
       const imported = importState(text);
       const total = imported.classes.reduce((sum, classroom) => sum + classroom.pupils.length, 0);
       commit({ ...imported, revision: state.revision }, { record: true, notify: false });
       toast(t("notice.imported", { count: total }), "success", { undo: true });
     })
-    .catch((error) => toast(error.message || "Could not read that file.", "error"));
+    .catch((error) => {
+      if (isCurrentSession(context)) toast(error.message || "Could not read that file.", "error");
+    });
 });
 
-/* ---------- Toasts ----------
-   Court, nommé, et annulable quand l'action est destructrice. */
+/* Short notifications; destructive changes may expose an undo action. */
 
 function toast(message, kind = "info", { undo: withUndo = false } = {}) {
   const node = document.createElement("div");
@@ -1197,10 +1236,8 @@ function toast(message, kind = "info", { undo: withUndo = false } = {}) {
     node.appendChild(button);
   }
 
-  // Trois messages suffisent : au-delà, la pile masque la console au lieu
-  // de l'informer. Le retrait est immédiat, pas fondu : `dismiss` ne
-  // détache le nœud qu'après son animation, et la boucle tournerait sans
-  // fin en attendant une place qui ne se libère pas.
+  // Remove overflow immediately: waiting for the dismissal animation inside
+  // this loop would never reduce the node count and would freeze the page.
   while (toastRoot.children.length >= 3) toastRoot.firstElementChild.remove();
 
   toastRoot.appendChild(node);
@@ -1214,7 +1251,7 @@ function dismiss(node) {
   setTimeout(() => node.remove(), 220);
 }
 
-/* ---------- Serveur ---------- */
+/* ---------- Optimistic server synchronization ---------- */
 
 function scheduleServerSave() {
   if (saveInFlight || syncConflict) {
@@ -1239,7 +1276,7 @@ async function saveToServer() {
   saveInFlight = context;
   const snapshot = JSON.stringify(state);
   try {
-    const response = await fetch(apiUrl("state"), {
+    const response = await requestApi("state", {
       method: "PUT",
       headers: { "Content-Type": "application/json", "X-Session-Token": context.token },
       body: snapshot
@@ -1265,14 +1302,15 @@ async function saveToServer() {
     cacheState();
     setDirty(!unchanged);
   } catch {
-    // Hors ligne ou sans backend : localStorage suffit, la synchro se fera
-    // au prochain chargement réussi.
+    // Keep the dirty cache offline; a later successful bootstrap retries it.
   } finally {
     if (saveInFlight === context) saveInFlight = null;
-  }
-  if (saveQueued && !syncConflict && isCurrentSession(context)) {
-    saveQueued = false;
-    saveToServer();
+    // A stale request may finish after an account switch. Flush the current
+    // account's queued edits as well, rather than leaving them dirty forever.
+    if (saveQueued && !syncConflict && account && !saveInFlight) {
+      saveQueued = false;
+      scheduleServerSave();
+    }
   }
 }
 
@@ -1281,7 +1319,7 @@ async function bootstrapFromServer() {
   const context = captureSessionContext();
   if (!context || context.accountId !== account.id) return;
   try {
-    const response = await fetch(apiUrl("state"), {
+    const response = await requestApi("state", {
       cache: "no-store",
       headers: { "X-Session-Token": context.token }
     });
@@ -1294,6 +1332,7 @@ async function bootstrapFromServer() {
     const remote = await response.json();
     if (!isCurrentSession(context) || account?.id !== context.accountId) return;
     if (!remote || !Array.isArray(remote.classes)) return;
+    if ((Number(remote.revision) || 0) < state.revision) return;
     if (localDirty) {
       if ((Number(state.revision) || 0) === (Number(remote.revision) || 0)) saveToServer();
       else {
@@ -1307,7 +1346,7 @@ async function bootstrapFromServer() {
     cacheState();
     render();
   } catch {
-    // Hors ligne : on garde ce que localStorage contenait.
+    // Stay on the local cache when the server is unavailable.
   }
 }
 
@@ -1316,7 +1355,7 @@ async function reloadServerCopy() {
   const context = captureSessionContext();
   const accountId = account.id;
   try {
-    const response = await fetch(apiUrl("state"), { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    const response = await requestApi("state", { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
     if (!isCurrentSession(context) || account?.id !== accountId || !response.ok) return;
     const remote = await response.json();
     if (!isCurrentSession(context) || account?.id !== accountId) return;
@@ -1341,7 +1380,7 @@ async function loadAdminAccounts() {
   ui.adminError = "";
   render();
   try {
-    const response = await fetch(apiUrl("admin/accounts"), { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    const response = await requestApi("admin/accounts", { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
     if (!isCurrentSession(context) || account?.role !== "admin") return;
     const payload = await response.json().catch(() => null);
     if (!isCurrentSession(context) || account?.role !== "admin") return;
@@ -1367,14 +1406,14 @@ window.addEventListener("pagehide", () => {
   if (saveInFlight) return;
   const context = captureSessionContext();
   try {
-    fetch(apiUrl("state"), {
+    void requestApi("state", {
       method: "PUT",
       headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
       body: JSON.stringify(state),
       keepalive: true
-    });
+    }, 8000).catch(() => {});
   } catch {
-    // Fermeture de page : localStorage a déjà la copie.
+    // The local dirty cache is already durable when the page is closing.
   }
 });
 

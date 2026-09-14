@@ -1,26 +1,12 @@
 import http from "node:http";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApi } from "./api.mjs";
+import { createStaticHandler } from "./static.mjs";
+import { isStateDocument } from "../src/state-schema.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, "..");
-
-const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".mjs": "application/javascript; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
-  ".glb": "model/gltf-binary",
-  ".ico": "image/x-icon"
-};
 
 function sendJson(res, status, payload) {
   const body = JSON.stringify(payload);
@@ -36,18 +22,23 @@ function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
+    let rejected = false;
     req.on("data", (chunk) => {
+      if (rejected) return;
       size += chunk.length;
       if (size > limit) {
+        rejected = true;
+        chunks.length = 0;
         const error = new Error("payload too large");
         error.status = 413;
         reject(error);
-        req.destroy();
+        // Drain the remaining body; destroying the socket would discard the 413.
         return;
       }
       chunks.push(chunk);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("end", () => { if (!rejected) resolve(Buffer.concat(chunks).toString("utf8")); });
+    req.on("aborted", () => reject(new Error("request aborted")));
     req.on("error", reject);
   });
 }
@@ -57,6 +48,7 @@ async function readJsonObject(req, res, limit = 4 * 1024) {
   try {
     payload = JSON.parse(await readBody(req, limit));
   } catch (error) {
+    if (req.aborted || res.destroyed) return null;
     sendJson(res, error.status || 400, { error: error.status ? "payload too large" : "invalid JSON" });
     return null;
   }
@@ -109,6 +101,7 @@ export function createGameServer({
   const limiter = createRateLimiter(rateLimit);
   api.ensureDir(dataDir);
   api.bootstrapAccounts();
+  const serveStatic = createStaticHandler({ publicDir, dataDir });
 
   function requireSession(req, res) {
     const session = api.sessionFor(req.headers["x-session-token"]);
@@ -196,12 +189,15 @@ export function createGameServer({
   }
 
   async function handleVerify(req, res) {
-    const session = requireSession(req, res);
+    let session = requireSession(req, res);
     if (!session) return;
     const rateKey = throttle(req, res, "verify");
     if (!rateKey) return;
     const payload = await readJsonObject(req, res);
     if (!payload) return;
+    // The request body may arrive after another request revoked this token.
+    session = requireSession(req, res);
+    if (!session) return;
     if (!api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
@@ -212,11 +208,16 @@ export function createGameServer({
   }
 
   async function handlePasswordChange(req, res) {
-    const session = requireSession(req, res);
+    let session = requireSession(req, res);
     if (!session) return;
+    const rateKey = throttle(req, res, "password-change");
+    if (!rateKey) return;
     const payload = await readJsonObject(req, res);
     if (!payload) return;
+    session = requireSession(req, res);
+    if (!session) return;
     if (!api.passwordMatches(stringField(payload, "current"), session.account.hash)) {
+      limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
     }
@@ -231,6 +232,7 @@ export function createGameServer({
     index.accounts[session.account.id] = { ...session.account, hash: api.hashPassword(next), updatedAt };
     api.writeAccounts(index);
     api.revokeAccountTokens(session.account.id, session.token);
+    limiter.clear(rateKey);
     sendJson(res, 200, { ok: true, updatedAt });
   }
 
@@ -245,9 +247,8 @@ export function createGameServer({
     }
     const state = await readJsonObject(req, res, 10 * 1024 * 1024);
     if (!state) return;
-    if (!Array.isArray(state.classes)
-      || !state.classes.every((classroom) => classroom && typeof classroom === "object" && Array.isArray(classroom.pupils))
-      || !Number.isSafeInteger(state.revision) || state.revision < 0) {
+    if (!requireSession(req, res)) return;
+    if (!isStateDocument(state) || !Number.isSafeInteger(state.revision) || state.revision < 0) {
       sendJson(res, 400, { error: "not a ClassQuest state" });
       return;
     }
@@ -291,6 +292,7 @@ export function createGameServer({
     }
     const payload = await readJsonObject(req, res);
     if (!payload) return;
+    if (!requireAdmin(req, res)) return;
     const password = stringField(payload, "password");
     const problem = api.passwordProblem(password);
     if (problem) {
@@ -309,51 +311,9 @@ export function createGameServer({
     sendJson(res, 200, { ok: true });
   }
 
-  function isBlockedPath(resolved) {
-    const relative = path.relative(publicDir, resolved);
-    if (relative.startsWith("..")) return true;
-    const dataRelative = path.relative(path.resolve(dataDir), resolved);
-    if (dataRelative === "" || (!dataRelative.startsWith("..") && !path.isAbsolute(dataRelative))) return true;
-    const parts = relative.split(path.sep);
-    if (["server", ".git", "node_modules"].includes(parts[0])) return true;
-    const entry = ["index.html", "styles.css", "items-3d.html", "character-lab.html"].includes(relative);
-    const prototype = parts[0] === "prototype" && parts[1] === "sheikah"
-      && !parts.some((part) => part.startsWith("."))
-      && [".html", ".css", ".js", ".mjs", ".glb", ".webp"].includes(path.extname(relative));
-    return !entry && !prototype && parts[0] !== "assets" && parts[0] !== "src";
-  }
-
-  function serveStatic(req, res, pathname) {
-    const resolved = path.normalize(path.join(publicDir, pathname === "/" ? "/index.html" : pathname));
-    if (resolved !== publicDir && !resolved.startsWith(publicDir + path.sep)) {
-      res.writeHead(403).end("Forbidden");
-      return;
-    }
-    // Validate the requested path before the SPA fallback; a missing private
-    // file must not be turned into a successful HTML response.
-    if (isBlockedPath(resolved)) {
-      res.writeHead(404).end("Not found");
-      return;
-    }
-    let target = resolved;
-    if (!fs.existsSync(target) || fs.statSync(target).isDirectory()) target = path.join(publicDir, "index.html");
-    if (!fs.existsSync(target) || isBlockedPath(target)) {
-      res.writeHead(404).end("Not found");
-      return;
-    }
-    const ext = path.extname(target).toLowerCase();
-    const cacheable = new Set([".svg", ".jpg", ".jpeg", ".png", ".webp", ".ico"]);
-    res.writeHead(200, {
-      "Content-Type": MIME[ext] || "application/octet-stream",
-      "Cache-Control": cacheable.has(ext) ? "public, max-age=3600" : "no-cache"
-    });
-    if (req.method === "HEAD") res.end();
-    else res.end(fs.readFileSync(target));
-  }
-
   return http.createServer(async (req, res) => {
-    const pathname = new URL(req.url, "http://localhost").pathname;
     try {
+      const pathname = new URL(req.url, "http://localhost").pathname;
       if (pathname === "/api/health" && req.method === "GET") return sendJson(res, 200, { ok: true });
       if (pathname === "/api/accounts" && req.method === "POST") return await handleSignUp(req, res);
       if (pathname === "/api/session") {

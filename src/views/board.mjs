@@ -1,8 +1,6 @@
-/* ============================================================
-   board.mjs — le plateau projeté au tableau
-   Priorité de lecture : prénom → héros → niveau/XP → HP → argent.
-   Tout est dimensionné pour être lu depuis le fond de la classe.
-   ============================================================ */
+/* Legacy grid/list renderer retained for compatibility and regression tests.
+ * The live Sheikah board is rendered by views/sheikah.mjs.
+ */
 
 import { isEliminated } from "../domain.mjs";
 import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
@@ -116,9 +114,9 @@ function renderRoster(classroom, pupils, ui, selectedIds, density) {
   `;
 }
 
-/* La carte entière est une cible de sélection (doigt sur écran interactif),
-   donc un vrai <button> à plat sous le contenu plutôt qu'un article
-   cliquable : l'état coché est annoncé, la loupe reste atteignable. */
+/* A real selection button sits under the card content. This exposes pressed
+ * state to assistive technology while leaving the separate zoom button usable.
+ */
 function renderCard(pupil, selected) {
   return `
     <article class="hero-card ${selected ? "is-selected" : ""} ${statusClass(pupil)}" role="listitem">

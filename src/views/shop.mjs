@@ -1,10 +1,8 @@
-/* ============================================================
-   shop.mjs — boutique du héros
-   Même composant côté prof et côté élève : ce qu'un élève voit chez lui
-   est exactement ce que le prof voit au tableau.
-   ============================================================ */
+/* Shared shop markup for teacher and pupil views. Previewing never purchases
+ * or equips anything; the separate action button states its exact consequence.
+ */
 
-import { canBuyItem, getShopItems, isItemOwned } from "../domain.mjs";
+import { canBuyItem, cosmeticField, getShopItems, isItemOwned } from "../domain.mjs";
 import { renderItemThumbnail } from "../equipment-previews.mjs";
 import { escapeHtml, getItemRarity, getItemTier, renderMoney } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
@@ -48,10 +46,9 @@ export function renderShop(pupil, activeType, previewId = null) {
   `;
 }
 
-/* Un seul bouton par article, dont le libellé dit ce qui va se passer :
-   « Buy 40 », « Equip », « Equipped ». Jamais « OK ». */
+// Explicit action labels distinguish buying, equipping and already equipped items.
 function renderShopItem(item, pupil, previewed = false) {
-  const field = item.type === "outfit" ? "skin" : item.type === "tone" ? "skinTone" : item.type;
+  const field = cosmeticField(item.type);
   const bespoke = item.type === "bespoke";
   const equipped = !bespoke && pupil[field] === item.id;
   const owned = isItemOwned(pupil, item.id);
@@ -92,8 +89,7 @@ function renderShopItem(item, pupil, previewed = false) {
     state = "equip";
   }
 
-  // Un article verrouillé annonce aussi son prix : un élève économise pour
-  // ce qu'il convoite, il doit savoir combien avant d'y avoir droit.
+  // Locked items still show their price so pupils can plan their purchases.
   const price = item.price ? t("shop.coins", { price: item.price }) : t("shop.free");
   const meta = locked ? `${t("shop.level", { level: item.minLevel })} · ${price}` : price;
 

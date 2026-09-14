@@ -84,3 +84,50 @@ test("password validation and API failures are reported safely", async () => {
   assert.match(refused.error, /Wrong username or password/);
   assert.equal(session.isSignedIn(), false);
 });
+
+test("a wrong teacher password does not expire a valid account session", async () => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  respond = () => jsonResponse(401, { error: "wrong username or password" });
+  const wrong = await session.verifyPassword("incorrect");
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.expired, undefined);
+  assert.equal(wrong.error, "Wrong password.");
+  assert.equal(session.isSignedIn(), true);
+  respond = () => jsonResponse(401, { error: "not signed in" });
+  assert.equal((await session.verifyPassword("class-password")).expired, true);
+});
+
+test("teacher unlock state cannot follow a switch to another account", async () => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  session.unlockAdult();
+  assert.equal(session.isAdultUnlocked(), true);
+  store.set(session.SESSION_KEY, JSON.stringify({ token: "token-b", account: { ...ACCOUNT, id: "account-b" } }));
+  assert.equal(session.isAdultUnlocked(), false);
+  assert.equal(session.unlockUntil(), null);
+});
+
+test("offline password checks still reject stale account contexts", async () => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  let reject;
+  respond = () => new Promise((_, no) => { reject = no; });
+  const verification = session.verifyPassword("class-password");
+  session.forgetSession();
+  reject(new Error("offline"));
+  assert.equal((await verification).stale, true);
+});
+
+test("signout returns immediately even when remote revocation never answers", async () => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  respond = () => new Promise(() => {});
+  let timer;
+  try {
+    await Promise.race([session.signOut(), new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("signout waited for the network")), 100);
+    })]);
+    assert.equal(session.isSignedIn(), false);
+  } finally { clearTimeout(timer); }
+});

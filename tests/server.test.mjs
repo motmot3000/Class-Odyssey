@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import net from "node:net";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -59,14 +60,15 @@ for (const { name, autoPort, dynamicPort } of [
   });
 }
 
-async function fixture({ legacyState, rateLimit } = {}) {
+async function fixture({ legacyState, rateLimit, publicDir } = {}) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-"));
   if (legacyState) fs.writeFileSync(path.join(dataDir, "state.json"), JSON.stringify(legacyState));
   const server = createGameServer({
     dataDir,
     founderUsername: FOUNDER.username,
     founderPassword: FOUNDER.password,
-    rateLimit
+    rateLimit,
+    publicDir
   });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -92,7 +94,7 @@ async function fixture({ legacyState, rateLimit } = {}) {
     await new Promise((resolve) => server.close(resolve));
     fs.rmSync(dataDir, { recursive: true, force: true });
   }
-  return { dataDir, request, close };
+  return { dataDir, request, close, base, server };
 }
 
 async function signIn(request, username = FOUNDER.username, password = FOUNDER.password) {
@@ -113,6 +115,62 @@ test("merged workshop entry points are served without exposing private files", a
       assert.equal((await app.request(route)).response.status, 404, route);
     }
   } finally { await app.close(); }
+});
+
+test("oversized request bodies produce a usable 413 response", async () => {
+  const app = await fixture();
+  try {
+    const result = await app.request("/api/session", { method: "POST", rawBody: JSON.stringify({ username: "x".repeat(6000) }) });
+    assert.equal(result.response.status, 413);
+    assert.equal(result.payload.error, "payload too large");
+    assert.equal((await app.request("/api/health")).response.status, 200);
+  } finally { await app.close(); }
+});
+
+test("static serving handles indexes and rejects missing assets, dotfiles and private symlinks", async () => {
+  const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-public-"));
+  fs.mkdirSync(path.join(publicDir, "assets", "demo"), { recursive: true });
+  fs.writeFileSync(path.join(publicDir, "index.html"), "<h1>App</h1>");
+  fs.writeFileSync(path.join(publicDir, "assets", "demo", "index.html"), "<h1>Workshop</h1>");
+  fs.writeFileSync(path.join(publicDir, "assets", ".env"), "private-test-marker");
+  const app = await fixture({ publicDir });
+  try {
+    fs.symlinkSync(path.join(app.dataDir, "accounts.json"), path.join(publicDir, "assets", "leak.json"));
+    for (const route of ["/src/missing.mjs", "/assets/missing.glb", "/assets/.env", "/assets/leak.json"]) {
+      assert.equal((await app.request(route)).response.status, 404, route);
+    }
+    const response = await fetch(app.base + "/assets/demo/");
+    assert.equal(await response.text(), "<h1>Workshop</h1>");
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+    const head = await fetch(app.base + "/assets/demo/index.html", { method: "HEAD" });
+    assert.equal(await head.text(), "");
+    assert.equal(head.headers.get("content-length"), String(Buffer.byteLength("<h1>Workshop</h1>")));
+  } finally { await app.close(); fs.rmSync(publicDir, { recursive: true, force: true }); }
+});
+
+test("a token revoked while a state body arrives cannot perform a late write", async () => {
+  const app = await fixture();
+  let upload;
+  try {
+    const { token } = await signIn(app.request);
+    const received = new Promise(resolve => app.server.once("request", resolve));
+    const result = new Promise((resolve, reject) => {
+      upload = http.request(app.base + "/api/state", { method: "PUT", headers: { "X-Session-Token": token, "Content-Type": "application/json" } }, response => {
+        response.resume();
+        response.on("end", () => resolve(response.statusCode));
+      });
+      upload.on("error", reject);
+    });
+    upload.write('{"revision":0,"classes":');
+    await received;
+    await app.request("/api/session", { method: "DELETE", token });
+    upload.end('[{"id":"7p","pupils":[{"id":"late","name":"Late write"}]}]}');
+    assert.equal(await result, 401);
+    const next = await signIn(app.request);
+    const state = await app.request("/api/state", { token: next.token });
+    assert.equal(state.payload.revision, 0);
+    assert.equal(state.payload.classes[0].pupils.length, 0);
+  } finally { upload?.destroy(); await app.close(); }
 });
 
 async function signUp(request, username, password = "teacher-secret") {
