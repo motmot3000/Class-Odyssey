@@ -15,7 +15,7 @@ test("FR/EN views retain all merged shop categories and 3D previews", () => {
   try {
     for (const lang of ["fr", "en"]) {
       setLang(lang);
-      assert.match(renderWelcome({ tab: "signin" }), new RegExp(t("welcome.title.welcome")));
+      assert.ok(renderWelcome({ tab: "signin" }).includes(t("welcome.formTitle")));
       assert.match(renderRules(), new RegExp(t("rules.title.how").replace("?", "\\?")));
       const shop = renderShop(pupil, "hairColor");
       assert.match(shop, /data-category="hairColor"/);

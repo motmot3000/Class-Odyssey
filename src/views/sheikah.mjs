@@ -107,7 +107,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
         <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="ClassQuest" width="869" height="212" />
         <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
       </div>
-      ${view === "welcome" ? `<div class="top-end">${themeControl}</div>` : `
+       ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a>${themeControl}</div>` : `
       <nav class="tabs" aria-label="Classes">
         ${state.classes.map((classroom) => {
           const active = classroom.id === state.activeClassId;

@@ -51,6 +51,7 @@ import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
+import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
@@ -79,6 +80,7 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 let releaseCharacterViewer = null;
+let releaseWelcomeScene = null;
 
 // Remember the chosen pupil on this device only, never in shared server state.
 const STUDENT_KEY = "classquest:student";
@@ -181,7 +183,10 @@ window.addEventListener("hashchange", () => {
 /* ---------- Rendering ---------- */
 
 function render() {
+  releaseWelcomeScene?.();
+  releaseWelcomeScene = null;
   const view = currentView();
+  app.dataset.view = view;
   const memory = captureUiMemory();
   const focusPanel = view === "board" ? ui.focusPanel : null;
   if (focusPanel) {
@@ -200,6 +205,7 @@ function render() {
   flushFlash();
   syncSheikahRuntime();
   mountHeroPortraits(app);
+  if (view === "welcome") releaseWelcomeScene = mountWelcomeScene(app);
   updateClock();
   if (focusPanel) {
     const field = app.querySelector(`[data-panel="${focusPanel}"] input`);
@@ -237,7 +243,7 @@ function syncSheikahRuntime() {
 
 function renderViewBody(view) {
   if (view === "welcome") {
-    return `<main class="page gate-page">${renderWelcome({
+    return `<main class="welcome-page">${renderWelcome({
       tab: ui.gateTab,
       error: ui.gateError,
       pending: ui.gatePending,
