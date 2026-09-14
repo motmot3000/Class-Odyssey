@@ -1,5 +1,7 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
+  "console.accessRemaining": ["Accès professeur : encore {time}", "Teacher access: {time} remaining"],
+  "console.accessExpired": ["Accès expiré — saisis le mot de passe pour continuer.", "Access expired — enter the password to continue."],
   "nav.class": ["Classe", "Class"],
   "class.back": ["Retour à la classe", "Back to class"],
   "class.hint": ["Ouvre ton personnage, ton dressing ou la boutique.", "Open your character, dressing or shop."],

@@ -26,6 +26,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
       <h2>${t("console.title")}</h2>
       <button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>
     </div>
+    ${unlockedUntil ? `<p class="teacher-session-status" role="timer" aria-live="off" data-teacher-time data-until="${Number(unlockedUntil)}"></p>` : ''}
     <div class="console-history">
       <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="${t("console.undoHint")}">
         ${icon("undo")}<span>${t("console.undo")}</span>

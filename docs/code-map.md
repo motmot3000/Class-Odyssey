@@ -33,12 +33,12 @@
 
 The main route is a single `#class` space. Pupils can view characters and use
 the Dressing and Shop. The teacher console is a native dialog, reached through
-the fixed right-edge tab and password verification. Its dialog is docked on
-the right. Closing it locks teacher controls;
+the fixed right-edge tab and password verification. Its non-modal panel is docked on
+the right, so the class remains interactive. Folding it preserves the five-minute grant;
 adding a pupil temporarily opens a child form and returns to the console.
 Individual selection is singular; whole-class rewards use an explicit scope.
 
-The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account, expires after eight hours at most, and is cleared when the console is closed.
+The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account and expires five minutes after password verification. Folding/reopening does not extend this deadline. Explicit locking or sign-out revokes it immediately.
 
 Every asynchronous result must check its captured account/token before touching state. In particular, imports, saves and password checks must not act on a newly signed-in account. The server rechecks sessions after receiving request bodies because a token may have been revoked while a body was arriving.
 

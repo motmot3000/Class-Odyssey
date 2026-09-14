@@ -220,7 +220,8 @@ function renderSheikahBody(view) {
   const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
   if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
   if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
-  return renderSheikahStudent({ classroom, ui, pupil, classView:true });
+  return renderSheikahStudent({ classroom, ui, pupil, classView:true,
+    selectionMode:ui.teacherDialog === 'console' && isAdultUnlocked(), selectedIds:state.selectedPupilIds });
 }
 
 function syncSheikahRuntime() {
@@ -273,7 +274,8 @@ function getTargets() {
   return state.selectedPupilIds.filter((id) => inClass.has(id));
 }
 
-function getShopPupil() {
+function getShopPupil(source = null) {
+  if (source && app.contains(source)) return studentPupilId ? getPupilById(state, studentPupilId) : null;
   const dialogPupil = dialogRoot.querySelector('dialog[data-pupil-id]')?.dataset.pupilId;
   if (dialogPupil) return getPupilById(state, dialogPupil);
   if (currentView() === "class" && ui.teacherDialog !== 'console') return studentPupilId ? getPupilById(state, studentPupilId) : null;
@@ -337,6 +339,12 @@ function flushFlash() {
 function updateClock() {
   const clock = app.querySelector("#clock");
   if (clock) clock.textContent = new Date().toLocaleTimeString(getLang() === "fr" ? "fr-CH" : "en-GB", { hour: "2-digit", minute: "2-digit" });
+  const access = dialogRoot.querySelector('[data-teacher-time]');
+  if (access) {
+    const seconds = Math.max(0, Math.ceil(((unlockUntil() || 0) - Date.now()) / 1000));
+    const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    access.textContent = seconds ? t('console.accessRemaining', { time }) : t('console.accessExpired');
+  }
 }
 
 /* Event delegation survives complete DOM replacement without accumulating
@@ -420,6 +428,12 @@ app.addEventListener("toggle", handlePanelToggle, true);
 dialogRoot.addEventListener("toggle", handlePanelToggle, true);
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === 'Escape' && ui.teacherDialog === 'console' && !event.defaultPrevented) {
+    event.preventDefault();
+    closeDialog();
+    render();
+    return;
+  }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !typing) {
     event.preventDefault();
@@ -450,7 +464,7 @@ window.addEventListener("storage", (event) => {
 });
 
 function showClassRoster() {
-  closeDialog({ resumeConsole:false });
+  if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
   rememberStudent(null);
   state = { ...state, selectedPupilId:null, selectedPupilIds:[] };
   ui.sheikahView = "board";
@@ -571,7 +585,10 @@ const ACTIONS = {
     ui.openPanels.add("account");
     openTeacherConsole();
   },
-  "teacher-console": () => openTeacherConsole(),
+  "teacher-console": () => {
+    if (ui.teacherDialog === 'console') { closeDialog(); render(); }
+    else openTeacherConsole();
+  },
 
   "gate-tab": (el) => {
     ui.gateTab = el.dataset.tab;
@@ -615,7 +632,7 @@ const ACTIONS = {
     ui.sheikahView = "board";
     ui.draft = null;
     ui.scope = "selection";
-    closeDialog({ resumeConsole:false });
+    if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
     rememberStudent(null);
     state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
     navigate('#class');
@@ -631,11 +648,9 @@ const ACTIONS = {
   },
 
   "zoom-pupil": (el) => {
-    closeDialog({ resumeConsole:false });
-    lockAdult();
     ACTIONS['sheikah-open'](el);
   },
-  "close-dialog": () => closeDialog(),
+  "close-dialog": () => { closeDialog(); render(); },
 
   scope: (el) => {
     ui.scope = el.dataset.scope;
@@ -696,7 +711,7 @@ const ACTIONS = {
   },
 
   "preview-item": (el) => {
-    if (currentView() === 'class' && ui.teacherDialog !== 'console' && ui.sheikahView === "shop") {
+    if (currentView() === 'class' && app.contains(el) && ui.sheikahView === "shop") {
       ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
       render();
       if (matchMedia('(max-width: 1100px)').matches) {
@@ -706,9 +721,9 @@ const ACTIONS = {
       }
       return;
     }
-    openItemDialog(el.dataset.itemId);
+    openItemDialog(el.dataset.itemId, getShopPupil(el));
   },
-  "shop-item": (el) => buyOrEquip(el.dataset.itemId),
+  "shop-item": (el) => buyOrEquip(el.dataset.itemId, getShopPupil(el)),
 
   "student-pick": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
@@ -838,7 +853,7 @@ const FORMS = {
     const target = ui.teacherAfterUnlock;
     closeDialog({ resumeConsole:false });
     if (target === 'admin' && account?.role === 'admin') navigate('#admin');
-    else openTeacherConsole({ verified:true });
+    else openTeacherConsole();
     toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
   },
 
@@ -910,7 +925,7 @@ const FORMS = {
     });
     if (wasDialog) closeDialog({ resumeConsole:false });
     commit(next);
-    if (returnToConsole) { ui.addFromConsole=false; openTeacherConsole({ verified:true }); }
+    if (returnToConsole) { ui.addFromConsole=false; openTeacherConsole(); }
     toast(t("notice.joined", { name, classroom: classroom.name }), "success");
     dialogRoot.querySelector('[data-action="focus-add"]')?.focus({ preventScroll: true });
   },
@@ -971,8 +986,7 @@ function describeTargets(targets) {
   return t("notice.heroes", { count: targets.length });
 }
 
-function buyOrEquip(itemId) {
-  const pupil = getShopPupil();
+function buyOrEquip(itemId, pupil = getShopPupil()) {
   const item = getShopItem(itemId);
   if (!pupil || !item) return;
 
@@ -1009,15 +1023,13 @@ function openPupilDialog(pupilId) {
   if (viewer) releaseCharacterViewer = mountCharacterViewer(viewer);
 }
 
-function openItemDialog(itemId) {
-  const pupil = getShopPupil();
+function openItemDialog(itemId, pupil = getShopPupil()) {
   const item = getShopItem(itemId);
   if (!pupil || !item) return;
   showDialog(renderItemDialog(item, pupil));
 }
 
 function showDialog(html, teacherMode = null) {
-  if (!teacherMode && ui.teacherDialog === 'console') lockAdult();
   const continuingUnlock = teacherMode === 'unlock' && ui.teacherDialog === 'unlock';
   closeDialog({ resumeConsole:false, preserveUnlock:continuingUnlock });
   ui.teacherDialog = teacherMode;
@@ -1025,14 +1037,17 @@ function showDialog(html, teacherMode = null) {
   const dialog = dialogRoot.querySelector("dialog");
   if (!dialog) return;
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) closeDialog();
+    if (event.target === dialog && teacherMode !== 'console') closeDialog();
   });
   dialog.addEventListener("close", () => {
     if (dialogRoot.contains(dialog)) {
       closeDialog();
+      render();
     }
   });
-  dialog.showModal();
+  if (teacherMode === 'console') dialog.show();
+  else dialog.showModal();
+  document.body.dataset.teacherPanel = teacherMode === 'console' || (teacherMode === 'add' && ui.addFromConsole) ? 'open' : 'closed';
   app.querySelector('.teacher-console-tab')?.setAttribute('aria-expanded', String(Boolean(teacherMode)));
 }
 
@@ -1051,12 +1066,12 @@ function closeDialog({ resumeConsole = true, preserveUnlock = false } = {}) {
   const dialog = dialogRoot.querySelector("dialog");
   if (dialog?.open) dialog.close();
   dialogRoot.innerHTML = "";
+  document.body.dataset.teacherPanel = 'closed';
   app.querySelector('.teacher-console-tab')?.setAttribute('aria-expanded', 'false');
   if (resumeConsole && mode === 'add' && ui.addFromConsole && isAdultUnlocked()) {
     ui.addFromConsole = false;
-    openTeacherConsole({ verified:true });
+    openTeacherConsole();
   } else if (resumeConsole && ['console','unlock'].includes(mode)) {
-    lockAdult();
     app.querySelector('.teacher-console-tab')?.focus({ preventScroll:true });
   }
 }
@@ -1071,11 +1086,13 @@ function openTeacherGate(after = 'console') {
   dialogRoot.querySelector('#adult-password')?.focus();
 }
 
-function openTeacherConsole({ verified = false } = {}) {
-  if (!verified || !isAdultUnlocked()) { openTeacherGate(); return; }
+function openTeacherConsole() {
+  if (!isAdultUnlocked()) { openTeacherGate(); return; }
+  window.history.replaceState(null, '', '#class');
+  ui.sheikahView = 'board';
+  ui.draft = null;
   ui.teacherDialog = 'console';
-  renderTeacherDialog();
-  mountHeroPortraits(document.body);
+  render();
 }
 
 function renderTeacherDialog() {
@@ -1094,7 +1111,7 @@ function renderTeacherDialog() {
   }
   const classroom = getCurrentClass(state);
   const focused = classroom.pupils.find(item => item.id === state.selectedPupilId) || null;
-  showDialog(`<dialog class="dialog teacher-console-dialog" aria-label="${t('console.title')}"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button><div class="teacher-console-content">${renderConsole({classroom,ui,targets:getTargets(),focused,canUndo:history.length>0,events:state.events,armedReset:armedDanger==='reset',unlockedUntil:unlockUntil(),account})}</div></dialog>`, 'console');
+  showDialog(`<dialog class="dialog teacher-console-dialog" aria-label="${t('console.title')}" aria-modal="false"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button><div class="teacher-console-content">${renderConsole({classroom,ui,targets:getTargets(),focused,canUndo:history.length>0,events:state.events,armedReset:armedDanger==='reset',unlockedUntil:unlockUntil(),account})}</div></dialog>`, 'console');
 }
 
 function disarmDanger() {
@@ -1524,4 +1541,4 @@ applyTheme();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
-setInterval(updateClock, 30_000);
+setInterval(updateClock, 1000);

@@ -190,18 +190,18 @@ function renderSheikahBoard(classroom, ui, selectedIds) {
     </section>`;
 }
 
-function renderRuneCard(pupil, selectedIds = [], { student = false } = {}) {
-  const selected = selectedIds.includes(pupil.id);
+function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = false } = {}) {
+  const selected = (!student || selecting) && selectedIds.includes(pupil.id);
   const progress = xpProgress(pupil);
   const out = isEliminated(pupil);
   return `
     <article class="rune-card ${student ? 'student-card' : ''} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
-      <button class="card-hit" type="button" data-action="${student ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student ? '' : `aria-pressed="${selected}"`} aria-label="${t(student ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
+      <button class="card-hit" type="button" data-action="${student && !selecting ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student && !selecting ? '' : `aria-pressed="${selected}"`} aria-label="${t(student && !selecting ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
       <div class="dais dais-card">
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
-        ${student ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
+        ${student && !selecting ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
-        <button class="card-open" type="button" data-action="${student ? 'student-pick' : 'sheikah-open'}" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
+        <button class="card-open" type="button" data-action="${student && !selecting ? 'student-pick' : 'sheikah-open'}" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
       </div>
       <header class="rune-card-head">
         <div class="rune-card-name"><h2>${escapeHtml(pupil.name)}</h2></div>
@@ -227,7 +227,7 @@ function renderRuneCard(pupil, selectedIds = [], { student = false } = {}) {
 
 /* ---------- Pupil picker and hero views ---------- */
 
-export function renderSheikahStudent({ classroom, ui, pupil, classView = false }) {
+export function renderSheikahStudent({ classroom, ui, pupil, classView = false, selectionMode = false, selectedIds = [] }) {
   if (!pupil) {
     if (!classroom.pupils.length) {
       return `<main class="single"><div class="empty">${ico("heroes")}<h1>${t("student.noHeroesTitle", { name: escapeHtml(classroom.name) })}</h1><p>${t("sheikah.studentEmpty")}</p></div></main>`;
@@ -242,7 +242,7 @@ export function renderSheikahStudent({ classroom, ui, pupil, classView = false }
           <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query || "")}" placeholder="${t("student.findName")}" aria-label="${t("student.findName")}" autocomplete="off" /></label>
           ${pupils.length ? `
           <div class="rune-grid picker-grid" role="list">
-            ${pupils.map(item => renderRuneCard(item, [], { student:true })).join('')}
+            ${pupils.map(item => renderRuneCard(item, selectedIds, { student:true, selecting:selectionMode })).join('')}
           </div>` : `<div class="empty"><h2>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h2><button class="btn" data-action="clear-search">${t("student.clearSearch")}</button></div>`}
         </div>
       </main>`;
@@ -278,10 +278,10 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
           <div class="conduit big" role="progressbar" aria-label="${t("student.experience")}" aria-valuemin="0" aria-valuemax="${progress.needed}" aria-valuenow="${progress.current}"><i style="--progress:${progress.percent / 100}"></i></div>
           <p class="sheet-role">${next ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") }) : t("student.allUnlocked")}</p>
           <div class="row">
-            <button class="btn btn-primary" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.workshop")}</span></button>
+            <button class="btn" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.workshop")}</span></button>
             <button class="btn" data-action="sheikah-shop" data-pupil-id="${escapeHtml(pupil.id)}">${ico("shop")}<span>${t("student.shop")}</span></button>
           </div>
-          <details class="equipment-details"><summary>${t("sheikah.equipment")}</summary>${renderSheikahGear(pupil)}${renderCustomOrders(pupil)}</details>
+          <div class="hero-class-return"><button class="btn" type="button" data-action="show-class">${ico('back')}<span>${t('class.back')}</span></button></div>
         </div>
       </div>
     </main>`;

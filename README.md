@@ -52,7 +52,9 @@ différent dans chaque `.env` et ouvrir l'URL correspondante.
 - **Teacher console**, via l'onglet du bord droit, ouvre un panneau latéral protégé
   par le mot de passe du compte. Elle contient les récompenses, les données et
   le bouton **+ Add a student**. L'ajout se fait dans une boîte dédiée, puis
-  revient à la console. Fermer la console reverrouille les commandes prof.
+  revient à la console. L'accès reste déverrouillé cinq minutes après validation
+  du mot de passe, y compris quand le panneau est replié. La classe reste
+  interactive pendant l'utilisation de la console.
 
 Un seul élève est sélectionné à la fois ; « Toute la classe » reste un choix
 explicite pour les récompenses collectives. Les anciens liens `#board` et

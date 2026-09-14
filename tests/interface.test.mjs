@@ -7,7 +7,7 @@ import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
-import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar } from "../src/views/sheikah.mjs";
+import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet } from "../src/views/sheikah.mjs";
 
 test("Students cards expose the full hero stats and direct Dressing/Shop actions", () => {
   const classroom = getCurrentClass(createInitialState());
@@ -65,6 +65,19 @@ test("Class navigation has no separate teacher/student views and exposes a prote
     assert.match(html,/data-class-id="7p"/);
     assert.match(html,/data-class-id="8p"/);
   } finally { globalThis.document=previousDocument; }
+});
+
+test("an open teacher panel enables single-card selection and hero navigation stays neutral", () => {
+  const classroom=getCurrentClass(createInitialState());
+  const pupil=classroom.pupils[0];
+  const html=renderSheikahStudent({classroom,ui:{},pupil:null,classView:true,selectionMode:true,selectedIds:[pupil.id]});
+  assert.match(html,/data-action="toggle-pupil"/);
+  assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
+  const sheet=renderSheikahSheet(pupil,{}, {student:true});
+  const dressing=sheet.match(/<button[^>]+data-action="sheikah-personalize"[^>]*>/)[0];
+  assert.doesNotMatch(dressing,/btn-primary|aria-pressed="true"|is-active/);
+  assert.doesNotMatch(sheet,/equipment-details|Hero equipment/);
+  assert.match(sheet,/hero-class-return/);
 });
 
 test("pupil search filters names, escapes user content and offers a recovery action", () => {
