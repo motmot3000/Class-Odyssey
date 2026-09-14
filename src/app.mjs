@@ -27,6 +27,7 @@ import {
   toggleSelection,
   updateCosmetics
 } from "./domain.mjs";
+import { BRAND } from "./brand.mjs";
 import { requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
@@ -194,7 +195,7 @@ function render() {
     ${renderConflict()}
     ${renderViewBody(view)}
   `;
-  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : view === "lock" ? "lock.title" : view === "student" ? "app.aria.students" : "app.aria.teacher")} · ClassQuest`;
+  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : view === "lock" ? "lock.title" : view === "student" ? "app.aria.students" : "app.aria.teacher")} · ${BRAND.name}`;
   restoreUiMemory(memory);
   flushFlash();
   syncSheikahRuntime();

@@ -1,0 +1,18 @@
+<!-- Extraits à intégrer ; ajuster les chemins à l'emplacement des fichiers. -->
+<!-- Dans <head>, après copie du contenu de icons à la racine publique : -->
+<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180">
+<!-- Fusionner d'abord avec le manifeste existant si l'app en a déjà un. -->
+<link rel="manifest" href="./site.webmanifest">
+
+<!-- Charger également les règles de classquest-brand.css dans l'application. -->
+<!-- Le conteneur possède un seul nom accessible ; les images sont décoratives. -->
+<a class="cq-brand" href="./" aria-label="ClassQuest — accueil">
+  <img class="cq-brand-light"
+       src="./assets/classquest/svg/classquest-horizontal-light.svg"
+       alt="" width="869" height="212">
+  <img class="cq-brand-dark"
+       src="./assets/classquest/svg/classquest-horizontal-dark.svg"
+       alt="" width="869" height="212">
+</a>
