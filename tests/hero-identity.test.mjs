@@ -13,7 +13,7 @@ test('hero identity uses the equipped title, never the outfit or hair colour',()
   const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui,pupil:null});
   assert.match(picker,/Pupil/);
   assert.doesNotMatch(picker,/>Ranger<|>Brown<|<script>/);
-  assert.ok(picker.indexOf('picker-portrait')<picker.indexOf('picker-info'));
+  assert.ok(picker.indexOf('picker-portrait')<picker.indexOf('rune-card-head'));
   const sheet=renderSheikahSheet(pupil,ui);
   assert.match(sheet,/data-title-labelled/);
   assert.doesNotMatch(sheet,/Ranger · Brown/);

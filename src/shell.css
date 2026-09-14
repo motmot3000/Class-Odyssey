@@ -309,6 +309,54 @@ body:has(.layout) #language-switcher {
 
 dialog.dialog:not([open]) { display: none; }
 .dialog::backdrop { background: rgba(4, 10, 20, 0.78); }
+.dialog-add-pupil { width: min(460px, calc(100vw - 32px)); padding: 30px; }
+.dialog-add-pupil h2 { padding-right: 32px; }
+.dialog-add-pupil form { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+.dialog-add-pupil .field-row { align-items: stretch; }
+.dialog-add-pupil .field-row .field { flex: 1; min-width: 0; }
+.console-head { flex-wrap: wrap; gap: 8px; }
+.console-history { display: flex; justify-content: flex-end; margin: 8px 0; }
+.class-return-bar { max-width: 1360px; margin: 0 auto 20px; display: flex; align-items: center; }
+.btn-class-return { min-height: 48px; padding: 12px 18px; gap: 10px; font-weight: 700; color: var(--cyan); border: 1px solid var(--cyan-2); background: var(--panel); }
+.btn-class-return:hover { background: var(--cyan-soft); border-color: var(--cyan); }
+.rune-card-foot .rune-act { background: transparent; color: var(--cyan-2); }
+.rune-card-foot .rune-act:hover { background: var(--cyan-soft); color: var(--ink); }
+.rune-card-foot .rune-act:active { background: var(--selected); color: var(--on-selected); }
+.picker h1[tabindex="-1"]:focus { outline: none; }
+.teacher-console-dialog { width: min(620px,calc(100vw - 24px)); padding: 24px; }
+.teacher-console-dialog .console-head { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; padding-right: 30px; }
+.teacher-console-dialog .console-head h2 { min-width: 0; font-size: clamp(18px,2vw,22px); }
+.teacher-console-content { max-height: calc(100svh - 96px); overflow: auto; padding-right: 6px; }
+.teacher-console-dialog details.panel { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.teacher-console-dialog details.panel > summary { padding-block: 10px; }
+.teacher-console-dialog details.panel > summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; color: var(--ink-2); }
+.teacher-console-dialog details.panel > summary::-webkit-details-marker { display: none; }
+.teacher-console-dialog details.panel > summary .icon { width: 16px; height: 16px; color: var(--cyan-2); }
+.teacher-unlock-dialog { width: min(490px,calc(100vw - 24px)); padding: 20px; }
+.teacher-unlock-dialog .gate { margin: 0; padding: 0; }
+.teacher-unlock-dialog .gate-card { border: 0; padding: 24px 14px; }
+.teacher-target { margin-block: 12px; }
+
+/* One navigation row on every screen; the logo returns to the class roster. */
+.topbar:not(.topbar-welcome) { flex-wrap: nowrap; }
+.brand-home { display: flex; align-items: center; min-height: 44px; border: 0; background: none; padding: 0; cursor: pointer; }
+.topbar:not(.topbar-welcome) .top-end { width: auto; flex: 0 0 auto; flex-wrap: nowrap; margin-left: auto; }
+@media (max-width: 720px) {
+  .topbar:not(.topbar-welcome) { gap: 4px; padding: 8px; min-height: 64px; }
+  .topbar:not(.topbar-welcome) .brand-logo { width: clamp(70px,23vw,100px); height: auto; }
+  .topbar:not(.topbar-welcome) > .tabs { margin-left: auto; padding-left: 4px; max-width: none; border: 0; gap: 0; }
+  .topbar:not(.topbar-welcome) .tabs button { min-width: 40px; padding: 6px; }
+  .topbar:not(.topbar-welcome) .top-end { gap: 0; margin-left: 0; }
+  .topbar:not(.topbar-welcome) .top-end > .ghost { width: 40px; padding: 8px; }
+  .topbar:not(.topbar-welcome) .top-end > .ghost > span { display: none; }
+  .topbar:not(.topbar-welcome) .top-end > .ghost[data-action="show-rules"] { width: auto; gap: 4px; }
+  .topbar:not(.topbar-welcome) .top-end > .ghost[data-action="show-rules"] > span { display: inline; }
+  .topbar:not(.topbar-welcome) .tablet-tools > summary { width: 40px; padding: 8px; }
+}
+@media (max-width: 359px) {
+  .topbar:not(.topbar-welcome) .top-end > .ghost[data-action="show-rules"] { width: 40px; }
+  .topbar:not(.topbar-welcome) .top-end > .ghost[data-action="show-rules"] > span { display: none; }
+}
 
 .dialog-close {
   position: absolute;

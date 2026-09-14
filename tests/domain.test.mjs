@@ -376,13 +376,26 @@ test("bespoke item costs 100 money and requires level 10", () => {
   assert.equal(getPupilById(nextState, pupilId).customOrders.length, 2);
 });
 
-test("toggling selection adds and removes a pupil from the bulk selection", () => {
+test("clicking a pupil replaces the previous selection and clicking again clears it", () => {
   let state = createInitialState();
   const pupilId = getCurrentClass(state).pupils[0].id;
   state = toggleSelection(state, pupilId);
   assert.deepEqual(state.selectedPupilIds, [pupilId]);
-  state = toggleSelection(state, pupilId);
+  const second = getCurrentClass(state).pupils[1].id;
+  state = toggleSelection(state, second);
+  assert.deepEqual(state.selectedPupilIds, [second]);
+  assert.equal(state.selectedPupilId, second);
+  state = toggleSelection(state, second);
   assert.deepEqual(state.selectedPupilIds, []);
+  assert.equal(state.selectedPupilId, null);
+});
+
+test("old multiple selections are reduced to the focused pupil on load", () => {
+  const raw = createInitialState();
+  const ids = getCurrentClass(raw).pupils.map(pupil=>pupil.id);
+  raw.selectedPupilIds=ids;
+  raw.selectedPupilId=ids[2];
+  assert.deepEqual(normalizeState(raw).selectedPupilIds,[ids[2]]);
 });
 
 test("select mode clears the single selection, and turning it off clears the bulk selection", () => {

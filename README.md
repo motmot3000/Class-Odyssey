@@ -44,17 +44,19 @@ worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
 temporaire. Pour lancer plusieurs branches en parallèle, choisir un `PORT`
 différent dans chaque `.env` et ouvrir l'URL correspondante.
 
-## Deux interfaces
+## Une vue Class
 
-- **Teacher** (`#board`) : plateau de classe + console d'attribution (XP, HP,
-  argent, ajout/suppression d'élèves), protégée par une seconde saisie du mot de
-  passe du compte.
-- **Students** (`#student`) : chaque élève retrouve son héros, consulte ses
-  stats (HP, XP, niveau, argent) et dépense son argent dans la boutique
-  (achat + équipement). Le héros choisi est mémorisé sur l'appareil.
+- **Class** (`#class`) affiche les héros de la classe avec leurs portraits de
+  face, titres, niveaux, XP, cœurs et pièces. Les cartes donnent accès à la
+  fiche, au **Dressing** et au **Shop**.
+- **Teacher console**, dans le menu des options, ouvre une fenêtre protégée
+  par le mot de passe du compte. Elle contient les récompenses, les données et
+  le bouton **+ Add a student**. L'ajout se fait dans une boîte dédiée, puis
+  revient à la console. Fermer la console reverrouille les commandes prof.
 
-La bascule entre les deux se fait via les onglets **Teacher / Students**
-dans l'en-tête, à côté des onglets de classe.
+Un seul élève est sélectionné à la fois ; « Toute la classe » reste un choix
+explicite pour les récompenses collectives. Les anciens liens `#board` et
+`#student` ouvrent désormais la même vue Class.
 
 Chaque enseignant dispose d'un compte, d'un état et de sauvegardes isolés. Le
 compte fondateur a le rôle `admin` et voit en plus la page **Accounts**, qui

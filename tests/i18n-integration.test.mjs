@@ -49,7 +49,7 @@ test("Sheikah, admin, validation errors and rewards follow the chosen language",
     setLang("fr");
     const sheet = renderSheikahSheet(pupil, { angle: "back" }, { student: true });
     const workshop = renderSheikahPersonalize(pupil, { draft: null });
-    assert.ok(sheet.includes("Changer de héros"));
+    assert.ok(sheet.includes("Retour à la classe"));
     assert.ok(workshop.includes("Enregistrer la tenue"));
     assert.doesNotMatch(sheet + workshop, /Hair color|Scout|Brown|HP restored|<img onerror=/);
     assert.match(renderAdmin({ error: "Could not load accounts." }), /Impossible de charger les comptes/);

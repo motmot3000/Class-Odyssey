@@ -1,20 +1,22 @@
 """Compress rendered previews and build a local review sheet (Pillow)."""
 from pathlib import Path
 import json
+import sys
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'assets/items-3d/previews'
 RAW = Path('/tmp/opencode/classquest-equipment-previews')
 report = json.loads((OUT/'manifest.json').read_text())
-for entry in list(report['items'].values()) + list(report['portraits'].values()):
+portraits_only = '--portraits-only' in sys.argv
+for entry in ([] if portraits_only else list(report['items'].values())) + list(report['portraits'].values()):
     target = OUT/entry['file']
     target.parent.mkdir(parents=True,exist_ok=True)
     image = Image.open(RAW/Path(entry['file']).with_suffix('.png')).convert('RGBA')
     image.save(target, 'WEBP',quality=93,method=6)
 
-files = sorted((RAW/'review').glob('*.png'))
-files += [RAW/Path(entry['file']).with_suffix('.png') for entry in report['items'].values()]
+files = [] if portraits_only else sorted((RAW/'review').glob('*.png'))
+files += [RAW/Path(entry['file']).with_suffix('.png') for entry in (report['portraits'] if portraits_only else report['items']).values()]
 cell_w,cell_h,columns=240,280,6
 sheet = Image.new('RGB',(cell_w*columns,cell_h*((len(files)+columns-1)//columns)), '#e7e9df')
 draw = ImageDraw.Draw(sheet)

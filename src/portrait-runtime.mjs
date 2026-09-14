@@ -1,4 +1,4 @@
-import { CATALOGUE_URL, CATALOGUE_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
+import { CATALOGUE_URL, CATALOGUE_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
 const MAX_CACHED_PORTRAITS = 64;
@@ -8,7 +8,7 @@ const pending = new Map();
 let queue = Promise.resolve();
 let observer;
 
-const portraitKey = look => CATALOGUE_REVISION + JSON.stringify(look);
+const portraitKey = look => PORTRAIT_REVISION + JSON.stringify(look);
 
 /** Use a cached image during HTML rendering, before IntersectionObserver fires.
  * This avoids flashing an unequipped fallback when returning to the pupil list.
@@ -77,7 +77,7 @@ function requestPortrait(image) {
       if (!renderer) return null;
       try {
         renderer.applyState(look);
-        renderer.setAngle("quarter");
+        renderer.setAngle("front");
         renderer.setRotation(false);
         renderer.setVisible(true);
         renderer.resize();

@@ -14,6 +14,6 @@ export function renderLockScreen({ account, error = "", pending = false } = {}) 
       </form>
       ${error ? `<p id="lock-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : `<p class="gate-help">${t("lock.hint")}</p>`}
       <hr class="rule" />
-      <div class="gate-actions"><button class="btn btn-ghost" type="button" data-action="show-student">${t("lock.action.back")}</button><button class="btn btn-ghost" type="button" data-action="sign-out">${t("lock.action.signout")}</button></div>
+      <div class="gate-actions"><button class="btn btn-ghost" type="button" data-action="close-dialog">${t("common.cancel")}</button><button class="btn btn-ghost" type="button" data-action="sign-out">${t("lock.action.signout")}</button></div>
     </div></section>`;
 }

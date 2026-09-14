@@ -31,7 +31,13 @@
 4. The API accepts a `PUT /api/state` only when its revision matches the stored revision. A successful write increments the revision; a stale write receives **409**, never an automatic overwrite.
 5. If offline or conflicted, the dirty local copy stays available. Explicit conflict recovery archives that copy before loading the server version.
 
-The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account and expires after eight hours.
+The main route is a single `#class` space. Pupils can view characters and use
+the Dressing and Shop. The teacher console is a native dialog, reached through
+the options menu and password verification. Closing it locks teacher controls;
+adding a pupil temporarily opens a child form and returns to the console.
+Individual selection is singular; whole-class rewards use an explicit scope.
+
+The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account, expires after eight hours at most, and is cleared when the console is closed.
 
 Every asynchronous result must check its captured account/token before touching state. In particular, imports, saves and password checks must not act on a newly signed-in account. The server rechecks sessions after receiving request bodies because a token may have been revoked while a body was arriving.
 

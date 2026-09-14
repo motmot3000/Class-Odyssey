@@ -170,12 +170,21 @@
     "male": {
       "file": "portraits/male.webp",
       "pose": "base-v2-arms-lowered",
-      "hair": "short"
+      "hair": "short",
+      "view": "front",
+      "width": 768,
+      "height": 1152,
+      "renderer": "Three.js, current catalogue, daylight, full silhouette"
     },
     "female": {
       "file": "portraits/female.webp",
       "pose": "base-v2-arms-lowered",
-      "hair": "long"
+      "hair": "long",
+      "view": "front",
+      "width": 768,
+      "height": 1152,
+      "renderer": "Three.js, current catalogue, daylight, full silhouette"
     }
-  }
+  },
+  "portraitRevision": "catalogue-v5-tailored-armour-front-hd"
 }

@@ -233,6 +233,12 @@ export function normalizeState(rawState) {
   }
 
   state.selectedPupilIds = state.selectedPupilIds.filter((id) => getPupilById(state, id));
+  // Migrate earlier multi-selections to the last focused pupil, or the first
+  // remaining selection. Whole-class rewards are an explicit UI scope.
+  if (state.selectedPupilIds.length > 1) {
+    const selected = state.selectedPupilIds.includes(state.selectedPupilId) ? state.selectedPupilId : state.selectedPupilIds[0];
+    state.selectedPupilIds = [selected];
+  }
 
   return state;
 }
@@ -390,10 +396,8 @@ export function setSelectMode(state, enabled) {
 
 export function toggleSelection(state, pupilId) {
   if (!getPupilById(state, pupilId)) return state;
-  const set = new Set(state.selectedPupilIds);
-  if (set.has(pupilId)) set.delete(pupilId);
-  else set.add(pupilId);
-  return { ...state, selectedPupilIds: [...set] };
+  const deselect = state.selectedPupilIds.includes(pupilId);
+  return { ...state, selectedPupilIds: deselect ? [] : [pupilId], selectedPupilId: deselect ? null : pupilId };
 }
 
 export function selectAllInClass(state, classId) {

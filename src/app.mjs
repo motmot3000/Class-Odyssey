@@ -23,7 +23,6 @@ import {
   removePupil,
   renamePupil,
   restoreHpAll,
-  selectAllInClass,
   toggleSelection,
   updateCosmetics
 } from "./domain.mjs";
@@ -50,15 +49,15 @@ import {
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
+import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
   renderSheikahTopbar,
-  renderSheikahTeacher,
   renderSheikahStudent,
   renderSheikahSheet,
   renderSheikahShop,
@@ -80,6 +79,7 @@ const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
 let releaseCharacterViewer = null;
+let teacherUnlockRequest = 0;
 let releaseWelcomeScene = null;
 
 // Remember the chosen pupil on this device only, never in shared server state.
@@ -112,6 +112,11 @@ const ui = {
   openPanels: new Set(["hero"]),
   lockError: "",
   lockPending: false,
+  teacherDialog: null,
+  teacherAfterUnlock: 'console',
+  addFromConsole: false,
+  addClassId: null,
+  focusClassHeading: false,
   gateTab: "signin",
   gateError: "",
   gatePending: false,
@@ -146,10 +151,12 @@ let theme = (() => {
 })();
 
 function applyTheme() {
-  document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#e7e9df" : "#101b20");
+  // The public entry is always light; retain the user's theme for the game.
+  const displayedTheme = isSignedIn() ? theme : "light";
+  document.documentElement.dataset.theme = displayedTheme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", displayedTheme === "light" ? "#e7e9df" : "#101b20");
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* Keep the in-memory theme. */ }
-  setSheikahTheme(theme);
+  setSheikahTheme(displayedTheme);
 }
 
 /* ---------- Hash routing ---------- */
@@ -157,10 +164,9 @@ function applyTheme() {
 function currentView() {
   if (!isSignedIn()) return "welcome";
   if (location.hash === "#rules") return "rules";
-  if (location.hash.startsWith("#student")) return "student";
-  if (location.hash === "#admin" && account?.role === "admin") return isAdultUnlocked() ? "admin" : "lock";
-  if (location.hash.startsWith("#board")) return isAdultUnlocked() ? "board" : "lock";
-  return isAdultUnlocked() ? "board" : "student";
+  if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
+  // Older #board/#student bookmarks now enter the same public class space.
+  return "class";
 }
 
 function navigate(hash) {
@@ -169,7 +175,7 @@ function navigate(hash) {
 }
 
 window.addEventListener("hashchange", () => {
-  closeDialog();
+  closeDialog({ resumeConsole: false });
   ui.query = "";
   ui.consoleOpen = false;
   ui.lockError = "";
@@ -186,48 +192,35 @@ function render() {
   releaseWelcomeScene?.();
   releaseWelcomeScene = null;
   const view = currentView();
+  applyTheme();
   app.dataset.view = view;
   const memory = captureUiMemory();
-  const focusPanel = view === "board" ? ui.focusPanel : null;
-  if (focusPanel) {
-    ui.openPanels.add(focusPanel);
-    ui.consoleOpen = true;
-    ui.sheikahView = "board";
-    ui.focusPanel = null;
-  }
   app.innerHTML = `
-    ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked(), student: view === "student" })}
+    ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
     ${renderViewBody(view)}
   `;
-  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : view === "lock" ? "lock.title" : view === "student" ? "app.aria.students" : "app.aria.teacher")} · ${BRAND.name}`;
+  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : "nav.class")} · ${BRAND.name}`;
+  renderTeacherDialog();
   restoreUiMemory(memory);
   flushFlash();
   syncSheikahRuntime();
-  mountHeroPortraits(app);
+  mountHeroPortraits(document.body);
   if (view === "welcome") releaseWelcomeScene = mountWelcomeScene(app);
   updateClock();
-  if (focusPanel) {
-    const field = app.querySelector(`[data-panel="${focusPanel}"] input`);
-    field?.focus({ preventScroll: true });
-    field?.scrollIntoView({ block: "nearest" });
+  if (ui.focusClassHeading && view === 'class' && ui.sheikahView === 'board') {
+    ui.focusClassHeading = false;
+    app.querySelector('.picker h1')?.focus({ preventScroll:true });
+    window.scrollTo({ top:0 });
   }
 }
 
 function renderSheikahBody(view) {
   const classroom = getCurrentClass(state);
-  if (view === "student") {
-    const pupil = getStudentPupil(classroom);
-    if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
-    if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
-    return renderSheikahStudent({ classroom, ui, pupil });
-  }
-  const targets = getTargets();
-  const focused = state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
-  if (focused && ui.sheikahView === "shop") return renderSheikahShop(focused, ui);
-  if (focused && ui.sheikahView === "sheet") return renderSheikahSheet(focused, ui);
-  if (focused && ui.sheikahView === "personalize") return renderSheikahPersonalize(focused, ui);
-  return renderSheikahTeacher({ classroom, ui, targets, focused, canUndo: history.length > 0, account, selectedIds: state.selectedPupilIds, events: state.events, armedReset: armedDanger === "reset", unlockedUntil: unlockUntil() });
+  const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
+  if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
+  if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
+  return renderSheikahStudent({ classroom, ui, pupil, classView:true });
 }
 
 function syncSheikahRuntime() {
@@ -253,10 +246,6 @@ function renderViewBody(view) {
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked() })}</main>`;
-  }
-
-  if (view === "lock") {
-    return `<main class="page lock-page">${renderLockScreen({ account, error: ui.lockError, pending: ui.lockPending })}</main>`;
   }
 
   return renderSheikahBody(view);
@@ -285,7 +274,9 @@ function getTargets() {
 }
 
 function getShopPupil() {
-  if (currentView() === "student") return studentPupilId ? getPupilById(state, studentPupilId) : null;
+  const dialogPupil = dialogRoot.querySelector('dialog[data-pupil-id]')?.dataset.pupilId;
+  if (dialogPupil) return getPupilById(state, dialogPupil);
+  if (currentView() === "class" && ui.teacherDialog !== 'console') return studentPupilId ? getPupilById(state, studentPupilId) : null;
   return state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
 }
 
@@ -297,25 +288,25 @@ function captureUiMemory() {
   const active = document.activeElement;
   const focusAction = active?.dataset?.action || null;
   const actionControls = focusAction
-    ? [...app.querySelectorAll(`[data-action="${CSS.escape(focusAction)}"]`)]
+    ? [...document.querySelectorAll(`[data-action="${CSS.escape(focusAction)}"]`)]
     : [];
   return {
     focusId: active && active.id ? active.id : null,
     focusAction,
     focusActionIndex: actionControls.indexOf(active),
     caret: active && typeof active.selectionStart === "number" ? active.selectionStart : null,
-    consoleScroll: app.querySelector(".console")?.scrollTop ?? 0,
+    consoleScroll: dialogRoot.querySelector(".teacher-console-content")?.scrollTop ?? 0,
     pageScroll: window.scrollY
   };
 }
 
 function restoreUiMemory(memory) {
-  const console_ = app.querySelector(".console");
+  const console_ = dialogRoot.querySelector(".teacher-console-content");
   if (console_) console_.scrollTop = memory.consoleScroll;
 
   let next = memory.focusId ? document.getElementById(memory.focusId) : null;
   if (!next && memory.focusAction && memory.focusActionIndex >= 0) {
-    next = [...app.querySelectorAll(`[data-action="${CSS.escape(memory.focusAction)}"]`)][memory.focusActionIndex];
+    next = [...document.querySelectorAll(`[data-action="${CSS.escape(memory.focusAction)}"]`)][memory.focusActionIndex];
   }
   if (next) {
     next.focus({ preventScroll: true });
@@ -356,16 +347,16 @@ function updateClock() {
 // authorization. Recheck it on each mutation because an open screen can expire.
 const TEACHER_ACTIONS = new Set([
   "award-xp", "award-money", "hp-minus", "hp-plus", "heal-all",
-  "remove-pupil", "reset-all", "export", "import", "refresh-admin"
+  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add"
 ]);
 const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset"]);
 function allowTeacherAction() {
   if (isAdultUnlocked()) return true;
-  navigate("#board");
+  openTeacherGate();
   return false;
 }
 
-app.addEventListener("click", (event) => {
+function dispatchActionClick(event) {
   const trigger = event.target.closest("[data-action]");
   if (!trigger || trigger.tagName === "FORM") return;
   const action = trigger.dataset.action;
@@ -373,7 +364,9 @@ app.addEventListener("click", (event) => {
   event.preventDefault();
   if (TEACHER_ACTIONS.has(action) && !allowTeacherAction()) return;
   ACTIONS[action](trigger);
-});
+}
+app.addEventListener("click", dispatchActionClick);
+dialogRoot.addEventListener("click", dispatchActionClick);
 
 app.addEventListener("submit", (event) => {
   const form = event.target.closest("form[data-action]");
@@ -393,8 +386,16 @@ dialogRoot.addEventListener("submit", (event) => {
   if (action) action(form);
 });
 
-app.addEventListener("input", (event) => {
+function handleInput(event) {
   const field = event.target;
+  if (field.dataset.action === 'teacher-target') {
+    if (!allowTeacherAction()) return;
+    const pupil = getCurrentClass(state).pupils.find(item => item.id === field.value);
+    state = { ...state, selectedPupilId:pupil?.id || null, selectedPupilIds:pupil ? [pupil.id] : [] };
+    ui.scope = 'selection';
+    render();
+    return;
+  }
   if (field.form?.classList.contains("gate-form") && ["username", "displayName"].includes(field.name)) {
     ui.gateValues[field.name] = field.value;
   }
@@ -405,14 +406,18 @@ app.addEventListener("input", (event) => {
   }
   if (field.id === "xp-amount") ui.xpAmount = field.value;
   if (field.id === "coin-amount") ui.coinAmount = field.value;
-});
+}
+app.addEventListener("input", handleInput);
+dialogRoot.addEventListener("input", handleInput);
 
-app.addEventListener("toggle", (event) => {
+function handlePanelToggle(event) {
   const panel = event.target.closest("details[data-panel]");
   if (!panel) return;
   if (panel.open) ui.openPanels.add(panel.dataset.panel);
   else ui.openPanels.delete(panel.dataset.panel);
-}, true);
+}
+app.addEventListener("toggle", handlePanelToggle, true);
+dialogRoot.addEventListener("toggle", handlePanelToggle, true);
 
 document.addEventListener("keydown", (event) => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
@@ -444,17 +449,29 @@ window.addEventListener("storage", (event) => {
   }
 });
 
+function showClassRoster() {
+  closeDialog({ resumeConsole:false });
+  rememberStudent(null);
+  state = { ...state, selectedPupilId:null, selectedPupilIds:[] };
+  ui.sheikahView = "board";
+  ui.draft = null;
+  ui.shopPreview = null;
+  ui.focusClassHeading = true;
+  navigate("#class");
+}
+
+function chooseClassPupil(pupilId) {
+  if (!getCurrentClass(state).pupils.some(pupil => pupil.id === pupilId)) return false;
+  state = { ...state, selectedPupilId:pupilId, selectedPupilIds:[pupilId] };
+  ui.scope = 'selection';
+  rememberStudent(pupilId);
+  return true;
+}
+
 const ACTIONS = {
-  "show-board": () => {
-    ui.sheikahView = "board";
-    ui.draft = null;
-    navigate("#board");
-  },
-  "show-student": () => {
-    ui.sheikahView = "board";
-    ui.draft = null;
-    navigate("#student");
-  },
+  "show-class": showClassRoster,
+  "show-board": showClassRoster,
+  "show-student": showClassRoster,
   "show-rules": () => navigate("#rules"),
 
   /* ---------- Sheikah navigation and customization ---------- */
@@ -464,7 +481,7 @@ const ACTIONS = {
     renderPreservingForms();
   },
   "sheikah-open": (el) => {
-    state = { ...state, selectedPupilId: el.dataset.pupilId };
+    if (!chooseClassPupil(el.dataset.pupilId)) return;
     ui.sheikahView = "sheet";
     ui.draft = null;
     render();
@@ -478,8 +495,8 @@ const ACTIONS = {
     window.scrollTo({ top: 0 });
   },
   "sheikah-personalize": (el) => {
-    const id = el.dataset.pupilId || (currentView() === "student" ? studentPupilId : state.selectedPupilId);
-    if (id) state = { ...state, selectedPupilId: id };
+    const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
+    if (!chooseClassPupil(id)) return;
     ui.sheikahView = "personalize";
     ui.draft = null;
     render();
@@ -515,11 +532,8 @@ const ACTIONS = {
     toast(t("sheikah.savedLook"), "success");
   },
   "sheikah-shop": (el) => {
-    const studentView = currentView() === "student";
-    const id = el.dataset.pupilId || (studentView ? studentPupilId : state.selectedPupilId);
-    if (!id) return;
-    state = { ...state, selectedPupilId: id };
-    if (studentView) rememberStudent(id);
+    const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
+    if (!chooseClassPupil(id)) return;
     ui.sheikahView = "shop";
     ui.draft = null;
     ui.shopPreview = null;
@@ -535,14 +549,16 @@ const ACTIONS = {
   },
   "show-admin": () => {
     if (account?.role !== "admin") return;
+    if (!isAdultUnlocked()) { openTeacherGate('admin'); return; }
     if (location.hash === "#admin" && isAdultUnlocked()) loadAdminAccounts();
     else navigate("#admin");
   },
   "refresh-admin": () => loadAdminAccounts(),
   "account-settings": () => {
-    ui.focusPanel = "account";
-    navigate("#board");
+    ui.openPanels.add("account");
+    openTeacherConsole();
   },
+  "teacher-console": () => openTeacherConsole(),
 
   "gate-tab": (el) => {
     ui.gateTab = el.dataset.tab;
@@ -566,9 +582,11 @@ const ACTIONS = {
   },
 
   "lock-adult": () => {
+    closeDialog({ resumeConsole:false });
     lockAdult();
     ui.consoleOpen = false;
-    navigate("#student");
+    ui.sheikahView = 'board';
+    navigate("#class");
     toast("Adult access locked.", "info");
   },
 
@@ -584,45 +602,31 @@ const ACTIONS = {
     ui.sheikahView = "board";
     ui.draft = null;
     ui.scope = "selection";
-    commit({ ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] }, { record: false });
+    closeDialog({ resumeConsole:false });
+    rememberStudent(null);
+    state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
+    navigate('#class');
   },
 
   // Selecting a hero also focuses its details in the teacher console.
   "toggle-pupil": (el) => {
     const pupilId = el.dataset.pupilId;
-    const wasSelected = state.selectedPupilIds.includes(pupilId);
-    let next = toggleSelection(state, pupilId);
-    next = {
-      ...next,
-      selectedPupilId: wasSelected
-        ? (state.selectedPupilId === pupilId ? null : state.selectedPupilId)
-        : pupilId
-    };
+    const next = toggleSelection(state, pupilId);
     ui.scope = "selection";
-    if (!wasSelected) ui.openPanels.add("hero");
+    if (next.selectedPupilIds.length) ui.openPanels.add("hero");
     commit(next, { record: false });
   },
 
   "zoom-pupil": (el) => {
-    if (["board", "student"].includes(currentView())) {
-      if (el.dataset.pupilId) state = { ...state, selectedPupilId: el.dataset.pupilId };
-      ui.sheikahView = "sheet";
-      ui.draft = null;
-      render();
-      return;
-    }
-    openPupilDialog(el.dataset.pupilId);
+    closeDialog({ resumeConsole:false });
+    lockAdult();
+    ACTIONS['sheikah-open'](el);
   },
   "close-dialog": () => closeDialog(),
 
   scope: (el) => {
     ui.scope = el.dataset.scope;
     render();
-  },
-
-  "select-all": () => {
-    ui.scope = "selection";
-    commit(selectAllInClass(state, state.activeClassId), { record: false });
   },
 
   "clear-selection": () => commit(clearSelection(state), { record: false }),
@@ -638,8 +642,10 @@ const ACTIONS = {
   },
 
   "focus-add": () => {
-    ui.focusPanel = "add";
-    render();
+    ui.addFromConsole = ui.teacherDialog === 'console';
+    ui.addClassId = state.activeClassId;
+    showDialog(renderAddPupilDialog(getCurrentClass(state)), 'add');
+    dialogRoot.querySelector('#pupil-name')?.focus();
   },
 
   "award-xp": (el) => giveXp(Number(el.dataset.amount), el.dataset.reason),
@@ -677,7 +683,7 @@ const ACTIONS = {
   },
 
   "preview-item": (el) => {
-    if (["board", "student"].includes(currentView()) && ui.sheikahView === "shop") {
+    if (currentView() === 'class' && ui.teacherDialog !== 'console' && ui.sheikahView === "shop") {
       ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
       render();
       if (matchMedia('(max-width: 1100px)').matches) {
@@ -692,20 +698,15 @@ const ACTIONS = {
   "shop-item": (el) => buyOrEquip(el.dataset.itemId),
 
   "student-pick": (el) => {
-    rememberStudent(el.dataset.pupilId);
-    ui.sheikahView = "board";
+    if (!chooseClassPupil(el.dataset.pupilId)) return;
+    ui.sheikahView = "sheet";
     ui.draft = null;
     ui.query = "";
     render();
     window.scrollTo({ top: 0 });
   },
 
-  "change-hero": () => {
-    rememberStudent(null);
-    ui.sheikahView = "board";
-    ui.draft = null;
-    render();
-  },
+  "change-hero": showClassRoster,
 
   undo: () => undo(),
 
@@ -795,6 +796,7 @@ const FORMS = {
 
   unlock: async (form) => {
     if (ui.lockPending) return;
+    const request = ++teacherUnlockRequest;
     const context = captureSessionContext();
     const password = String(new FormData(form).get("password") || "");
     if (!password) {
@@ -806,7 +808,7 @@ const FORMS = {
     ui.lockError = "";
     render();
     const result = await verifyPassword(password);
-    if (!isCurrentSession(context)) return;
+    if (!isCurrentSession(context) || request !== teacherUnlockRequest || ui.teacherDialog !== 'unlock') return;
     ui.lockPending = false;
     if (result.expired) {
       endSession("The session ended. Sign in again. Your local cache was kept.", context);
@@ -815,13 +817,14 @@ const FORMS = {
     if (!result.ok) {
       ui.lockError = result.error;
       render();
+      dialogRoot.querySelector('#adult-password')?.focus();
       return;
     }
     unlockAdult();
-    if (location.hash === "#admin" && account?.role === "admin") {
-      render();
-      loadAdminAccounts();
-    } else navigate("#board");
+    const target = ui.teacherAfterUnlock;
+    closeDialog({ resumeConsole:false });
+    if (target === 'admin' && account?.role === 'admin') navigate('#admin');
+    else openTeacherConsole({ verified:true });
     toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
   },
 
@@ -881,13 +884,21 @@ const FORMS = {
       form.querySelector("#pupil-name")?.focus();
       return;
     }
-    commit(addPupil(state, state.activeClassId, {
+    const classId = form.dataset.classId || state.activeClassId;
+    const classroom = state.classes.find(item => item.id === classId);
+    if (!classroom) { closeDialog(); return; }
+    const wasDialog = dialogRoot.contains(form);
+    const returnToConsole = ui.teacherDialog === 'add' && ui.addFromConsole;
+    const next = addPupil(state, classId, {
       name,
       gender: String(data.get("gender") || "boy"),
       skinTone: String(data.get("skinTone") || "light")
-    }));
-    toast(t("notice.joined", { name, classroom: getCurrentClass(state).name }), "success");
-    document.querySelector("#pupil-name")?.focus();
+    });
+    if (wasDialog) closeDialog({ resumeConsole:false });
+    commit(next);
+    if (returnToConsole) { ui.addFromConsole=false; openTeacherConsole({ verified:true }); }
+    toast(t("notice.joined", { name, classroom: classroom.name }), "success");
+    dialogRoot.querySelector('[data-action="focus-add"]')?.focus({ preventScroll: true });
   },
 
   "rename-pupil": (form) => {
@@ -991,21 +1002,20 @@ function openItemDialog(itemId) {
   showDialog(renderItemDialog(item, pupil));
 }
 
-function showDialog(html) {
-  closeDialog();
+function showDialog(html, teacherMode = null) {
+  if (!teacherMode && ui.teacherDialog === 'console') lockAdult();
+  const continuingUnlock = teacherMode === 'unlock' && ui.teacherDialog === 'unlock';
+  closeDialog({ resumeConsole:false, preserveUnlock:continuingUnlock });
+  ui.teacherDialog = teacherMode;
   dialogRoot.innerHTML = html;
   const dialog = dialogRoot.querySelector("dialog");
   if (!dialog) return;
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) closeDialog();
-    const close = event.target.closest("[data-action='close-dialog']");
-    if (close) closeDialog();
   });
   dialog.addEventListener("close", () => {
     if (dialogRoot.contains(dialog)) {
-      releaseCharacterViewer?.();
-      releaseCharacterViewer = null;
-      dialogRoot.innerHTML = "";
+      closeDialog();
     }
   });
   dialog.showModal();
@@ -1014,17 +1024,66 @@ function showDialog(html) {
 /* Native close events arrive on the next turn. Clear immediately so a closed
  * dialog cannot remain in the DOM or accessibility tree between renders.
  */
-function closeDialog() {
+function closeDialog({ resumeConsole = true, preserveUnlock = false } = {}) {
+  const mode = ui.teacherDialog;
+  ui.teacherDialog = null;
+  if (mode === 'unlock' && !preserveUnlock) {
+    teacherUnlockRequest += 1;
+    ui.lockPending = false;
+  }
   releaseCharacterViewer?.();
   releaseCharacterViewer = null;
   const dialog = dialogRoot.querySelector("dialog");
   if (dialog?.open) dialog.close();
   dialogRoot.innerHTML = "";
+  if (resumeConsole && mode === 'add' && ui.addFromConsole && isAdultUnlocked()) {
+    ui.addFromConsole = false;
+    openTeacherConsole({ verified:true });
+  } else if (resumeConsole && ['console','unlock'].includes(mode)) {
+    lockAdult();
+    app.querySelector('.tablet-tools summary')?.focus({ preventScroll:true });
+  }
+}
+
+function openTeacherGate(after = 'console') {
+  app.querySelector('.tablet-tools')?.removeAttribute('open');
+  ui.teacherAfterUnlock = after;
+  ui.lockPending = false;
+  ui.lockError = '';
+  ui.teacherDialog = 'unlock';
+  renderTeacherDialog();
+  dialogRoot.querySelector('#adult-password')?.focus();
+}
+
+function openTeacherConsole({ verified = false } = {}) {
+  if (!verified || !isAdultUnlocked()) { openTeacherGate(); return; }
+  ui.teacherDialog = 'console';
+  renderTeacherDialog();
+  mountHeroPortraits(document.body);
+}
+
+function renderTeacherDialog() {
+  let mode = ui.teacherDialog;
+  if (!mode) return;
+  if (mode !== 'unlock' && !isAdultUnlocked()) mode = 'unlock';
+  if (mode === 'unlock') {
+    showDialog(`<dialog class="dialog teacher-unlock-dialog" aria-labelledby="lock-title"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>${renderLockScreen({account,error:ui.lockError,pending:ui.lockPending})}</dialog>`, 'unlock');
+    return;
+  }
+  if (mode === 'add') {
+    const classroom = state.classes.find(item => item.id === ui.addClassId);
+    if (classroom) showDialog(renderAddPupilDialog(classroom), 'add');
+    else closeDialog();
+    return;
+  }
+  const classroom = getCurrentClass(state);
+  const focused = classroom.pupils.find(item => item.id === state.selectedPupilId) || null;
+  showDialog(`<dialog class="dialog teacher-console-dialog" aria-label="${t('console.title')}"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button><div class="teacher-console-content">${renderConsole({classroom,ui,targets:getTargets(),focused,canUndo:history.length>0,events:state.events,armedReset:armedDanger==='reset',unlockedUntil:unlockUntil(),account})}</div></dialog>`, 'console');
 }
 
 function disarmDanger() {
   armedDanger = null;
-  const armed = app.querySelector(".is-armed");
+  const armed = document.querySelector("#app .is-armed, #dialog-root .is-armed");
   if (armed) render();
 }
 
@@ -1044,7 +1103,7 @@ function commit(nextState, { record = true, notify = true } = {}) {
 }
 
 function undo() {
-  if (!isAdultUnlocked()) return;
+  if (!isAdultUnlocked() || ui.teacherDialog !== 'console') return;
   if (!history.length) {
     toast("Nothing left to undo.", "info");
     return;
@@ -1124,6 +1183,7 @@ function loadState(accountId) {
 }
 
 function openAccount(next) {
+  closeDialog({ resumeConsole:false });
   clearTimeout(persistTimer);
   persistTimer = null;
   saveQueued = false;
@@ -1150,6 +1210,7 @@ function openAccount(next) {
 
 function endSession(message = "", context = null) {
   if (context && !isCurrentSession(context)) return;
+  closeDialog({ resumeConsole:false });
   forgetSession(context);
   account = null;
   activeSession = null;
@@ -1425,9 +1486,9 @@ window.addEventListener("pagehide", () => {
 });
 
 function renderPreservingForms() {
-  const forms = [...app.querySelectorAll("form")].map(form => [...form.elements].map(input => ({ name: input.name, value: input.value, checked: input.checked })));
+  const forms = [...document.querySelectorAll("#app form, #dialog-root form")].map(form => [...form.elements].map(input => ({ name: input.name, value: input.value, checked: input.checked })));
   render();
-  [...app.querySelectorAll("form")].forEach((form, index) => {
+  [...document.querySelectorAll("#app form, #dialog-root form")].forEach((form, index) => {
     for (const saved of forms[index] || []) {
       const input = saved.name && form.elements.namedItem(saved.name);
       if (!input || input.type === "file") continue;
@@ -1440,7 +1501,7 @@ function renderPreservingForms() {
 initLanguage();
 document.getElementById("lang-toggle")?.addEventListener("click", () => {
   setLang(getLang() === "fr" ? "en" : "fr");
-  closeDialog();
+  if (!ui.teacherDialog) closeDialog();
   renderPreservingForms();
 });
 applyTheme();

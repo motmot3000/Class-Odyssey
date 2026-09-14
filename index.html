@@ -14,7 +14,8 @@
       // Light on first visit; preserve an explicit choice before styles load.
       try {
         const savedTheme = localStorage.getItem("classquest:theme");
-        if (savedTheme === "light" || savedTheme === "dark") {
+        const savedSession = JSON.parse(localStorage.getItem("classquest:session") || "null");
+        if (savedSession?.token && savedSession?.account?.id && (savedTheme === "light" || savedTheme === "dark")) {
           document.documentElement.dataset.theme = savedTheme;
         }
       } catch { /* Storage may be unavailable in private browsing. */ }
@@ -40,16 +41,7 @@
     <link rel="stylesheet" href="./src/welcome.css" />
   </head>
   <body>
-    <!-- Welcome direction: a6bf5223, user-selected luminous exploration.
-      THESIS: Enter a game world together; the actual equipped heroes lead the invitation.
-      OWN-WORLD: Sunlit highlands, pine-green ink, golden brass, Marcellus lettering.
-      STORY: English becomes a shared adventure; discover a hero, then open your class.
-      FIRST VIEWPORT: Landscape fills the screen. Large invitation upper left, three
-      current-catalogue heroes below, a clear sign-in panel right. Role selection
-      brings a hero forward; optional live 3D invites a closer look.
-      FORM: An adventure game's entry screen, responsive and motion-optional.
-      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
-    -->
+    <!-- Static, light entry screen: landscape, invitation and account form. -->
     <div id="app"></div>
     <div id="toasts" aria-live="polite"></div>
     <div id="dialog-root"></div>

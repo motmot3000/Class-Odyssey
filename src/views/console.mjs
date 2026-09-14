@@ -2,7 +2,7 @@
  * into details panels. All state changes are dispatched through app.mjs.
  */
 
-import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
+import { getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
 import { baseStageAttributes as heroStageAttributes } from "../characters.mjs";
 import { renderEquippedCharacter as renderHero } from "../equipment-previews.mjs";
 import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney, translateReward } from "../ui.mjs";
@@ -24,6 +24,9 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
   return `
     <div class="console-head">
       <h2>${t("console.title")}</h2>
+      <button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>
+    </div>
+    <div class="console-history">
       <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="${t("console.undoHint")}">
         ${icon("undo")}<span>${t("console.undo")}</span>
       </button>
@@ -32,7 +35,6 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     ${renderTarget(classroom, ui, targets)}
     ${renderAward(ui, targets)}
     ${renderHeroPanel(focused, ui, open)}
-    ${renderRosterPanel(classroom, open)}
     ${renderActivityPanel(events, open)}
     ${renderDataPanel(open, armedReset)}
     ${renderAccountPanel(open, unlockedUntil, account)}
@@ -88,8 +90,11 @@ function renderTarget(classroom, ui, targets) {
       </div>
       <p class="target-names">${summary}</p>
       ${ui.scope === "selection" ? `
+        <label class="field teacher-target"><span>${t('console.target.choose')}</span><select id="teacher-target" data-action="teacher-target">
+          <option value="">${t('console.target.none')}</option>
+          ${classroom.pupils.map(pupil=>`<option value="${escapeHtml(pupil.id)}" ${targets.includes(pupil.id)?'selected':''}>${escapeHtml(pupil.name)}</option>`).join('')}
+        </select></label>
         <div class="target-actions">
-          <button class="btn btn-sm" type="button" data-action="select-all">${t("console.target.selectAll")}</button>
           <button class="btn btn-sm" type="button" data-action="clear-selection" ${targets.length ? "" : "disabled"}>${t("console.target.clear")}</button>
         </div>
       ` : ""}
@@ -207,36 +212,6 @@ function renderHeroPanel(pupil, ui, open) {
     <details class="panel" data-panel="shop" ${open("shop")}>
       <summary>${icon("shop")}<span>${t("console.shop.summary", { name: escapeHtml(pupil.name) })}</span></summary>
       ${renderShop(pupil, ui.shopCategory)}
-    </details>
-  `;
-}
-
-function renderRosterPanel(classroom, open) {
-  return `
-    <details class="panel" data-panel="add" ${open("add")}>
-      <summary>${icon("plus")}<span>${t("console.roster.add")}</span></summary>
-      <form class="add-form" data-action="add-pupil">
-        <div class="inline-form">
-          <input id="pupil-name" name="name" autocomplete="off" placeholder="${t("console.roster.firstName")}" aria-label="${t("console.roster.firstName")}" />
-          <button class="btn btn-primary btn-sm" type="submit">${t("console.roster.addBtn")}</button>
-        </div>
-        <div class="field-row">
-          <label class="field">
-            <span>${t("console.roster.character")}</span>
-            <select name="gender">
-              <option value="boy">${t("console.roster.boy")}</option>
-              <option value="girl">${t("console.roster.girl")}</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>${t("console.roster.skinTone")}</span>
-            <select name="skinTone">
-              ${SKIN_TONES.filter((tone) => !tone.price).map((tone) => `<option value="${tone.id}">${escapeHtml(tItem(tone, "name"))}</option>`).join("")}
-            </select>
-          </label>
-        </div>
-        <p class="panel-note">${t("console.roster.joining", { name: escapeHtml(classroom.name) })}</p>
-      </form>
     </details>
   `;
 }

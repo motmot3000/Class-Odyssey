@@ -10,6 +10,7 @@ export const CATEGORIES = [
 export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'lore-lantern', hair: 'short', hairColor: 'brown-hair' };
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
 export const CATALOGUE_REVISION = 'catalogue-v5-tailored-armour';
+export const PORTRAIT_REVISION = `${CATALOGUE_REVISION}-front-hd`;
 export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
 
 export function pupilLook(pupil, draft = null) {

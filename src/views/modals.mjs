@@ -2,7 +2,7 @@
  * background. app.mjs owns mounting and disposal of their optional 3D viewer.
  */
 
-import { canBuyItem, cosmeticField, getNextReward, isItemOwned, xpProgress } from "../domain.mjs";
+import { canBuyItem, cosmeticField, getNextReward, isItemOwned, xpProgress, SKIN_TONES } from "../domain.mjs";
 import { renderItemThumbnail } from "../equipment-previews.mjs";
 import { renderBaseCharacterViewer, baseStageAttributes } from "../characters.mjs";
 import {
@@ -33,6 +33,26 @@ const TYPE_LABEL = {
   tone: () => t("modal.type.tone"),
   bespoke: () => t("modal.type.bespoke")
 };
+
+export function renderAddPupilDialog(classroom) {
+  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="add-pupil-title">${t('console.roster.add')}</h2>
+    <p class="panel-note">${t('console.roster.joining',{name:escapeHtml(classroom.name)})}</p>
+    <form class="add-form" data-action="add-pupil" data-class-id="${escapeHtml(classroom.id)}">
+      <label class="field"><span>${t('console.roster.firstName')}</span><input id="pupil-name" name="name" autocomplete="off" required autofocus /></label>
+      <div class="field-row">
+        <label class="field"><span>${t('console.roster.character')}</span><select name="gender">
+          <option value="boy">${t('console.roster.boy')}</option><option value="girl">${t('console.roster.girl')}</option>
+        </select></label>
+        <label class="field"><span>${t('console.roster.skinTone')}</span><select name="skinTone">
+          ${SKIN_TONES.filter(tone=>!tone.price).map(tone=>`<option value="${tone.id}">${escapeHtml(tItem(tone,'name'))}</option>`).join('')}
+        </select></label>
+      </div>
+      <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('console.roster.addBtn')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
+    </form>
+  </dialog>`;
+}
 
 // Read-only hero details remain safe to display on a classroom touch screen.
 export function renderPupilDialog(pupil) {
@@ -91,7 +111,7 @@ export function renderItemDialog(item, pupil) {
   const visual = renderItemThumbnail(item);
 
   return `
-    <dialog class="dialog dialog-item" aria-label="${escapeHtml(tItem(item, "name"))}">
+    <dialog class="dialog dialog-item" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${escapeHtml(tItem(item, "name"))}">
       <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
       <div class="dialog-item-art item-only-preview">${visual}</div>
       <h2>${escapeHtml(tItem(item, "name"))}</h2>
