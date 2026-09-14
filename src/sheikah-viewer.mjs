@@ -32,6 +32,7 @@ export async function createHeroViewer(container, glbUrl, initialState, { onProg
     setTheme: viewer.setTheme,
     counts: viewer.counts,
     resize: viewer.resize,
+    snapshot: viewer.snapshot,
     destroy: viewer.destroy
   };
 }

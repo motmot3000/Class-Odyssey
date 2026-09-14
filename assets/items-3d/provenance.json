@@ -3,6 +3,9 @@
   "referenceBranch": "motmot3000/test-modelisation",
   "referenceAssets": ["assets/characters-base/boy-medium.glb", "assets/characters-base/girl-medium.glb"],
   "referenceRevision": "base-v2-2026-09",
+  "appearanceRevision": "catalogue-v4-fibres-fit",
+  "surfacePass": "UV-compatible surface-v3 face, iris, skin and trouser maps; regenerated tapered hair with tangent-space fibre maps; close-cut tunic, flat leather belt and thinner anatomical grips. Original body positions and anchor contract retained.",
+  "previewPipeline": "tools/render-equipment-previews.py and tools/finalize-equipment-previews.py render the current catalogue: 27 isolated products, two canonical portraits; live class-card portraits are generated from the same GLB and actual equipped look.",
   "referenceCharacters": "Noa et Mila, corps soudés en pose naturelle à 82 degrés depuis la pose T",
   "sourceGeometry": {
     "copyright": "Nintendo — The Legend of Zelda: Breath of the Wild",

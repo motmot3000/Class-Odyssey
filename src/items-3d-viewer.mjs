@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { visiblePart, HAIR_PALETTE } from './items-3d-model.mjs';
+import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION } from './items-3d-model.mjs';
 
-export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = '/assets/items-3d/catalogue.glb', theme = 'light' } = {}) {
+export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = `/assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, theme = 'light' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -42,7 +42,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   };
   let model;
   try {
-    const gltf = await new GLTFLoader().loadAsync(modelURL, event => { if (event.total) onProgress(Math.round(event.loaded / event.total * 100)); });
+    const gltf = await new GLTFLoader().loadAsync(modelURL, event => { if (event.total) onProgress?.(Math.round(event.loaded / event.total * 100)); });
     model = gltf.scene;
   } catch (error) { environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
   scene.add(model);
@@ -58,6 +58,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   const target = new THREE.Vector3(0, 1.02, 0);
   let distance = 4.8;
   let elevation = .23;
+  let previewSize = null;
   const views = {
     front: { yaw: 0, target: [0, 1.02, 0], distance: 4.8, elevation: .18 },
     quarter: { yaw: .55, target: [0, 1.02, 0], distance: 4.8, elevation: .23 },
@@ -66,7 +67,9 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     item: { yaw: .10, target: [0, 1, 0], distance: 2.5, elevation: .09 }
   };
   function placeCamera() {
-    const d = distance * Math.max(1, .82 / camera.aspect);
+    const d = previewSize
+      ? Math.max(previewSize.y/2, Math.hypot(previewSize.x, previewSize.z)/(2*camera.aspect)) / Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * 1.18 + previewSize.length()*.2
+      : distance * Math.max(1, .82 / camera.aspect);
     camera.position.set(target.x + Math.sin(yaw) * d, target.y + elevation, target.z + Math.cos(yaw) * d);
     camera.lookAt(target);
   }
@@ -84,7 +87,9 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     return { pieces, triangles: Math.round(triangles) };
   }
   function applyLook(next) {
+    const wasPreview = Boolean(look.preview);
     look = { ...next };
+    ground.visible = !look.preview;
     model.userData.game_of_more_loadout = { ...look };
     model.traverse(obj => {
       obj.visible = visiblePart(obj.userData, look);
@@ -98,15 +103,27 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         }
       }
     });
-    if (angle === 'item' || angle === 'head') setAngle(angle);
+    if (look.preview || wasPreview || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
     requestDraw();
     return counts();
   }
   function setAngle(value) {
+    if (!views[value]) value = 'quarter';
+    if (look.preview && ['head', 'item'].includes(value)) value = 'quarter';
     angle = value; rotating = false; lastTime = 0;
     const preset = views[value];
     yaw = preset.yaw; target.set(...preset.target); distance = preset.distance; elevation = preset.elevation;
-    if (value === 'item' || value === 'head') {
+    previewSize = null;
+    if (look.preview) {
+      const bounds = new THREE.Box3();
+      model.updateMatrixWorld(true);
+      model.traverseVisible(obj => { if (obj.isMesh) bounds.expandByObject(obj, true); });
+      if (!bounds.isEmpty()) {
+        bounds.getCenter(target);
+        previewSize = bounds.getSize(new THREE.Vector3());
+        elevation = previewSize.y*.06;
+      }
+    } else if (value === 'item' || value === 'head') {
       const bounds = new THREE.Box3();
       const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon'];
       model.traverseVisible(obj => {
@@ -151,10 +168,10 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   renderer.domElement.addEventListener('pointermove', event => {
     if (pointer?.id !== event.pointerId) return;
     const delta = event.clientX - pointer.x; pointer.x = event.clientX;
-    if (Math.abs(delta) > .3) { rotating = false; angle = 'free'; yaw -= delta * .008; onFreeView(); requestDraw(); }
+    if (Math.abs(delta) > .3) { rotating = false; angle = 'free'; yaw -= delta * .008; onFreeView?.(); requestDraw(); }
   });
   for (const type of ['pointerup', 'pointercancel']) renderer.domElement.addEventListener(type, () => { pointer = undefined; });
-  renderer.domElement.addEventListener('webglcontextlost', event => { event.preventDefault(); lost = true; setActive(false); onError('La session 3D a été interrompue. Rechargez la page pour reprendre.'); });
+  renderer.domElement.addEventListener('webglcontextlost', event => { event.preventDefault(); lost = true; setActive(false); onError?.('La session 3D a été interrompue. Rechargez la page pour reprendre.'); });
   async function exportLook(itemsOnly = false) {
     const { GLTFExporter } = await import('three/addons/exporters/GLTFExporter.js');
     try {
@@ -177,9 +194,40 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     counts,
     resize,
     exportLook,
+    snapshot() {
+      if (lost) return null;
+      const previousTarget=target.clone(), previousSize=previewSize, previousElevation=elevation;
+      const wasGroundVisible=ground.visible;
+      try {
+        const bounds=new THREE.Box3();
+        model.updateMatrixWorld(true);
+        model.traverseVisible(obj=>{if(obj.isMesh) bounds.expandByObject(obj,true);});
+        if (!bounds.isEmpty()) {
+          bounds.getCenter(target);
+          previewSize=bounds.getSize(new THREE.Vector3());
+          elevation=previewSize.y*.025;
+        }
+        ground.visible=false;
+        placeCamera(); renderer.render(scene,camera);
+        return canvas.toDataURL('image/webp', .85);
+      } finally {
+        target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
+        ground.visible=wasGroundVisible;
+      }
+    },
     destroy() {
       observer.disconnect();
       cancelAnimationFrame(frame);
+      const geometries=new Set(), materials=new Set(), textures=new Set();
+      model.traverse(obj=>{
+        if (obj.geometry) geometries.add(obj.geometry);
+        for (const mat of (Array.isArray(obj.material)?obj.material:[obj.material]).filter(Boolean)) materials.add(mat);
+      });
+      for (const material of materials) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+      geometries.forEach(geometry=>geometry.dispose());
+      materials.forEach(material=>material.dispose());
+      textures.forEach(texture=>texture.dispose());
+      environment.dispose(); ground.geometry.dispose(); ground.material.dispose();
       renderer.dispose();
       canvas.remove();
     }

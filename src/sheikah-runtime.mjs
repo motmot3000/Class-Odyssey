@@ -6,8 +6,9 @@
    ============================================================ */
 
 import { t } from "./i18n.mjs";
+import { CATALOGUE_URL, CATALOGUE_REVISION } from "./items-3d-model.mjs";
 
-const GLB_URL = new URL("../assets/items-3d/catalogue.glb", import.meta.url).href;
+const GLB_URL = CATALOGUE_URL;
 let runtime;
 let viewer;
 let instancePromise = null;
@@ -19,7 +20,7 @@ let onFreeView = () => {};
 
 function loadRuntime() {
   if (!runtime) {
-    runtime = import(new URL("../assets/sheikah/viewer.js", import.meta.url).href)
+    runtime = import(new URL(`../assets/sheikah/viewer.js?v=${CATALOGUE_REVISION}`, import.meta.url).href)
       .catch((error) => { runtime = undefined; throw error; });
   }
   return runtime;

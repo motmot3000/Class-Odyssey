@@ -36,11 +36,11 @@ test("girls use the female persona and keep their own cosmetics", () => {
 
 test("the shop preview applies only items that have a 3D model", () => {
   const value = pupil();
-  const original = gameLook(value);
-  const hat = shopPreviewLook(value, { shopPreview: "wizard-hat" });
+  const hat = shopPreviewLook(value, { shopCategory: "hat", shopPreview: "wizard-hat" });
   assert.equal(hat.hat, "wizard-hat");
-  const title = shopPreviewLook(value, { shopPreview: "class-legend" });
-  assert.deepEqual(title, original);
+  assert.deepEqual(hat.preview, { slot: "hat", id: "wizard-hat" });
+  const title = shopPreviewLook(value, { shopCategory: "title", shopPreview: "class-legend" });
+  assert.equal(title, null);
 });
 
 test("the Sheikah workshop converts its draft to domain cosmetic types", () => {

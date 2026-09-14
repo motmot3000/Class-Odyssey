@@ -1,0 +1,181 @@
+{
+  "revision": "catalogue-v4-fibres-fit",
+  "catalogueSha256": "3944d62140c2f9588203f701de23590ced866bf057c9d003b3e93c69e56ff710",
+  "renderSource": "catalogue.blend",
+  "items": {
+    "braided": {
+      "slot": "hair",
+      "file": "items/braided.webp",
+      "meshCount": 44,
+      "containsBody": false
+    },
+    "curly": {
+      "slot": "hair",
+      "file": "items/curly.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "long": {
+      "slot": "hair",
+      "file": "items/long.webp",
+      "meshCount": 61,
+      "containsBody": false
+    },
+    "royal-hair": {
+      "slot": "hair",
+      "file": "items/royal-hair.webp",
+      "meshCount": 75,
+      "containsBody": false
+    },
+    "short": {
+      "slot": "hair",
+      "file": "items/short.webp",
+      "meshCount": 34,
+      "containsBody": false
+    },
+    "celestial-crown": {
+      "slot": "hat",
+      "file": "items/celestial-crown.webp",
+      "meshCount": 13,
+      "containsBody": false
+    },
+    "classy-hat": {
+      "slot": "hat",
+      "file": "items/classy-hat.webp",
+      "meshCount": 4,
+      "containsBody": false
+    },
+    "explorer-cap": {
+      "slot": "hat",
+      "file": "items/explorer-cap.webp",
+      "meshCount": 6,
+      "containsBody": false
+    },
+    "feather-beret": {
+      "slot": "hat",
+      "file": "items/feather-beret.webp",
+      "meshCount": 5,
+      "containsBody": false
+    },
+    "gold-crown": {
+      "slot": "hat",
+      "file": "items/gold-crown.webp",
+      "meshCount": 10,
+      "containsBody": false
+    },
+    "steel-helm": {
+      "slot": "hat",
+      "file": "items/steel-helm.webp",
+      "meshCount": 7,
+      "containsBody": false
+    },
+    "sunglasses": {
+      "slot": "hat",
+      "file": "items/sunglasses.webp",
+      "meshCount": 7,
+      "containsBody": false
+    },
+    "wizard-hat": {
+      "slot": "hat",
+      "file": "items/wizard-hat.webp",
+      "meshCount": 5,
+      "containsBody": false
+    },
+    "grammar-mage": {
+      "slot": "outfit",
+      "file": "items/grammar-mage.webp",
+      "meshCount": 15,
+      "containsBody": false
+    },
+    "grand-archmage": {
+      "slot": "outfit",
+      "file": "items/grand-archmage.webp",
+      "meshCount": 17,
+      "containsBody": false
+    },
+    "honor-knight": {
+      "slot": "outfit",
+      "file": "items/honor-knight.webp",
+      "meshCount": 21,
+      "containsBody": false
+    },
+    "realm-sovereign": {
+      "slot": "outfit",
+      "file": "items/realm-sovereign.webp",
+      "meshCount": 39,
+      "containsBody": false
+    },
+    "starter": {
+      "slot": "outfit",
+      "file": "items/starter.webp",
+      "meshCount": 10,
+      "containsBody": false
+    },
+    "story-keeper": {
+      "slot": "outfit",
+      "file": "items/story-keeper.webp",
+      "meshCount": 21,
+      "containsBody": false
+    },
+    "vocab-ranger": {
+      "slot": "outfit",
+      "file": "items/vocab-ranger.webp",
+      "meshCount": 12,
+      "containsBody": false
+    },
+    "dual-daggers": {
+      "slot": "weapon",
+      "file": "items/dual-daggers.webp",
+      "meshCount": 20,
+      "containsBody": false
+    },
+    "lore-lantern": {
+      "slot": "weapon",
+      "file": "items/lore-lantern.webp",
+      "meshCount": 9,
+      "containsBody": false
+    },
+    "pencil-sword": {
+      "slot": "weapon",
+      "file": "items/pencil-sword.webp",
+      "meshCount": 10,
+      "containsBody": false
+    },
+    "spell-grimoire": {
+      "slot": "weapon",
+      "file": "items/spell-grimoire.webp",
+      "meshCount": 9,
+      "containsBody": false
+    },
+    "star-shield": {
+      "slot": "weapon",
+      "file": "items/star-shield.webp",
+      "meshCount": 8,
+      "containsBody": false
+    },
+    "swords-and-shield": {
+      "slot": "weapon",
+      "file": "items/swords-and-shield.webp",
+      "meshCount": 28,
+      "containsBody": false
+    },
+    "word-wand": {
+      "slot": "weapon",
+      "file": "items/word-wand.webp",
+      "meshCount": 7,
+      "containsBody": false
+    }
+  },
+  "portraits": {
+    "male": {
+      "file": "portraits/male.webp",
+      "pose": "base-v2-arms-lowered",
+      "hair": "short"
+    },
+    "female": {
+      "file": "portraits/female.webp",
+      "pose": "base-v2-arms-lowered",
+      "hair": "long"
+    }
+  }
+}

@@ -5,7 +5,7 @@
    ============================================================ */
 
 import { canBuyItem, getShopItems, isItemOwned } from "../domain.mjs";
-import { renderItemArt } from "../avatar.mjs";
+import { renderItemThumbnail } from "../equipment-previews.mjs";
 import { escapeHtml, getItemRarity, getItemTier, renderMoney } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
 
@@ -106,7 +106,7 @@ function renderShopItem(item, pupil, previewed = false) {
         data-item-id="${escapeHtml(item.id)}"
         aria-pressed="${previewed}"
         aria-label="${t("shop.preview", { name: escapeHtml(tItem(item, "name")) })}"
-      >${renderThumb(item, pupil)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
+      >${renderItemThumbnail(item)}<span class="item-tier" aria-hidden="true">${getItemTier(item)}</span></button>
       <div class="shop-item-text">
         <strong>${escapeHtml(tItem(item, "name"))}</strong>
         <small>${meta}</small>
@@ -121,11 +121,4 @@ function renderShopItem(item, pupil, previewed = false) {
       >${label}</button>
     </article>
   `;
-}
-
-function renderThumb(item, pupil) {
-  if (item.type === "title") {
-    return `<span class="title-chip title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>`;
-  }
-  return renderItemArt({ ...item, name: tItem(item, "name") }, pupil);
 }

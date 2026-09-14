@@ -53,6 +53,7 @@ import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
+import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
   renderSheikahTopbar,
   renderSheikahTeacher,
@@ -198,6 +199,7 @@ function render() {
   restoreUiMemory(memory);
   flushFlash();
   syncSheikahRuntime();
+  mountHeroPortraits(app);
   updateClock();
   if (focusPanel) {
     const field = app.querySelector(`[data-panel="${focusPanel}"] input`);
@@ -643,6 +645,11 @@ const ACTIONS = {
     if (["board", "student"].includes(currentView()) && ui.sheikahView === "shop") {
       ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
       render();
+      if (matchMedia('(max-width: 1100px)').matches) {
+        const stage = app.querySelector('.atelier-stage');
+        const headerHeight = app.querySelector('.topbar')?.getBoundingClientRect().height || 0;
+        if (stage) window.scrollTo({ top: Math.max(0, window.scrollY + stage.getBoundingClientRect().top - headerHeight - 12), behavior: 'instant' });
+      }
       return;
     }
     openItemDialog(el.dataset.itemId);

@@ -5,13 +5,12 @@
    ============================================================ */
 
 import { canBuyItem, getNextReward, isItemOwned, xpProgress } from "../domain.mjs";
-import { renderHero, renderItemArt } from "../avatar.mjs";
+import { renderItemThumbnail } from "../equipment-previews.mjs";
 import { renderBaseCharacterViewer, baseStageAttributes } from "../characters.mjs";
 import {
   escapeHtml,
   getItemRarity,
   gearOf,
-  heroStageAttributes,
   icon,
   renderHearts,
   renderCustomOrders,
@@ -93,17 +92,12 @@ export function renderItemDialog(item, pupil) {
         ? t("modal.unlocksAt", { level: item.minLevel })
         : t("modal.costs", { price: item.price, money: pupil.money });
 
-  const previewPupil = bespoke
-    ? pupil
-    : { ...pupil, [field]: item.id };
-  const visual = bespoke
-    ? renderItemArt({ ...item, name: tItem(item, "name") })
-    : `${renderHero(previewPupil)}${item.type === "title" ? `<span class="preview-title title-${item.id}">${escapeHtml(tItem(item, "name"))}</span>` : ""}`;
+  const visual = renderItemThumbnail(item);
 
   return `
     <dialog class="dialog dialog-item" aria-label="${escapeHtml(tItem(item, "name"))}">
       <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
-      <div class="dialog-item-art ${bespoke ? "" : "is-hero-preview"}" ${bespoke ? "" : heroStageAttributes(previewPupil)}>${visual}</div>
+      <div class="dialog-item-art item-only-preview">${visual}</div>
       <h2>${escapeHtml(tItem(item, "name"))}</h2>
       <p class="panel-note item-meta"><span class="rarity-label rarity-${getItemRarity(item)}">${t(`rarity.${getItemRarity(item)}`)}</span>${t("modal.meta", { type: TYPE_LABEL[item.type]?.() || t("modal.type.weapon"), level: item.minLevel, price: item.price ? t("shop.coins", { price: item.price }) : t("shop.free") })}</p>
       ${item.description ? `<p class="dialog-item-description">${escapeHtml(tItem(item, "description"))}</p>` : ""}

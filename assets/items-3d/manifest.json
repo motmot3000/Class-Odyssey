@@ -1,4 +1,5 @@
 {
+  "appearanceRevision": "catalogue-v4-fibres-fit",
   "sourceRevision": "base-v2-2026-09",
   "sourcePose": {
     "armsFromT": 82,
@@ -16,18 +17,18 @@
     "persona:male": 4,
     "core:base": 2,
     "persona:female": 4,
-    "outfit:starter": 18,
-    "outfit:vocab-ranger": 22,
-    "outfit:grammar-mage": 28,
-    "outfit:story-keeper": 40,
-    "outfit:honor-knight": 40,
-    "outfit:grand-archmage": 32,
-    "outfit:realm-sovereign": 76,
-    "hair:short": 132,
-    "hair:long": 294,
+    "outfit:starter": 20,
+    "outfit:vocab-ranger": 24,
+    "outfit:grammar-mage": 30,
+    "outfit:story-keeper": 42,
+    "outfit:honor-knight": 42,
+    "outfit:grand-archmage": 34,
+    "outfit:realm-sovereign": 78,
+    "hair:short": 204,
+    "hair:long": 366,
     "hair:curly": 6,
-    "hair:braided": 192,
-    "hair:royal-hair": 378,
+    "hair:braided": 264,
+    "hair:royal-hair": 450,
     "hat:explorer-cap": 12,
     "hat:sunglasses": 14,
     "hat:feather-beret": 10,
@@ -57,15 +58,15 @@
     "male": {
       "anchor": {
         "position": [
-          0,
+          0.0,
           1.676,
           0.01645
         ],
         "quaternion": [
-          0,
-          0,
-          0,
-          1
+          0.0,
+          0.0,
+          0.0,
+          1.0
         ]
       },
       "clearance": [
@@ -75,35 +76,35 @@
       ],
       "templateToCharacter": [
         1.001398325,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
         0.931195796,
-        0,
-        0,
+        0.0,
+        0.0,
         -0.004000068,
         0.005275651,
-        1
+        1.0
       ]
     },
     "female": {
       "anchor": {
         "position": [
-          0,
+          0.0,
           1.676,
           0.01645
         ],
         "quaternion": [
-          0,
-          0,
-          0,
-          1
+          0.0,
+          0.0,
+          0.0,
+          1.0
         ]
       },
       "clearance": [
@@ -113,21 +114,21 @@
       ],
       "templateToCharacter": [
         0.950466096,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
         0.931195796,
-        0,
-        0,
+        0.0,
+        0.0,
         -0.004000068,
         0.005275651,
-        1
+        1.0
       ]
     }
   }

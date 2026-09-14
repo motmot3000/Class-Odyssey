@@ -1,5 +1,6 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
+  "shop.itemOnlyHint": ["Découvre chaque objet seul. Une fois acheté, retrouve-le porté par ton héros dans l’atelier.", "Discover each item on its own. Once purchased, see it on your hero in the workshop."],
   "welcome.adventure": ["L’aventure commence en classe.", "The adventure starts in class."],
   "welcome.adventureHint": ["Un héros pour chaque élève. Des progrès en anglais qui font grandir toute la classe.", "A hero for every pupil. Progress in English that helps the whole class grow."],
   "welcome.usernameHint": ["3 à 32 caractères : lettres, chiffres, point, tiret ou tiret bas.", "3–32 characters: letters, numbers, dots, dashes or underscores."],

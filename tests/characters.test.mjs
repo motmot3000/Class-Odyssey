@@ -31,13 +31,12 @@ test("base rendering escapes names and never changes inventory or equipped cosme
   assert.deepEqual(value,before);
 });
 
-test("board grid, board list, console and student views use lightweight base portraits", () => {
+test("legacy board and student views keep lightweight base portraits", () => {
   const classroom={...getCurrentClass(createInitialState()),pupils:[pupil({gender:"girl",skinTone:"brown"})]};
   const value=classroom.pupils[0];
   const views=[
     renderBoard(classroom,ui,[]),
     renderBoard(classroom,{...ui,density:"list"},[]),
-    renderConsole({classroom,ui,targets:[],focused:value,canUndo:false,events:[],armedReset:false}),
     renderStudentPicker(classroom,ui),
     renderStudentLocker(value,ui)
   ];
@@ -47,6 +46,15 @@ test("board grid, board list, console and student views use lightweight base por
     assert.doesNotMatch(html,/<canvas|data-base-character-viewer/);
     assert.match(html,/data-character-stage="base-v2"/);
   }
+});
+
+test("the active teacher console uses the current equipped character portrait", () => {
+  const value = pupil({ gender: 'girl', hair: 'long', hat: 'wizard-hat' });
+  const classroom = { ...getCurrentClass(createInitialState()), pupils: [value] };
+  const html = renderConsole({classroom,ui,targets:[],focused:value,canUndo:false,events:[],armedReset:false});
+  assert.match(html, /data-hero-portrait/);
+  assert.match(html, /items-3d\/previews\/portraits\/female\.webp/);
+  assert.doesNotMatch(html, /assets\/wardrobe\//);
 });
 
 test("full-size pupil dialog declares the matching model and preserves its stats", () => {
@@ -60,9 +68,10 @@ test("full-size pupil dialog declares the matching model and preserves its stats
   assert.match(html,/data-character-angle="back"/);
 });
 
-test("item previews retain the existing cosmetic renderer during base-only integration", () => {
+test("item dialogs show the 3D product thumbnail without an old avatar", () => {
   const item=SHOP_ITEMS.find(item=>item.type==="hat" && item.id!=="no-hat");
   const html=renderItemDialog(item,pupil());
-  assert.match(html,/<svg class="avatar/);
+  assert.match(html,/data-item-thumbnail="explorer-cap"/);
+  assert.doesNotMatch(html,/<svg class="avatar|is-hero-preview/);
   assert.doesNotMatch(html,/data-base-character-viewer/);
 });

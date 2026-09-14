@@ -5,7 +5,8 @@
    ============================================================ */
 
 import { SKIN_TONES, getNextReward, getRewardsForLevel, xpProgress } from "../domain.mjs";
-import { renderBaseCharacter as renderHero, baseStageAttributes as heroStageAttributes } from "../characters.mjs";
+import { baseStageAttributes as heroStageAttributes } from "../characters.mjs";
+import { renderEquippedCharacter as renderHero } from "../equipment-previews.mjs";
 import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney, translateReward } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
 import { getLang, t, tItem, translateMessage } from "../i18n.mjs";

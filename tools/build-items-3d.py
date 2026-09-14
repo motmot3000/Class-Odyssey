@@ -9,8 +9,10 @@ import bmesh
 import hashlib
 import json
 import math
+import os
 import struct
 import tempfile
+import numpy as np
 from pathlib import Path
 from mathutils import Matrix, Quaternion, Vector, noise
 
@@ -30,6 +32,123 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
+APPEARANCE_REVISION = 'catalogue-v4-fibres-fit'
+REFINED = ROOT / 'assets' / 'characters-refined' / 'textures'
+
+
+def texture_node(mat, filename):
+    node = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    node.image = bpy.data.images.load(str(filename), check_existing=True)
+    return node
+
+
+def surface_maps(mat, normal_path, rough_path, strength=.4):
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    shader = nodes.get('Principled BSDF')
+    normal = texture_node(mat, normal_path)
+    normal.image.colorspace_settings.name = 'Non-Color'
+    mapping = nodes.new('ShaderNodeNormalMap')
+    mapping.inputs['Strength'].default_value = strength
+    links.new(normal.outputs['Color'], mapping.inputs['Color'])
+    links.new(mapping.outputs['Normal'], shader.inputs['Normal'])
+    rough = texture_node(mat, rough_path)
+    rough.image.colorspace_settings.name = 'Non-Color'
+    links.new(rough.outputs['Color'], shader.inputs['Roughness'])
+
+
+def refine_source_materials(obj, gender):
+    """Reuse the surface-v3 UV-compatible face/skin/eye maps, not its old hair."""
+    for mat in obj.data.materials:
+        if not mat or not mat.use_nodes: continue
+        shader = mat.node_tree.nodes.get('Principled BSDF')
+        if not shader or mat.get('catalogue_surface_revision'): continue
+        key = mat.get('base_skin_map')
+        if key:
+            filename = f'head-{gender}-medium.png' if key == 'head' else 'skin-medium.png'
+            for node in mat.node_tree.nodes:
+                if node.type == 'TEX_IMAGE' and any(link.to_socket == shader.inputs['Base Color'] for link in node.outputs['Color'].links):
+                    node.image = bpy.data.images.load(str(REFINED / filename), check_existing=True)
+            surface_maps(mat, REFINED/f'normal-{key}.png', REFINED/f'rough-{key}.png', .50 if key == 'head' else .30)
+            shader.inputs['Specular IOR Level'].default_value = .28
+            shader.inputs['Subsurface Weight'].default_value = .025
+        elif 'Eye_L' in obj.name or 'Eye_R' in obj.name:
+            side = 'left' if 'Eye_L' in obj.name else 'right'
+            for node in mat.node_tree.nodes:
+                if node.type == 'TEX_IMAGE' and node.image:
+                    node.image = bpy.data.images.load(str(REFINED/f'eye-{gender}-{side}.png'), check_existing=True)
+            shader.inputs['Roughness'].default_value = .22
+            shader.inputs['Coat Weight'].default_value = .18
+        elif 'Pant_' in obj.name:
+            for node in mat.node_tree.nodes:
+                if node.type == 'TEX_IMAGE' and node.image:
+                    node.image = bpy.data.images.load(str(REFINED/'trousers.png'), check_existing=True)
+            surface_maps(mat, REFINED/'normal-trousers.png', REFINED/'rough-trousers.png', .45)
+        mat['catalogue_surface_revision'] = APPEARANCE_REVISION
+
+
+def make_surface_textures():
+    """Small, portable tangent-space PBR textures: fibres instead of clay."""
+    directory = OUT/'textures'
+    directory.mkdir(exist_ok=True)
+    size = 512
+    v, u = np.mgrid[0:size, 0:size].astype(np.float32) / size
+    for kind in ['hair', 'cloth']:
+        if kind == 'hair':
+            flow = u*93 + .16*np.sin(v*TAU*2) + .04*np.sin(v*TAU*7)
+            nx = .20*np.cos(flow*TAU) + .07*np.cos((u*207+v*.13)*TAU)
+            ny = .035*np.sin(v*TAU*5+u*TAU)
+            rough = .49 + .075*np.sin(flow*TAU) + .025*np.sin(v*TAU*3)
+        else:
+            nx = .09*np.sin(u*TAU*126)*np.cos(v*TAU*126)
+            ny = .09*np.cos(u*TAU*126)*np.sin(v*TAU*126)
+            rough = .85+.035*np.sin(u*TAU*23)*np.cos(v*TAU*27)
+        nz = np.sqrt(1-nx*nx-ny*ny)
+        normal = np.stack((nx*.5+.5, ny*.5+.5, nz*.5+.5, np.ones_like(u)), axis=-1)
+        roughness = np.stack((rough,rough,rough,np.ones_like(u)),axis=-1)
+        for channel, pixels in [('normal',normal),('roughness',roughness)]:
+            image = bpy.data.images.new(f'{kind} fine {channel}', width=size,height=size,alpha=False)
+            image.colorspace_settings.name='Non-Color'
+            image.pixels.foreach_set(pixels.ravel())
+            image.filepath_raw = str(directory/f'{kind}-{channel}.png')
+            image.file_format='PNG'; image.save()
+
+
+def grid_uv(obj, columns, rows):
+    uv = obj.data.uv_layers.new(name='FibreFlow')
+    for polygon in obj.data.polygons:
+        indices = [obj.data.loops[index].vertex_index for index in polygon.loop_indices]
+        wrap = any(index % columns == 0 for index in indices) and any(index % columns == columns-1 for index in indices)
+        for index in polygon.loop_indices:
+            vertex = obj.data.loops[index].vertex_index
+            across = vertex % columns
+            if wrap and across == 0: across = columns
+            uv.data[index].uv = (across/columns, (vertex//columns)/max(1,rows-1))
+
+
+def cloth_uv(obj):
+    uv = obj.data.uv_layers.new(name='WovenSurface')
+    for loop in obj.data.loops:
+        p = obj.data.vertices[loop.vertex_index].co
+        uv.data[loop.index].uv = (p.x*3+p.y, p.z*3)
+
+
+def trim_under_belt(obj):
+    # Keep the lowered sleeves, but remove the hidden original tunic tail.
+    # Otherwise it pokes through the new close-cut skirt beneath the belt.
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    arms = [(anchor_position(f'elbow_{side}'), anchor_position(f'wrist_{side}')) for side in ['left','right']]
+    def outside_sleeves(point):
+        for start, end in arms:
+            direction = end-start
+            weight = max(0,min(1,(point-start).dot(direction)/direction.length_squared))
+            if (point-(start+direction*weight)).length < .085: return False
+        return True
+    faces = [face for face in bm.faces if all(abs(v.co.x) < .215 and outside_sleeves(v.co) for v in face.verts)]
+    edges = {edge for face in faces for edge in face.edges}
+    verts = {vertex for face in faces for vertex in face.verts}
+    bmesh.ops.bisect_plane(bm, geom=faces+list(edges)+list(verts),
+                          plane_co=(0,0,1.030), plane_no=(0,0,1), clear_inner=True, dist=.00001)
+    bm.to_mesh(obj.data); bm.free(); obj.data.update()
 
 
 def anchor(name, who=None):
@@ -264,6 +383,7 @@ def prepare():
                 bpy.data.objects.remove(obj, do_unlink=True)
                 continue
             part = obj.get('part')
+            refine_source_materials(obj, gender)
             if part == 'clothes' and 'shirt' in obj.name.lower():
                 shirts.append(obj); continue
             if part not in ['skin','eyes','clothes']:
@@ -294,15 +414,28 @@ def garments(shirt):
                         ('story-keeper', '#913E37'), ('honor-knight', '#375B80'),
                         ('grand-archmage', '#453555'), ('realm-sovereign', '#853A42')]:
         cloth = material(f'{item} / woven cloth', color, .92)
-        duplicate(shirt, 'fitted long-sleeve tunic', cloth)
+        surface_maps(cloth, OUT/'textures/cloth-normal.png', OUT/'textures/cloth-roughness.png', .28)
+        top = duplicate(shirt, 'fitted long-sleeve tunic', cloth)
+        trim_under_belt(top)
+        cloth_uv(top)
         hem = .83 if item in ['starter', 'vocab-ranger'] else .42 if item in ['grammar-mage', 'grand-archmage'] else .67
-        shell('tailored tunic skirt', [(hem, .24, .185, -.015), (.92, .208, .19, -.024), (1.025, .18, .18, -.01)], cloth)
-        ring('bound hem', 0, -.015, hem, .24, .185, .004, GOLD if item != 'starter' else LEATHER)
-        belt_points = fitted_ring(shirt, 1.03, .009)
-        line('fitted leather waist belt', belt_points, .012, LEATHER, True)
+        # A close-cut tunic below the waist, not the previous rigid flared skirt.
+        rx = .204 if persona == 'male' else .194
+        ry = .169 if persona == 'male' else .160
+        skirt = shell('tailored tunic skirt', [(hem,rx,ry,-.015),(.92,rx*.94,ry*.98,-.020),(1.025,.175,.163,-.01)], cloth, thickness=.004)
+        cloth_uv(skirt)
+        ring('bound hem', 0, -.015, hem, rx, ry, .002, GOLD if item != 'starter' else LEATHER)
+        belt_points = fitted_ring(shirt, 1.035, .006)
+        lower = fitted_ring(shirt, 1.018, .006)
+        upper = fitted_ring(shirt, 1.052, .006)
+        n = len(lower)
+        belt = mesh('flat fitted leather waist belt', lower+upper,
+                    [(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)], LEATHER)
+        belt.modifiers.new('Leather band thickness','SOLIDIFY').thickness=.003
+        line('belt upper stitching', upper, .00065, GOLD, True)
         front = min(y for x, y, z in belt_points)
-        box('belt buckle', (0, front - .012, 1.03), (.056, .015, .039), GOLD)
-        box('buckle inset', (0, front - .022, 1.03), (.036, .005, .021), LEATHER, .002)
+        box('belt buckle', (0, front - .007, 1.035), (.044, .009, .035), GOLD, .003)
+        box('buckle inset', (0, front - .013, 1.035), (.030, .003, .023), LEATHER, .001)
         if item == 'starter':
             ring('scout neckerchief', 0, -.015, 1.436, .071, .075, .013, SAGE)
             prism('folded scout scarf', [(-.048, .025), (.048, .025), (.018, -.095), (0, -.068), (-.023, -.094)], (0, -.09, 1.404), .008, SAGE)
@@ -341,6 +474,7 @@ def garments(shirt):
 def tress(name, control, widths, depths, mat, detail=False):
     """Sculpted ribbon-like lock, smooth along its length and tapered at its tip."""
     control = [Vector(point) for point in control]
+    if slot == 'hair': depths = [depth*.58 for depth in depths]
     centers, ws, ds = [], [], []
     for j in range(len(control) - 1):
         p0, p1 = control[max(0, j - 1)], control[j]
@@ -368,14 +502,15 @@ def tress(name, control, widths, depths, mat, detail=False):
     faces += [(j*n+i, j*n+(i+1)%n, (j+1)*n+(i+1)%n, (j+1)*n+i) for j in range(len(centers)-1) for i in range(n)]
     faces.append(tuple((len(centers)-1)*n+i for i in range(n)))
     result = mesh(name, vertices, faces, mat)
+    grid_uv(result,n,len(centers))
     if detail:
         for i, points in enumerate(ridges):
-            line(name + ' / fine strand ' + str(i), [tuple(p) for p in points[3:-4:3]], .0009, HAIR_LIGHT if i else HAIR_DARK)
+            line(name + ' / fine strand ' + str(i), [tuple(p) for p in points[3:-4:3]], .00035, HAIR_LIGHT if i else HAIR_DARK)
     return result
 
 
 def scalp_point(a, theta, afro=False):
-    rx, ry, rz = (.169, .181, .181) if afro else (.115, .151, .151)
+    rx, ry, rz = (.156, .171, .171) if afro else (.115, .151, .151)
     zc = 1.65 if afro else HEAD_FIT['hair_center_z']
     direction = Vector((math.sin(theta)*math.cos(a), math.sin(theta)*math.sin(a), math.cos(theta)))
     ripple = .009*noise.noise_vector(direction*13).x + .0035*noise.noise_vector(direction*37).y if afro else 0
@@ -394,23 +529,26 @@ def scalp(afro=False):
             # leaving eyebrows and the silhouette of both ears visible.
             end = (1.89 + .28*math.sin(a)) if afro else (1.69 + .28*math.sin(a))
             if afro: end += .023*math.sin(a*13)+.015*math.cos(a*21)
+            else: end += .024*math.sin(a*17)+.010*math.sin(a*31+.7)
             theta = .002 + (end - .002) * j / (rows-1)
             vertices.append(scalp_point(a, theta, afro))
-    mesh('sculpted afro silhouette' if afro else 'fitted continuous hairline', vertices,
-         [(j*n+i, (j+1)*n+i, (j+1)*n+(i+1)%n, j*n+(i+1)%n) for j in range(rows-1) for i in range(n)], HAIR)
+    obj = mesh('sculpted afro silhouette' if afro else 'fitted continuous hairline', vertices,
+          [(j*n+i, (j+1)*n+i, (j+1)*n+(i+1)%n, j*n+(i+1)%n) for j in range(rows-1) for i in range(n)], HAIR)
+    grid_uv(obj,n,rows)
 
 
 def parted_fringe(short=False):
-    # Broad overlapping locks are flattened ribbons, not tubular curves.
+    # Side part with overlapping, finely tapered layers; no thick forehead slab.
+    for i in range(6):
+        u = i/5
+        tress('combed side-part layer', [(.044-u*.014,.012+u*.009,1.767-u*.007),
+              (.022-u*.036,-.089,1.755-u*.006),(-.040-u*.049,-.145+u*.012,1.690-u*.018),
+              (-.087-u*.015,-.106+u*.013,1.630-u*.010)],
+              [.010,.019,.018,.0006],[.004,.008,.006,.0004], HAIR, True)
     for i in range(3):
-        u = i/2
-        tress('swept left fringe', [(.043-u*.009, -.005, 1.769), (.008-u*.025, -.096, 1.767-u*.009),
-              (-.050-u*.023, -.155, 1.699-u*.010), (-.097-u*.004, -.115, 1.632-u*.008)],
-              [.012, .027, .029, .002], [.006, .012, .010, .001], HAIR, True)
-    tress('parted right fringe', [(.047, -.005, 1.766), (.094, -.077, 1.737), (.109, -.105, 1.672), (.102, -.074, 1.616)],
-          [.013, .030, .023, .002], [.006, .012, .010, .001], HAIR, True)
-    tress('broad swept forehead lock', [(.041,-.055,1.763),(.028,-.144,1.718),(-.018,-.171,1.665),(-.075,-.141,1.642)],
-          [.016,.042,.035,.002],[.006,.012,.009,.001], HAIR, True)
+        tress('light right temple sweep', [(.050+i*.006,.005,1.764-i*.006),(.088+i*.006,-.070,1.733-i*.008),
+              (.109,-.097+i*.010,1.674-i*.017),(.104,-.068+i*.012,1.617-i*.008)],
+              [.008,.016,.013,.0005],[.004,.007,.006,.0004], HAIR, True)
     if short:
         for sign in [-1, 1]:
             tress('tapered temple', [(sign*.101, -.032, 1.688), (sign*.113, -.068, 1.629), (sign*.104, -.058, 1.575)],
@@ -588,8 +726,8 @@ def hats():
 
 
 def sword(x, y, z, length=.61, name='sword'):
-    box(name + ' leather grip', (x, y, z), (.031, .035, .13), LEATHER)
-    for j in range(6): ring(name + ' grip binding', x, y, z - .055 + j * .021, .018, .02, .0023, GOLD)
+    line(name + ' leather grip', [(x,y,z-.065),(x,y,z+.065)], .011, LEATHER)
+    for j in range(6): ring(name + ' grip binding', x, y, z - .055 + j * .021, .0115, .0115, .0012, GOLD)
     ell(name + ' pommel', (x, y, z - .083), (.026, .023, .026), GOLD)
     prism(name + ' curved crossguard', [(-.101, -.017), (-.098, .012), (-.035, .027), (0, .009), (.035, .027), (.098, .012), (.101, -.017), (.035, -.007), (0, -.014), (-.035, -.007)], (x, y, z + .082), .028, GOLD)
     start = z + .095
@@ -638,7 +776,7 @@ def weapons():
     item = 'lore-lantern'
     start = len(objects)
     x, y = .582, -.023
-    line('lantern carrying handle', [(x - .045, y, .79), (x - .043, y, .862), (x, y, .896), (x + .043, y, .862), (x + .045, y, .79)], .006, GOLD)
+    line('lantern carrying handle', [(x - .039, y, .79), (x - .037, y, .855), (x, y, .886), (x + .037, y, .855), (x + .039, y, .79)], .0045, GOLD)
     box('lantern glowing panes', (x, y, .7), (.078, .076, .151), AMBER)
     for z in [.612, .787]: box('lantern brass cap', (x, y, z), (.119, .112, .024), GOLD)
     for dx in [-.046, .046]:
@@ -657,7 +795,7 @@ def weapons():
     mounted(start, 'grip_right', (.582,-.023,.886), 'book')
     item = 'word-wand'
     start = len(objects)
-    line('wooden staff', [(.582, -.023, .74), (.582, -.023, 1.44)], .014, LEATHER)
+    line('wooden staff', [(.582, -.023, .74), (.582, -.023, 1.44)], .011, LEATHER)
     for z in [.79, .93, 1.405]: ring('staff metal band', .582, -.023, z, .017, .017, .005, GOLD)
     for sign in [-1, 1]: line('crystal cradle', [(.582, -.023, 1.435), (.582 + sign * .068, -.023, 1.518), (.582 + sign * .052, -.023, 1.582)], .009, GOLD)
     prism('wand crystal', [(0, .101), (.043, 0), (0, -.093), (-.043, 0)], (.582, -.023, 1.539), .052, GEM)
@@ -668,10 +806,13 @@ def hand_mount(name, kind):
     """Mount orientation relative to the delivered anatomical anchor frame."""
     frame = anchor_matrix(name)
     position = frame.translation.copy()
-    if kind in ['blade','book','back']:
+    if kind in ['blade','back']:
         # The hand +Y axis points toward the relaxed fingers: blades point
         # down naturally and their guard follows the knuckle-row axis.
         return frame
+    if kind == 'book':
+        # Offset the book's edge into the palm rather than its thick centre.
+        return frame @ Matrix.Translation((.045,0,0))
     side = 1 if name.endswith('left') else -1
     if kind == 'shield':
         elbow = anchor_position('elbow_left')
@@ -738,7 +879,7 @@ def export():
     for obj in bpy.context.selected_objects:
         key = f"{obj.get('shop_slot')}:{obj.get('shop_id')}"
         manifest[key] = manifest.get(key, 0) + 1
-    report = {'sourceRevision': CONTRACT['revision'], 'sourcePose': CONTRACT['pose'],
+    report = {'appearanceRevision': APPEARANCE_REVISION, 'sourceRevision': CONTRACT['revision'], 'sourcePose': CONTRACT['pose'],
               'sourceSha256': {f'{gender}-medium.glb': hashlib.sha256((SOURCES/f'{gender}-medium.glb').read_bytes()).hexdigest() for gender in CHARACTERS.values()},
               'anchorManifestSha256': hashlib.sha256((SOURCES/'manifest.json').read_bytes()).hexdigest(),
               'coordinates': 'metres; Blender Z up, front -Y; glTF Y up, front +Z',
@@ -768,11 +909,12 @@ def export():
     bpy.ops.file.pack_all(); bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT / 'catalogue.blend'), compress=True)
     scene.render.filepath = str(OUT / 'preview.png')
-    bpy.ops.render.render(write_still=True)
+    if not os.environ.get('SKIP_CATALOGUE_RENDER'): bpy.ops.render.render(write_still=True)
     print('CATALOGUE_READY', json.dumps(manifest))
 
 
 bases = prepare()
+make_surface_textures()
 GOLD = material('Brushed old gold', '#B49962', .38, .72)
 STEEL = material('Satin steel', '#93A3AC', .34, .68)
 LEATHER = material('Oiled chestnut leather', '#65503C', .84)
@@ -785,9 +927,11 @@ ENAMEL = material('Blue enamel', '#365B80', .38, .18)
 GLASS = material('Dark blue lenses', '#172C35', .14, .3)
 GEM = material('Turquoise crystal', '#6FBDC4', .21, .18, .18)
 AMBER = material('Lantern warm light', '#E6B555', .38, .05, 1.1)
-HAIR = material('Hair / selectable color', '#594432', .8)
-HAIR_DARK = material('Hair / shadow strands', '#493829', .84)
-HAIR_LIGHT = material('Hair / highlight strands', '#645039', .77)
+HAIR = material('Hair / selectable color', '#594432', .52)
+HAIR_DARK = material('Hair / shadow strands', '#493829', .57)
+HAIR_LIGHT = material('Hair / highlight strands', '#645039', .50)
+surface_maps(HAIR, OUT/'textures/hair-normal.png', OUT/'textures/hair-roughness.png', .32)
+HAIR.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value=.32
 for persona in CHARACTERS:
     garments(bases[persona]['shirt'])
 persona = None

@@ -5,11 +5,13 @@
    Les règles du jeu et les actions restent celles de l'app.
    ============================================================ */
 
-import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { t, tItem } from "../i18n.mjs";
+import { pupilLook } from "../items-3d-model.mjs";
+import { renderHeroPortrait, renderItemThumbnail, isModeledItem } from "../equipment-previews.mjs";
 
 const ico = (name, cls = "") => {
   const paths = {
@@ -47,24 +49,23 @@ export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", hair: 
    source unique : la fiche, l'atelier et la boutique montrent tous le même
    personnage équipé des objets réels du jeu. */
 export function gameLook(pupil, draft = null) {
-  const value = (field) => draft?.[field] || pupil[field];
-  return {
-    persona: pupil.gender === "girl" ? "female" : "male",
-    skin: value("skin"),
-    hat: value("hat"),
-    weapon: value("weapon"),
-    hair: value("hair"),
-    hairColor: value("hairColor")
-  };
+  return pupilLook(pupil, draft);
 }
 
-/* Aperçu boutique : le look du héros, avec l'article survolé/sélectionné
-   appliqué quand il a un modèle 3D. Les catégories sans modèle (teinte,
-   visage, titre) gardent la silhouette inchangée. */
+/* In the shop, show the product alone. The equipped look belongs in the workshop. */
+export function shopPreviewItem(pupil, ui = {}) {
+  const type = ui.shopCategory || 'outfit';
+  const items = getShopItems(type);
+  const requested = getShopItem(ui.shopPreview);
+  if (requested?.type === type) return requested;
+  const field = SHOP_FIELD[type] || (type === 'tone' ? 'skinTone' : type);
+  return items.find(item => item.id === pupil[field]) || items[0] || getShopItems('outfit')[0];
+}
+
 export function shopPreviewLook(pupil, ui = {}) {
-  const item = ui.shopPreview ? getShopItem(ui.shopPreview) : null;
-  const field = item ? SHOP_FIELD[item.type] : null;
-  return gameLook(pupil, field ? { [field]: item.id } : null);
+  const item = shopPreviewItem(pupil, ui);
+  if (!isModeledItem(item)) return null;
+  return { ...gameLook(pupil, { [SHOP_FIELD[item.type]]: item.id }), preview: { slot:item.type, id:item.id } };
 }
 
 export function cosmeticChangesFromDraft(draft = {}) {
@@ -84,22 +85,23 @@ const nameOf = (list, id) => {
 
 /* Barre d'angles partagée par la fiche, l'atelier et la boutique. Les vues
    correspondent aux cadrages du catalogue items-3d. */
-function renderAngleBar(ui) {
-  const active = ui.angle || "quarter";
+function renderAngleBar(ui, itemOnly = false) {
+  const angles = itemOnly ? ['front', 'quarter', 'back'] : SHEIKAH_ANGLES;
+  const active = angles.includes(ui.angle) ? ui.angle : "quarter";
   return `<div class="angle-bar">
-    ${SHEIKAH_ANGLES.map((angle) => `<button type="button" class="${active === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${active === angle}">${t(`view.${angle}`)}</button>`).join("")}
+    ${angles.map((angle) => `<button type="button" class="${active === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${active === angle}">${t(`view.${angle}`)}</button>`).join("")}
     <button type="button" class="rot ${ui.rotating ? "on" : ""}" data-action="sheikah-rotate" aria-pressed="${ui.rotating}">${ico("rotate")}${t("view.rotation")}</button>
   </div>`;
 }
 
-function renderViewerHost(pupil, look, { live = false } = {}) {
+function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
   return `<div class="dais dais-lg${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
-    ${renderViewerFallback(pupil)}
+    ${renderViewerFallback(pupil, item)}
   </div>`;
 }
 
-function renderViewerFallback(pupil) {
-  return `<img class="viewer-fallback" src="./assets/wardrobe/${pupil.gender === "girl" ? "mila" : "noa"}-portrait.webp" alt="${t("view.character", { name: escapeHtml(pupil.name) })}" width="240" height="300" />
+function renderViewerFallback(pupil, item = null) {
+  return `${item ? renderItemThumbnail(item, { className:'viewer-fallback' }) : renderHeroPortrait(pupil, { className:'viewer-fallback', alt:t('view.character',{name:pupil.name}), large:true, dynamic:false })}
     <span class="loader" data-load-bar style="--p:0%" role="status" aria-label="${t("view.loading")}"><i></i></span>
     <div class="viewer-recovery" hidden><p class="viewer-error" role="status"></p><button class="btn" type="button" data-action="retry-viewer">${t("view.retry")}</button></div>`;
 }
@@ -210,7 +212,7 @@ function renderRuneCard(pupil, selectedIds) {
         <span class="lvl-seal" aria-label="${t("app.aria.level", { level: pupil.level })}"><small>${t("common.levelShort")}</small><b>${pupil.level}</b></span>
       </header>
       <div class="dais dais-card">
-        <img class="hero-fig" src="./assets/wardrobe/${pupil.gender === "girl" ? "mila" : "noa"}-portrait.webp" alt="" loading="lazy" />
+        ${renderHeroPortrait(pupil)}
         <span class="selection-mark" aria-hidden="true">${ico("check")}</span>
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
         <button class="card-open" type="button" data-action="sheikah-open" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
@@ -248,7 +250,7 @@ export function renderSheikahStudent({ classroom, ui, pupil }) {
           <div class="picker-grid">
             ${pupils.map((item) => `
               <button type="button" class="picker-card" data-action="student-pick" data-pupil-id="${escapeHtml(item.id)}">
-                <img class="picker-portrait" src="./assets/wardrobe/${item.gender === "girl" ? "mila" : "noa"}-portrait.webp" alt="" width="80" height="96" loading="lazy" />
+                ${renderHeroPortrait(item, { className:'picker-portrait' })}
                 <span class="lvl-seal" aria-label="${t("app.aria.level", { level: item.level })}"><small>${t("common.levelShort")}</small><b>${item.level}</b></span>
                 <strong>${escapeHtml(item.name)}</strong>
                 <small>${escapeHtml(nameOf(SKINS, item.skin))}</small>
@@ -344,24 +346,26 @@ export function renderSheikahPersonalize(pupil, ui) {
 
 export function renderSheikahShop(pupil, ui) {
   const look = shopPreviewLook(pupil, ui);
+  const item = shopPreviewItem(pupil, ui);
   const active = ui.shopCategory || "outfit";
   return `
     <main class="single">
-      <div class="atelier">
+      <div class="atelier atelier-shop">
         <header class="sheet-heading">
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="sheet-context">${t("student.shop")}</p>
           <button class="btn" type="button" data-action="shop-back">${ico("back")}${t("shop.backHero")}</button>
         </header>
         <div class="atelier-stage">
-          ${renderViewerHost(pupil, look)}
-          ${renderAngleBar(ui)}
+          ${look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
+          ${look ? renderAngleBar(ui, true) : ''}
+          <p class="item-preview-caption">${escapeHtml(tItem(item, 'name'))}</p>
         </div>
 
         <div class="atelier-panel">
-          <p class="atelier-sub">${t("student.shopHint")}</p>
+          <p class="atelier-sub">${t("shop.itemOnlyHint")}</p>
           <div class="shop-hero-summary">${renderLevel(pupil.level)}${renderTitle(pupil)}</div>
-          ${renderShop(pupil, active, ui.shopPreview)}
+          ${renderShop(pupil, active, item.id)}
           ${renderCustomOrders(pupil)}
         </div>
       </div>

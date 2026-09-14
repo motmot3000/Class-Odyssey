@@ -1,5 +1,36 @@
 # Première collection d’équipements 3D
 
+## Intégration courante dans ClassQuest
+
+La passe `catalogue-v4-fibres-fit` utilise les matières affinées du visage et
+du corps, des mèches plus fines, une tunique moins évasée et une ceinture plate.
+Les géométries source du corps et le contrat d’ancrage restent inchangés.
+
+Les cartes de classe et la sélection d’élève sont rendues depuis le même
+catalogue que le workshop. Deux portraits actuels servent de secours, puis
+un renderer hors-écran unique produit les looks réellement équipés et les
+conserve dans un cache borné (64 combinaisons).
+
+La boutique présente **l’objet seul**, dans ses vignettes et son aperçu 3D.
+Les 27 images WebP proviennent de `catalogue.blend`, sans personnage ajouté.
+Après achat, l’atelier montre l’objet porté. Les carnations, expressions,
+couleurs et titres utilisent des pastilles/symboles dédiés, pas un ancien avatar.
+
+Reconstruction complète (Blender 4.5 et Pillow) :
+
+```sh
+blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
+blender -b assets/items-3d/catalogue.blend --python-exit-code 1 --python tools/render-equipment-previews.py
+python3 tools/finalize-equipment-previews.py
+npm run build:items-3d
+npm run build:sheikah
+npm test
+```
+
+`previews/manifest.json` lie les vignettes au SHA-256 du catalogue. Les
+cheveux, chapeaux et prises restent ajustés séparément pour Noa et Mila ;
+les mains restent statiques, sans animation de fermeture des doigts.
+
 Ouvrir **http://localhost:5201/items-3d.html**.
 
 ```sh

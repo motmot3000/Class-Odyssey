@@ -9,6 +9,18 @@ export const CATEGORIES = [
 ];
 export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'lore-lantern', hair: 'short', hairColor: 'brown-hair' };
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
+export const CATALOGUE_REVISION = 'catalogue-v4-fibres-fit';
+export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
+
+export function pupilLook(pupil, draft = null) {
+  const value = (field, fallback) => draft?.[field] || pupil[field] || fallback;
+  return {
+    persona: pupil.gender === 'girl' ? 'female' : 'male',
+    skin: value('skin', 'starter'), hat: value('hat', 'no-hat'),
+    weapon: value('weapon', 'no-weapon'), hair: value('hair', 'short'),
+    hairColor: value('hairColor', 'brown-hair')
+  };
+}
 export const PRESETS = {
   ranger: { skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'lore-lantern' },
   mage: { skin: 'grammar-mage', hat: 'wizard-hat', weapon: 'word-wand' },
@@ -22,6 +34,10 @@ export function visiblePart(data, look, itemsOnly = false) {
   if (data.fit_persona && data.fit_persona !== look.persona) return false;
   const slot = data.shop_slot;
   if (!slot) return true;
+  if (look.preview) {
+    if (slot !== look.preview.slot || data.shop_id !== look.preview.id) return false;
+    return slot !== 'hair' || !data.hat_fit || data.hat_fit === 'open';
+  }
   if (slot === 'core') return !itemsOnly;
   if (slot === 'persona') return !itemsOnly && data.shop_id === look.persona;
   const category = CATEGORIES.find((entry) => entry.type === slot);
