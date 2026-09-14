@@ -1,0 +1,17 @@
+{
+  "landscape": {
+    "file": "../welcome-valley.webp",
+    "source": "Locally generated with Juggernaut XI (polyvalent), seed 491026, 1536×1024; converted to WebP quality 86.",
+    "prompt": "A breathtaking luminous fantasy adventure game environment, wide cinematic establishing landscape shot. A sunlit sweeping green highland valley with a winding ancient stone path leading to a distant ruined citadel on a tall rocky island, cascading waterfalls, layered blue mountains and immense soft ivory clouds in a pale turquoise morning sky. Beautiful painterly stylized 3D video game environment, hand painted textures, lush moss, wild ferns, golden grass, art directed mature adventure aesthetic. Foreground lower left is a broad mossy stone overlook, empty space for separately composited game characters. Distant valley in the center. Upper left sky is softly atmospheric and simple with lots of negative space for a headline. Right third has darker forest greenery as backdrop for UI. Soft golden sunlight from upper left, magical sense of possibility, inviting, peaceful epic scale, fresh sage green, deep pine, warm ivory, muted teal, amber sunlight. Landscape environment ONLY. No people, no characters, no text, no lettering, no logo, no UI, no frame."
+  },
+  "characters": {
+    "files": ["ranger.webp", "mage.webp", "knight.webp"],
+    "source": "Rendered from ../items-3d/catalogue.glb with the existing createHeroViewer and snapshot API. Catalogue revision: catalogue-v5-tailored-armour; base-v2 arms-lowered geometry. No generated or repainted anatomy.",
+    "credit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: ClassQuest study.",
+    "looks": {
+      "ranger": { "persona": "male", "skin": "vocab-ranger", "hat": "explorer-cap", "weapon": "lore-lantern", "hair": "short", "hairColor": "brown-hair" },
+      "mage": { "persona": "female", "skin": "grammar-mage", "hat": "no-hat", "weapon": "word-wand", "hair": "long", "hairColor": "red-hair" },
+      "knight": { "persona": "male", "skin": "honor-knight", "hat": "no-hat", "weapon": "star-shield", "hair": "short", "hairColor": "black-hair" }
+    }
+  }
+}

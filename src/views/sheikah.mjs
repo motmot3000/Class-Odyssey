@@ -110,9 +110,9 @@ export function renderSheikahTopbar({ view, state, account, unlocked, student })
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
       <div class="brand">
         <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-wordmark"><span class="brand-name">ClassQuest</span><span class="brand-sub">${t("sheikah.brand")}</span></span>
+        <span class="brand-wordmark"><span class="brand-name">ClassQuest</span><span class="brand-sub">${t(view === "welcome" ? "welcome.brand" : "sheikah.brand")}</span></span>
       </div>
-      ${view === "welcome" ? `<div class="top-end">${themeControl}</div>` : `
+       ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a>${themeControl}</div>` : `
       <nav class="tabs" aria-label="Classes">
         ${state.classes.map((classroom) => {
           const active = classroom.id === state.activeClassId;
