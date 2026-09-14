@@ -47,13 +47,10 @@ import {
   verifyPassword
 } from "./session.mjs";
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
-import { renderBoard } from "./views/board.mjs";
-import { renderConsole } from "./views/console.mjs";
 import { renderAdmin } from "./views/admin.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderStudentLocker, renderStudentPicker } from "./views/student.mjs";
 import { renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import {
@@ -61,6 +58,7 @@ import {
   renderSheikahTeacher,
   renderSheikahStudent,
   renderSheikahSheet,
+  renderSheikahShop,
   renderSheikahPersonalize,
   cosmeticChangesFromDraft
 } from "./views/sheikah.mjs";
@@ -70,6 +68,7 @@ import {
   setSheikahAngle,
   setSheikahRotation,
   setSheikahTheme,
+  retrySheikahViewer,
   setSheikahFreeViewHandler
 } from "./sheikah-runtime.mjs";
 import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i18n.mjs";
@@ -106,6 +105,7 @@ const ui = {
   xpAmount: 100,
   coinAmount: 20,
   consoleOpen: false,
+  focusPanel: null,
   openPanels: new Set(["hero"]),
   lockError: "",
   lockPending: false,
@@ -120,8 +120,7 @@ const ui = {
   sheikahView: "board",
   angle: "quarter",
   rotating: false,
-  draft: null,
-  classicShop: false
+  draft: null
 };
 
 setSheikahFreeViewHandler(() => {
@@ -149,26 +148,6 @@ function applyTheme() {
   setSheikahTheme(theme);
 }
 
-/* Bascule d'habillage : une seule feuille à la fois, pour que Sheikah et
-   l'ancien système visuel ne se marchent jamais dessus. */
-function setSkin(sheikah) {
-  let link = document.getElementById("ui-skin");
-  if (!link) {
-    link = document.createElement("link");
-    link.id = "ui-skin";
-    link.rel = "stylesheet";
-    document.head.append(link);
-  }
-  const href = sheikah ? "./src/sheikah.css" : "./styles.css";
-  if (link.getAttribute("href") !== href) link.setAttribute("href", href);
-}
-
-function usesSheikah(view) {
-  if (view !== "board" && view !== "student") return false;
-  if (ui.classicShop && view === "student") return false;
-  return true;
-}
-
 /* ---------- Routage ---------- */
 
 function currentView() {
@@ -190,7 +169,11 @@ window.addEventListener("hashchange", () => {
   ui.query = "";
   ui.consoleOpen = false;
   ui.lockError = "";
-  render();
+  ui.sheikahView = "board";
+  ui.draft = null;
+  window.scrollTo({ top: 0 });
+  if (currentView() === "admin") loadAdminAccounts();
+  else render();
 });
 
 /* ---------- Rendu ---------- */
@@ -198,46 +181,41 @@ window.addEventListener("hashchange", () => {
 function render() {
   const view = currentView();
   const memory = captureUiMemory();
-  const sheikah = usesSheikah(view);
-
-  if (sheikah) {
-    const student = view === "student";
-    const html = `
-      ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked(), student })}
-      ${renderConflict()}
-      ${renderSheikahBody(view)}
-    `;
-    setSkin(true);
-    app.innerHTML = html;
-    restoreUiMemory(memory);
-    flushFlash();
-    syncSheikahRuntime();
-    updateClock();
-    return;
+  const focusPanel = view === "board" ? ui.focusPanel : null;
+  if (focusPanel) {
+    ui.openPanels.add(focusPanel);
+    ui.consoleOpen = true;
+    ui.sheikahView = "board";
+    ui.focusPanel = null;
   }
-
-  const html = `
-    ${renderTopbar(view)}
+  app.innerHTML = `
+    ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked(), student: view === "student" })}
     ${renderConflict()}
     ${renderViewBody(view)}
   `;
-  setSkin(false);
-  app.innerHTML = html;
-
+  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : view === "lock" ? "lock.title" : view === "student" ? "app.aria.students" : "app.aria.teacher")} · ClassQuest`;
   restoreUiMemory(memory);
   flushFlash();
-  unmountSheikahViewer();
+  syncSheikahRuntime();
+  updateClock();
+  if (focusPanel) {
+    const field = app.querySelector(`[data-panel="${focusPanel}"] input`);
+    field?.focus({ preventScroll: true });
+    field?.scrollIntoView({ block: "nearest" });
+  }
 }
 
 function renderSheikahBody(view) {
   const classroom = getCurrentClass(state);
   if (view === "student") {
     const pupil = getStudentPupil(classroom);
+    if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
     if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
     return renderSheikahStudent({ classroom, ui, pupil });
   }
   const targets = getTargets();
   const focused = state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
+  if (focused && ui.sheikahView === "shop") return renderSheikahShop(focused, ui);
   if (focused && ui.sheikahView === "sheet") return renderSheikahSheet(focused, ui);
   if (focused && ui.sheikahView === "personalize") return renderSheikahPersonalize(focused, ui);
   return renderSheikahTeacher({ classroom, ui, targets, focused, canUndo: history.length > 0, account, selectedIds: state.selectedPupilIds, events: state.events, armedReset: armedDanger === "reset", unlockedUntil: unlockUntil() });
@@ -256,7 +234,7 @@ function syncSheikahRuntime() {
 
 function renderViewBody(view) {
   if (view === "welcome") {
-    return `<main class="page page-narrow">${renderBanner()}${renderWelcome({
+    return `<main class="page gate-page">${renderWelcome({
       tab: ui.gateTab,
       error: ui.gateError,
       pending: ui.gatePending,
@@ -264,60 +242,15 @@ function renderViewBody(view) {
     })}</main>`;
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
-  const classroom = getCurrentClass(state);
-
   if (view === "rules") {
-    return `<main class="page page-narrow">${renderBanner()}${renderRules()}</main>`;
+    return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked() })}</main>`;
   }
 
   if (view === "lock") {
-    return `<main class="page page-narrow">${renderBanner()}${renderLockScreen({ account, error: ui.lockError, pending: ui.lockPending })}</main>`;
+    return `<main class="page lock-page">${renderLockScreen({ account, error: ui.lockError, pending: ui.lockPending })}</main>`;
   }
 
-  if (view === "student") {
-    const pupil = getStudentPupil(classroom);
-    return `
-      <main class="page page-narrow">
-        ${renderBanner()}
-        ${pupil ? renderStudentLocker(pupil, ui) : renderStudentPicker(classroom, ui)}
-      </main>
-    `;
-  }
-
-  const targets = getTargets();
-  const focused = state.selectedPupilId ? getPupilById(state, state.selectedPupilId) : null;
-
-  return `
-    <main class="page page-board">
-      ${renderBoard(classroom, ui, state.selectedPupilIds)}
-      <aside class="console ${ui.consoleOpen ? "is-open" : ""}" aria-label="${t("console.title")}">
-        <button
-          class="console-mobile-toggle"
-          id="console-toggle"
-          type="button"
-          data-action="toggle-console"
-          aria-expanded="${ui.consoleOpen}"
-          aria-controls="teacher-console-body"
-        >
-          <span>${icon("shop")}${t("console.title")}</span>
-          <strong>${ui.consoleOpen ? t("app.console.close") : targets.length ? t("app.selected", { n: targets.length }) : t("app.controls")}</strong>
-        </button>
-        <div class="console-body" id="teacher-console-body">
-          ${renderConsole({
-            classroom,
-            ui,
-            targets,
-            focused,
-            canUndo: history.length > 0,
-            events: state.events,
-            armedReset: armedDanger === "reset",
-            unlockedUntil: unlockUntil(),
-            account
-          })}
-        </div>
-      </aside>
-    </main>
-  `;
+  return renderSheikahBody(view);
 }
 
 function getStudentPupil(classroom) {
@@ -328,54 +261,9 @@ function getStudentPupil(classroom) {
   return pupil;
 }
 
-function renderTopbar(view) {
-  const brand = `
-    <div class="brand">
-      <img class="brand-mark" src="./assets/emblem.svg" alt="" width="32" height="32" />
-      <span class="brand-name">ClassQuest</span>
-    </div>`;
-  if (view === "welcome") return `<header class="topbar">${brand}</header>`;
-  const teacherTab = view === "board" || view === "lock";
-  const unlocked = isAdultUnlocked();
-  return `
-    <header class="topbar">
-      ${brand}
-
-      <nav class="segmented class-tabs" aria-label="Classes">
-        ${state.classes.map((classroom) => {
-          const active = classroom.id === state.activeClassId;
-          return `<button type="button" class="${active ? "is-active" : ""}" data-action="select-class" data-class-id="${escapeHtml(classroom.id)}" aria-pressed="${active}">${escapeHtml(classroom.name)}</button>`;
-        }).join("")}
-      </nav>
-
-      <div class="topbar-end">
-        <div class="segmented" role="group" aria-label="Interface">
-          <button type="button" class="${teacherTab ? "is-active" : ""}" data-action="show-board" aria-pressed="${teacherTab}">${t("app.aria.teacher")}${unlocked ? "" : icon("lock", "icon-tab")}</button>
-          <button type="button" class="${view === "student" ? "is-active" : ""}" data-action="show-student" aria-pressed="${view === "student"}">${t("app.aria.students")}</button>
-        </div>
-        ${account?.role === "admin" ? `<button type="button" class="btn btn-sm btn-ghost ${view === "admin" ? "is-active" : ""}" data-action="show-admin">${t("app.aria.accounts")}</button>` : ""}
-        ${unlocked ? `<button type="button" class="btn btn-sm btn-ghost" data-action="lock-adult">${icon("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
-        <button type="button" class="btn btn-sm btn-ghost ${view === "rules" ? "is-active" : ""}" data-action="show-rules">${icon("book")}<span>${t("app.aria.rules")}</span></button>
-        <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
-      </div>
-    </header>
-  `;
-}
-
 function renderConflict() {
   if (!syncConflict || !account) return "";
   return `<aside class="sync-conflict" role="alert"><strong>${t("app.conflict.title")} :</strong> ${t("app.conflict.body")} <button class="btn btn-sm" data-action="export">${t("app.conflict.export")}</button><button class="btn btn-sm" data-action="reload-server">${t("app.conflict.load")}</button></aside>`;
-}
-
-/* La grande bannière reste sur les écrans que la classe regarde ensemble ;
-   le plateau, lui, rend chaque pixel vertical aux héros. */
-function renderBanner() {
-  return `
-    <div class="banner">
-      <img src="./assets/banner.png" alt="" width="1408" height="352" decoding="async" />
-      <h1 class="banner-title">ClassQuest</h1>
-    </div>
-  `;
 }
 
 /* ---------- Cible des récompenses ---------- */
@@ -482,6 +370,9 @@ dialogRoot.addEventListener("submit", (event) => {
 
 app.addEventListener("input", (event) => {
   const field = event.target;
+  if (field.form?.classList.contains("gate-form") && ["username", "displayName"].includes(field.name)) {
+    ui.gateValues[field.name] = field.value;
+  }
   if (field.dataset.action === "search") {
     ui.query = field.value;
     render();
@@ -519,11 +410,13 @@ window.addEventListener("storage", (event) => {
 
 const ACTIONS = {
   "show-board": () => {
-    ui.classicShop = false;
+    ui.sheikahView = "board";
+    ui.draft = null;
     navigate("#board");
   },
   "show-student": () => {
-    ui.classicShop = false;
+    ui.sheikahView = "board";
+    ui.draft = null;
     navigate("#student");
   },
   "show-rules": () => navigate("#rules"),
@@ -532,26 +425,30 @@ const ACTIONS = {
   "toggle-theme": () => {
     theme = theme === "light" ? "dark" : "light";
     applyTheme();
-    render();
+    renderPreservingForms();
   },
   "sheikah-open": (el) => {
     state = { ...state, selectedPupilId: el.dataset.pupilId };
     ui.sheikahView = "sheet";
     ui.draft = null;
     render();
+    window.scrollTo({ top: 0 });
   },
   "sheikah-back": () => {
     ui.sheikahView = "board";
     ui.draft = null;
     render();
+    window.scrollTo({ top: 0 });
   },
   "sheikah-personalize": (el) => {
-    const id = el.dataset.pupilId || (studentPupilId || state.selectedPupilId);
+    const id = el.dataset.pupilId || (currentView() === "student" ? studentPupilId : state.selectedPupilId);
     if (id) state = { ...state, selectedPupilId: id };
     ui.sheikahView = "personalize";
     ui.draft = null;
     render();
+    window.scrollTo({ top: 0 });
   },
+  "retry-viewer": () => retrySheikahViewer(),
   "sheikah-set": (el) => {
     ui.draft = { ...(ui.draft || {}), [el.dataset.field]: el.dataset.value };
     render();
@@ -577,22 +474,32 @@ const ACTIONS = {
     ui.sheikahView = "sheet";
     if (draft) commit(next);
     else render();
+    window.scrollTo({ top: 0 });
     toast(t("sheikah.savedLook"), "success");
   },
   "sheikah-shop": () => {
     const pupilId = currentView() === "student" ? studentPupilId : state.selectedPupilId;
     if (!pupilId) return;
-    rememberStudent(pupilId);
-    ui.classicShop = true;
-    ui.sheikahView = "board";
-    navigate("#student");
+    ui.sheikahView = "shop";
+    ui.draft = null;
+    render();
+    window.scrollTo({ top: 0 });
+  },
+  "shop-back": () => {
+    ui.sheikahView = "sheet";
+    render();
+    window.scrollTo({ top: 0 });
   },
   "show-admin": () => {
     if (account?.role !== "admin") return;
-    navigate("#admin");
-    if (isAdultUnlocked()) loadAdminAccounts();
+    if (location.hash === "#admin" && isAdultUnlocked()) loadAdminAccounts();
+    else navigate("#admin");
   },
   "refresh-admin": () => loadAdminAccounts(),
+  "account-settings": () => {
+    ui.focusPanel = "account";
+    navigate("#board");
+  },
 
   "gate-tab": (el) => {
     ui.gateTab = el.dataset.tab;
@@ -628,6 +535,9 @@ const ACTIONS = {
 
   "select-class": (el) => {
     disarmDanger();
+    ui.sheikahView = "board";
+    ui.draft = null;
+    ui.scope = "selection";
     commit({ ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] }, { record: false });
   },
 
@@ -674,11 +584,8 @@ const ACTIONS = {
   },
 
   "focus-add": () => {
-    ui.openPanels.add("add");
+    ui.focusPanel = "add";
     render();
-    const input = document.querySelector("#pupil-name");
-    input?.scrollIntoView({ block: "center", behavior: "smooth" });
-    input?.focus();
   },
 
   "award-xp": (el) => giveXp(Number(el.dataset.amount), el.dataset.reason),
@@ -719,6 +626,8 @@ const ACTIONS = {
 
   "student-pick": (el) => {
     rememberStudent(el.dataset.pupilId);
+    ui.sheikahView = "board";
+    ui.draft = null;
     ui.query = "";
     render();
     window.scrollTo({ top: 0 });
@@ -726,6 +635,8 @@ const ACTIONS = {
 
   "change-hero": () => {
     rememberStudent(null);
+    ui.sheikahView = "board";
+    ui.draft = null;
     render();
   },
 
@@ -1066,6 +977,7 @@ function commit(nextState, { record = true, notify = true } = {}) {
 }
 
 function undo() {
+  if (!isAdultUnlocked()) return;
   if (!history.length) {
     toast("Nothing left to undo.", "info");
     return;
@@ -1158,7 +1070,11 @@ function openAccount(next) {
   ui.gateValues = {};
   ui.adminAccounts = [];
   studentPupilId = loadStudentId();
+  ui.sheikahView = "board";
+  ui.draft = null;
   render();
+  window.scrollTo({ top: 0 });
+  if (currentView() === "admin") loadAdminAccounts();
   bootstrapFromServer();
 }
 
@@ -1177,8 +1093,10 @@ function endSession(message = "", context = null) {
   ui.gateTab = "signin";
   ui.gatePending = false;
   ui.consoleOpen = false;
+  ui.focusPanel = null;
   if (location.hash) historyReplaceWithoutHash();
   render();
+  window.scrollTo({ top: 0 });
   if (message) toast(message, "warn");
 }
 
@@ -1428,11 +1346,8 @@ window.addEventListener("pagehide", () => {
   }
 });
 
-initLanguage();
-document.getElementById("lang-toggle")?.addEventListener("click", () => {
+function renderPreservingForms() {
   const forms = [...app.querySelectorAll("form")].map(form => [...form.elements].map(input => ({ name: input.name, value: input.value, checked: input.checked })));
-  setLang(getLang() === "fr" ? "en" : "fr");
-  closeDialog();
   render();
   [...app.querySelectorAll("form")].forEach((form, index) => {
     for (const saved of forms[index] || []) {
@@ -1442,8 +1357,16 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
       if (typeof saved.checked === "boolean") input.checked = saved.checked;
     }
   });
+}
+
+initLanguage();
+document.getElementById("lang-toggle")?.addEventListener("click", () => {
+  setLang(getLang() === "fr" ? "en" : "fr");
+  closeDialog();
+  renderPreservingForms();
 });
 applyTheme();
 render();
 bootstrapFromServer();
+if (currentView() === "admin") loadAdminAccounts();
 setInterval(updateClock, 30_000);

@@ -55,8 +55,8 @@
   --money-dim: var(--amber-soft);
   --action: var(--cyan);
   --on-action: var(--cyan-ink);
-  --rank: var(--cyan);
-  --rank-dim: var(--cyan-soft);
+  --rank: var(--amber);
+  --rank-dim: var(--amber-soft);
   --shadow-2: 0 18px 44px rgba(3, 9, 20, 0.6);
   --t-xs: 0.75rem;
   --t-sm: 0.875rem;
@@ -99,7 +99,7 @@ h1, h2, h3, h4 { margin: 0; line-height: 1.12; font-family: var(--font-display);
 p { margin: 0; }
 button, input, select { font-family: inherit; }
 input { caret-color: var(--cyan); }
-.ic, .icon { width: 18px; height: 18px; display: block; flex: none; fill: none; }
+.ic { width: 18px; height: 18px; display: block; flex: none; fill: none; }
 
 .label {
   font-family: var(--font-display);
@@ -473,6 +473,7 @@ input { caret-color: var(--cyan); }
 .atelier { grid-template-columns: minmax(0, 1fr) 460px; }
 .sheet-stage, .atelier-stage { position: relative; grid-area: stage; }
 .sheet-heading { grid-area: heading; padding-top: var(--s6); min-width: 0; }
+.sheet-heading > .btn { margin-top: var(--s4); }
 .sheet-info, .atelier-panel { grid-area: info; }
 .sheet-stage, .atelier-stage { background: var(--stage); border: 1px solid var(--line-2); border-radius: 120px 120px var(--r-sm) var(--r-sm); padding: 16px; }
 .sheet-stage::before, .atelier-stage::before { content: ""; position: absolute; inset: 12px; border: 1px solid var(--stage-line); border-radius: 108px 108px 0 0; pointer-events: none; }
@@ -578,7 +579,6 @@ input { caret-color: var(--cyan); }
 /* ---------------- motion ---------------- */
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes scan { to { transform: translateX(100%); } }
 @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
 
