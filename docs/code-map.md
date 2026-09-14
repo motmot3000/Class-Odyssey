@@ -33,7 +33,8 @@
 
 The main route is a single `#class` space. Pupils can view characters and use
 the Dressing and Shop. The teacher console is a native dialog, reached through
-the options menu and password verification. Closing it locks teacher controls;
+the fixed right-edge tab and password verification. Its dialog is docked on
+the right. Closing it locks teacher controls;
 adding a pupil temporarily opens a child form and returns to the console.
 Individual selection is singular; whole-class rewards use an explicit scope.
 

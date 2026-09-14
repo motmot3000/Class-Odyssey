@@ -75,8 +75,8 @@ export function cosmeticChangesFromDraft(draft = {}) {
 }
 
 // Camera controls correspond to catalogue presets. Isolated products have no head view.
-function renderAngleBar(ui, itemOnly = false) {
-  const angles = itemOnly ? ['front', 'quarter', 'back'] : SHEIKAH_ANGLES;
+function renderAngleBar(ui, { itemOnly = false, dressing = false } = {}) {
+  const angles = itemOnly ? ['front', 'quarter', 'back'] : dressing ? SHEIKAH_ANGLES.filter(angle => angle !== 'item') : SHEIKAH_ANGLES;
   const active = ui.angle === "free" ? null : angles.includes(ui.angle) ? ui.angle : "quarter";
   return `<div class="angle-bar">
     ${angles.map((angle) => `<button type="button" class="${active === angle ? "on" : ""}" data-action="sheikah-angle" data-value="${angle}" aria-pressed="${active === angle}">${t(`view.${angle}`)}</button>`).join("")}
@@ -85,7 +85,7 @@ function renderAngleBar(ui, itemOnly = false) {
 }
 
 function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
-  return `<div class="dais dais-lg${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
+  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
     ${renderViewerFallback(pupil, item)}
   </div>`;
 }
@@ -126,13 +126,13 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
           <summary class="ghost" aria-label="${t("sheikah.tools")}" title="${t("sheikah.tools")}">${ico("menu")}</summary>
           <div class="tablet-tools-menu">
             <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
-            <button type="button" class="ghost" data-action="teacher-console">${ico('lock')}<span>${t('console.title')}</span></button>
             ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-current="${view === "admin" ? "page" : "false"}" aria-label="${t("app.aria.accounts")}" title="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}
             ${unlocked ? `<button type="button" class="ghost" data-action="lock-adult" aria-label="${t("console.account.lock")}" title="${t("console.account.lock")}">${ico("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
           </div>
         </details>
       </div>`}
-    </header>`;
+    </header>
+    ${view === 'welcome' ? '' : `<button class="teacher-console-tab" type="button" data-action="teacher-console" aria-haspopup="dialog" aria-expanded="false" aria-label="${t('console.title')}">${ico('lock')}<span>${t('console.title')}</span></button>`}`;
 }
 
 /* ---------- Teacher board ---------- */
@@ -309,7 +309,7 @@ export function renderSheikahPersonalize(pupil, ui) {
         </header>
         <div class="atelier-stage">
           ${renderViewerHost(pupil, draft, { live: true })}
-          ${renderAngleBar(ui)}
+          ${renderAngleBar(ui, { dressing:true })}
         </div>
 
         <div class="atelier-panel">
@@ -348,7 +348,7 @@ export function renderSheikahShop(pupil, ui) {
         </header>
         <div class="atelier-stage">
           ${look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
-          ${look ? renderAngleBar(ui, true) : ''}
+          ${look ? renderAngleBar(ui, { itemOnly:true }) : ''}
           <p class="item-preview-caption">${escapeHtml(tItem(item, 'name'))}</p>
         </div>
 

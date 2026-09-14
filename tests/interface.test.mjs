@@ -52,7 +52,7 @@ test("teacher console adds pupils through a named dialog and uses a single targe
   assert.match(dialog,/name="skinTone"/);
 });
 
-test("Class navigation has no separate teacher/student views and exposes the protected console in options", () => {
+test("Class navigation has no separate teacher/student views and exposes a protected edge tab", () => {
   const previousDocument = globalThis.document;
   globalThis.document = { documentElement:{dataset:{theme:'light'}} };
   try {
@@ -60,6 +60,8 @@ test("Class navigation has no separate teacher/student views and exposes the pro
     assert.doesNotMatch(html,/data-action="show-board"|data-action="show-student"/);
     assert.match(html,/data-action="show-class"/);
     assert.match(html,/data-action="teacher-console"/);
+    assert.match(html,/class="teacher-console-tab"/);
+    assert.match(html,/aria-haspopup="dialog"/);
     assert.match(html,/data-class-id="7p"/);
     assert.match(html,/data-class-id="8p"/);
   } finally { globalThis.document=previousDocument; }

@@ -468,6 +468,13 @@ function chooseClassPupil(pupilId) {
   return true;
 }
 
+function resetHeroCamera() {
+  ui.angle = 'quarter';
+  ui.rotating = false;
+  setSheikahAngle('quarter');
+  setSheikahRotation(false);
+}
+
 const ACTIONS = {
   "show-class": showClassRoster,
   "show-board": showClassRoster,
@@ -482,12 +489,14 @@ const ACTIONS = {
   },
   "sheikah-open": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
+    resetHeroCamera();
     ui.sheikahView = "sheet";
     ui.draft = null;
     render();
     window.scrollTo({ top: 0 });
   },
   "sheikah-back": () => {
+    resetHeroCamera();
     ui.sheikahView = ui.sheikahView === "shop" ? "sheet" : "board";
     ui.draft = null;
     ui.shopPreview = null;
@@ -497,6 +506,7 @@ const ACTIONS = {
   "sheikah-personalize": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
+    resetHeroCamera();
     ui.sheikahView = "personalize";
     ui.draft = null;
     render();
@@ -520,6 +530,7 @@ const ACTIONS = {
     render();
   },
   "sheikah-equip": (el) => {
+    resetHeroCamera();
     const draft = ui.draft;
     const next = draft && el.dataset.pupilId
       ? updateCosmetics(state, el.dataset.pupilId, cosmeticChangesFromDraft(draft))
@@ -534,6 +545,7 @@ const ACTIONS = {
   "sheikah-shop": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
+    resetHeroCamera();
     ui.sheikahView = "shop";
     ui.draft = null;
     ui.shopPreview = null;
@@ -541,6 +553,7 @@ const ACTIONS = {
     window.scrollTo({ top: 0 });
   },
   "shop-back": () => {
+    resetHeroCamera();
     ui.sheikahView = "sheet";
     ui.draft = null;
     ui.shopPreview = null;
@@ -699,6 +712,7 @@ const ACTIONS = {
 
   "student-pick": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
+    resetHeroCamera();
     ui.sheikahView = "sheet";
     ui.draft = null;
     ui.query = "";
@@ -1019,6 +1033,7 @@ function showDialog(html, teacherMode = null) {
     }
   });
   dialog.showModal();
+  app.querySelector('.teacher-console-tab')?.setAttribute('aria-expanded', String(Boolean(teacherMode)));
 }
 
 /* Native close events arrive on the next turn. Clear immediately so a closed
@@ -1036,12 +1051,13 @@ function closeDialog({ resumeConsole = true, preserveUnlock = false } = {}) {
   const dialog = dialogRoot.querySelector("dialog");
   if (dialog?.open) dialog.close();
   dialogRoot.innerHTML = "";
+  app.querySelector('.teacher-console-tab')?.setAttribute('aria-expanded', 'false');
   if (resumeConsole && mode === 'add' && ui.addFromConsole && isAdultUnlocked()) {
     ui.addFromConsole = false;
     openTeacherConsole({ verified:true });
   } else if (resumeConsole && ['console','unlock'].includes(mode)) {
     lockAdult();
-    app.querySelector('.tablet-tools summary')?.focus({ preventScroll:true });
+    app.querySelector('.teacher-console-tab')?.focus({ preventScroll:true });
   }
 }
 

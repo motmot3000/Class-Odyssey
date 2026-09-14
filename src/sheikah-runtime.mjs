@@ -74,6 +74,8 @@ export function mountSheikahViewer(host, look) {
   resource.get(host, look)
     .then((instance) => {
       if (!instance || currentHost !== host || !host.isConnected) return;
+      // Do not expose a canvas with the previous screen's camera or dimensions.
+      instance.element.style.visibility = 'hidden';
       if (instance.element.parentElement !== host) host.append(instance.element);
       instance.element.setAttribute("aria-label", t("view.keyboard"));
       instance.applyState(look);
@@ -82,11 +84,18 @@ export function mountSheikahViewer(host, look) {
       instance.setRotation(Boolean(viewerRotating));
       instance.setTheme?.(currentTheme);
       instance.resize?.();
-      host.classList.remove("is-loading");
-      const loader = host.querySelector("[data-load-bar]");
-      if (loader) loader.hidden = true;
-      const fallback = host.querySelector(".viewer-fallback");
-      if (fallback) fallback.hidden = true;
+      requestAnimationFrame(() => {
+        if (currentHost !== host || !host.isConnected || resource.peek() !== instance) return;
+        try {
+          instance.resize?.();
+          instance.element.style.visibility = '';
+          host.classList.remove('is-loading');
+          const loader = host.querySelector('[data-load-bar]');
+          if (loader) loader.hidden = true;
+          const fallback = host.querySelector('.viewer-fallback');
+          if (fallback) fallback.hidden = true;
+        } catch (error) { fail(error, host); }
+      });
     })
     .catch((error) => fail(error, host));
 }

@@ -49,7 +49,7 @@ différent dans chaque `.env` et ouvrir l'URL correspondante.
 - **Class** (`#class`) affiche les héros de la classe avec leurs portraits de
   face, titres, niveaux, XP, cœurs et pièces. Les cartes donnent accès à la
   fiche, au **Dressing** et au **Shop**.
-- **Teacher console**, dans le menu des options, ouvre une fenêtre protégée
+- **Teacher console**, via l'onglet du bord droit, ouvre un panneau latéral protégé
   par le mot de passe du compte. Elle contient les récompenses, les données et
   le bouton **+ Add a student**. L'ajout se fait dans une boîte dédiée, puis
   revient à la console. Fermer la console reverrouille les commandes prof.
