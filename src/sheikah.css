@@ -165,9 +165,8 @@ input { caret-color: var(--cyan); }
   cursor: pointer;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 15px;
+  letter-spacing: 0.01em;
   transition: color var(--ease) 160ms, border-color var(--ease) 160ms, background var(--ease) 160ms;
 }
 .class-picker-summary::-webkit-details-marker { display: none; }
