@@ -173,7 +173,9 @@
       "view": "front",
       "width": 768,
       "height": 1152,
-      "hair": "short"
+      "hair": "short",
+      "renderer": "Three.js, stylized-v1, daylight, full silhouette",
+      "bytes": 33862
     },
     "female": {
       "file": "portraits/female.webp",
@@ -181,8 +183,10 @@
       "view": "front",
       "width": 768,
       "height": 1152,
-      "hair": "long"
+      "hair": "long",
+      "renderer": "Three.js, stylized-v1, daylight, full silhouette",
+      "bytes": 34000
     }
   },
-  "portraitRevision": "catalogue-v7-approved-bases-front-hd"
+  "portraitRevision": "stylized-v1-front-hd"
 }

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { createInitialState, getCurrentClass, SHOP_ITEMS } from '../src/domain.mjs';
-import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
+import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, PORTRAIT_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
 import { renderItemThumbnail, renderHeroPortrait } from '../src/equipment-previews.mjs';
 import { renderSheikahStudent, renderSheikahShop } from '../src/views/sheikah.mjs';
 
@@ -23,6 +23,17 @@ test('the live base characters are the delivered stylized catalogue', () => {
   assert.equal(manifest.appearanceRevision, BASE_CATALOGUE_REVISION);
   assert.ok(manifest.parts['persona:male'] > 0 && manifest.parts['persona:female'] > 0);
   assert.ok(manifest.parts['outfit:story-keeper'] > 0);
+});
+
+test('baked fallback portraits match the live base so the old base never flashes', () => {
+  assert.equal(PORTRAIT_REVISION, `${BASE_CATALOGUE_REVISION}-front-hd`);
+  const report = JSON.parse(readFileSync(new URL('previews/manifest.json', root)));
+  assert.equal(report.portraitRevision, PORTRAIT_REVISION);
+  for (const persona of ['male', 'female']) {
+    assert.match(report.portraits[persona].renderer, /stylized-v1/);
+    const file = readFileSync(new URL(`previews/${report.portraits[persona].file}`, root));
+    assert.equal(file.toString('ascii', 0, 4), 'RIFF');
+  }
 });
 
 test('every modeled item has a real item-only WebP rendered from this catalogue', () => {

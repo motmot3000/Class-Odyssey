@@ -10,7 +10,6 @@ export const CATEGORIES = [
 export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'lore-lantern', hair: 'short', hairColor: 'brown-hair' };
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
 export const CATALOGUE_REVISION = 'catalogue-v7-approved-bases';
-export const PORTRAIT_REVISION = `${CATALOGUE_REVISION}-front-hd`;
 export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
 
 /* Live base characters used by the game. These are the delivered, stylized
@@ -19,6 +18,10 @@ export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATAL
  * above stays available for the standalone lab and for the pipeline tests. */
 export const BASE_CATALOGUE_REVISION = 'stylized-v1';
 export const BASE_CATALOGUE_URL = new URL(`../assets/character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href;
+
+/* Baked fallback portraits must match the live base, otherwise the old base
+ * flashes on the cards before the live portrait replaces it. */
+export const PORTRAIT_REVISION = `${BASE_CATALOGUE_REVISION}-front-hd`;
 
 export function pupilLook(pupil, draft = null) {
   const value = (field, fallback) => draft?.[field] || pupil[field] || fallback;

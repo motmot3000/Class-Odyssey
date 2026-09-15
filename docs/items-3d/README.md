@@ -20,6 +20,10 @@ STYLIZED=1 blender -b --factory-startup --python-exit-code 1 --python tools/buil
 
 L'atelier autonome peut inspecter n'importe quelle base : `items-3d.html?model=/assets/character-stylized/catalogue.glb`.
 
+Les **portraits de secours** (`previews/portraits/*.webp`) sont rendus depuis cette
+même base stylisée, et `PORTRAIT_REVISION` suit `BASE_CATALOGUE_REVISION` : l'ancien
+personnage ne peut donc plus apparaître avant le rendu live.
+
 ### Détails
 
 La passe `catalogue-v7-approved-bases` intègre les visages et les silhouettes
