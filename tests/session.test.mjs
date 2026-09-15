@@ -108,6 +108,30 @@ test("teacher unlock state cannot follow a switch to another account", async () 
   assert.equal(session.unlockUntil(), null);
 });
 
+test("teacher access has a fixed five-minute deadline", async (t) => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  session.unlockAdult();
+  const deadline = session.unlockUntil();
+  assert.equal(deadline, now + 5 * 60 * 1000);
+  now += 299999;
+  assert.equal(session.isAdultUnlocked(), true);
+  assert.equal(session.unlockUntil(), deadline);
+  now += 1;
+  assert.equal(session.isAdultUnlocked(), false);
+  assert.equal(session.isSignedIn(), true);
+});
+
+test("old long teacher grants are discarded", async () => {
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  store.set("classquest:adult", JSON.stringify({ accountId: ACCOUNT.id, until: Date.now() + 8 * 60 * 60 * 1000 }));
+  assert.equal(session.isAdultUnlocked(), false);
+  assert.equal(store.has("classquest:adult"), false);
+});
+
 test("offline password checks still reject stale account contexts", async () => {
   respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
   await session.signIn("teacher", "class-password");

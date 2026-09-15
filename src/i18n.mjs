@@ -35,7 +35,7 @@ const dict = {
     "lock.submit.unlock": "Déverrouiller",
     "lock.action.back": "Retour aux héros",
     "lock.action.signout": "Se déconnecter",
-    "lock.hint": "La console du professeur reste ouverte sur cet appareil pendant huit heures.",
+    "lock.hint": "L’accès professeur reste déverrouillé pendant 5 minutes, même si la console est repliée.",
     "lock.prompt": "Saisis le mot de passe de {account} pour ouvrir les contrôles du professeur.",
 
     /* ---------- rules ---------- */
@@ -428,7 +428,7 @@ const dict = {
     "lock.submit.unlock": "Unlock",
     "lock.action.back": "Back to heroes",
     "lock.action.signout": "Sign out",
-    "lock.hint": "The teacher console stays open on this device for eight hours.",
+    "lock.hint": "Teacher access stays unlocked for 5 minutes, even when the console is folded away.",
     "lock.prompt": "Type the password for {account} to open teacher controls.",
 
     "rules.title.how": "How does it work?",

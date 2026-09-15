@@ -32,13 +32,17 @@
 5. If offline or conflicted, the dirty local copy stays available. Explicit conflict recovery archives that copy before loading the server version.
 
 The main route is a single `#class` space. Pupils can view characters and use
-the Dressing and Shop. The teacher console is a native dialog, reached through
-the fixed right-edge tab and password verification. Its dialog is docked on
-the right. Closing it locks teacher controls;
+the Dressing and Shop. Navigation follows one hierarchy — **Class → Hero sheet
+→ Dressing / Shop** — where Dressing and Shop return to the hero through the
+same top-left control, and the hero sheet returns to the class. The teacher
+console is a native dialog, reached through the fixed right-edge tab and
+password verification. Its non-modal panel is docked on the right, so the
+class remains interactive. Folding it preserves the five-minute grant;
 adding a pupil temporarily opens a child form and returns to the console.
-Individual selection is singular; whole-class rewards use an explicit scope.
+Individual selection is singular; **Whole class** is a reversible selection
+toggle, and rewards always target the visible selection.
 
-The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account, expires after eight hours at most, and is cleared when the console is closed.
+The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account and expires five minutes after password verification. Folding/reopening does not extend this deadline. Explicit locking or sign-out revokes it immediately.
 
 Every asynchronous result must check its captured account/token before touching state. In particular, imports, saves and password checks must not act on a newly signed-in account. The server rechecks sessions after receiving request bodies because a token may have been revoked while a body was arriving.
 
@@ -54,6 +58,12 @@ Every asynchronous result must check its captured account/token before touching 
 - `src/equipment-previews.mjs`: HTML for current-model portraits, item-only thumbnails and non-3D swatches.
 
 The shop previews **only the selected product**. The workshop renders the hero's equipped look. A preview does not buy/equip an item. Titles come from `pupil.title`, never from the outfit or hair colour.
+
+Earned titles form a five-step prestige ladder (`titleTierOf`): the tier decides the
+title colour, ornament, glow and the `.title-halo` / `.title-emblem` backdrop behind
+the character. Tier 1 is neutral; the top tier adds gold rays and a title-specific
+emblem. `titleBackdropAttributes(pupil)` is applied to every character dais (class
+cards and the hero sheet), and the character always renders above the backdrop.
 
 Two different lifetime checks matter: **host identity** prevents mounting into an old screen; **resource generation** prevents an obsolete load from replacing a retried viewer. Keep both.
 

@@ -2,7 +2,7 @@ import { requestApi } from "./api.mjs";
 
 export const SESSION_KEY = "classquest:session";
 const UNLOCK_KEY = "classquest:adult";
-const UNLOCK_MS = 8 * 60 * 60 * 1000;
+export const TEACHER_UNLOCK_MS = 5 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;
 
@@ -89,7 +89,9 @@ export function isAdultUnlocked() {
   if (!session || unlock?.accountId !== session.account.id) return false;
   const until = Number(unlock?.until);
   if (!Number.isFinite(until)) return false;
-  if (until <= Date.now()) {
+  const now = Date.now();
+  // Discard old eight-hour grants as well as expired grants.
+  if (until <= now || until > now + TEACHER_UNLOCK_MS) {
     lockAdult();
     return false;
   }
@@ -99,7 +101,7 @@ export function isAdultUnlocked() {
 export const unlockUntil = () => isAdultUnlocked() ? Number(readStored(UNLOCK_KEY)?.until) : null;
 export const unlockAdult = () => {
   const account = getAccount();
-  if (account) writeStored(UNLOCK_KEY, { accountId: account.id, until: Date.now() + UNLOCK_MS });
+  if (account) writeStored(UNLOCK_KEY, { accountId: account.id, until: Date.now() + TEACHER_UNLOCK_MS });
 };
 export const lockAdult = () => writeStored(UNLOCK_KEY, null);
 

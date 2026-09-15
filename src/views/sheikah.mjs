@@ -3,7 +3,7 @@
  */
 
 import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
-import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle } from "../ui.mjs";
+import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
@@ -26,16 +26,20 @@ const ico = (name, cls = "") => {
     sun: `<circle cx="10" cy="10" r="3.4"/><path d="M10 1.8v2.2M10 16v2.2M1.8 10h2.2M16 10h2.2M4.2 4.2l1.6 1.6M14.2 14.2l1.6 1.6M15.8 4.2l-1.6 1.6M5.8 14.2l-1.6 1.6"/>`,
     moon: `<path d="M16.4 12.6A6.8 6.8 0 0 1 7.4 3.6a6.8 6.8 0 1 0 9 9Z"/>`,
     lock: `<rect x="4.5" y="8.5" width="11" height="8" rx="1.8"/><path d="M7.2 8.5V6.6a2.8 2.8 0 0 1 5.6 0v1.9"/>`,
-    book: `<path d="M4 4.5h5a2 2 0 0 1 2 2v9a1.6 1.6 0 0 0-1.6-1.6H4z"/><path d="M16 4.5h-3.4a1.6 1.6 0 0 0-1.6 1.6v9.4"/>`,
+    // Lucide "book-open": two pages and a spine, unmistakably a book at 16px.
+    book: `<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>`,
     back: `<path d="M15 10H5"/><path d="M9 5.5 4.5 10 9 14.5"/>`,
     plus: `<path d="M10 4.5v11M4.5 10h11"/>`,
     check: `<path d="m5 10 3.5 3.5L15 6.5"/>`,
     menu: `<path d="M4 5h12M4 10h12M4 15h12"/>`,
+    // Lucide "settings": a cog, so the options control reads as parameters.
+    settings: `<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
     shop: `<path d="M4 7.5h12l-1 8.5H5z"/><path d="M7.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5"/>`
   };
+  const VIEWBOXES = { settings: "0 0 24 24", book: "0 0 24 24" };
   const path = paths[name];
   if (!path) return "";
-  return `<svg class="ic ${cls}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  return `<svg class="ic ${cls}" viewBox="${VIEWBOXES[name] || "0 0 20 20"}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 };
 
 export const SHEIKAH_ANGLES = ["front", "quarter", "back", "head", "item"];
@@ -85,7 +89,10 @@ function renderAngleBar(ui, { itemOnly = false, dressing = false } = {}) {
 }
 
 function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
-  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
+  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}' ${titleBackdropAttributes(pupil)}>
+    <span class="title-halo" aria-hidden="true"></span>
+    <span class="title-emblem" aria-hidden="true"></span>
+    <span class="title-frame" aria-hidden="true"></span>
     ${renderViewerFallback(pupil, item)}
   </div>`;
 }
@@ -96,13 +103,17 @@ function renderViewerFallback(pupil, item = null) {
     <div class="viewer-recovery" hidden><p class="viewer-error" role="status"></p><button class="btn" type="button" data-action="retry-viewer">${t("view.retry")}</button></div>`;
 }
 
-function renderClassReturn() {
-  return `<div class="class-return-bar"><button class="btn btn-class-return" type="button" data-action="show-class">${ico('back')}<span>${t('class.back')}</span></button></div>`;
+/* Navigation hierarchy: Class → Hero sheet → Dressing / Shop.
+   Dressing and Shop are children of the hero, so their back control always
+   returns to the hero, in the same top-left spot on both screens. */
+function renderHeroBack() {
+  return `<button class="btn btn-back" type="button" data-action="hero-back">${ico('back')}<span>${t('shop.backHero')}</span></button>`;
 }
 
 /* ---------- Application navigation ---------- */
 
 export function renderSheikahTopbar({ view, state, account, unlocked }) {
+  const activeClass = state.classes.find((classroom) => classroom.id === state.activeClassId) || state.classes[0];
   const themeControl = `<button type="button" class="ghost" data-action="toggle-theme" aria-label="${t("common.changeTheme")}" title="${t("common.changeTheme")}">${ico(document.documentElement.dataset.theme === "light" ? "moon" : "sun")}<span>${t("common.theme")}</span></button>`;
   return `
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
@@ -113,17 +124,27 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
         </button>
       </div>
        ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a></div>` : `
-      <nav class="tabs" aria-label="Classes">
-        ${state.classes.map((classroom) => {
-          const active = classroom.id === state.activeClassId;
-          return `<button type="button" class="${active ? "on" : ""}" data-action="select-class" data-class-id="${escapeHtml(classroom.id)}" aria-pressed="${active}">${escapeHtml(classroom.name)}</button>`;
-        }).join("")}
-      </nav>
+      <details class="class-picker">
+        <summary class="class-picker-summary" aria-label="${t("nav.classes")}">
+          ${ico("heroes")}
+          <span class="class-picker-label">${t("nav.classes")}</span>
+          <span class="class-picker-current">${escapeHtml(activeClass?.name || "")}</span>
+          <span class="class-picker-caret" aria-hidden="true"></span>
+        </summary>
+        <div class="class-picker-menu" role="menu" aria-label="${t("nav.classes")}">
+          ${state.classes.map((classroom) => {
+            const active = classroom.id === state.activeClassId;
+            return `<button type="button" role="menuitemradio" aria-checked="${active}" class="${active ? "on" : ""}" data-action="select-class" data-class-id="${escapeHtml(classroom.id)}">
+              <span class="class-picker-name">${escapeHtml(classroom.name)}</span>${active ? ico("check") : ""}
+            </button>`;
+          }).join("")}
+        </div>
+      </details>
       <div class="top-end">
         <button type="button" class="ghost" data-action="show-rules" aria-current="${view === "rules" ? "page" : "false"}" aria-label="${t("app.aria.rules")}" title="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         ${themeControl}
         <details class="tablet-tools">
-          <summary class="ghost" aria-label="${t("sheikah.tools")}" title="${t("sheikah.tools")}">${ico("menu")}</summary>
+          <summary class="ghost" aria-label="${t("sheikah.tools")}" title="${t("sheikah.tools")}">${ico("settings")}</summary>
           <div class="tablet-tools-menu">
             <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
             ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-current="${view === "admin" ? "page" : "false"}" aria-label="${t("app.aria.accounts")}" title="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}
@@ -190,18 +211,21 @@ function renderSheikahBoard(classroom, ui, selectedIds) {
     </section>`;
 }
 
-function renderRuneCard(pupil, selectedIds = [], { student = false } = {}) {
-  const selected = selectedIds.includes(pupil.id);
+function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = false } = {}) {
+  const selected = (!student || selecting) && selectedIds.includes(pupil.id);
   const progress = xpProgress(pupil);
   const out = isEliminated(pupil);
   return `
     <article class="rune-card ${student ? 'student-card' : ''} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
-      <button class="card-hit" type="button" data-action="${student ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student ? '' : `aria-pressed="${selected}"`} aria-label="${t(student ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
-      <div class="dais dais-card">
+      <button class="card-hit" type="button" data-action="${student && !selecting ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student && !selecting ? '' : `aria-pressed="${selected}"`} aria-label="${t(student && !selecting ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
+      <div class="dais dais-card" ${titleBackdropAttributes(pupil)}>
+        <span class="title-halo" aria-hidden="true"></span>
+        <span class="title-emblem" aria-hidden="true"></span>
+        <span class="title-frame" aria-hidden="true"></span>
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
-        ${student ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
+        ${student && !selecting ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
-        <button class="card-open" type="button" data-action="${student ? 'student-pick' : 'sheikah-open'}" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
+        <button class="card-open" type="button" data-action="${student && !selecting ? 'student-pick' : 'sheikah-open'}" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t("console.hero.zoom", { name: escapeHtml(pupil.name) })}">${ico("expand")}</button>
       </div>
       <header class="rune-card-head">
         <div class="rune-card-name"><h2>${escapeHtml(pupil.name)}</h2></div>
@@ -227,7 +251,7 @@ function renderRuneCard(pupil, selectedIds = [], { student = false } = {}) {
 
 /* ---------- Pupil picker and hero views ---------- */
 
-export function renderSheikahStudent({ classroom, ui, pupil, classView = false }) {
+export function renderSheikahStudent({ classroom, ui, pupil, classView = false, selectionMode = false, selectedIds = [] }) {
   if (!pupil) {
     if (!classroom.pupils.length) {
       return `<main class="single"><div class="empty">${ico("heroes")}<h1>${t("student.noHeroesTitle", { name: escapeHtml(classroom.name) })}</h1><p>${t("sheikah.studentEmpty")}</p></div></main>`;
@@ -242,7 +266,7 @@ export function renderSheikahStudent({ classroom, ui, pupil, classView = false }
           <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query || "")}" placeholder="${t("student.findName")}" aria-label="${t("student.findName")}" autocomplete="off" /></label>
           ${pupils.length ? `
           <div class="rune-grid picker-grid" role="list">
-            ${pupils.map(item => renderRuneCard(item, [], { student:true })).join('')}
+            ${pupils.map(item => renderRuneCard(item, selectedIds, { student:true, selecting:selectionMode })).join('')}
           </div>` : `<div class="empty"><h2>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h2><button class="btn" data-action="clear-search">${t("student.clearSearch")}</button></div>`}
         </div>
       </main>`;
@@ -256,7 +280,6 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
   const look = gameLook(pupil);
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="sheet">
         <header class="sheet-heading">
           <h1>${escapeHtml(pupil.name)}</h1>
@@ -278,10 +301,10 @@ export function renderSheikahSheet(pupil, ui, { student = false } = {}) {
           <div class="conduit big" role="progressbar" aria-label="${t("student.experience")}" aria-valuemin="0" aria-valuemax="${progress.needed}" aria-valuenow="${progress.current}"><i style="--progress:${progress.percent / 100}"></i></div>
           <p class="sheet-role">${next ? t("student.levelUnlock", { next: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") }) : t("student.allUnlocked")}</p>
           <div class="row">
-            <button class="btn btn-primary" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.workshop")}</span></button>
+            <button class="btn" data-action="sheikah-personalize" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.workshop")}</span></button>
             <button class="btn" data-action="sheikah-shop" data-pupil-id="${escapeHtml(pupil.id)}">${ico("shop")}<span>${t("student.shop")}</span></button>
           </div>
-          <details class="equipment-details"><summary>${t("sheikah.equipment")}</summary>${renderSheikahGear(pupil)}${renderCustomOrders(pupil)}</details>
+          <div class="hero-class-return"><button class="btn" type="button" data-action="show-class">${ico('back')}<span>${t('class.back')}</span></button></div>
         </div>
       </div>
     </main>`;
@@ -301,9 +324,9 @@ export function renderSheikahPersonalize(pupil, ui) {
     </section>`;
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="atelier">
         <header class="sheet-heading">
+          ${renderHeroBack()}
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="sheet-context">${t("sheikah.workshopTitle")}</p>
         </header>
@@ -324,7 +347,6 @@ export function renderSheikahPersonalize(pupil, ui) {
 
           <div class="atelier-actions">
             <button class="btn btn-primary btn-lg" data-action="sheikah-equip" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.saveLook")}</span></button>
-            <button class="btn btn-lg" data-action="sheikah-back">${t("common.cancel")}</button>
           </div>
         </div>
       </div>
@@ -333,22 +355,36 @@ export function renderSheikahPersonalize(pupil, ui) {
 
 /* ---------- Item-only shop ---------- */
 
+/* Titles have no 3D model, so the shop renders the real title on its own
+ * title backdrop: pupils can see exactly how prestigious a title looks. */
+function renderTitleStage(item) {
+  const pupil = { title: item.id };
+  return `<div class="dais dais-lg title-stage" ${titleBackdropAttributes(pupil)}>
+    <span class="title-halo" aria-hidden="true"></span>
+    <span class="title-emblem" aria-hidden="true"></span>
+    <span class="title-frame" aria-hidden="true"></span>
+    <div class="title-stage-tag">${renderTitle(pupil, { labelled: true })}</div>
+  </div>`;
+}
+
 export function renderSheikahShop(pupil, ui) {
   const look = shopPreviewLook(pupil, ui);
   const item = shopPreviewItem(pupil, ui);
   const active = ui.shopCategory || "outfit";
+  const isTitle = item.type === "title";
   return `
     <main class="single">
-      ${renderClassReturn()}
       <div class="atelier atelier-shop">
         <header class="sheet-heading">
+          ${renderHeroBack()}
           <h1>${escapeHtml(pupil.name)}</h1>
           <p class="sheet-context">${t("student.shop")}</p>
-          <button class="btn" type="button" data-action="shop-back">${ico("back")}${t("shop.backHero")}</button>
         </header>
         <div class="atelier-stage">
-          ${look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
-          ${look ? renderAngleBar(ui, { itemOnly:true }) : ''}
+          ${isTitle
+            ? renderTitleStage(item)
+            : look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
+          ${!isTitle && look ? renderAngleBar(ui, { itemOnly:true }) : ''}
           <p class="item-preview-caption">${escapeHtml(tItem(item, 'name'))}</p>
         </div>
 

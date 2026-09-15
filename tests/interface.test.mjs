@@ -7,7 +7,7 @@ import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
-import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar } from "../src/views/sheikah.mjs";
+import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
 
 test("Students cards expose the full hero stats and direct Dressing/Shop actions", () => {
   const classroom = getCurrentClass(createInitialState());
@@ -64,7 +64,38 @@ test("Class navigation has no separate teacher/student views and exposes a prote
     assert.match(html,/aria-haspopup="dialog"/);
     assert.match(html,/data-class-id="7p"/);
     assert.match(html,/data-class-id="8p"/);
+    assert.match(html,/aria-label="[^"]*"[^>]*title="[^"]*"[^>]*>\s*<svg class="ic "[^>]*viewBox="0 0 24 24"/);
+    assert.doesNotMatch(html,/M4 5h12M4 10h12M4 15h12/);
   } finally { globalThis.document=previousDocument; }
+});
+
+test("an open teacher panel enables single-card selection and hero navigation stays neutral", () => {
+  const classroom=getCurrentClass(createInitialState());
+  const pupil=classroom.pupils[0];
+  const html=renderSheikahStudent({classroom,ui:{},pupil:null,classView:true,selectionMode:true,selectedIds:[pupil.id]});
+  assert.match(html,/data-action="toggle-pupil"/);
+  assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
+  const sheet=renderSheikahSheet(pupil,{}, {student:true});
+  const dressing=sheet.match(/<button[^>]+data-action="sheikah-personalize"[^>]*>/)[0];
+  assert.doesNotMatch(dressing,/btn-primary|aria-pressed="true"|is-active/);
+  assert.doesNotMatch(sheet,/equipment-details|Hero equipment/);
+  assert.match(sheet,/hero-class-return/);
+  assert.doesNotMatch(sheet,/data-action="hero-back"/);
+});
+
+test("Dressing and Shop both return to the hero from the same header control", () => {
+  const classroom=getCurrentClass(createInitialState());
+  const pupil=classroom.pupils[0];
+  const dressing=renderSheikahPersonalize(pupil,{angle:'quarter'});
+  const shop=renderSheikahShop(pupil,{shopCategory:'outfit'});
+  for (const html of [dressing,shop]) {
+    const header=html.match(/<header class="sheet-heading">[\s\S]*?<\/header>/)[0];
+    assert.match(header,/class="btn btn-back"/);
+    assert.ok(header.indexOf('btn-back')<header.indexOf('<h1>'));
+    assert.match(header,/data-action="hero-back"/);
+  }
+  assert.doesNotMatch(dressing,/data-action="sheikah-back"|data-action="show-class"/);
+  assert.doesNotMatch(shop,/data-action="shop-back"/);
 });
 
 test("pupil search filters names, escapes user content and offers a recovery action", () => {
@@ -85,10 +116,23 @@ test("the shop names its pupil and returns to the hero without switching roles",
   const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: "Mila & Noa", money: 73 };
   const html = renderSheikahShop(pupil, { shopCategory: "outfit" });
   assert.match(html, /Mila &amp; Noa/);
-  assert.match(html, /data-action="shop-back"/);
+  assert.match(html, /data-action="hero-back"/);
   assert.match(html, /<strong>73<\/strong>/);
   assert.doesNotMatch(html, /data-action="show-student"|data-action="change-hero"/);
   assert.match(html, /data-category="outfit"\s+aria-pressed="true"/);
+});
+
+test("the shop previews each title on its own tier backdrop", () => {
+  const pupil = getCurrentClass(createInitialState()).pupils[0];
+  const html = renderSheikahShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
+  assert.match(html, /class="dais dais-lg title-stage" data-title-tier="5" data-title-id="class-legend"/);
+  assert.match(html, /title-emblem/);
+  assert.match(html, /data-title-labelled/);
+  // Every title thumbnail is styled individually, never the same plain chip.
+  const ids = [...html.matchAll(/data-title-id="([^"]+)"/g)].map(match => match[1]);
+  assert.ok(ids.includes("perfect-pupil") && ids.includes("grammar-master") && ids.includes("rookie"));
+  assert.ok(new Set(ids).size >= 8);
+  assert.doesNotMatch(html, /angle-bar/);
 });
 
 test("locked pupils can return from the rules without hitting the teacher gate", () => {

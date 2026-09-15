@@ -27,6 +27,7 @@ import {
   selectAllInClass,
   setSelectMode,
   toggleSelection,
+  toggleClassSelection,
   updateCosmetics,
   xpNeededForLevel
 } from "../src/domain.mjs";
@@ -419,6 +420,16 @@ test("select all targets only the active class, and clear selection empties it",
 
   state = clearSelection(state);
   assert.deepEqual(state.selectedPupilIds, []);
+});
+
+test("toggling the whole class selects every pupil, then clears on the second press", () => {
+  let state = createInitialState();
+  const ids = getCurrentClass(state).pupils.map((pupil) => pupil.id);
+  state = toggleClassSelection(state, "7p");
+  assert.deepEqual([...state.selectedPupilIds].sort(), [...ids].sort());
+  state = toggleClassSelection(state, "7p");
+  assert.deepEqual(state.selectedPupilIds, []);
+  assert.equal(toggleClassSelection(state, "missing"), state);
 });
 
 test("bulk HP change applies to every selected pupil and clamps at the bounds", () => {

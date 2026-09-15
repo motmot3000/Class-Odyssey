@@ -49,10 +49,18 @@ différent dans chaque `.env` et ouvrir l'URL correspondante.
 - **Class** (`#class`) affiche les héros de la classe avec leurs portraits de
   face, titres, niveaux, XP, cœurs et pièces. Les cartes donnent accès à la
   fiche, au **Dressing** et au **Shop**.
+- La navigation suit une hiérarchie unique : **Classe → Fiche héros →
+  Dressing / Shop**. La fiche héros revient à la **Classe** ; le Dressing et
+  le Shop reviennent au **héros** par le même bouton, placé en haut à gauche.
+- La console enseignant sélectionne un élève à la fois. **Toute la classe**
+  est une bascule : un appui sélectionne tout le monde, un second efface la
+  sélection. Les récompenses visent toujours la sélection visible.
 - **Teacher console**, via l'onglet du bord droit, ouvre un panneau latéral protégé
   par le mot de passe du compte. Elle contient les récompenses, les données et
   le bouton **+ Add a student**. L'ajout se fait dans une boîte dédiée, puis
-  revient à la console. Fermer la console reverrouille les commandes prof.
+  revient à la console. L'accès reste déverrouillé cinq minutes après validation
+  du mot de passe, y compris quand le panneau est replié. La classe reste
+  interactive pendant l'utilisation de la console.
 
 Un seul élève est sélectionné à la fois ; « Toute la classe » reste un choix
 explicite pour les récompenses collectives. Les anciens liens `#board` et
