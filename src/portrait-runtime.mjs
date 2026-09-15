@@ -1,4 +1,4 @@
-import { CATALOGUE_URL, CATALOGUE_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
+import { BASE_CATALOGUE_URL, BASE_CATALOGUE_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
 const MAX_CACHED_PORTRAITS = 64;
@@ -8,7 +8,8 @@ const pending = new Map();
 let queue = Promise.resolve();
 let observer;
 
-const portraitKey = look => PORTRAIT_REVISION + JSON.stringify(look);
+// Bake-proof the cache key on the live base so a base change never reuses old images.
+const portraitKey = look => `${BASE_CATALOGUE_REVISION}/${PORTRAIT_REVISION}` + JSON.stringify(look);
 
 /** Use a cached image during HTML rendering, before IntersectionObserver fires.
  * This avoids flashing an unequipped fallback when returning to the pupil list.
@@ -30,8 +31,8 @@ const resource = createSharedResource(async () => {
   document.body.append(host);
   try {
     let ownedResource;
-    const { createHeroViewer } = await import(new URL(`../assets/sheikah/viewer.js?v=${CATALOGUE_REVISION}`, import.meta.url).href);
-    const renderer = await createHeroViewer(host, CATALOGUE_URL, DEFAULT_LOOK, {
+    const { createHeroViewer } = await import(new URL(`../assets/sheikah/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href);
+    const renderer = await createHeroViewer(host, BASE_CATALOGUE_URL, DEFAULT_LOOK, {
       theme: "light",
       onError: () => { if (ownedResource && resource.peek() === ownedResource) resource.reset(); }
     });

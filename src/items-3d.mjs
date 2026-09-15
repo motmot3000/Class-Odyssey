@@ -5,6 +5,7 @@ import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, PRESETS, lookFromParams, lookSu
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 let look = lookFromParams(new URLSearchParams(location.search));
+const reviewModel = new URLSearchParams(location.search).get('model');
 let category = 'outfit';
 let viewer;
 let pending = false;
@@ -76,6 +77,7 @@ async function load() {
   try {
     const { createItemsViewer } = await import('./items-3d-viewer.mjs');
     viewer = await createItemsViewer($('#viewer'), look, {
+      modelURL: reviewModel || undefined,
       onProgress: value => { $('#loading-status').textContent = `Chargement des modèles… ${value} %`; },
       onError: text => { setReady(false); $('#loading-status').textContent = text; $('#loading-status').hidden = false; $('#poster').hidden = false; $('#viewer canvas').hidden = true; $('#render-mode').textContent = 'Aperçu Blender'; },
       onFreeView: () => { angle = 'free'; rotating = false; syncView(); }

@@ -13,6 +13,13 @@ export const CATALOGUE_REVISION = 'catalogue-v7-approved-bases';
 export const PORTRAIT_REVISION = `${CATALOGUE_REVISION}-front-hd`;
 export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
 
+/* Live base characters used by the game. These are the delivered, stylized
+ * reference models (isolated stylized build): natural faces, delivered
+ * silhouettes and their own painted materials. The baked production catalogue
+ * above stays available for the standalone lab and for the pipeline tests. */
+export const BASE_CATALOGUE_REVISION = 'stylized-v1';
+export const BASE_CATALOGUE_URL = new URL(`../assets/character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href;
+
 export function pupilLook(pupil, draft = null) {
   const value = (field, fallback) => draft?.[field] || pupil[field] || fallback;
   return {

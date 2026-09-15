@@ -2,6 +2,26 @@
 
 ## Intégration courante dans ClassQuest
 
+### Base de personnage live
+
+Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
+`assets/character-stylized/catalogue.glb` (`stylized-v1`) via
+`BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
+ajoute une expression naturelle (sourcils détendus, léger sourire) et des
+matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
+(`catalogue-v7-approved-bases`) reste la référence de la chaîne d'outils et des
+tests.
+
+Pour reconstruire la base stylisée :
+
+```sh
+STYLIZED=1 blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
+```
+
+L'atelier autonome peut inspecter n'importe quelle base : `items-3d.html?model=/assets/character-stylized/catalogue.glb`.
+
+### Détails
+
 La passe `catalogue-v7-approved-bases` intègre les visages et les silhouettes
 validés. Les cartes approuvées de l'expression Douce et les yeux de référence
 remplacent les précédentes ; la seconde passe de corps applique les morphologies

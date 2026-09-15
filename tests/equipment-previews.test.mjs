@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { createInitialState, getCurrentClass, SHOP_ITEMS } from '../src/domain.mjs';
-import { CATALOGUE_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
+import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
 import { renderItemThumbnail, renderHeroPortrait } from '../src/equipment-previews.mjs';
 import { renderSheikahStudent, renderSheikahShop } from '../src/views/sheikah.mjs';
 
@@ -12,6 +12,18 @@ function catalogue() {
   const data=readFileSync(new URL('catalogue.glb',root));
   return JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
 }
+
+test('the live base characters are the delivered stylized catalogue', () => {
+  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v1');
+  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v1$/);
+  assert.notEqual(BASE_CATALOGUE_URL, CATALOGUE_REVISION);
+  const data = readFileSync(new URL('../assets/character-stylized/catalogue.glb', import.meta.url));
+  assert.equal(data.toString('ascii', 0, 4), 'glTF');
+  const manifest = JSON.parse(readFileSync(new URL('../assets/character-stylized/manifest.json', import.meta.url)));
+  assert.equal(manifest.appearanceRevision, BASE_CATALOGUE_REVISION);
+  assert.ok(manifest.parts['persona:male'] > 0 && manifest.parts['persona:female'] > 0);
+  assert.ok(manifest.parts['outfit:story-keeper'] > 0);
+});
 
 test('every modeled item has a real item-only WebP rendered from this catalogue', () => {
   const report = JSON.parse(readFileSync(new URL('previews/manifest.json',root)));

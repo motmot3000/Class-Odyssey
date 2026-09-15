@@ -18,9 +18,15 @@ from pathlib import Path
 from mathutils import Matrix, Quaternion, Vector, noise
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'assets' / 'items-3d'
-SOURCES = OUT / 'sources'
+# STYLIZED=1 builds an isolated review catalogue from the delivered characters
+# and their own materials: a natural, semi-realistic stylized look without the
+# previous face reshaping, eye swap or body deformation. It never overwrites
+# assets/items-3d, so the proposal can be inspected before any integration.
+STYLIZED = bool(os.environ.get('STYLIZED'))
+OUT = ROOT / 'assets' / ('character-stylized' if STYLIZED else 'items-3d')
+SOURCES = ROOT / 'assets' / 'items-3d' / 'sources'
 CONTRACT = json.loads((SOURCES / 'manifest.json').read_text())
+OUT.mkdir(parents=True, exist_ok=True)
 C = Matrix(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
 CHARACTERS = {'male': 'boy', 'female': 'girl'}
 TAU = math.tau
@@ -33,7 +39,7 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'catalogue-v7-approved-bases'
+APPEARANCE_REVISION = 'stylized-v1' if STYLIZED else 'catalogue-v7-approved-bases'
 REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
 HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
 # Validated face, eye and expression maps. The frozen snapshots in
@@ -207,6 +213,50 @@ def refine_eyelids(obj, gender):
         p.z += -dz * .09 * width * edge
         vertex.co = inverse @ p
     obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+
+
+def stylize_face(obj, gender):
+    """Gentle, natural expression on the delivered face.
+
+    The delivered head is already clean and semi-realistic; this only relaxes
+    the angled brows into a calm arch, lifts the mouth corners into a soft
+    smile and fills the cheeks a touch. Eyes, lids and gaze are left alone so
+    the character never stares.
+    """
+    if obj.get('part') not in ['skin', 'eyes']: return
+    matrix = obj.matrix_world.copy(); inverse = matrix.inverted()
+    for vertex in obj.data.vertices:
+        p = matrix @ vertex.co; x, y, z = p
+        if y > -.060 or not 1.49 < z < 1.69: continue
+        # Calm arch: raise the inner brow, let the outer end fall.
+        t = max(0, min(1, (abs(x)-.014)/.058))
+        brow = math.exp(-((z-1.630)/.021)**4) * math.exp(-((abs(x)-.045)/.052)**6)
+        p.z += (.0026*(1-t) - .0018*t) * brow
+        # Soft smile from the mouth corners, not a painted grin.
+        corners = min(1, (abs(x)/.037)**2) * math.exp(-((abs(x)/.055)**6) - ((z-1.512)/.017)**2)
+        p.z += .0022 * corners
+        # Slightly fuller cheeks read younger and friendlier.
+        cheek = math.exp(-((abs(x)-.052)/.026)**2 - ((z-1.566)/.024)**2)
+        p.z += .0007 * cheek
+        # A gently narrower jaw keeps Mila clearly feminine without reshaping
+        # the skull, so the supplied hairstyles and hats still seat correctly.
+        if gender == 'girl' and z < 1.552:
+            jaw = math.exp(-((abs(x)-.055)/.045)**4) * max(0, min(1, (1.552-z)/.05))
+            p.x -= (x - (1 if x >= 0 else -1)*.055) * .18 * jaw
+        vertex.co = inverse @ p
+    obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+    for face in obj.data.polygons: face.use_smooth = True
+
+
+def stylize_materials(obj):
+    """A matte, graphic response while keeping the delivered painted textures."""
+    for mat in obj.data.materials:
+        if not mat or not mat.use_nodes: continue
+        shader = mat.node_tree.nodes.get('Principled BSDF')
+        if not shader: continue
+        shader.inputs['Specular IOR Level'].default_value = .20
+        shader.inputs['Coat Weight'].default_value = 0
+        if 'Sheen Weight' in shader.inputs: shader.inputs['Sheen Weight'].default_value = 0
 
 
 def make_surface_textures():
@@ -622,13 +672,19 @@ def prepare():
                 bpy.data.objects.remove(obj, do_unlink=True)
                 continue
             part = obj.get('part')
-            refine_source_materials(obj, gender)
+            if STYLIZED:
+                stylize_materials(obj)
+            else:
+                refine_source_materials(obj, gender)
             # Skin, eyelids and eyeballs share the same facial field, so the
             # refined eye and mouth openings keep matching their surfaces.
             if part in ['skin', 'eyes']:
-                sculpt_head(obj, gender)
-                soften_face(obj, gender)
-                refine_eyelids(obj, gender)
+                if STYLIZED:
+                    stylize_face(obj, gender)
+                else:
+                    sculpt_head(obj, gender)
+                    soften_face(obj, gender)
+                    refine_eyelids(obj, gender)
             if part == 'clothes' and 'shirt' in obj.name.lower():
                 shirts.append(obj); continue
             if part not in ['skin','eyes','clothes']:
@@ -1198,16 +1254,23 @@ def export():
         obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.object.convert(target='MESH')
-    refine_seat_silhouette(bpy.context.selected_objects)
-    # Validated athletic silhouettes: the first pass softens the rear, the
-    # second shapes the shoulders, chest, waist, hips and arms. Both use the
-    # shared field in refit_body_shapes.py and protect everything above
-    # 1.455 m, so the approved face and hair normals are copied verbatim.
-    for obj in bpy.context.selected_objects:
-        gender = CHARACTERS.get(obj.get('fit_persona'))
-        if not gender: continue
-        apply_body_shape(obj, gender, 'v1')
-        apply_body_shape(obj, gender, 'v2')
+    if STYLIZED:
+        # Keep the delivered silhouette. Mila only receives the light feminine
+        # field (hips, waist, chest, arms); Noa stays exactly as delivered.
+        for obj in bpy.context.selected_objects:
+            if obj.get('fit_persona') == 'female':
+                apply_body_shape(obj, 'girl', 'v1')
+    else:
+        refine_seat_silhouette(bpy.context.selected_objects)
+        # Validated athletic silhouettes: the first pass softens the rear, the
+        # second shapes the shoulders, chest, waist, hips and arms. Both use the
+        # shared field in refit_body_shapes.py and protect everything above
+        # 1.455 m, so the approved face and hair normals are copied verbatim.
+        for obj in bpy.context.selected_objects:
+            gender = CHARACTERS.get(obj.get('fit_persona'))
+            if not gender: continue
+            apply_body_shape(obj, gender, 'v1')
+            apply_body_shape(obj, gender, 'v2')
     bpy.ops.export_scene.gltf(filepath=str(OUT / 'catalogue.glb'), export_format='GLB', use_selection=True,
                               export_apply=True, export_yup=True, export_animations=False, export_extras=True)
     manifest = {}

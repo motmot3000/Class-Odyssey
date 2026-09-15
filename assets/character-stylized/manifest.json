@@ -1,0 +1,135 @@
+{
+  "appearanceRevision": "stylized-v1",
+  "sourceRevision": "base-v2-2026-09",
+  "sourcePose": {
+    "armsFromT": 82,
+    "elbowFlexion": 8,
+    "fingerFlexion": 10,
+    "palms": "toward thighs"
+  },
+  "sourceSha256": {
+    "boy-medium.glb": "5988af9084b11c3717c3c7e21e932725f013bd1c2aeb63bdf82979f5937036ff",
+    "girl-medium.glb": "97b2dc79bcc01e4ecba10fc18e2de659674dffd50b87e38dd328846d5bb232e7"
+  },
+  "anchorManifestSha256": "77f4ab4dbf4d191512d25a5f24185fd6a9f9e4cf588824aee9b87910fc712b12",
+  "coordinates": "metres; Blender Z up, front -Y; glTF Y up, front +Z",
+  "parts": {
+    "persona:male": 4,
+    "core:base": 2,
+    "persona:female": 4,
+    "outfit:starter": 14,
+    "outfit:vocab-ranger": 24,
+    "outfit:grammar-mage": 30,
+    "outfit:story-keeper": 146,
+    "outfit:honor-knight": 146,
+    "outfit:grand-archmage": 34,
+    "outfit:realm-sovereign": 182,
+    "hair:long": 423,
+    "hair:curly": 6,
+    "hair:braided": 570,
+    "hair:royal-hair": 990,
+    "hair:short": 258,
+    "hat:explorer-cap": 12,
+    "hat:sunglasses": 14,
+    "hat:feather-beret": 10,
+    "hat:wizard-hat": 10,
+    "hat:classy-hat": 8,
+    "hat:gold-crown": 20,
+    "hat:celestial-crown": 26,
+    "hat:steel-helm": 14,
+    "weapon:star-shield": 16,
+    "weapon:pencil-sword": 20,
+    "weapon:dual-daggers": 40,
+    "weapon:swords-and-shield": 56,
+    "weapon:lore-lantern": 18,
+    "weapon:spell-grimoire": 18,
+    "weapon:word-wand": 14
+  },
+  "staticPose": true,
+  "headFit": {
+    "center_y": -0.012,
+    "hair_center_z": 1.625,
+    "hat_seat_z": 1.692,
+    "hat_inner_x": 0.118,
+    "hat_inner_y": 0.143,
+    "under_hat_z": 1.7
+  },
+  "headFits": {
+    "male": {
+      "anchor": {
+        "position": [
+          0.0,
+          1.676,
+          0.01645
+        ],
+        "quaternion": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "clearance": [
+        0,
+        0.012,
+        0
+      ],
+      "templateToCharacter": [
+        1.001398325,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.931195796,
+        0.0,
+        0.0,
+        -0.004000068,
+        0.005275651,
+        1.0
+      ]
+    },
+    "female": {
+      "anchor": {
+        "position": [
+          0.0,
+          1.676,
+          0.01645
+        ],
+        "quaternion": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "clearance": [
+        0,
+        0.012,
+        0
+      ],
+      "templateToCharacter": [
+        0.950466096,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.931195796,
+        0.0,
+        0.0,
+        -0.004000068,
+        0.005275651,
+        1.0
+      ]
+    }
+  }
+}

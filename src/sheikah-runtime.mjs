@@ -4,10 +4,10 @@
  */
 
 import { t } from "./i18n.mjs";
-import { CATALOGUE_URL, CATALOGUE_REVISION } from "./items-3d-model.mjs";
+import { BASE_CATALOGUE_URL, BASE_CATALOGUE_REVISION } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
-const GLB_URL = CATALOGUE_URL;
+const GLB_URL = BASE_CATALOGUE_URL;
 let runtime;
 let currentHost = null;
 let viewerAngle = "quarter";
@@ -17,7 +17,7 @@ let onFreeView = () => {};
 
 function loadRuntime() {
   if (!runtime) {
-    runtime = import(new URL(`../assets/sheikah/viewer.js?v=${CATALOGUE_REVISION}`, import.meta.url).href)
+    runtime = import(new URL(`../assets/sheikah/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href)
       .catch((error) => { runtime = undefined; throw error; });
   }
   return runtime;
