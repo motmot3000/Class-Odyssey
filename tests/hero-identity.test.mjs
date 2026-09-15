@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createInitialState,getCurrentClass } from '../src/domain.mjs';
-import { renderTitle } from '../src/ui.mjs';
+import { renderTitle, titleTierOf, titleBackdropAttributes } from '../src/ui.mjs';
 import { renderSheikahStudent,renderSheikahSheet,renderSheikahPersonalize,renderSheikahTeacher } from '../src/views/sheikah.mjs';
 import { renderRules } from '../src/views/rules.mjs';
 import { t,setLang } from '../src/i18n.mjs';
@@ -23,11 +23,39 @@ test('hero identity uses the equipped title, never the outfit or hair colour',()
 });
 
 test('title decoration depends on the earned title, not the pupil level',()=>{
-  assert.match(renderTitle({title:'perfect-pupil',level:20}),/data-title-tier="1"/);
+  assert.match(renderTitle({title:'perfect-pupil',level:20}),/data-title-tier="2"/);
   const legendary=renderTitle({title:'class-legend',level:10});
-  assert.match(legendary,/data-title-tier="4"/);
+  assert.match(legendary,/data-title-tier="5"/);
   assert.ok(legendary.length>renderTitle({title:'perfect-pupil'}).length);
   assert.doesNotMatch(renderTitle({title:'"><script>'}),/<script>/);
+});
+
+test('titles climb a five-step prestige ladder with a matching backdrop',()=>{
+  const tiers={rookie:1,'perfect-pupil':2,pathfinder:2,'scholar-virtuoso':3,'realm-champion':3,'grand-archon':4,'paragon-sovereign':4,'grammar-master':5,'class-legend':5};
+  for(const [title,tier] of Object.entries(tiers)){
+    assert.equal(titleTierOf({title}),tier,title);
+    assert.match(renderTitle({title}),new RegExp(`data-title-tier="${tier}"`));
+  }
+  assert.equal(titleTierOf({title:'missing'}),1);
+  assert.match(titleBackdropAttributes({title:'class-legend'}),/data-title-tier="5" data-title-id="class-legend"/);
+  assert.doesNotMatch(titleBackdropAttributes({title:'"><script>'}),/<script>/);
+  // Higher tiers accumulate ornament; the crown and rays only appear at the top.
+  const rookie=renderTitle({title:'rookie'});
+  const master=renderTitle({title:'grammar-master'});
+  assert.doesNotMatch(rookie,/orn-crown|orn-rays/);
+  assert.match(master,/orn-crown/);
+  assert.match(master,/orn-rays/);
+});
+
+test('hero cards and the hero sheet expose the title backdrop layer',()=>{
+  const classroom=getCurrentClass(createInitialState());
+  const pupil={...classroom.pupils[0],title:'grammar-master'};
+  const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui:{},pupil:null});
+  assert.match(picker,/class="dais dais-card" data-title-tier="5" data-title-id="grammar-master"/);
+  assert.match(picker,/class="title-halo"/);
+  const sheet=renderSheikahSheet(pupil,{});
+  assert.match(sheet,/data-viewer-host[^>]*data-title-tier="5"/);
+  assert.match(sheet,/title-halo/);
 });
 
 test('Rules preserves the original text and reading order in both languages',()=>{

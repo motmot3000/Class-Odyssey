@@ -970,3 +970,85 @@ input { caret-color: var(--cyan); }
   .picker-card strong { font-size: 21px; }
   .picker h1 { font-size: 30px; }
 }
+
+/* ============================================================
+   Title backdrop — the dais behind the character reflects prestige.
+   Tier 1 stays neutral; every tier adds tint, geometry and, at the top,
+   a recoloured arch with title-specific emblems. Decorations live inside
+   the dais (overflow hidden) so they never spill over the card.
+   ============================================================ */
+.title-halo { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.title-halo::before,
+.title-halo::after { content: ""; position: absolute; pointer-events: none; }
+
+.dais[data-title-tier="2"] { --halo-color: #2f6fa8; --halo-soft: rgba(47,111,168,.16); }
+.dais[data-title-tier="3"] { --halo-color: #2b7d63; --halo-soft: rgba(43,125,99,.20); }
+.dais[data-title-tier="4"] { --halo-color: #a23b3b; --halo-soft: rgba(162,59,59,.22); }
+.dais[data-title-tier="5"] { --halo-color: #b8871f; --halo-soft: rgba(197,150,42,.26); }
+
+/* Soft tint, stronger as the tier rises. */
+.dais[data-title-tier="2"] .title-halo::before { inset: 0; background: radial-gradient(60% 55% at 50% 88%, var(--halo-soft), transparent 72%); }
+.dais[data-title-tier="3"] .title-halo::before { inset: 0; background: radial-gradient(64% 58% at 50% 90%, var(--halo-soft), transparent 74%); }
+.dais[data-title-tier="4"] .title-halo::before { inset: 0; background: radial-gradient(70% 62% at 50% 92%, var(--halo-soft), transparent 76%); }
+.dais[data-title-tier="5"] .title-halo::before { inset: 0; background: radial-gradient(74% 66% at 50% 94%, var(--halo-soft), transparent 78%); }
+
+/* Tier 2: a pair of quiet guide lines. */
+.dais[data-title-tier="2"] .title-halo::after {
+  inset: auto 16% 14% 16%; height: 38%;
+  border-left: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
+  border-radius: 60% 60% 0 0;
+}
+
+/* Tier 3: corner chevrons and a dotted base. */
+.dais[data-title-tier="3"] .title-halo::after {
+  inset: 12% 12% 10%;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--halo-color) 55%, transparent) 0 2px, transparent 2px 14px) bottom / 100% 1px no-repeat,
+    linear-gradient(to bottom right, transparent 47.6%, color-mix(in srgb, var(--halo-color) 50%, transparent) 47.6% 48.4%, transparent 48.4%) 0 0 / 34% 34% no-repeat,
+    linear-gradient(to bottom left, transparent 47.6%, color-mix(in srgb, var(--halo-color) 50%, transparent) 47.6% 48.4%, transparent 48.4%) 100% 0 / 34% 34% no-repeat;
+}
+
+/* Tier 4: a ringed medallion behind the shoulders. */
+.dais[data-title-tier="4"] .title-halo::after {
+  inset: 20% 30% 24%; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--halo-color) 12%, transparent);
+}
+
+/* Tier 5: radiant sunburst rays, masked away from the centre. */
+.dais[data-title-tier="5"] .title-halo::after {
+  inset: -18% -6% 16%;
+  background: repeating-conic-gradient(from 0deg at 50% 64%,
+    color-mix(in srgb, var(--halo-color) 42%, transparent) 0deg 1.4deg, transparent 1.4deg 11deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 34%, #000 46%, transparent 80%);
+  mask: radial-gradient(closest-side, transparent 34%, #000 46%, transparent 80%);
+  opacity: .65;
+}
+
+/* The arch line behind the head picks up the title colour from tier 4 up. */
+.dais[data-title-tier="4"]::before,
+.dais[data-title-tier="5"]::before { border-color: color-mix(in srgb, var(--halo-color) 55%, var(--stage-line)); }
+
+/* Title-specific emblems. They are alpha masks recoloured to the title colour,
+ * so they tint with the tier instead of reading as grey artwork. */
+.title-emblem { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: var(--halo-color, currentColor); }
+.dais[data-title-tier="4"][data-title-id="paragon-sovereign"] .title-emblem {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M6 26 10 8l10 8 12-14 12 14 10-8 4 18z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M6 26 10 8l10 8 12-14 12 14 10-8 4 18z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  opacity: .55;
+}
+.dais[data-title-tier="5"][data-title-id="grammar-master"] .title-emblem {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M8 26c6-12 14-16 24-16s18 4 24 16' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14 22c3-2 5-5 6-9M50 22c-3-2-5-5-6-9' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M8 26c6-12 14-16 24-16s18 4 24 16' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14 22c3-2 5-5 6-9M50 22c-3-2-5-5-6-9' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  opacity: .7;
+}
+.dais[data-title-tier="5"][data-title-id="class-legend"] .title-emblem {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='m32 3 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z' fill='none' stroke='%23000' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='m32 3 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z' fill='none' stroke='%23000' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
+  opacity: .75;
+}
+
+/* The character must always sit above its title backdrop. */
+.dais-lg canvas { z-index: 2; }
+.dais .viewer-fallback { position: relative; z-index: 2; }

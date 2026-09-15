@@ -82,17 +82,40 @@ export function getItemName(type, id) {
 
 /* Rank identity, independent of outfit and hair colour. Higher earned titles
    receive richer heraldic decoration, without motion or changes to game rules. */
+/* Titles are a prestige ladder. The earned title (not the pupil level) decides a
+ * 1-5 tier used for colour, ornament and the backdrop behind the character.
+ */
+export function titleItemOf(pupil) {
+  const titles = getShopItems("title");
+  return titles.find((item) => item.id === pupil?.title) || titles[0];
+}
+
+export function titleTierOf(pupil) {
+  const level = titleItemOf(pupil)?.minLevel || 1;
+  if (level >= 8) return 5;
+  if (level >= 6) return 4;
+  if (level >= 4) return 3;
+  if (level >= 2) return 2;
+  return 1;
+}
+
+export function titleBackdropAttributes(pupil) {
+  const item = titleItemOf(pupil);
+  return `data-title-tier="${titleTierOf(pupil)}" data-title-id="${escapeHtml(item?.id || "rookie")}"`;
+}
+
 export function renderTitle(pupil, { labelled = false } = {}) {
-  const titles=getShopItems('title');
-  const item=titles.find(item=>item.id===pupil.title) || titles[0];
-  const tier=item.minLevel>=8 ? 4 : item.minLevel>=5 ? 3 : item.minLevel>=3 ? 2 : 1;
-  const ornament=`<svg class="title-ornament" viewBox="0 0 48 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M2 16h24m2 0 5-5 5 5-5 5-5-5Z"/>
-    ${tier>=2 ? '<path d="M8 16c2-7 7-11 13-12M12 16c-4-3-5-6-4-9m10 3c-4-1-6-3-6-6M8 16c2 7 7 11 13 12m-9-12c-4 3-5 6-4 9m10-3c-4 1-6 3-6 6"/>' : ''}
-    ${tier>=3 ? '<path d="m23 3 2 3 3-2-1 6h-7l-1-6 3 2 1-3Z"/>' : ''}
-    ${tier>=4 ? '<path d="m38 6 2 3 4 1-4 1-2 3-1-3-4-1 4-1 1-3Zm0 12 2 3 4 1-4 1-2 3-1-3-4-1 4-1 1-3Z"/>' : ''}
+  const item = titleItemOf(pupil);
+  const tier = titleTierOf(pupil);
+  const ornament = `<svg class="title-ornament" viewBox="0 0 48 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path class="orn-base" d="M2 16h22"/>
+    <path class="orn-gem" d="m26 16 4-4 4 4-4 4z"/>
+    ${tier >= 2 ? '<path class="orn-leaf" d="M9 16c1-4 4-6 8-6"/><path class="orn-leaf" d="M9 16c1 4 4 6 8 6"/>' : ""}
+    ${tier >= 3 ? '<path class="orn-star" d="m14 3 1.7 3.3 3.6.5-2.6 2.5.6 3.6L14 11.3l-3.3 1.6.6-3.6-2.6-2.5 3.6-.5z"/>' : ""}
+    ${tier >= 4 ? '<path class="orn-crown" d="M5 11l3-6 4 3.5L16 4l3 7z"/>' : ""}
+    ${tier >= 5 ? '<path class="orn-rays" d="M30 2l2 5M37 1l1 5M44 4l-2 4"/><circle class="orn-dot" cx="33" cy="21" r="1.3"/><circle class="orn-dot" cx="39" cy="23" r="1.1"/><circle class="orn-dot" cx="45" cy="19" r="1"/>' : ""}
   </svg>`;
-  return `<span class="hero-title-tag title-${escapeHtml(item.id)}" data-title-tier="${tier}" ${labelled ? 'data-title-labelled' : ''}>
+  return `<span class="hero-title-tag title-${escapeHtml(item.id)}" data-title-tier="${tier}" data-title-id="${escapeHtml(item.id)}" ${labelled ? 'data-title-labelled' : ''}>
     ${labelled ? `<span class="hero-title-label">${t('modal.type.title')}</span>` : ''}
     <span class="hero-title-ribbon">${ornament}<span class="hero-title-name">${escapeHtml(tItem(item,'name'))}</span>${ornament}</span>
   </span>`;

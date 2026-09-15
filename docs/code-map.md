@@ -59,6 +59,12 @@ Every asynchronous result must check its captured account/token before touching 
 
 The shop previews **only the selected product**. The workshop renders the hero's equipped look. A preview does not buy/equip an item. Titles come from `pupil.title`, never from the outfit or hair colour.
 
+Earned titles form a five-step prestige ladder (`titleTierOf`): the tier decides the
+title colour, ornament, glow and the `.title-halo` / `.title-emblem` backdrop behind
+the character. Tier 1 is neutral; the top tier adds gold rays and a title-specific
+emblem. `titleBackdropAttributes(pupil)` is applied to every character dais (class
+cards and the hero sheet), and the character always renders above the backdrop.
+
 Two different lifetime checks matter: **host identity** prevents mounting into an old screen; **resource generation** prevents an obsolete load from replacing a retried viewer. Keep both.
 
 ## Sources versus generated files

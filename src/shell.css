@@ -128,19 +128,59 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .title-chip, .hero-title-tag { color: var(--amber); font-family: var(--font-display); font-weight: 600; overflow-wrap: anywhere; }
 .title-chip { font-size: 16px; }
 
-/* Earned titles are the hero's identity; decoration grows with title rarity. */
-.hero-title-tag { display: block; color: var(--cyan); font-size: 20px; line-height: 1.2; text-align: center; }
+/* Earned titles are a prestige ladder. Tier 1 is quiet; each tier adds colour,
+ * ornament, glow and (for tier 4-5) a plaque, ending in a radiant gold legend. */
+.hero-title-tag {
+  --title-color: #5c6b5e;
+  --title-glow: transparent;
+  display: block;
+  color: var(--title-color);
+  font-size: 20px;
+  line-height: 1.2;
+  text-align: center;
+}
 .hero-title-label { display: block; margin-bottom: 8px; font: 600 11px/1.3 var(--font-ui); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
-.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; }
+.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; position: relative; }
 .hero-title-name { min-width: 0; overflow-wrap: anywhere; }
 .title-ornament { width: 28px; height: 24px; flex: 0 0 auto; }
 .title-ornament:last-child { transform: scaleX(-1); }
-.hero-title-tag[data-title-tier="2"] { color: var(--cyan); }
-.hero-title-tag[data-title-tier="3"], .hero-title-tag[data-title-tier="4"] { color: var(--amber); }
-.hero-title-tag[data-title-tier="3"] .title-ornament, .hero-title-tag[data-title-tier="4"] .title-ornament { width: 37px; height: 28px; }
-.hero-title-tag[data-title-tier="4"] .hero-title-name { border-block: 1px solid var(--inlay); padding-block: 4px; }
-.hero-title-tag[data-title-labelled] { padding: 16px 10px; font-size: clamp(26px,2.6vw,36px); background: var(--slate); border-block: 1px solid var(--line-2); }
+.title-ornament .orn-gem { fill: currentColor; }
+.title-ornament .orn-dot { fill: currentColor; stroke: none; }
+
+.hero-title-tag[data-title-tier="1"] { --title-color: #5c6b5e; }
+.hero-title-tag[data-title-tier="2"] { --title-color: #2f6fa8; --title-glow: rgba(47,111,168,.28); }
+.hero-title-tag[data-title-tier="3"] { --title-color: #2b7d63; --title-glow: rgba(43,125,99,.34); }
+.hero-title-tag[data-title-tier="4"] { --title-color: #a23b3b; --title-glow: rgba(162,59,59,.40); }
+.hero-title-tag[data-title-tier="5"] { --title-color: #a07a1e; --title-glow: rgba(197,150,42,.55); }
+
+.hero-title-tag[data-title-tier="3"] .title-ornament,
+.hero-title-tag[data-title-tier="4"] .title-ornament,
+.hero-title-tag[data-title-tier="5"] .title-ornament { width: 38px; height: 28px; }
+.hero-title-tag[data-title-tier="4"] .hero-title-name,
+.hero-title-tag[data-title-tier="5"] .hero-title-name { border-block: 1px solid color-mix(in srgb, var(--title-color) 55%, transparent); padding-block: 4px; }
+.hero-title-tag[data-title-tier="5"] .hero-title-name {
+  text-shadow: 0 0 10px var(--title-glow), 0 0 22px var(--title-glow);
+  letter-spacing: .02em;
+}
+.hero-title-tag[data-title-tier="4"] .hero-title-name { text-shadow: 0 0 8px var(--title-glow); }
+
+/* Tier 5 gets a radiant plaque; tier 4 a restrained rimmed one. */
+.hero-title-tag[data-title-tier="5"][data-title-labelled],
+.hero-title-tag[data-title-tier="5"] .hero-title-ribbon { position: relative; }
+.hero-title-tag[data-title-tier="5"] .hero-title-ribbon::before {
+  content: "";
+  position: absolute;
+  inset: -14px -22px;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, var(--title-glow), transparent 78%);
+  pointer-events: none;
+}
+.hero-title-tag[data-title-labelled] { padding: 16px 10px; font-size: clamp(26px,2.6vw,36px); background: var(--slate); border-block: 1px solid var(--line-2); position: relative; }
 .hero-title-tag[data-title-labelled] .title-ornament { width: 44px; height: 32px; }
+.hero-title-tag[data-title-tier="4"][data-title-labelled],
+.hero-title-tag[data-title-tier="5"][data-title-labelled] { background: linear-gradient(180deg, color-mix(in srgb, var(--title-color) 12%, var(--slate)), var(--slate)); border-block-color: color-mix(in srgb, var(--title-color) 45%, transparent); }
+.hero-title-tag[data-title-tier="5"][data-title-labelled] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--title-color) 40%, transparent); }
+
 .rune-card-title { padding: 0 10px 10px; position: relative; z-index: 2; }
 .workshop-identity { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; }
 .picker-info .hero-title-tag { font-size: 21px; }

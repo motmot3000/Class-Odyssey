@@ -3,7 +3,7 @@
  */
 
 import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
-import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle } from "../ui.mjs";
+import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
@@ -89,7 +89,9 @@ function renderAngleBar(ui, { itemOnly = false, dressing = false } = {}) {
 }
 
 function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
-  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}'>
+  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}' ${titleBackdropAttributes(pupil)}>
+    <span class="title-halo" aria-hidden="true"></span>
+    <span class="title-emblem" aria-hidden="true"></span>
     ${renderViewerFallback(pupil, item)}
   </div>`;
 }
@@ -215,7 +217,9 @@ function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = 
   return `
     <article class="rune-card ${student ? 'student-card' : ''} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
       <button class="card-hit" type="button" data-action="${student && !selecting ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student && !selecting ? '' : `aria-pressed="${selected}"`} aria-label="${t(student && !selecting ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
-      <div class="dais dais-card">
+      <div class="dais dais-card" ${titleBackdropAttributes(pupil)}>
+        <span class="title-halo" aria-hidden="true"></span>
+        <span class="title-emblem" aria-hidden="true"></span>
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
         ${student && !selecting ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
