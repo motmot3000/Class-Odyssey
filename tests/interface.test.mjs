@@ -64,6 +64,8 @@ test("Class navigation has no separate teacher/student views and exposes a prote
     assert.match(html,/aria-haspopup="dialog"/);
     assert.match(html,/data-class-id="7p"/);
     assert.match(html,/data-class-id="8p"/);
+    assert.match(html,/aria-label="[^"]*"[^>]*title="[^"]*"[^>]*>\s*<svg class="ic "[^>]*viewBox="0 0 24 24"/);
+    assert.doesNotMatch(html,/M4 5h12M4 10h12M4 15h12/);
   } finally { globalThis.document=previousDocument; }
 });
 

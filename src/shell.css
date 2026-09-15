@@ -31,9 +31,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 /* The same navigation stays in place across the teacher and pupil paths. */
 .topbar { height: auto; min-height: var(--topbar-h); gap: var(--s4); padding-block: max(8px, env(safe-area-inset-top)) 8px; }
-.topbar .tabs { flex: none; }
-.topbar > .tabs { max-width: 260px; overflow-x: auto; }
-.topbar > .tabs button { white-space: nowrap; }
+.topbar > .class-picker { flex: none; max-width: 320px; }
 .topbar-welcome .top-end { width: auto; margin-left: auto; }
 .topbar-welcome .ghost span { display: inline; }
 .top-end { gap: var(--s2); }
@@ -383,8 +381,8 @@ body[data-teacher-panel="open"] .teacher-console-tab { z-index: 46; right: min(4
 @media (max-width: 720px) {
   .topbar:not(.topbar-welcome) { gap: 4px; padding: 8px; min-height: 64px; }
   .topbar:not(.topbar-welcome) .brand-logo { width: clamp(70px,23vw,100px); height: auto; }
-  .topbar:not(.topbar-welcome) > .tabs { margin-left: auto; padding-left: 4px; max-width: none; border: 0; gap: 0; }
-  .topbar:not(.topbar-welcome) .tabs button { min-width: 40px; padding: 6px; }
+  .topbar:not(.topbar-welcome) > .class-picker { margin-left: auto; }
+  .topbar:not(.topbar-welcome) .class-picker-summary { min-height: 40px; padding: 6px 12px; }
   .topbar:not(.topbar-welcome) .top-end { gap: 0; margin-left: 0; }
   .topbar:not(.topbar-welcome) .top-end > .ghost { width: 40px; padding: 8px; }
   .topbar:not(.topbar-welcome) .top-end > .ghost > span { display: none; }

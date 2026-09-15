@@ -26,16 +26,20 @@ const ico = (name, cls = "") => {
     sun: `<circle cx="10" cy="10" r="3.4"/><path d="M10 1.8v2.2M10 16v2.2M1.8 10h2.2M16 10h2.2M4.2 4.2l1.6 1.6M14.2 14.2l1.6 1.6M15.8 4.2l-1.6 1.6M5.8 14.2l-1.6 1.6"/>`,
     moon: `<path d="M16.4 12.6A6.8 6.8 0 0 1 7.4 3.6a6.8 6.8 0 1 0 9 9Z"/>`,
     lock: `<rect x="4.5" y="8.5" width="11" height="8" rx="1.8"/><path d="M7.2 8.5V6.6a2.8 2.8 0 0 1 5.6 0v1.9"/>`,
-    book: `<path d="M4 4.5h5a2 2 0 0 1 2 2v9a1.6 1.6 0 0 0-1.6-1.6H4z"/><path d="M16 4.5h-3.4a1.6 1.6 0 0 0-1.6 1.6v9.4"/>`,
+    // Lucide "book-open": two pages and a spine, unmistakably a book at 16px.
+    book: `<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>`,
     back: `<path d="M15 10H5"/><path d="M9 5.5 4.5 10 9 14.5"/>`,
     plus: `<path d="M10 4.5v11M4.5 10h11"/>`,
     check: `<path d="m5 10 3.5 3.5L15 6.5"/>`,
     menu: `<path d="M4 5h12M4 10h12M4 15h12"/>`,
+    // Lucide "settings": a cog, so the options control reads as parameters.
+    settings: `<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
     shop: `<path d="M4 7.5h12l-1 8.5H5z"/><path d="M7.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5"/>`
   };
+  const VIEWBOXES = { settings: "0 0 24 24", book: "0 0 24 24" };
   const path = paths[name];
   if (!path) return "";
-  return `<svg class="ic ${cls}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+  return `<svg class="ic ${cls}" viewBox="${VIEWBOXES[name] || "0 0 20 20"}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 };
 
 export const SHEIKAH_ANGLES = ["front", "quarter", "back", "head", "item"];
@@ -106,6 +110,7 @@ function renderHeroBack() {
 /* ---------- Application navigation ---------- */
 
 export function renderSheikahTopbar({ view, state, account, unlocked }) {
+  const activeClass = state.classes.find((classroom) => classroom.id === state.activeClassId) || state.classes[0];
   const themeControl = `<button type="button" class="ghost" data-action="toggle-theme" aria-label="${t("common.changeTheme")}" title="${t("common.changeTheme")}">${ico(document.documentElement.dataset.theme === "light" ? "moon" : "sun")}<span>${t("common.theme")}</span></button>`;
   return `
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
@@ -116,17 +121,27 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
         </button>
       </div>
        ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a></div>` : `
-      <nav class="tabs" aria-label="Classes">
-        ${state.classes.map((classroom) => {
-          const active = classroom.id === state.activeClassId;
-          return `<button type="button" class="${active ? "on" : ""}" data-action="select-class" data-class-id="${escapeHtml(classroom.id)}" aria-pressed="${active}">${escapeHtml(classroom.name)}</button>`;
-        }).join("")}
-      </nav>
+      <details class="class-picker">
+        <summary class="class-picker-summary" aria-label="${t("nav.classes")}">
+          ${ico("heroes")}
+          <span class="class-picker-label">${t("nav.classes")}</span>
+          <span class="class-picker-current">${escapeHtml(activeClass?.name || "")}</span>
+          <span class="class-picker-caret" aria-hidden="true"></span>
+        </summary>
+        <div class="class-picker-menu" role="menu" aria-label="${t("nav.classes")}">
+          ${state.classes.map((classroom) => {
+            const active = classroom.id === state.activeClassId;
+            return `<button type="button" role="menuitemradio" aria-checked="${active}" class="${active ? "on" : ""}" data-action="select-class" data-class-id="${escapeHtml(classroom.id)}">
+              <span class="class-picker-name">${escapeHtml(classroom.name)}</span>${active ? ico("check") : ""}
+            </button>`;
+          }).join("")}
+        </div>
+      </details>
       <div class="top-end">
         <button type="button" class="ghost" data-action="show-rules" aria-current="${view === "rules" ? "page" : "false"}" aria-label="${t("app.aria.rules")}" title="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         ${themeControl}
         <details class="tablet-tools">
-          <summary class="ghost" aria-label="${t("sheikah.tools")}" title="${t("sheikah.tools")}">${ico("menu")}</summary>
+          <summary class="ghost" aria-label="${t("sheikah.tools")}" title="${t("sheikah.tools")}">${ico("settings")}</summary>
           <div class="tablet-tools-menu">
             <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
             ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-current="${view === "admin" ? "page" : "false"}" aria-label="${t("app.aria.accounts")}" title="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}

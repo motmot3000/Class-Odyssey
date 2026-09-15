@@ -424,6 +424,21 @@ function handlePanelToggle(event) {
 app.addEventListener("toggle", handlePanelToggle, true);
 dialogRoot.addEventListener("toggle", handlePanelToggle, true);
 
+/* Topbar dropdowns (class picker, tools) behave like menus: one open at a time,
+ * and clicking elsewhere closes them. */
+document.addEventListener("toggle", (event) => {
+  const details = event.target;
+  if (!details.open || !details.matches(".class-picker, .tablet-tools")) return;
+  document.querySelectorAll(".class-picker[open], .tablet-tools[open]").forEach((other) => {
+    if (other !== details) other.open = false;
+  });
+}, true);
+document.addEventListener("click", (event) => {
+  document.querySelectorAll(".class-picker[open], .tablet-tools[open]").forEach((details) => {
+    if (!details.contains(event.target)) details.open = false;
+  });
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === 'Escape' && ui.teacherDialog === 'console' && !event.defaultPrevented) {
     event.preventDefault();
