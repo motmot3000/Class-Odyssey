@@ -973,82 +973,107 @@ input { caret-color: var(--cyan); }
 
 /* ============================================================
    Title backdrop — the dais behind the character reflects prestige.
-   Tier 1 stays neutral; every tier adds tint, geometry and, at the top,
-   a recoloured arch with title-specific emblems. Decorations live inside
-   the dais (overflow hidden) so they never spill over the card.
+   Decoration is drawn with precise, centred geometry (masks, borders and
+   rules) so nothing crosses or gets cut: a baselined rule with a gem from
+   tier 2, banner rails from tier 3, a medallion from tier 4 and radiant
+   rays plus a title emblem from tier 5. Everything lives inside the dais.
    ============================================================ */
-.title-halo { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.title-halo,
+.title-emblem,
+.title-frame { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .title-halo::before,
-.title-halo::after { content: ""; position: absolute; pointer-events: none; }
+.title-halo::after,
+.title-frame::before,
+.title-frame::after { content: ""; position: absolute; pointer-events: none; }
 
-.dais[data-title-tier="2"] { --halo-color: #2f6fa8; --halo-soft: rgba(47,111,168,.16); }
-.dais[data-title-tier="3"] { --halo-color: #2b7d63; --halo-soft: rgba(43,125,99,.20); }
-.dais[data-title-tier="4"] { --halo-color: #a23b3b; --halo-soft: rgba(162,59,59,.22); }
-.dais[data-title-tier="5"] { --halo-color: #b8871f; --halo-soft: rgba(197,150,42,.26); }
+.dais[data-title-tier="2"] { --halo-color: #2f6fa8; --halo-soft: rgba(47,111,168,.22); }
+.dais[data-title-tier="3"] { --halo-color: #2b7d63; --halo-soft: rgba(43,125,99,.26); }
+.dais[data-title-tier="4"] { --halo-color: #a23b3b; --halo-soft: rgba(162,59,59,.28); }
+.dais[data-title-tier="5"] { --halo-color: #b8871f; --halo-soft: rgba(197,150,42,.34); }
 
-/* Soft tint, stronger as the tier rises. */
-.dais[data-title-tier="2"] .title-halo::before { inset: 0; background: radial-gradient(60% 55% at 50% 88%, var(--halo-soft), transparent 72%); }
-.dais[data-title-tier="3"] .title-halo::before { inset: 0; background: radial-gradient(64% 58% at 50% 90%, var(--halo-soft), transparent 74%); }
-.dais[data-title-tier="4"] .title-halo::before { inset: 0; background: radial-gradient(70% 62% at 50% 92%, var(--halo-soft), transparent 76%); }
-.dais[data-title-tier="5"] .title-halo::before { inset: 0; background: radial-gradient(74% 66% at 50% 94%, var(--halo-soft), transparent 78%); }
+/* Ambient tint, rising with the tier. */
+.dais[data-title-tier="2"] .title-halo::before { inset: 0; background: radial-gradient(62% 56% at 50% 90%, var(--halo-soft), transparent 72%); }
+.dais[data-title-tier="3"] .title-halo::before { inset: 0; background: radial-gradient(66% 60% at 50% 92%, var(--halo-soft), transparent 74%); }
+.dais[data-title-tier="4"] .title-halo::before { inset: 0; background: radial-gradient(72% 64% at 50% 94%, var(--halo-soft), transparent 76%); }
+.dais[data-title-tier="5"] .title-halo::before { inset: 0; background: radial-gradient(78% 70% at 50% 96%, var(--halo-soft), transparent 78%); }
 
-/* Tier 2: a pair of quiet guide lines. */
-.dais[data-title-tier="2"] .title-halo::after {
-  inset: auto 16% 14% 16%; height: 38%;
-  border-left: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
-  border-right: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
-  border-radius: 60% 60% 0 0;
-}
-
-/* Tier 3: corner chevrons and a dotted base. */
-.dais[data-title-tier="3"] .title-halo::after {
-  inset: 12% 12% 10%;
-  background:
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--halo-color) 55%, transparent) 0 2px, transparent 2px 14px) bottom / 100% 1px no-repeat,
-    linear-gradient(to bottom right, transparent 47.6%, color-mix(in srgb, var(--halo-color) 50%, transparent) 47.6% 48.4%, transparent 48.4%) 0 0 / 34% 34% no-repeat,
-    linear-gradient(to bottom left, transparent 47.6%, color-mix(in srgb, var(--halo-color) 50%, transparent) 47.6% 48.4%, transparent 48.4%) 100% 0 / 34% 34% no-repeat;
-}
-
-/* Tier 4: a ringed medallion behind the shoulders. */
-.dais[data-title-tier="4"] .title-halo::after {
-  inset: 20% 30% 24%; border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--halo-color) 45%, transparent);
-  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--halo-color) 12%, transparent);
-}
-
-/* Tier 5: radiant sunburst rays, masked away from the centre. */
+/* Tier 4: a precise ring medallion behind the shoulders. */
+.dais[data-title-tier="4"] .title-halo::after,
 .dais[data-title-tier="5"] .title-halo::after {
-  inset: -18% -6% 16%;
-  background: repeating-conic-gradient(from 0deg at 50% 64%,
-    color-mix(in srgb, var(--halo-color) 42%, transparent) 0deg 1.4deg, transparent 1.4deg 11deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 34%, #000 46%, transparent 80%);
-  mask: radial-gradient(closest-side, transparent 34%, #000 46%, transparent 80%);
-  opacity: .65;
+  left: 50%; top: 47%; width: 46%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  border: 1px solid color-mix(in srgb, var(--halo-color) 48%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--halo-color) 10%, transparent);
+}
+.dais[data-title-tier="5"] .title-halo::after { box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--halo-color) 14%, transparent), 0 0 34px color-mix(in srgb, var(--halo-color) 28%, transparent); }
+
+/* Tier 5: radiant rays, evenly spaced and masked away from the centre. */
+.title-frame::before {
+  inset: -22% -8% 14%;
+  background: repeating-conic-gradient(from 0deg at 50% 66%,
+    color-mix(in srgb, var(--halo-color) 46%, transparent) 0deg 1.3deg, transparent 1.3deg 12deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 36%, #000 48%, transparent 82%);
+  mask: radial-gradient(closest-side, transparent 36%, #000 48%, transparent 82%);
+  opacity: 0;
+}
+.dais[data-title-tier="5"] .title-frame::before { opacity: .6; }
+
+/* A precise baselined rule with a centred gem: quiet frame for tier 2,
+ * doubled rails for tier 3 and up. */
+.title-frame::after {
+  left: 24%; right: 24%; bottom: 11%; height: 0;
+  border-top: 1px solid color-mix(in srgb, var(--halo-color) 62%, transparent);
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--halo-color) 90%, transparent) 0 2.4px, transparent 2.6px),
+    linear-gradient(to right, transparent 46%, color-mix(in srgb, var(--halo-color) 70%, transparent) 46% 54%, transparent 54%) no-repeat;
+  opacity: 0;
+}
+.dais[data-title-tier="2"] .title-frame::after { opacity: .9; }
+.dais[data-title-tier="3"] .title-frame::after,
+.dais[data-title-tier="4"] .title-frame::after,
+.dais[data-title-tier="5"] .title-frame::after {
+  opacity: 1;
+  box-shadow: 0 4px 0 -1px color-mix(in srgb, var(--halo-color) 34%, transparent);
+  bottom: 12%;
 }
 
-/* The arch line behind the head picks up the title colour from tier 4 up. */
+/* The arch line behind the head picks up the title colour from tier 3 up. */
+.dais[data-title-tier="3"]::before,
 .dais[data-title-tier="4"]::before,
 .dais[data-title-tier="5"]::before { border-color: color-mix(in srgb, var(--halo-color) 55%, var(--stage-line)); }
 
-/* Title-specific emblems. They are alpha masks recoloured to the title colour,
- * so they tint with the tier instead of reading as grey artwork. */
-.title-emblem { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: var(--halo-color, currentColor); }
-.dais[data-title-tier="4"][data-title-id="paragon-sovereign"] .title-emblem {
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M6 26 10 8l10 8 12-14 12 14 10-8 4 18z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M6 26 10 8l10 8 12-14 12 14 10-8 4 18z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  opacity: .55;
-}
-.dais[data-title-tier="5"][data-title-id="grammar-master"] .title-emblem {
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M8 26c6-12 14-16 24-16s18 4 24 16' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14 22c3-2 5-5 6-9M50 22c-3-2-5-5-6-9' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='M8 26c6-12 14-16 24-16s18 4 24 16' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath d='M14 22c3-2 5-5 6-9M50 22c-3-2-5-5-6-9' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  opacity: .7;
-}
-.dais[data-title-tier="5"][data-title-id="class-legend"] .title-emblem {
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='m32 3 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z' fill='none' stroke='%23000' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cpath d='m32 3 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z' fill='none' stroke='%23000' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E") center 7% / 30% auto no-repeat;
-  opacity: .75;
-}
+/* Title emblems: alpha masks recoloured to the tier, pinned above the head so
+ * they are never cropped and never cross the character. */
+.title-emblem { background: var(--halo-color, currentColor); opacity: 0; -webkit-mask-position: 50% 6%; mask-position: 50% 6%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: 30% auto; mask-size: 30% auto; }
+.dais[data-title-tier="3"] .title-emblem { -webkit-mask-size: 26% auto; mask-size: 26% auto; }
+.dais[data-title-tier="5"] .title-emblem { -webkit-mask-size: 34% auto; mask-size: 34% auto; }
+
+.dais[data-title-id="perfect-pupil"] .title-emblem,
+.dais[data-title-id="pathfinder"] .title-emblem,
+.dais[data-title-id="scholar-virtuoso"] .title-emblem,
+.dais[data-title-id="realm-champion"] .title-emblem,
+.dais[data-title-id="grand-archon"] .title-emblem,
+.dais[data-title-id="paragon-sovereign"] .title-emblem,
+.dais[data-title-id="grammar-master"] .title-emblem,
+.dais[data-title-id="class-legend"] .title-emblem { opacity: .85; }
+
+.dais[data-title-id="perfect-pupil"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M46 16c-5-4-12-6-20-6H18v22h8c8 0 15 2 20 6M50 16c5-4 12-6 20-6h8v22h-8c-8 0-15 2-20 6M48 16v22' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M46 16c-5-4-12-6-20-6H18v22h8c8 0 15 2 20 6M50 16c5-4 12-6 20-6h8v22h-8c-8 0-15 2-20 6M48 16v22' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="pathfinder"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l6 14 14 6-14 6-6 14-6-14-14-6 14-6z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='48' cy='26' r='6' fill='none' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l6 14 14 6-14 6-6 14-6-14-14-6 14-6z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='48' cy='26' r='6' fill='none' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E"); }
+.dais[data-title-id="scholar-virtuoso"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l7 16 17 2-12 12 3 17-15-9-15 9 3-17-12-12 17-2z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l7 16 17 2-12 12 3 17-15-9-15 9 3-17-12-12 17-2z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="realm-champion"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M28 10h40v14c0 9-9 15-20 18-11-3-20-9-20-18z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 20h28M48 14v22' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M28 10h40v14c0 9-9 15-20 18-11-3-20-9-20-18z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 20h28M48 14v22' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="grand-archon"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M30 40V12l18 8 18-8v28' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M30 18 18 12v22l12 6' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M30 40V12l18 8 18-8v28' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M30 18 18 12v22l12 6' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="paragon-sovereign"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M22 38 28 12l12 10 8-14 8 14 12-10 6 26z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M22 38h52' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M22 38 28 12l12 10 8-14 8 14 12-10 6 26z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M22 38h52' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="grammar-master"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M18 38c4-16 14-24 30-24s26 8 30 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 30c2-3 4-6 5-10M74 30c-2-3-4-6-5-10M30 22c2-2 4-3 6-4M66 22c-2-2-4-3-6-4' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M18 38c4-16 14-24 30-24s26 8 30 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 30c2-3 4-6 5-10M74 30c-2-3-4-6-5-10M30 22c2-2 4-3 6-4M66 22c-2-2-4-3-6-4' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.dais[data-title-id="class-legend"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 4l5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M24 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1zM72 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 4l5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M24 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1zM72 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 
 /* The character must always sit above its title backdrop. */
 .dais-lg canvas { z-index: 2; }
 .dais .viewer-fallback { position: relative; z-index: 2; }
+
+/* Shop title preview: the title shown on its own backdrop, never cropped. */
+.title-stage { display: grid; place-items: center; }
+.title-stage-tag { position: relative; z-index: 2; display: grid; place-items: center; width: 100%; }
+.title-stage-tag .hero-title-tag[data-title-labelled] { display: inline-block; width: auto; min-width: min(100%, 320px); padding-inline: 34px; }
+.shop-title-thumb { display: grid; place-items: center; min-height: 96px; padding: 6px; }
+.shop-title-thumb .hero-title-tag { font-size: 14px; }
+.shop-title-thumb .title-ornament { width: 20px; height: 18px; }

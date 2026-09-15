@@ -92,6 +92,7 @@ function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
   return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}' ${titleBackdropAttributes(pupil)}>
     <span class="title-halo" aria-hidden="true"></span>
     <span class="title-emblem" aria-hidden="true"></span>
+    <span class="title-frame" aria-hidden="true"></span>
     ${renderViewerFallback(pupil, item)}
   </div>`;
 }
@@ -220,6 +221,7 @@ function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = 
       <div class="dais dais-card" ${titleBackdropAttributes(pupil)}>
         <span class="title-halo" aria-hidden="true"></span>
         <span class="title-emblem" aria-hidden="true"></span>
+        <span class="title-frame" aria-hidden="true"></span>
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
         ${student && !selecting ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
@@ -353,10 +355,23 @@ export function renderSheikahPersonalize(pupil, ui) {
 
 /* ---------- Item-only shop ---------- */
 
+/* Titles have no 3D model, so the shop renders the real title on its own
+ * title backdrop: pupils can see exactly how prestigious a title looks. */
+function renderTitleStage(item) {
+  const pupil = { title: item.id };
+  return `<div class="dais dais-lg title-stage" ${titleBackdropAttributes(pupil)}>
+    <span class="title-halo" aria-hidden="true"></span>
+    <span class="title-emblem" aria-hidden="true"></span>
+    <span class="title-frame" aria-hidden="true"></span>
+    <div class="title-stage-tag">${renderTitle(pupil, { labelled: true })}</div>
+  </div>`;
+}
+
 export function renderSheikahShop(pupil, ui) {
   const look = shopPreviewLook(pupil, ui);
   const item = shopPreviewItem(pupil, ui);
   const active = ui.shopCategory || "outfit";
+  const isTitle = item.type === "title";
   return `
     <main class="single">
       <div class="atelier atelier-shop">
@@ -366,8 +381,10 @@ export function renderSheikahShop(pupil, ui) {
           <p class="sheet-context">${t("student.shop")}</p>
         </header>
         <div class="atelier-stage">
-          ${look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
-          ${look ? renderAngleBar(ui, { itemOnly:true }) : ''}
+          ${isTitle
+            ? renderTitleStage(item)
+            : look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
+          ${!isTitle && look ? renderAngleBar(ui, { itemOnly:true }) : ''}
           <p class="item-preview-caption">${escapeHtml(tItem(item, 'name'))}</p>
         </div>
 

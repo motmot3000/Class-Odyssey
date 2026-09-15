@@ -122,6 +122,19 @@ test("the shop names its pupil and returns to the hero without switching roles",
   assert.match(html, /data-category="outfit"\s+aria-pressed="true"/);
 });
 
+test("the shop previews each title on its own tier backdrop", () => {
+  const pupil = getCurrentClass(createInitialState()).pupils[0];
+  const html = renderSheikahShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
+  assert.match(html, /class="dais dais-lg title-stage" data-title-tier="5" data-title-id="class-legend"/);
+  assert.match(html, /title-emblem/);
+  assert.match(html, /data-title-labelled/);
+  // Every title thumbnail is styled individually, never the same plain chip.
+  const ids = [...html.matchAll(/data-title-id="([^"]+)"/g)].map(match => match[1]);
+  assert.ok(ids.includes("perfect-pupil") && ids.includes("grammar-master") && ids.includes("rookie"));
+  assert.ok(new Set(ids).size >= 8);
+  assert.doesNotMatch(html, /angle-bar/);
+});
+
 test("locked pupils can return from the rules without hitting the teacher gate", () => {
   assert.match(renderRules({ unlocked: false }), /data-action="show-student"/);
   assert.doesNotMatch(renderRules({ unlocked: false }), /data-action="show-board"/);

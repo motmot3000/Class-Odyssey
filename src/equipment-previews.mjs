@@ -1,6 +1,6 @@
 import { getShopItem } from './domain.mjs';
 import { modeledItemIds, pupilLook, HAIR_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION } from './items-3d-model.mjs';
-import { escapeHtml, icon } from './ui.mjs';
+import { escapeHtml, icon, renderTitle } from './ui.mjs';
 import { t, tItem } from './i18n.mjs';
 import { cachedHeroPortrait } from './portrait-runtime.mjs';
 
@@ -27,7 +27,8 @@ export function renderItemThumbnail(item, { className = 'item-thumbnail' } = {})
   if (isModeledItem(item)) {
     return `<img class="${escapeHtml(className)}" data-item-thumbnail="${escapeHtml(item.id)}" src="${previewAsset(`items/${item.id}.webp`)}" alt="" width="320" height="320" loading="lazy" decoding="async" />`;
   }
-  if (item.type === 'title') return `<span class="title-chip title-${escapeHtml(item.id)}">${escapeHtml(tItem(item, 'name'))}</span>`;
+  // Titles have no 3D model: show the real, tier-styled title instead of a plain chip.
+  if (item.type === 'title') return `<span class="shop-title-thumb">${renderTitle({ title: item.id })}</span>`;
   const canonical = getShopItem(item.id);
   const color = item.type === 'hairColor' ? HAIR_PALETTE[item.id] : item.type === 'tone' ? canonical?.color : null;
   if (color && /^#[\da-f]{6}$/i.test(color)) return `<span class="cosmetic-swatch" style="--swatch:${color}" aria-hidden="true"></span>`;
