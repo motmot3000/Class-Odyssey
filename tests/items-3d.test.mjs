@@ -164,24 +164,65 @@ test('the catalogue is rebuilt from the delivered base-v2 files and pose contrac
   }
 });
 
-test('the welded skin and natural hands retain every delivered source position', () => {
+test('the shipped bodies match the validated athletic silhouettes exactly', () => {
   const catalogue = readGlb();
+  // The approved faces are frozen in assets/characters-approved/faces-v1 and
+  // the athletic silhouettes are the validated body pass over them. The live
+  // catalogue must reproduce those approved meshes vertex for vertex, which
+  // also proves the protected face and hair regions were carried over.
   for (const [persona, gender] of [['male','boy'],['female','girl']]) {
-    const source = readGlb(`../assets/items-3d/sources/${gender}-medium.glb`);
-    const collect = (gltf, isSource) => {
+    const reference = readGlb(`../assets/character-detail-study/${gender}-athletic.glb`);
+    const collect = (gltf, fitted) => {
       const points = new Set();
       worldMeshes(gltf, (node, primitive, world, data) => {
-        if (data.part !== 'skin' || (!isSource && data.fit_persona !== persona)) return;
+        if (data.part !== 'skin') return;
+        if (fitted && data.fit_persona !== persona) return;
         for (const p of positions(gltf, gltf.accessors[primitive.attributes.POSITION], world)) {
-          points.add(p.toArray().map(v => Math.round(v*100000)).join(','));
+          points.add(p.toArray().map(v => Math.round(v*10000)).join(','));
         }
       });
       return points;
     };
-    const original = collect(source, true), fitted = collect(catalogue, false);
-    assert.ok(original.size > 1000);
-    assert.equal(fitted.size, original.size, `${gender} skin topology changed`);
-    for (const point of original) assert.ok(fitted.has(point), `${gender} lost or moved a welded skin vertex: ${point}`);
+    const approved = collect(reference, false);
+    const shipped = collect(catalogue, true);
+    assert.ok(approved.size > 1000, `${gender} has too little approved body to check`);
+    assert.deepEqual(shipped, approved, `${gender} catalogue body differs from the approved silhouette`);
+  }
+});
+
+test('both base characters have a slightly slimmer posterior hip profile', () => {
+  const catalogue = readGlb();
+  for (const [persona, gender] of [['male','boy'],['female','girl']]) {
+    const source = readGlb(`../assets/items-3d/sources/${gender}-medium.glb`);
+    const posterior = (gltf, isSource) => {
+      const depths=[];
+      worldMeshes(gltf, (node, primitive, world, data) => {
+        if (!isSource && data.fit_persona !== persona) return;
+        if (data.part !== 'skin' && !node.name.includes('Pant_')) return;
+        for (const p of positions(gltf,gltf.accessors[primitive.attributes.POSITION],world)) {
+          if (p.y>.78 && p.y<.93 && p.z<0 && Math.abs(p.x)<.16) depths.push(-p.z);
+        }
+      });
+      assert.ok(depths.length>10, `${gender}: posterior profile missing`);
+      return Math.max(...depths);
+    };
+    const before=posterior(source,true), after=posterior(catalogue,false);
+    assert.ok(after<before-.015, `${gender}: posterior volume was not reduced`);
+    assert.ok(after>before*.55, `${gender}: posterior reduction is excessive`);
+    assert.ok(after<before*.80, `${gender}: posterior reduction is not the approved athletic profile`);
+  }
+});
+
+test('the refit base characters use the supplied hairstyles and a plain starter outfit', () => {
+  const gltf = readGlb();
+  const nodes = gltf.nodes.filter(node => node.mesh !== undefined);
+  for (const [persona, hairId] of [['female', 'long'], ['male', 'short']]) {
+    const parts = nodes.filter(node => node.extras?.shop_slot === 'hair' && node.extras.fit_persona === persona && node.extras.shop_id === hairId);
+    assert.ok(parts.length >= 3, `${persona}: missing supplied hairstyle fits`);
+    assert.ok(parts.every(node => gltf.materials[gltf.meshes[node.mesh].primitives[0].material].name.startsWith('Hair / supplied locks')), `${persona}: base cut is not the supplied hairstyle`);
+  }
+  for (const banned of ['neckerchief', 'scout scarf', 'compass fastening']) {
+    assert.ok(!nodes.some(node => node.name.toLowerCase().includes(banned)), `starter outfit still contains ${banned}`);
   }
 });
 

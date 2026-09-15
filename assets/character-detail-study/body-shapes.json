@@ -1,0 +1,21 @@
+{
+  "revision": "sportive-bases-v1",
+  "integrated": false,
+  "base": "warm",
+  "characters": {
+    "girl": {
+      "verticesAdjusted": 11709,
+      "faceAndHairChanged": false,
+      "hipWidthAdjustment": "+5% maximum",
+      "chestAdjustment": "4.5mm maximum projection",
+      "clothing": "Same smooth deformation field as the body; height and pose retained."
+    },
+    "boy": {
+      "verticesAdjusted": 11711,
+      "faceAndHairChanged": false,
+      "hipWidthAdjustment": "-3.5% maximum",
+      "chestAdjustment": "+3.5% maximum width; 2.5mm projection",
+      "clothing": "Same smooth deformation field as the body; height and pose retained."
+    }
+  }
+}

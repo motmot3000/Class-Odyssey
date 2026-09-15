@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Présentation des personnages · ClassQuest</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/character-detail-study.css">
+  <script type="module" src="/src/character-detail-study.mjs"></script>
+</head>
+<body>
+  <!-- Review-only extension of ClassQuest's light equipment studio. The two
+       authored characters lead; synchronized views expose the face, silhouette
+       and supplied hairstyles. No application state or live asset is changed. -->
+  <header class="masthead"><span class="brand">ClassQuest</span><span>Atelier des personnages</span><span class="review-state">Visages figés · travail sur les corps</span></header>
+  <main>
+    <div class="intro">
+      <div><h1>Deux silhouettes d’aventuriers.</h1><p>Fesses moins bombées pour les deux. Des morphologies plus distinctes, athlétiques sans exagération.<br>Les visages, les yeux et les coiffures validés sont figés.</p></div>
+      <a class="download-scene" href="/assets/characters-approved/faces-v1/index.html">Voir les visages sauvegardés · version 1</a>
+    </div>
+    <div class="toolbar">
+      <fieldset><legend>Comparaison des corps</legend><div class="segmented"><button type="button" data-version="athletic" aria-pressed="true">Morphologies sportives</button><button type="button" data-version="sporty" aria-pressed="false">Corps précédents</button></div></fieldset>
+      <fieldset class="views"><legend>Point de vue</legend><div class="segmented"><button type="button" data-view="full" aria-pressed="true">En pied</button><button type="button" data-view="profile" aria-pressed="false">Profil</button><button type="button" data-view="back" aria-pressed="false">Dos</button><button type="button" data-view="front" aria-pressed="false">Visage</button><button type="button" data-view="quarter" aria-pressed="false">Visage ¾</button></div></fieldset>
+    </div>
+    <p id="study-status" role="status" aria-live="polite">Morphologies sportives · rendus des modèles 3D</p>
+    <div class="portraits">
+      <article>
+        <div class="character-heading"><h2>Mila <span>Fille · sportive</span></h2><a data-model="girl" href="/assets/character-detail-study/girl-athletic.glb" download>Modèle 3D <span aria-hidden="true">↓</span></a></div>
+        <button class="portrait-stage" data-enlarge="girl" type="button" aria-label="Agrandir Mila"><img id="girl-portrait" src="/assets/character-detail-study/girl-athletic-full.webp" width="900" height="900" alt="Mila, morphologie sportive féminine et fesses affinées"><span class="zoom-label">Agrandir</span></button>
+        <h3>Sportive, avec des formes douces</h3><p>Hanches et cuisses légèrement plus pleines, poitrine très discrète sous la tunique, ventre et bras plus dessinés. Moins de volume à l’arrière.</p>
+      </article>
+      <article>
+        <div class="character-heading"><h2>Noa <span>Garçon · aventurier</span></h2><a data-model="boy" href="/assets/character-detail-study/boy-athletic.glb" download>Modèle 3D <span aria-hidden="true">↓</span></a></div>
+        <button class="portrait-stage" data-enlarge="boy" type="button" aria-label="Agrandir Noa"><img id="boy-portrait" src="/assets/character-detail-study/boy-athletic-full.webp" width="900" height="900" alt="Noa, épaules et bras plus dessinés, hanches et fesses affinées"><span class="zoom-label">Agrandir</span></button>
+        <h3>Un buste plus structuré</h3><p>Épaules, torse et bras plus définis, avec des hanches et des fesses affinées. Une silhouette d’aventurier, sans musculature massive.</p>
+      </article>
+    </div>
+    <section class="expression-comparison" aria-labelledby="expression-title">
+      <h2 id="expression-title">Les corps, avant et après</h2>
+      <p>Mila à gauche, Noa à droite. Même pose, mêmes vêtements et même éclairage pour comparer.</p>
+      <div class="expression-options">
+        <button type="button" data-version="sporty" aria-pressed="false"><span class="expression-faces"><img src="/assets/character-detail-study/girl-sporty-full.webp" width="640" height="1024" alt="Mila avant" loading="lazy"><img src="/assets/character-detail-study/boy-sporty-full.webp" width="640" height="1024" alt="Noa avant" loading="lazy"></span><strong>Corps précédents</strong><span>Les silhouettes avant cette seconde passe.</span></button>
+        <button type="button" data-version="athletic" aria-pressed="true"><span class="expression-faces"><img src="/assets/character-detail-study/girl-athletic-full.webp" width="640" height="1024" alt="Mila après" loading="lazy"><img src="/assets/character-detail-study/boy-athletic-full.webp" width="640" height="1024" alt="Noa après" loading="lazy"></span><strong>Morphologies sportives</strong><span>Fesses moins bombées, formes féminines plus lisibles et contours masculins plus dessinés.</span></button>
+      </div>
+    </section>
+    <section class="details" aria-labelledby="detail-title"><h2 id="detail-title">Cette passe</h2><dl><div><dt>Visages protégés</dt><dd>La version validée est sauvegardée séparément. Positions, UV, textures et normales du visage sont protégés pendant le travail des corps.</dd></div><div><dt>Allure sportive</dt><dd>Des contours plus définis au niveau du torse, du ventre et des bras, sans musculature massive.</dd></div><div><dt>Coiffures conservées</dt><dd>Les mèches approuvées et le complément arrière de la fille restent identiques.</dd></div><div><dt>Silhouette et tenue</dt><dd>Moins de volume arrière pour les deux, morphologies plus distinctes et vêtements ajustés au même corps. La tenue de base reste simple.</dd></div><div><dt>Comparaison</dt><dd>Même éclairage et mêmes cadrages pour l'avant et l'après. Les vues Profil et Dos permettent de vérifier les fesses et les contours du corps.</dd></div></dl></section>
+    <footer>Rendus Blender des vrais modèles · étude locale · septembre 2026</footer>
+  </main>
+  <dialog id="portrait-dialog" aria-labelledby="zoom-title"><div class="dialog-heading"><h2 id="zoom-title">Portrait</h2><button type="button" id="close-zoom" autofocus>Fermer</button></div><img id="zoom-image" src="/assets/character-detail-study/girl-gentle-front.webp" width="900" height="900" alt="Portrait agrandi de Mila"></dialog>
+</body>
+</html>

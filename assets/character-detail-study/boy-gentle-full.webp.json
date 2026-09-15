@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the gentle catalogue revision, base starter outfit, view full.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "gentle",
+  "view": "full"
+}

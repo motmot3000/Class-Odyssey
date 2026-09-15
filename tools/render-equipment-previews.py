@@ -28,7 +28,7 @@ scene.view_settings.look = 'AgX - Medium High Contrast'
 camera.data.type = 'ORTHO'
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj.get('shop_slot')]
 report = {
-    'revision': 'catalogue-v5-tailored-armour',
+    'revision': 'catalogue-v7-approved-bases',
     'catalogueSha256': hashlib.sha256((ROOT/'assets/items-3d/catalogue.glb').read_bytes()).hexdigest(),
     'renderSource': 'catalogue.blend',
     'items': {}, 'portraits': {}
@@ -36,7 +36,7 @@ report = {
 PORTRAITS_ONLY = '--portraits-only' in sys.argv
 if PORTRAITS_ONLY:
     report = json.loads((OUT/'manifest.json').read_text())
-report['portraitRevision'] = 'catalogue-v5-tailored-armour-front-hd'
+report['portraitRevision'] = 'catalogue-v7-approved-bases-front-hd'
 
 
 def set_visibility(predicate):

@@ -1,0 +1,7 @@
+{
+  "origin": "Derived from assets/characters-refined/textures/head-girl-medium.png: fine pore grain, non-tiling mottle, warm subsurface tint and livelier cheeks.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}

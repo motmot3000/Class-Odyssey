@@ -1,0 +1,27 @@
+{
+  "integrated": false,
+  "expressions": {
+    "gentle": {
+      "label": "Douce",
+      "inner": 0.017,
+      "outer": -0.008,
+      "smile": 0.0025,
+      "cheek": 0.0007
+    },
+    "smile": {
+      "label": "Souriante",
+      "inner": 0.02,
+      "outer": -0.006,
+      "smile": 0.0045,
+      "cheek": 0.0015
+    },
+    "serene": {
+      "label": "Sereine",
+      "inner": 0.015,
+      "outer": -0.01,
+      "smile": 0.001,
+      "cheek": 0.0003
+    }
+  },
+  "hair": "Outer hairstyles unchanged; posterior underlayer added on girl only."
+}

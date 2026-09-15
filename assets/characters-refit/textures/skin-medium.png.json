@@ -1,0 +1,7 @@
+{
+  "origin": "Derived from assets/characters-refined/textures/skin-medium.png: pore grain, mottle and warm subsurface tint on the body atlas.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}

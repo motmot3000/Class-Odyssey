@@ -1,0 +1,71 @@
+{
+  "revision": "reference-eyes-v1",
+  "integrated": false,
+  "baseExpression": "gentle",
+  "references": {
+    "boy-left": {
+      "origin": "link-the-legend-of-zelda-breath-of-the-wild.zip",
+      "member": "textures/link_eyeball_l_alb.png",
+      "sourceSha256": "10bbe3f774e8a326799c5fa46271a72133d31b87735026723c9b9fec9c1110c1",
+      "attribution": "Nintendo; user-supplied reference archive. Archive does not include a licence notice.",
+      "referenceIrisCenter": [
+        0.48899906517094016,
+        0.4908520299145299
+      ],
+      "sourceDimensions": [
+        64,
+        64
+      ],
+      "adaptation": "Original iris and pupil layout retained, softer sclera, fine radial detail and soft glint.",
+      "generator": "tools/prepare_reference_eyes.py"
+    },
+    "boy-right": {
+      "origin": "link-the-legend-of-zelda-breath-of-the-wild.zip",
+      "member": "textures/link_eyeball_r_alb.png",
+      "sourceSha256": "9804cd1cd6d021330a446bd9198e57c2ec57fceb48cda5652ce5cabb99206577",
+      "attribution": "Nintendo; user-supplied reference archive. Archive does not include a licence notice.",
+      "referenceIrisCenter": [
+        0.4893937366167024,
+        0.49069860813704497
+      ],
+      "sourceDimensions": [
+        64,
+        64
+      ],
+      "adaptation": "Original iris and pupil layout retained, softer sclera, fine radial detail and soft glint.",
+      "generator": "tools/prepare_reference_eyes.py"
+    },
+    "girl-left": {
+      "origin": "link-the-legend-of-zelda-breath-of-the-wild.zip",
+      "member": "textures/link_eyeball_l_alb.png",
+      "sourceSha256": "10bbe3f774e8a326799c5fa46271a72133d31b87735026723c9b9fec9c1110c1",
+      "attribution": "Nintendo; user-supplied reference archive. Archive does not include a licence notice.",
+      "referenceIrisCenter": [
+        0.48899906517094016,
+        0.4908520299145299
+      ],
+      "sourceDimensions": [
+        64,
+        64
+      ],
+      "adaptation": "Original iris and pupil layout retained, softer sclera, fine radial detail and soft glint.",
+      "generator": "tools/prepare_reference_eyes.py"
+    },
+    "girl-right": {
+      "origin": "link-the-legend-of-zelda-breath-of-the-wild.zip",
+      "member": "textures/link_eyeball_r_alb.png",
+      "sourceSha256": "9804cd1cd6d021330a446bd9198e57c2ec57fceb48cda5652ce5cabb99206577",
+      "attribution": "Nintendo; user-supplied reference archive. Archive does not include a licence notice.",
+      "referenceIrisCenter": [
+        0.4893937366167024,
+        0.49069860813704497
+      ],
+      "sourceDimensions": [
+        64,
+        64
+      ],
+      "adaptation": "Original iris and pupil layout retained, softer sclera, fine radial detail and soft glint.",
+      "generator": "tools/prepare_reference_eyes.py"
+    }
+  }
+}

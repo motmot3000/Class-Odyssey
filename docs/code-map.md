@@ -72,7 +72,9 @@ same esbuild output graph; unrelated files are not pruned.
 
 For geometry, `tools/build-items-3d.py` imports immutable source characters, fits clothing/armour to anatomical contours and emits `catalogue.blend`, `catalogue.glb` and its manifest. `tools/render-equipment-previews.py` renders product-only images and portraits; `tools/finalize-equipment-previews.py` produces WebP files. See [the equipment pipeline](items-3d/README.md) for commands and Blender/Pillow requirements.
 
-The base source positions and anatomical anchor contract are intentionally preserved. Generated preview manifests bind images to the catalogue SHA-256, so rebuild previews after geometry changes.
+The base characters' faces, skin, hair and starter outfit come from the refit revision: `tools/prepare_refit_textures.py` authors `assets/characters-refit/textures`, `tools/blender/prepare_refit_hair.py` prepares the two supplied hairstyles, and the catalogue build re-sculpts the frontal face bowl, applies the approved `Douce` expression and reference-eye maps, adds Mila's posterior hair underlayer and drops the starter collar. `tools/freeze_approved_faces.py` keeps the frozen snapshots in `assets/characters-approved/faces-v1`. See [the refit revision](characters-refit/README.md).
+
+The anatomical anchor contract is preserved. `tools/blender/refit_body_shapes.py` defines the validated athletic silhouettes; the catalogue build applies its `v1` then `v2` fields to the body, trousers and every fitted outfit, protecting everything above 1.455 m so the approved head and hair normals are copied verbatim. `tests/items-3d.test.mjs` asserts the shipped bodies match `assets/character-detail-study/*-athletic.glb` vertex for vertex, and `tests/approved-faces.test.mjs` guards the frozen face snapshot hashes. Generated preview manifests bind images to the catalogue SHA-256, so rebuild previews after geometry changes.
 
 The character, surface, wardrobe and item workshops are development tools. Their experiments are not automatically the game's live renderer.
 

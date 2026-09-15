@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the before catalogue revision, base starter outfit, view profile.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "before",
+  "view": "profile"
+}

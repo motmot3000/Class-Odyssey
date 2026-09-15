@@ -1,0 +1,31 @@
+{
+  "revision": "sportive-bases-v2",
+  "integrated": false,
+  "base": "sporty",
+  "characters": {
+    "girl": {
+      "verticesAdjusted": 11854,
+      "faceAndHairChanged": false,
+      "hipWidthAdjustment": "+3.5% maximum over v1",
+      "chestAdjustment": "3.5mm extra maximum projection; subtle abdominal planes",
+      "clothing": "Same smooth deformation field as the body; height and pose retained.",
+      "faceSource": "assets/characters-approved/faces-v1/girl-approved.glb",
+      "upperArmAdjustment": "+5% local radius maximum",
+      "posteriorAdjustment": "-22% maximum depth in the targeted posterior region",
+      "thighAdjustment": "+7.5% local lateral radius",
+      "protectedHeadNormals": true
+    },
+    "boy": {
+      "verticesAdjusted": 11772,
+      "faceAndHairChanged": false,
+      "hipWidthAdjustment": "-2.5% maximum over v1",
+      "chestAdjustment": "3.5mm extra maximum projection; subtle abdominal planes",
+      "clothing": "Same smooth deformation field as the body; height and pose retained.",
+      "faceSource": "assets/characters-approved/faces-v1/boy-approved.glb",
+      "upperArmAdjustment": "+7.5% local radius maximum",
+      "posteriorAdjustment": "-22% maximum depth in the targeted posterior region",
+      "thighAdjustment": "unchanged",
+      "protectedHeadNormals": true
+    }
+  }
+}

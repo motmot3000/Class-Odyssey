@@ -20,3 +20,25 @@ var/
 .impeccable/review/
 *.blend1
 __pycache__/
+
+# Regenerable full-resolution study renders; WebP and the editable scene ship.
+/assets/character-detail-study/*-before-*.png
+/assets/character-detail-study/*-after-*.png
+/assets/character-detail-study/*-gentle-*.png
+/assets/character-detail-study/*-smile-*.png
+/assets/character-detail-study/*-serene-*.png
+/assets/character-detail-study/*-warm-*.png
+/assets/character-detail-study/*-sporty-*.png
+/assets/character-detail-study/*-athletic-*.png
+
+# Intermediate study models are rebuilt from catalogue.blend by the documented
+# study order (expressions -> warm eyes -> body passes). The approved snapshot
+# and the two review variants ship so the pages and tests have their inputs.
+/assets/character-detail-study/*-before.glb
+/assets/character-detail-study/*-after.glb
+/assets/character-detail-study/*-gentle.glb
+/assets/character-detail-study/*-smile.glb
+/assets/character-detail-study/*-serene.glb
+/assets/character-detail-study/*-warm.glb
+# Byproduct scene saved while rendering the study comparison views.
+/assets/character-detail-study/*.blend

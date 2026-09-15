@@ -11,6 +11,7 @@ import json
 import math
 import os
 import struct
+import sys
 import tempfile
 import numpy as np
 from pathlib import Path
@@ -32,8 +33,19 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'catalogue-v5-tailored-armour'
-REFINED = ROOT / 'assets' / 'characters-refined' / 'textures'
+APPEARANCE_REVISION = 'catalogue-v7-approved-bases'
+REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
+HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
+# Validated face, eye and expression maps. The frozen snapshots in
+# assets/characters-approved/faces-v1 are the reference those maps were
+# approved with; they are produced by the study tools documented in
+# docs/characters-refit/README.md.
+STUDY = ROOT / 'assets' / 'character-detail-study'
+FACE_TEXTURES = STUDY / 'expressions' / 'textures'
+WARM_EYES = STUDY / 'warm-eyes'
+# Single source of truth for the validated body silhouettes.
+sys.path.insert(0, str(ROOT / 'tools' / 'blender'))
+from refit_body_shapes import apply_body_shape
 
 
 def texture_node(mat, filename):
@@ -56,34 +68,145 @@ def surface_maps(mat, normal_path, rough_path, strength=.4):
     links.new(rough.outputs['Color'], shader.inputs['Roughness'])
 
 
+def base_color_image_node(mat):
+    """Albedo image node, whether it feeds Base Color directly or through the
+    vertex-colour Mix that the glTF importer inserts for toned skin."""
+    if not mat or not mat.use_nodes: return None
+    shader = mat.node_tree.nodes.get('Principled BSDF')
+    if not shader: return None
+    for node in mat.node_tree.nodes:
+        if node.type != 'TEX_IMAGE' or not node.image: continue
+        for link in node.outputs['Color'].links:
+            if link.to_node is shader: return node
+            if link.to_node.type in {'MIX_RGB', 'MIX'} and any(
+                    out.links and out.links[0].to_socket == shader.inputs['Base Color'] for out in link.to_node.outputs):
+                return node
+    return None
+
+
 def refine_source_materials(obj, gender):
-    """Reuse the surface-v3 UV-compatible face/skin/eye maps, not its old hair."""
+    """Swap in the refit skin, face and eye maps and set a matte, non-plastic
+    response. The delivered body geometry and UV islands are untouched."""
     for mat in obj.data.materials:
         if not mat or not mat.use_nodes: continue
         shader = mat.node_tree.nodes.get('Principled BSDF')
         if not shader or mat.get('catalogue_surface_revision'): continue
         key = mat.get('base_skin_map')
         if key:
-            filename = f'head-{gender}-medium.png' if key == 'head' else 'skin-medium.png'
-            for node in mat.node_tree.nodes:
-                if node.type == 'TEX_IMAGE' and any(link.to_socket == shader.inputs['Base Color'] for link in node.outputs['Color'].links):
-                    node.image = bpy.data.images.load(str(REFINED / filename), check_existing=True)
-            surface_maps(mat, REFINED/f'normal-{key}.png', REFINED/f'rough-{key}.png', .50 if key == 'head' else .30)
-            shader.inputs['Specular IOR Level'].default_value = .28
-            shader.inputs['Subsurface Weight'].default_value = .025
+            node = base_color_image_node(mat)
+            if key == 'head':
+                # Approved expression maps: subtle lower-eyelid crease, lip and
+                # cheek variation, and a stronger face normal for the creases.
+                if node: node.image = bpy.data.images.load(str(FACE_TEXTURES / f'{gender}-face.png'), check_existing=True)
+                surface_maps(mat, FACE_TEXTURES/'face-normal.png', REFINED/'rough-head.png', .70)
+                shader.inputs['Specular IOR Level'].default_value = .30
+            else:
+                if node: node.image = bpy.data.images.load(str(REFINED / 'skin-medium.png'), check_existing=True)
+                surface_maps(mat, REFINED/'normal-skin.png', REFINED/'rough-skin.png', .26)
+                shader.inputs['Specular IOR Level'].default_value = .26
+            shader.inputs['Subsurface Weight'].default_value = .02
+            shader.inputs['Subsurface Radius'].default_value = (1, .42, .24)
+            shader.inputs['Subsurface Scale'].default_value = .02
+            shader.inputs['Coat Weight'].default_value = 0
         elif 'Eye_L' in obj.name or 'Eye_R' in obj.name:
+            # Validated Link eye maps, applied to both characters.
             side = 'left' if 'Eye_L' in obj.name else 'right'
             for node in mat.node_tree.nodes:
                 if node.type == 'TEX_IMAGE' and node.image:
-                    node.image = bpy.data.images.load(str(REFINED/f'eye-{gender}-{side}.png'), check_existing=True)
-            shader.inputs['Roughness'].default_value = .22
-            shader.inputs['Coat Weight'].default_value = .18
+                    node.image = bpy.data.images.load(str(WARM_EYES/f'{gender}-{side}.png'), check_existing=True)
+            shader.inputs['Roughness'].default_value = .27
+            shader.inputs['Coat Weight'].default_value = .10
+            shader.inputs['Coat Roughness'].default_value = .19
+        elif 'Eyelash' in obj.name:
+            shader.inputs['Roughness'].default_value = .62
+            shader.inputs['Specular IOR Level'].default_value = .18
         elif 'Pant_' in obj.name:
             for node in mat.node_tree.nodes:
                 if node.type == 'TEX_IMAGE' and node.image:
                     node.image = bpy.data.images.load(str(REFINED/'trousers.png'), check_existing=True)
             surface_maps(mat, REFINED/'normal-trousers.png', REFINED/'rough-trousers.png', .45)
         mat['catalogue_surface_revision'] = APPEARANCE_REVISION
+
+
+def sculpt_head(obj, gender):
+    """Refine the delivered head into a calmer, less doll-like face.
+
+    Only the frontal face bowl is touched (z 1.49–1.665, in front of the ears),
+    so the hairline, hat seat, ears and neck weld stay exactly as delivered.
+    Skin, eyelids and eyeballs share one smooth field and move together.
+    """
+    feminine = gender == 'girl'
+    center_x = .046 if feminine else .049
+    for vertex in obj.data.vertices:
+        x, y, z = vertex.co
+        if z < 1.49 or z > 1.665 or y > -.055: continue
+        def ease(t):
+            t=max(0,min(1,t))
+            return t*t*(3-2*t)
+        mask=ease((z-1.49)/.025)*ease((1.665-z)/.020)*ease((-.055-y)/.035)
+        original=vertex.co.copy()
+        side = 1 if x >= 0 else -1
+        dx, dz = x - side*center_x, z - 1.588
+        weight = math.exp(-((dx/.037)**4 + (dz/.038)**4))
+        # Smaller, better-proportioned eyes raised into a natural eye line.
+        vertex.co.x -= dx * (.17 if feminine else .13) * weight
+        vertex.co.z -= dz * (.28 if feminine else .25) * weight
+        vertex.co.z += .006 * math.exp(-((dx/.046)**4 + (dz/.058)**4))
+        # Calmer brow ridge, softer still on the girl.
+        brow = math.exp(-((abs(x)-.042)/.036)**4 - ((z-1.628)/.018)**4)
+        vertex.co.z += ((.008 if feminine else .004) - (.016 if feminine else .010) * min(1, abs(x)/.08)) * brow
+        # A slightly fuller, better-defined mouth.
+        vertex.co.y -= (.0018 if feminine else .0012) * math.exp(-((x/.030)**4 + ((z-1.512)/.010)**2))
+        # Narrower jaw and a softer chin for the girl.
+        if feminine and z < 1.545:
+            jaw = math.exp(-((abs(x)-.055)/.045)**4) * max(0, min(1, (1.545-z)/.045))
+            vertex.co.x -= (x - side*.055) * .30 * jaw
+        vertex.co=original.lerp(vertex.co,mask)
+    obj.data.normals_split_custom_set([(0,0,0)] * len(obj.data.loops))
+    for polygon in obj.data.polygons: polygon.use_smooth = True
+
+
+def soften_face(obj, gender):
+    """Approved 'Douce' expression: relaxed inner brow and a gentle smile.
+
+    Applied after sculpt_head so it works on the same approved frontal bowl.
+    Hair, silhouette and provided textures stay untouched.
+    """
+    config = {'inner': .017, 'outer': -.008, 'smile': .0025, 'cheek': .0007}
+    if obj.get('part') not in ['skin', 'eyes']: return
+    matrix = obj.matrix_world.copy(); inverse = matrix.inverted()
+    for vertex in obj.data.vertices:
+        p = matrix @ vertex.co; x, y, z = p
+        if y > -.065 or not 1.49 < z < 1.67: continue
+        # Raise the inner brow and lower its outer end: remove the angry V.
+        t = max(0, min(1, (abs(x)-.014)/.058))
+        brow = math.exp(-((z-1.628)/.023)**4) * math.exp(-((abs(x)-.043)/.049)**6)
+        p.z += (config['inner']*(1-t) + config['outer']*t) * brow
+        # Gentle smile from the mouth corners, not a large painted grin.
+        corners = min(1, (abs(x)/.037)**2) * math.exp(-((abs(x)/.055)**6) - ((z-1.515)/.018)**2)
+        p.z += config['smile'] * corners
+        cheek = math.exp(-((abs(x)-.053)/.025)**2 - ((z-1.567)/.024)**2)
+        p.z += config['cheek'] * cheek
+        vertex.co = inverse @ p
+    obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+    for face in obj.data.polygons: face.use_smooth = True
+
+
+def refine_eyelids(obj, gender):
+    """Follow the validated reference aperture without deforming the globe."""
+    if obj.get('part') not in ['skin', 'eyes']: return
+    if 'Eye_L' in obj.name or 'Eye_R' in obj.name: return
+    matrix = obj.matrix_world.copy(); inverse = matrix.inverted()
+    center_x = .046 if gender == 'girl' else .049
+    for vertex in obj.data.vertices:
+        p = matrix @ vertex.co; x, y, z = p
+        if y > -.082 or not 1.574 < z < 1.619: continue
+        dx, dz = abs(x) - center_x, z - 1.596
+        width = math.exp(-((dx/.030)**4))
+        edge = max(0, min(1, (1.619-z)/.008)) * max(0, min(1, (z-1.574)/.008))
+        p.z += -dz * .09 * width * edge
+        vertex.co = inverse @ p
+    obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
 
 
 def make_surface_textures():
@@ -500,6 +623,12 @@ def prepare():
                 continue
             part = obj.get('part')
             refine_source_materials(obj, gender)
+            # Skin, eyelids and eyeballs share the same facial field, so the
+            # refined eye and mouth openings keep matching their surfaces.
+            if part in ['skin', 'eyes']:
+                sculpt_head(obj, gender)
+                soften_face(obj, gender)
+                refine_eyelids(obj, gender)
             if part == 'clothes' and 'shirt' in obj.name.lower():
                 shirts.append(obj); continue
             if part not in ['skin','eyes','clothes']:
@@ -552,9 +681,8 @@ def garments(shirt):
         box('belt buckle', (0, front - .007, 1.035), (.044, .009, .035), GOLD, .003)
         box('buckle inset', (0, front - .013, 1.035), (.030, .003, .023), LEATHER, .001)
         if item == 'starter':
-            ring('scout neckerchief', 0, -.015, 1.436, .071, .075, .013, SAGE)
-            prism('folded scout scarf', [(-.048, .025), (.048, .025), (.018, -.095), (0, -.068), (-.023, -.094)], (0, -.09, 1.404), .008, SAGE)
-            ell('compass fastening', (.033, -.108, 1.408), (.014, .007, .014), GOLD)
+            # The base outfit stays plain: no neckerchief, scarf or pendant.
+            pass
         else:
             cape_mat = cloth if item in ['vocab-ranger', 'realm-sovereign'] else CHARCOAL
             cape_hem = .73 if item == 'vocab-ranger' else .42
@@ -670,6 +798,33 @@ def parted_fringe(short=False):
                   [.019, .016, .001], [.009, .007, .001], HAIR, True)
 
 
+def complete_back_hair(hair):
+    """A fitted, combed underlayer behind Mila's approved outer locks.
+
+    The supplied cut leaves the occiput exposed at the nape. This smooth
+    underlayer closes it while every validated outer strand keeps its place.
+    """
+    vertices, faces = [], []
+    cols, rows = 64, 30
+    for j in range(rows):
+        theta = .92 + (2.23-.92)*j/(rows-1)
+        for i in range(cols+1):
+            a = math.pi*i/cols
+            ripple = .0009*math.sin(a*44 + theta*3)
+            vertices.append(((.118+ripple)*math.sin(theta)*math.cos(a),
+                             -.012+(.134+ripple)*math.sin(theta)*math.sin(a),
+                             1.625+.147*math.cos(theta)))
+    for j in range(rows-1):
+        for i in range(cols):
+            p = j*(cols+1)+i
+            faces.append((p, p+cols+1, p+cols+2, p+1))
+    material_node = hair.data.materials[0] if hair.data.materials else None
+    cap = mesh('filled posterior hair', vertices, faces, material_node)
+    cap['template_persona'] = hair.get('template_persona')
+    cap['hair_repair'] = 'Fitted underlayer closes the exposed occiput without changing approved outer locks'
+    return cap
+
+
 def hairstyles(source):
     global slot, item
     for pieces in source.values():
@@ -721,6 +876,35 @@ def hairstyles(source):
                 ring('slim braid tie', sign*.122, .064, 1.248, .015, .015, .003, GOLD)
                 tress('tapered braid end', [(sign*.122, .064, 1.248), (sign*.123, .064, 1.222), (sign*.115, .067, 1.203)],
                       [.012, .015, .001], [.009, .009, .001], HAIR)
+    bpy.context.view_layer.update()
+    # Refit base cuts: the supplied hairstyles replace one persona's default
+    # cut at a time; the other persona keeps the sculpted catalogue hair.
+    for obj in objects:
+        if obj.get('shop_slot') != 'hair': continue
+        if obj.get('shop_id') == 'long': obj['template_persona'] = 'male'
+        elif obj.get('shop_id') == 'short': obj['template_persona'] = 'female'
+    for gender, persona, hair_id in [('girl', 'female', 'long'), ('boy', 'male', 'short')]:
+        item = hair_id
+        before = set(bpy.context.scene.objects)
+        bpy.ops.import_scene.gltf(filepath=str(HAIR_REFIT / f'{gender}.glb'))
+        imported = list(set(bpy.context.scene.objects) - before)
+        hair_material = material(f'Hair / supplied locks {gender}', '#594432', .58)
+        hair_material.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value = .24
+        for obj in imported:
+            if obj.type != 'MESH': continue
+            matrix = obj.matrix_world.copy()
+            obj.parent = None
+            obj.data.transform(matrix)
+            obj.matrix_world = Matrix.Identity(4)
+            tag(obj, f'{gender} / supplied hairstyle', hair_material)
+            obj['template_persona'] = persona
+        for obj in imported:
+            if obj.type != 'MESH': bpy.data.objects.remove(obj, do_unlink=True)
+    # Close the exposed occiput behind Mila's approved outer locks with a
+    # fitted, combed underlayer. The validated outer strands stay untouched.
+    slot, item = 'hair', 'long'
+    complete_back_hair(next(obj for obj in objects if obj.get('shop_slot') == 'hair'
+                            and obj.get('shop_id') == 'long' and obj.get('template_persona') == 'female'))
     bpy.context.view_layer.update()
     # Hats compress and cover the crown; open crowns preserve the coiffure.
     for original in [o for o in objects if o.get('shop_slot') == 'hair']:
@@ -959,6 +1143,8 @@ def fit_equipment():
         HEAD_FITS[persona] = {'anchor': seat['world'], 'clearance': [0,.012,0],
                              'templateToCharacter': column_major(C @ head_matrix @ C.inverted())}
         for original in templates:
+            if original.get('template_persona', persona) != persona:
+                continue
             slot, item = original['shop_slot'], original['shop_id']
             fitted = duplicate(original, gender+' / '+original.name)
             if slot in ['hair','hat']:
@@ -980,6 +1166,30 @@ def fit_equipment():
     persona = None
 
 
+def refine_seat_silhouette(selected):
+    """Reduce the posterior hip volume slightly, including every fitted outfit.
+
+    Apply once to evaluated meshes, after tailoring. The smooth field leaves
+    the waist anchors, front pelvis, legs and arms unchanged.
+    """
+    for obj in selected:
+        if obj.type != 'MESH' or obj.get('shop_slot') not in ['core','persona','outfit']:
+            continue
+        matrix=obj.matrix_world.copy();inverse=matrix.inverted()
+        for vertex in obj.data.vertices:
+            p=matrix @ vertex.co
+            if not (.68<p.z<1.025 and p.y>0 and abs(p.x)<.24):
+                continue
+            height=math.sin(math.pi*(p.z-.68)/.345)**2
+            rear=min(1,p.y/.08);rear=rear*rear*(3-2*rear)
+            side=min(1,(.24-abs(p.x))/.05);side=side*side*(3-2*side)
+            weight=height*rear*side
+            p.y*=1-.18*weight
+            p.x*=1-.035*weight
+            vertex.co=inverse @ p
+        obj.data.update()
+
+
 def export():
     bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -988,6 +1198,16 @@ def export():
         obj.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.object.convert(target='MESH')
+    refine_seat_silhouette(bpy.context.selected_objects)
+    # Validated athletic silhouettes: the first pass softens the rear, the
+    # second shapes the shoulders, chest, waist, hips and arms. Both use the
+    # shared field in refit_body_shapes.py and protect everything above
+    # 1.455 m, so the approved face and hair normals are copied verbatim.
+    for obj in bpy.context.selected_objects:
+        gender = CHARACTERS.get(obj.get('fit_persona'))
+        if not gender: continue
+        apply_body_shape(obj, gender, 'v1')
+        apply_body_shape(obj, gender, 'v2')
     bpy.ops.export_scene.gltf(filepath=str(OUT / 'catalogue.glb'), export_format='GLB', use_selection=True,
                               export_apply=True, export_yup=True, export_animations=False, export_extras=True)
     manifest = {}

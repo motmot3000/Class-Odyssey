@@ -1,0 +1,10 @@
+{
+  "origin": "Close crop of boy-gentle-front.png, a real Blender render.",
+  "crop": [
+    205,
+    300,
+    695,
+    745
+  ],
+  "generator": "tools/finalize_character_views.py"
+}

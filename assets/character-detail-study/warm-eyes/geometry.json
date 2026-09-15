@@ -1,0 +1,19 @@
+{
+  "revision": "reference-eyes-v1",
+  "base": "gentle",
+  "integrated": false,
+  "characters": {
+    "girl": {
+      "reference": "Link Breath of the Wild",
+      "eyelidVerticesAdjusted": 580,
+      "hairChanged": false,
+      "mouthAndBrowsChanged": false
+    },
+    "boy": {
+      "reference": "Link Breath of the Wild",
+      "eyelidVerticesAdjusted": 580,
+      "hairChanged": false,
+      "mouthAndBrowsChanged": false
+    }
+  }
+}

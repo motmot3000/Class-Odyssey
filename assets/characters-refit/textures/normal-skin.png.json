@@ -1,0 +1,7 @@
+{
+  "origin": "Derived from normal-skin.png: softened relief plus fine cloth-free skin grain.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}

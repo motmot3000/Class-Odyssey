@@ -1,0 +1,25 @@
+{
+  "revision": "refit-hair-v1",
+  "source": "hunter-hairr-obj.zip",
+  "sourceMember": "source/Hair Sketchfab.zip/Hair Sketchfab.obj",
+  "sourceSha256": "5833dec859856695b34c35da41872a3f22d0432316bb50e17883f406e157d9b1",
+  "sourceObject": "Xps_New_mesh",
+  "attribution": "User-supplied model; the archive carries no author or licence notice.",
+  "sourceHeadRemoved": true,
+  "sourceHairTriangles": 61052,
+  "optimizedHairTriangles": 59969,
+  "coordinates": "Construction frame: Blender Z up, front -Y; glTF Y up, front +Z; metres",
+  "fit": {
+    "scale": [
+      0.3,
+      0.3,
+      0.29
+    ],
+    "offset": [
+      -0.0015,
+      -0.026,
+      1.20321115
+    ]
+  },
+  "output": "boy.glb"
+}

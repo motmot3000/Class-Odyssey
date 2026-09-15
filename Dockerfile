@@ -3,7 +3,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 
 COPY server/ ./server/
-COPY index.html styles.css ./
+COPY index.html styles.css character-detail-study.html ./
 COPY src/ ./src/
 COPY assets/ ./assets/
 

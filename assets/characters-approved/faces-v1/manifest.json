@@ -1,0 +1,20 @@
+{
+  "revision": "approved-faces-v1",
+  "approvedAt": "2026-09-15T06:39:44.549274+00:00",
+  "approval": "Les visages on est nickel, tu bouges plus comme ça, tu sauvegardes les visages, tu les mets à un endroit pour être sûr que ce soit la version qui soit retenue.",
+  "scope": "Faces, eyes, expression and hairstyles are frozen. Body silhouettes remain under review.",
+  "snapshotFormat": "Full self-contained GLB to preserve the original head/neck, UVs and normals without cutting the mesh.",
+  "protectedRegion": {
+    "axis": "glTF +Y / Blender +Z",
+    "minimumHeightMetres": 1.455
+  },
+  "sourceVariant": "sporty",
+  "files": {
+    "girl-approved.glb": "c14d0b41336eaeb55d62fbe5d06838264789f05c85deb9492f9da7ffb195152d",
+    "girl-face.webp": "6472c8494eb2098fac29a7f830c94e1380414b13f3dc0f876500c976246d6d75",
+    "girl-front.webp": "beb1e3cf722f5ad138633f2ecb5791aa41cc168238c66e9a6b3da2500e9d15e8",
+    "boy-approved.glb": "0437bf7160493d82933b30215cc09d298214b5730efc8b017d8538ed61248b99",
+    "boy-face.webp": "3c184929782850407dd74dc4175adc10b54dfb58fc272b2927f112998bbc8cc2",
+    "boy-front.webp": "3e0b8181c5a98cb9163bd1d7ecc3d8b5d89dd0614a328fbd35ea217f34a9110d"
+  }
+}

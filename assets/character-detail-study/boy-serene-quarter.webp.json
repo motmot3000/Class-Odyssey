@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the serene catalogue revision, base starter outfit, view quarter.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "serene",
+  "view": "quarter"
+}

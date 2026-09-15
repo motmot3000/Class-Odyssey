@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the after catalogue revision, base starter outfit, view back.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "after",
+  "view": "back"
+}

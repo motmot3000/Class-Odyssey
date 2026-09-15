@@ -1,0 +1,7 @@
+{
+  "origin": "Derived from normal-head.png: softened game relief plus fine pore-scale normals.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}

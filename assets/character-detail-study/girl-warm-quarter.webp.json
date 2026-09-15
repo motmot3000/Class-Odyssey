@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the warm catalogue revision, base starter outfit, view quarter.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "warm",
+  "view": "quarter"
+}

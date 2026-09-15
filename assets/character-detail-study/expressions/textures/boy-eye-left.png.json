@@ -1,0 +1,5 @@
+{
+  "origin": "Derived from refit iris: 16% larger iris coverage, more open pupil and softer sclera; original fibre colour retained.",
+  "generator": "tools/prepare_expression_textures.py",
+  "revision": "welcoming-expressions-v1"
+}

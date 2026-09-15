@@ -1,0 +1,7 @@
+{
+  "origin": "Procedural iris rebuilt over assets/characters-refined/textures/eye-boy-right.png: radiating fibres, limbal ring, reduced pupil, catchlight.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}

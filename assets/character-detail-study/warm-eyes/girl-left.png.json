@@ -1,0 +1,16 @@
+{
+  "origin": "link-the-legend-of-zelda-breath-of-the-wild.zip",
+  "member": "textures/link_eyeball_l_alb.png",
+  "sourceSha256": "10bbe3f774e8a326799c5fa46271a72133d31b87735026723c9b9fec9c1110c1",
+  "attribution": "Nintendo; user-supplied reference archive. Archive does not include a licence notice.",
+  "referenceIrisCenter": [
+    0.48899906517094016,
+    0.4908520299145299
+  ],
+  "sourceDimensions": [
+    64,
+    64
+  ],
+  "adaptation": "Original iris and pupil layout retained, softer sclera, fine radial detail and soft glint.",
+  "generator": "tools/prepare_reference_eyes.py"
+}

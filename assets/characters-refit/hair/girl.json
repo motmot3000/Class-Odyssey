@@ -1,0 +1,25 @@
+{
+  "revision": "refit-hair-v1",
+  "source": "blender-hair-model.zip",
+  "sourceMember": "source/Hair.fbx",
+  "sourceSha256": "c01409eafdafe0cee10e7457e24de4e10ab7bbd3101aa6d971ed5f96277f6067",
+  "sourceObject": "Lisa - Woman Head with BlendShapes.001",
+  "attribution": "User-supplied model; the archive carries no author or licence notice.",
+  "sourceHeadRemoved": true,
+  "sourceHairTriangles": 2049600,
+  "optimizedHairTriangles": 150000,
+  "coordinates": "Construction frame: Blender Z up, front -Y; glTF Y up, front +Z; metres",
+  "fit": {
+    "scale": [
+      0.44,
+      0.43,
+      0.42
+    ],
+    "offset": [
+      -0.022352,
+      -0.026,
+      1.6145
+    ]
+  },
+  "output": "girl.glb"
+}

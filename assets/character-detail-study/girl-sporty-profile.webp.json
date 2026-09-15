@@ -1,0 +1,6 @@
+{
+  "origin": "Blender Cycles render of the sporty catalogue revision, base starter outfit, view profile.",
+  "generator": "tools/blender/render_character_views.py",
+  "label": "sporty",
+  "view": "profile"
+}

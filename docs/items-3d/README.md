@@ -2,12 +2,16 @@
 
 ## Intégration courante dans ClassQuest
 
-La passe `catalogue-v5-tailored-armour` utilise les matières affinées du visage et
-du corps, des mèches plus fines, une tunique moins évasée et une ceinture plate.
-Les géométries source du corps et le contrat d’ancrage restent inchangés.
+La passe `catalogue-v7-approved-bases` intègre les visages et les silhouettes
+validés. Les cartes approuvées de l'expression Douce et les yeux de référence
+remplacent les précédentes ; la seconde passe de corps applique les morphologies
+sportives (fesses moins projetées, épaules/torse/bras plus dessinés chez Noa,
+hanches et cuisses plus pleines chez Mila) en protégeant tout ce qui dépasse
+1,455 m. Les géométries source du corps et le contrat d'ancrage restent
+inchangés.
 La taille des sept tenues suit désormais le contour réel de la ceinture,
 sans bord elliptique rapporté. Warrior, Knight et King portent des plaques
-ajustées, des lames d’épaule articulées et des jambières projetées sur les jambes.
+ajustées, des lames d'épaule articulées et des jambières projetées sur les jambes.
 
 Les cartes de classe et la sélection d’élève sont rendues depuis le même
 catalogue que le workshop. Deux portraits actuels servent de secours, puis

@@ -1,6 +1,6 @@
 {
-  "revision": "catalogue-v5-tailored-armour",
-  "catalogueSha256": "b94648867a4b517f836be8a85465a93d8d7a56d79199df2251ffbbae6eb1852f",
+  "revision": "catalogue-v7-approved-bases",
+  "catalogueSha256": "b7e384d89ecbacfa21b9d5631dd2607374fac116b53c2e4b0f02e5f4aa0d75b2",
   "renderSource": "catalogue.blend",
   "items": {
     "braided": {
@@ -30,7 +30,7 @@
     "short": {
       "slot": "hair",
       "file": "items/short.webp",
-      "meshCount": 85,
+      "meshCount": 1,
       "containsBody": false
     },
     "celestial-crown": {
@@ -108,7 +108,7 @@
     "starter": {
       "slot": "outfit",
       "file": "items/starter.webp",
-      "meshCount": 10,
+      "meshCount": 7,
       "containsBody": false
     },
     "story-keeper": {
@@ -170,21 +170,19 @@
     "male": {
       "file": "portraits/male.webp",
       "pose": "base-v2-arms-lowered",
-      "hair": "short",
       "view": "front",
       "width": 768,
       "height": 1152,
-      "renderer": "Three.js, current catalogue, daylight, full silhouette"
+      "hair": "short"
     },
     "female": {
       "file": "portraits/female.webp",
       "pose": "base-v2-arms-lowered",
-      "hair": "long",
       "view": "front",
       "width": 768,
       "height": 1152,
-      "renderer": "Three.js, current catalogue, daylight, full silhouette"
+      "hair": "long"
     }
   },
-  "portraitRevision": "catalogue-v5-tailored-armour-front-hd"
+  "portraitRevision": "catalogue-v7-approved-bases-front-hd"
 }

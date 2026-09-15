@@ -1,0 +1,7 @@
+{
+  "origin": "Derived from rough-skin.png: matte body skin response.",
+  "generator": "tools/prepare_refit_textures.py",
+  "seed": 20260915,
+  "revision": "characters-refit-v1",
+  "integrated": true
+}
