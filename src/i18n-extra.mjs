@@ -1,6 +1,6 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
-  "console.accessRemaining": ["Accès professeur : encore {time}", "Teacher access: {time} remaining"],
+  "console.accessRemaining": ["Verrouillage auto dans {time}", "Auto lock in {time}"],
   "console.accessExpired": ["Accès expiré — saisis le mot de passe pour continuer.", "Access expired — enter the password to continue."],
   "nav.class": ["Classe", "Class"],
   "nav.classes": ["Classe :", "Class:"],
