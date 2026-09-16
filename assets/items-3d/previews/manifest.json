@@ -1,14 +1,8 @@
 {
-  "revision": "catalogue-v7-approved-bases",
-  "catalogueSha256": "b7e384d89ecbacfa21b9d5631dd2607374fac116b53c2e4b0f02e5f4aa0d75b2",
+  "revision": "catalogue-v8-scoped-cosmetics",
+  "catalogueSha256": "07a1033bebfa53b81d96e22678c998ce9b85757eecee5b0ef85eb55caa3cbbee",
   "renderSource": "catalogue.blend",
   "items": {
-    "braided": {
-      "slot": "hair",
-      "file": "items/braided.webp",
-      "meshCount": 95,
-      "containsBody": false
-    },
     "curly": {
       "slot": "hair",
       "file": "items/curly.webp",
@@ -18,13 +12,7 @@
     "long": {
       "slot": "hair",
       "file": "items/long.webp",
-      "meshCount": 139,
-      "containsBody": false
-    },
-    "royal-hair": {
-      "slot": "hair",
-      "file": "items/royal-hair.webp",
-      "meshCount": 165,
+      "meshCount": 2,
       "containsBody": false
     },
     "short": {
@@ -87,22 +75,10 @@
       "meshCount": 15,
       "containsBody": false
     },
-    "grand-archmage": {
-      "slot": "outfit",
-      "file": "items/grand-archmage.webp",
-      "meshCount": 17,
-      "containsBody": false
-    },
     "honor-knight": {
       "slot": "outfit",
       "file": "items/honor-knight.webp",
-      "meshCount": 73,
-      "containsBody": false
-    },
-    "realm-sovereign": {
-      "slot": "outfit",
-      "file": "items/realm-sovereign.webp",
-      "meshCount": 91,
+      "meshCount": 57,
       "containsBody": false
     },
     "starter": {
@@ -114,55 +90,13 @@
     "story-keeper": {
       "slot": "outfit",
       "file": "items/story-keeper.webp",
-      "meshCount": 73,
+      "meshCount": 57,
       "containsBody": false
     },
     "vocab-ranger": {
       "slot": "outfit",
       "file": "items/vocab-ranger.webp",
       "meshCount": 12,
-      "containsBody": false
-    },
-    "dual-daggers": {
-      "slot": "weapon",
-      "file": "items/dual-daggers.webp",
-      "meshCount": 20,
-      "containsBody": false
-    },
-    "lore-lantern": {
-      "slot": "weapon",
-      "file": "items/lore-lantern.webp",
-      "meshCount": 9,
-      "containsBody": false
-    },
-    "pencil-sword": {
-      "slot": "weapon",
-      "file": "items/pencil-sword.webp",
-      "meshCount": 10,
-      "containsBody": false
-    },
-    "spell-grimoire": {
-      "slot": "weapon",
-      "file": "items/spell-grimoire.webp",
-      "meshCount": 9,
-      "containsBody": false
-    },
-    "star-shield": {
-      "slot": "weapon",
-      "file": "items/star-shield.webp",
-      "meshCount": 8,
-      "containsBody": false
-    },
-    "swords-and-shield": {
-      "slot": "weapon",
-      "file": "items/swords-and-shield.webp",
-      "meshCount": 28,
-      "containsBody": false
-    },
-    "word-wand": {
-      "slot": "weapon",
-      "file": "items/word-wand.webp",
-      "meshCount": 7,
       "containsBody": false
     }
   },
@@ -174,8 +108,8 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v1, daylight, full silhouette",
-      "bytes": 33862
+      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
+      "bytes": 50418
     },
     "female": {
       "file": "portraits/female.webp",
@@ -184,9 +118,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v1, daylight, full silhouette",
-      "bytes": 34000
+      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
+      "bytes": 52704
     }
   },
-  "portraitRevision": "stylized-v1-front-hd"
+  "portraitRevision": "stylized-v4-front-hd"
 }

@@ -50,24 +50,6 @@ export const SKINS = [
     reward: "Knight armor",
     description: "Blue knight armor.",
     price: 75
-  },
-  {
-    id: "grand-archmage",
-    name: "Archmage",
-    minLevel: 8,
-    colors: ["#573566", "#7fc7d9", "#25142b"],
-    reward: "Archmage robes",
-    description: "Magic archmage coat.",
-    price: 90
-  },
-  {
-    id: "realm-sovereign",
-    name: "King",
-    minLevel: 10,
-    colors: ["#8e3230", "#e2bc70", "#211b16"],
-    reward: "King outfit",
-    description: "Royal king outfit.",
-    price: 100
   }
 ];
 
@@ -95,33 +77,26 @@ export const HATS = [
   { id: "celestial-crown", name: "Royal Crown", minLevel: 10, price: 100, description: "The greatest golden crown." }
 ];
 
+/* The Items category (weapons, shields, books) is withdrawn. `no-weapon`
+ * remains as the internal empty-hands state for saved pupils and exports; it is
+ * never offered as a shop tab. */
 export const WEAPONS = [
-  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." },
-  { id: "star-shield", name: "Shield", minLevel: 2, price: 20, description: "A blue shield with a star." },
-  { id: "lore-lantern", name: "Lantern", minLevel: 3, price: 30, description: "A bright yellow lantern." },
-  { id: "spell-grimoire", name: "Magic Book", minLevel: 4, price: 45, description: "An ancient magic spellbook." },
-  { id: "dual-daggers", name: "Daggers", minLevel: 5, price: 55, description: "Two fast silver daggers." },
-  { id: "pencil-sword", name: "Sword", minLevel: 6, price: 65, description: "A fierce pointed steel sword." },
-  { id: "word-wand", name: "Wand", minLevel: 8, price: 85, description: "A powerful glowing magic wand." },
-  { id: "swords-and-shield", name: "Swords & Shield", minLevel: 10, price: 100, description: "A legendary pair of swords and royal shield." }
+  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." }
 ];
 
-export const FACES = [
-  { id: "smile", name: "Smile", minLevel: 1, price: 0, description: "A happy smile." },
-  { id: "wink", name: "Wink", minLevel: 2, price: 20, description: "A clever wink." },
-  { id: "cool", name: "Cool", minLevel: 3, price: 30, description: "A determined cool face." },
-  { id: "evil", name: "Evil Face", minLevel: 6, price: 55, description: "Small red demon eyes and a sly smile." },
-  { id: "star-eyes", name: "Star Eyes", minLevel: 8, price: 70, description: "Eyes shining like bright stars." },
-  { id: "transcendent", name: "God Face", minLevel: 10, price: 100, description: "Divine golden eyes and celestial marks." }
-];
+/* Faces are paused while the delivered 3D base owns the expression, so the
+ * category ships empty. The persisted `face` field keeps its neutral default
+ * for the legacy vector renderer. */
+export const FACES = [];
 
+/* Short and Long are the delivered cuts, free and shared by both characters;
+ * Bald and the Afro carry the first cosmetic unlocks. Braids and Royal Hair
+ * are withdrawn. */
 export const HAIRS = [
   { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
-  { id: "bald", name: "Bald", minLevel: 1, price: 10, description: "A clean fully shaved head." },
-  { id: "curly", name: "Afro", minLevel: 2, price: 40, description: "A classic rounded afro." },
-  { id: "braided", name: "Braids", minLevel: 6, price: 50, description: "Warrior braids." },
-  { id: "royal-hair", name: "Royal Hair", minLevel: 10, price: 90, description: "Long curls with subtle royal jewels." }
+  { id: "bald", name: "Bald", minLevel: 2, price: 10, description: "A clean fully shaved head." },
+  { id: "curly", name: "Afro", minLevel: 3, price: 30, description: "A classic rounded afro." }
 ];
 
 export const HAIR_COLORS = [
@@ -151,10 +126,7 @@ export const SKIN_TONES = [
   { id: "medium", name: "Medium Skin", color: "#f2c193", minLevel: 1, price: 0, description: "A natural medium skin tone." },
   { id: "tan", name: "Tan Skin", color: "#d9a06b", minLevel: 1, price: 0, description: "A natural tan skin tone." },
   { id: "brown", name: "Brown Skin", color: "#b07a4f", minLevel: 1, price: 0, description: "A natural brown skin tone." },
-  { id: "dark", name: "Dark Skin", color: "#7d4f33", minLevel: 1, price: 0, description: "A natural dark skin tone." },
-  { id: "tattooed-skin", name: "Regular Tattoos", color: "#c68a55", minLevel: 5, price: 50, description: "Simple geometric tattoos." },
-  { id: "yakuza-tattoos", name: "Yakuza Tattoos", color: "#c68a55", minLevel: 8, price: 80, description: "Detailed wave and blossom tattoos." },
-  { id: "golden-skin", name: "Golden Skin", color: "#d8ad4a", minLevel: 10, price: 100, description: "Living gold skin decorated with diamonds." }
+  { id: "dark", name: "Dark Skin", color: "#7d4f33", minLevel: 1, price: 0, description: "A natural dark skin tone." }
 ];
 
 export const SHOP_ITEMS = [

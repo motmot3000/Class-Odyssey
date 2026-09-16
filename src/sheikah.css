@@ -991,6 +991,14 @@ input { caret-color: var(--cyan); }
 .dais[data-title-tier="4"] { --halo-color: #a23b3b; --halo-soft: rgba(162,59,59,.28); }
 .dais[data-title-tier="5"] { --halo-color: #b8871f; --halo-soft: rgba(197,150,42,.34); }
 
+/* Four prestige titles own their accent, independent of the shared tier
+ * ladder: Explorer teal, Champion amber, King royal violet, Legend rose. The
+ * emblem mask (badge) and the accent together give each a distinct identity. */
+.dais[data-title-id="pathfinder"] { --halo-color: #1f9aa3; --halo-soft: rgba(31,154,163,.28); }
+.dais[data-title-id="realm-champion"] { --halo-color: #c07a1e; --halo-soft: rgba(192,122,30,.30); }
+.dais[data-title-id="paragon-sovereign"] { --halo-color: #6a4bb0; --halo-soft: rgba(106,75,176,.30); }
+.dais[data-title-id="class-legend"] { --halo-color: #c04a86; --halo-soft: rgba(192,74,134,.32); }
+
 /* Ambient tint, rising with the tier. */
 .dais[data-title-tier="2"] .title-halo::before { inset: 0; background: radial-gradient(62% 56% at 50% 90%, var(--halo-soft), transparent 72%); }
 .dais[data-title-tier="3"] .title-halo::before { inset: 0; background: radial-gradient(66% 60% at 50% 92%, var(--halo-soft), transparent 74%); }

@@ -3,5 +3,6 @@
   "generator": "tools/prepare_refit_textures.py",
   "seed": 20260915,
   "revision": "characters-refit-v1",
-  "integrated": true
+  "integrated": true,
+  "cleanup": "tools/clean_skin_specks.py median 17 smoothed the painted dotted lines (150025 pixels)"
 }

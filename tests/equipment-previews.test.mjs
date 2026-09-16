@@ -14,8 +14,8 @@ function catalogue() {
 }
 
 test('the live base characters are the delivered stylized catalogue', () => {
-  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v1');
-  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v1$/);
+  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v4');
+  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v4$/);
   assert.notEqual(BASE_CATALOGUE_URL, CATALOGUE_REVISION);
   const data = readFileSync(new URL('../assets/character-stylized/catalogue.glb', import.meta.url));
   assert.equal(data.toString('ascii', 0, 4), 'glTF');
@@ -23,6 +23,9 @@ test('the live base characters are the delivered stylized catalogue', () => {
   assert.equal(manifest.appearanceRevision, BASE_CATALOGUE_REVISION);
   assert.ok(manifest.parts['persona:male'] > 0 && manifest.parts['persona:female'] > 0);
   assert.ok(manifest.parts['outfit:story-keeper'] > 0);
+  assert.ok(manifest.parts['hair:short'] > 0 && manifest.parts['hair:long'] > 0 && manifest.parts['hair:curly'] > 0);
+  assert.equal(manifest.parts['outfit:grand-archmage'] || 0, 0);
+  assert.equal(manifest.parts['weapon:lore-lantern'] || 0, 0);
 });
 
 test('baked fallback portraits match the live base so the old base never flashes', () => {
@@ -30,7 +33,7 @@ test('baked fallback portraits match the live base so the old base never flashes
   const report = JSON.parse(readFileSync(new URL('previews/manifest.json', root)));
   assert.equal(report.portraitRevision, PORTRAIT_REVISION);
   for (const persona of ['male', 'female']) {
-    assert.match(report.portraits[persona].renderer, /stylized-v1/);
+    assert.match(report.portraits[persona].renderer, /stylized-v4/);
     const file = readFileSync(new URL(`previews/${report.portraits[persona].file}`, root));
     assert.equal(file.toString('ascii', 0, 4), 'RIFF');
   }
@@ -85,6 +88,6 @@ test('picker, fallback portraits and shop markup use current assets and preserve
 test('refined catalogue exports PBR fibre and facial maps', () => {
   const gltf=catalogue();
   const materials=gltf.materials;
-  assert.ok(materials.some(mat=>mat.name.startsWith('Hair / selectable') && mat.normalTexture && mat.pbrMetallicRoughness.metallicRoughnessTexture));
+  assert.ok(materials.some(mat=>mat.extras?.base_skin_map === 'skin' && mat.normalTexture && mat.pbrMetallicRoughness.metallicRoughnessTexture));
   assert.ok(materials.some(mat=>mat.extras?.base_skin_map === 'head' && mat.normalTexture));
 });

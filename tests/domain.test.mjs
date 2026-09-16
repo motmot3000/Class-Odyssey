@@ -96,24 +96,26 @@ test("a girl defaults to long hair and keeps her skin tone", () => {
   assert.equal(pupil.face, "smile");
 });
 
-test("faces and hairstyles are shop items", () => {
-  assert.equal(getShopItem("wink")?.type, "face");
-  assert.equal(getShopItem("curly")?.type, "hair");
+test("faces are paused and the shared haircuts ship with Bald and the Afro", () => {
+  assert.equal(getShopItems("face").length, 0);
+  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
+  assert.equal(getShopItem("short").price, 0);
+  assert.equal(getShopItem("long").price, 0);
+  assert.equal(getShopItem("bald").minLevel, 2);
+  assert.equal(getShopItem("bald").price, 10);
+  assert.equal(getShopItem("curly").minLevel, 3);
+  assert.equal(getShopItem("curly").price, 30);
+  assert.equal(getShopItem("braided"), null);
+  assert.equal(getShopItem("royal-hair"), null);
+  assert.equal(getShopItem("wink"), null);
   assert.equal(getShopItem("sunglasses")?.type, "hat");
-  assert.equal(getShopItem("evil")?.type, "face");
+  assert.equal(getShopItem("evil"), null);
   assert.equal(getShopItem("story-keeper")?.name, "Warrior");
   assert.equal(getShopItem("scholar-virtuoso")?.name, "Star");
 });
 
 test("shop item names use simple English for 7P and 8P pupils", () => {
   const names = {
-    "pencil-sword": "Sword",
-    "word-wand": "Wand",
-    "swords-and-shield": "Swords & Shield",
-    "star-shield": "Shield",
-    "lore-lantern": "Lantern",
-    "spell-grimoire": "Magic Book",
-    "dual-daggers": "Daggers",
     "gold-crown": "King's Crown",
     "explorer-cap": "Goggles",
     "wizard-hat": "Wizard Hat",
@@ -123,12 +125,6 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
     long: "Long Hair",
     bald: "Bald",
     curly: "Afro",
-    "royal-hair": "Royal Hair",
-    braided: "Braids",
-    cool: "Cool",
-    "star-eyes": "Star Eyes",
-    transcendent: "God Face",
-    "golden-skin": "Golden Skin",
     "custom-bespoke": "Custom Item"
   };
 
@@ -137,9 +133,12 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
   }
 
   for (const removedId of [
-    "shadow-hood", "winged-circlet", "star-cowl",
+    "shadow-hood", "winged-circlet", "star-cowl", "grand-archmage", "realm-sovereign",
     "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair", "monk-cut", "spiky", "buzz-cut", "grin",
-    "red-skin", "green-skin", "blue-skin"
+    "smile", "wink", "cool", "evil", "star-eyes", "transcendent",
+    "braided", "royal-hair",
+    "star-shield", "lore-lantern", "spell-grimoire", "dual-daggers", "pencil-sword", "word-wand", "swords-and-shield",
+    "golden-skin", "red-skin", "green-skin", "blue-skin"
   ]) {
     assert.equal(getShopItem(removedId), null);
   }
@@ -243,18 +242,24 @@ test("next reward finds the closest upcoming unlock and stops at the top", () =>
 });
 
 test("shop covers all categories with regular level unlocks up to level 10", () => {
-  const categories = ["outfit", "hat", "weapon", "face", "hair", "title", "tone"];
-  for (const cat of categories) {
+  for (const cat of ["outfit", "hat", "title"]) {
     const items = getShopItems(cat);
     assert.ok(items.length > 0);
     assert.ok(items.some((item) => item.minLevel >= 6));
   }
+  // Faces are paused; Items only keeps the empty-hands state; hair and skin
+  // tones stop at the first unlocks. None of them carries a level-6 item.
+  assert.equal(getShopItems("face").length, 0);
+  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
+  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
+  assert.equal(getShopItems("tone").length, 5);
 });
 
 test("items and titles follow their intended progression", () => {
+  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
   assert.deepEqual(
-    getShopItems("weapon").map((item) => item.id),
-    ["no-weapon", "star-shield", "lore-lantern", "spell-grimoire", "dual-daggers", "pencil-sword", "word-wand", "swords-and-shield"]
+    getShopItems("outfit").map((item) => item.id),
+    ["starter", "vocab-ranger", "grammar-mage", "story-keeper", "honor-knight"]
   );
   assert.deepEqual(
     getShopItems("title").map((item) => item.name),
@@ -262,22 +267,11 @@ test("items and titles follow their intended progression", () => {
   );
 });
 
-test("regular and Yakuza tattoos can be bought at levels 5 and 8", () => {
-  for (const [itemId, minLevel, price] of [["tattooed-skin", 5, 50], ["yakuza-tattoos", 8, 80]]) {
-    let state = createInitialState();
-    const pupilId = getCurrentClass(state).pupils[0].id;
-    state = awardMoney(state, [pupilId], price, "reward");
-    for (let level = 1; level < minLevel - 1; level++) {
-      state = awardXp(state, [pupilId], xpNeededForLevel(level), "level up");
-    }
-    assert.equal(purchaseItem(state, pupilId, itemId), state);
-    state = awardXp(state, [pupilId], xpNeededForLevel(minLevel - 1), "level up");
-    state = purchaseItem(state, pupilId, itemId);
-    const pupil = getPupilById(importState(JSON.stringify(state)), pupilId);
-    assert.equal(pupil.skinTone, itemId);
-    assert.equal(pupil.money, 0);
-    assert.equal(isItemOwned(pupil, itemId), true);
+test("tattoo and golden skins are withdrawn with the paused cosmetics", () => {
+  for (const itemId of ["tattooed-skin", "yakuza-tattoos", "golden-skin"]) {
+    assert.equal(getShopItem(itemId), null);
   }
+  assert.deepEqual(getShopItems("tone").map((item) => item.id), ["light", "medium", "tan", "brown", "dark"]);
 });
 
 test("hair colors unlock at the requested levels and keep the haircut through purchases and saves", () => {
@@ -498,22 +492,21 @@ test("normalizePupil keeps equipped cosmetics even if they are missing from owne
         if (pupil.id !== pupilId) return pupil;
         return {
           ...pupil,
-          hat: "explorer-cap",
+          hat: "wizard-hat",
+          skin: "grammar-mage",
           weapon: "pencil-sword",
-          face: "cool",
-          ownedItems: ["starter", "rookie", "no-hat", "no-weapon", "smile", "short", "long"]
+          ownedItems: ["starter", "rookie", "no-hat", "no-weapon"]
         };
       })
     }))
   };
   const normalized = normalizeState(raw);
   const pupil = getPupilById(normalized, pupilId);
-  assert.equal(pupil.hat, "explorer-cap");
-  assert.equal(pupil.weapon, "pencil-sword");
-  assert.equal(pupil.face, "cool");
-  assert.equal(isItemOwned(pupil, "explorer-cap"), true);
-  assert.equal(isItemOwned(pupil, "pencil-sword"), true);
-  assert.equal(isItemOwned(pupil, "cool"), true);
+  assert.equal(pupil.hat, "wizard-hat");
+  assert.equal(pupil.skin, "grammar-mage");
+  assert.equal(pupil.weapon, "no-weapon");
+  assert.equal(isItemOwned(pupil, "wizard-hat"), true);
+  assert.equal(isItemOwned(pupil, "grammar-mage"), true);
 });
 
 test("normalizePupil migrates the legacy coins field to money", () => {

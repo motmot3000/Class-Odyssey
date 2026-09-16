@@ -47,7 +47,7 @@ function sync() {
   $$('[data-persona]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.persona === look.persona)));
   $$('[data-preset]').forEach(button => button.setAttribute('aria-pressed', String(Object.entries(PRESETS[button.dataset.preset]).every(([field, id]) => look[field] === id))));
   $('#equipped-list').innerHTML = CATEGORIES.map(({ label, field }) => `<div><dt>${label}</dt><dd>${getShopItem(look[field]).name}</dd></div>`).join('');
-  $('#svg-reference').innerHTML = renderHero({ id: '3d-reference', name, ...look, gender: look.persona === 'female' ? 'girl' : 'boy', skinTone: 'light', face: 'smile' });
+  $('#svg-reference').innerHTML = renderHero({ id: '3d-reference', name, ...look, skinTone: look.tone, gender: look.persona === 'female' ? 'girl' : 'boy', face: 'smile' });
   const url = new URL(location.href);
   for (const [key, value] of Object.entries(look)) url.searchParams.set(key, value);
   history.replaceState(null, '', url);

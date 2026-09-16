@@ -133,10 +133,8 @@ export function gearOf(pupil) {
   return [
     [t("app.gear.outfit"), getItemName("outfit", pupil.skin)],
     [t("app.gear.hat"), getItemName("hat", pupil.hat)],
-    [t("app.gear.item"), getItemName("weapon", pupil.weapon)],
     [t("app.gear.hair"), getItemName("hair", pupil.hair)],
     [t("app.gear.hairColor"), getItemName("hairColor", pupil.hairColor || "brown-hair")],
-    [t("app.gear.face"), getItemName("face", pupil.face)],
     [t("app.gear.skin"), getItemName("tone", pupil.skinTone)]
   ];
 }

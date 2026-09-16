@@ -43,7 +43,7 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
   for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 27);
+  assert.equal(modeledItemIds().length, 16);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
     assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair'].includes(node.extras.shop_slot));
@@ -55,8 +55,6 @@ test('the real GLB covers every current modeled catalogue item and only the inte
 
 test('all equipment retains human-scale world bounds, including the transformed back sword', () => {
   const gltf = readGlb();
-  const manifest = JSON.parse(readFileSync(new URL('../assets/items-3d/manifest.json', import.meta.url)));
-  const hairTops = new Map();
   function visit(index, parent) {
     const node = gltf.nodes[index];
     const local = node.matrix ? new Matrix4().fromArray(node.matrix) : new Matrix4().compose(
@@ -72,28 +70,6 @@ test('all equipment retains human-scale world bounds, including the transformed 
           for (const z of [accessor.min[2], accessor.max[2]]) {
             const p = new Vector3(x, y, z).applyMatrix4(world);
             assert.ok(Math.abs(p.x) < 1 && p.y > -.03 && p.y < 2.22 && Math.abs(p.z) < .7, `${node.name} escaped fitted bounds: ${p.toArray()}`);
-            if (node.extras?.shop_slot === 'hair') p.applyMatrix4(new Matrix4().fromArray(node.extras.template_to_character).invert());
-            if (node.extras?.shop_slot === 'hair' && node.extras.hat_fit === 'covered') {
-              assert.ok(p.y <= manifest.headFit.under_hat_z + .0001, `${node.name} extends above the hat fitting plane`);
-            }
-            if (node.extras?.shop_slot === 'hair') {
-              const key = `${node.extras.fit_persona}:${node.extras.shop_id}:${node.extras.hat_fit}`;
-              hairTops.set(key, Math.max(hairTops.get(key) || 0, p.y));
-            }
-          }
-        }
-      }
-      if (node.extras?.shop_slot === 'hair' && node.extras.hat_fit === 'crowned') {
-        const view = gltf.bufferViews[accessor.bufferView];
-        const offset = (view.byteOffset || 0) + (accessor.byteOffset || 0);
-        const stride = view.byteStride || 12;
-        assert.equal(accessor.componentType, 5126);
-        for (let i = 0; i < accessor.count; i++) {
-          const p = new Vector3(...[0,4,8].map(delta => gltf.binary.readFloatLE(offset+i*stride+delta))).applyMatrix4(world);
-          p.applyMatrix4(new Matrix4().fromArray(node.extras.template_to_character).invert());
-          if (p.y >= 1.698 && p.y <= 1.746) {
-            const radial = Math.hypot(p.x/.112, (p.z+manifest.headFit.center_y)/.137);
-            assert.ok(radial <= 1.001, `${node.name} pierces the crown band at ${p.toArray()}`);
           }
         }
       }
@@ -101,11 +77,19 @@ test('all equipment retains human-scale world bounds, including the transformed 
     for (const child of node.children || []) visit(child, world);
   }
   for (const root of gltf.scenes[gltf.scene || 0].nodes) visit(root, new Matrix4());
-  for (const persona of ['male','female']) {
-    for (const hair of ['short','long','curly','braided','royal-hair']) {
-      assert.ok(Math.abs(hairTops.get(`${persona}:${hair}:open`)-hairTops.get(`${persona}:${hair}:crowned`)) < .0001, `${hair} loses its top under an open crown`);
+});
+
+test('hair under a closed crown stays flush under the hat fitting plane', () => {
+  const gltf = readGlb();
+  const manifest = JSON.parse(readFileSync(new URL('../assets/items-3d/manifest.json', import.meta.url)));
+  worldMeshes(gltf, (node, primitive, world, data) => {
+    if (data.shop_slot !== 'hair' || data.hat_fit !== 'covered') return;
+    const inverse = new Matrix4().fromArray(data.template_to_character).invert();
+    for (const point of positions(gltf, gltf.accessors[primitive.attributes.POSITION], world)) {
+      point.applyMatrix4(inverse);
+      assert.ok(point.y <= manifest.headFit.under_hat_z + .0001, `${node.name} extends above the hat fitting plane`);
     }
-  }
+  });
 });
 
 test('hat fit, haircuts and both personas select exactly one variant from actual GLB parts', () => {
@@ -128,14 +112,19 @@ test('hat fit, haircuts and both personas select exactly one variant from actual
   }
 });
 
-test('open crowns keep complete hairstyles instead of chopping off the top of the hair', () => {
+test('the shared haircuts ship while Braids and Royal Hair stay out', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
-  for (const hair of ['short', 'long', 'curly', 'braided', 'royal-hair']) {
-    for (const hat of ['gold-crown', 'celestial-crown']) {
-      const visible = parts.filter(part => part.shop_slot === 'hair' && visiblePart(part, { ...DEFAULT_LOOK, hair, hat }));
-      assert.ok(visible.length > 0);
-      assert.ok(visible.every(part => part.hat_fit === 'crowned'));
+  const shipped = [...new Set(parts.filter(part => part.shop_slot === 'hair').map(part => part.shop_id))].sort();
+  assert.deepEqual(shipped, ['curly', 'long', 'short']);
+  for (const hair of ['short', 'long', 'curly']) {
+    for (const persona of ['male', 'female']) {
+      const visible = parts.filter(part => part.shop_slot === 'hair' && part.fit_persona === persona
+        && visiblePart(part, { ...DEFAULT_LOOK, persona, hair }));
+      assert.ok(visible.length > 0, `${persona} must wear ${hair}`);
     }
+  }
+  for (const removed of ['braided', 'royal-hair']) {
+    assert.ok(!parts.some(part => part.shop_id === removed), `${removed} is withdrawn`);
   }
 });
 
@@ -213,14 +202,22 @@ test('both base characters have a slightly slimmer posterior hip profile', () =>
   }
 });
 
-test('the refit base characters use the supplied hairstyles and a plain starter outfit', () => {
+test('open crowns keep complete hairstyles instead of chopping off the top of the hair', () => {
+  const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+  for (const hair of ['short', 'long']) {
+    for (const hat of ['gold-crown', 'celestial-crown']) {
+      const visible = parts.filter(part => part.shop_slot === 'hair' && visiblePart(part, { ...DEFAULT_LOOK, hair, hat }));
+      assert.ok(visible.length > 0);
+      assert.ok(visible.every(part => part.hat_fit === 'crowned'));
+    }
+  }
+});
+
+test('the shipped catalogue ships the supplied haircuts and a plain starter outfit', () => {
   const gltf = readGlb();
   const nodes = gltf.nodes.filter(node => node.mesh !== undefined);
-  for (const [persona, hairId] of [['female', 'long'], ['male', 'short']]) {
-    const parts = nodes.filter(node => node.extras?.shop_slot === 'hair' && node.extras.fit_persona === persona && node.extras.shop_id === hairId);
-    assert.ok(parts.length >= 3, `${persona}: missing supplied hairstyle fits`);
-    assert.ok(parts.every(node => gltf.materials[gltf.meshes[node.mesh].primitives[0].material].name.startsWith('Hair / supplied locks')), `${persona}: base cut is not the supplied hairstyle`);
-  }
+  const hairs = new Set(nodes.filter(node => node.extras?.shop_slot === 'hair').map(node => node.extras.shop_id));
+  assert.deepEqual([...hairs].sort(), ['curly', 'long', 'short']);
   for (const banned of ['neckerchief', 'scout scarf', 'compass fastening']) {
     assert.ok(!nodes.some(node => node.name.toLowerCase().includes(banned)), `starter outfit still contains ${banned}`);
   }
@@ -242,12 +239,14 @@ test('head and held item mounts match each character’s anatomical anchors', ()
 });
 
 test('shareable looks validate item categories and preserve colour independently of the haircut', () => {
-  const look = lookFromParams(new URLSearchParams('persona=female&hair=curly&hairColor=blue-hair&skin=word-wand&hat=monk-cut'));
+  const look = lookFromParams(new URLSearchParams('persona=female&hair=royal-hair&hairColor=blue-hair&skin=word-wand&hat=monk-cut&tone=dark'));
   assert.equal(look.persona, 'female');
-  assert.equal(look.hair, 'curly');
+  assert.equal(look.hair, DEFAULT_LOOK.hair);
   assert.equal(look.hairColor, 'blue-hair');
+  assert.equal(look.tone, 'dark');
   assert.equal(look.skin, DEFAULT_LOOK.skin);
   assert.equal(look.hat, DEFAULT_LOOK.hat);
+  assert.equal(lookFromParams(new URLSearchParams('hair=curly')).hair, 'curly');
 });
 
 test('every outfit hides its continuous waist edge inside the belt and has no old central tunic tail', () => {
@@ -267,18 +266,19 @@ test('every outfit hides its continuous waist edge inside the belt and has no ol
       assert.ok(points.every(p=>Math.abs(p.x)>=.10||p.y>=1.0299),`${key}: old torso tail remains below waist`);
     }
   });
-  assert.equal(skirts.size,14);
-  assert.equal(tops.size,14);
+  assert.equal(skirts.size,10);
+  assert.equal(tops.size,10);
 });
 
-test('armoured outfits have fitted chest panels, articulated shoulders and contoured greaves',()=>{
+test('armoured outfits have fitted chest panels and articulated shoulders but no greaves',()=>{
   const nodes=readGlb().nodes.filter(node=>node.mesh!==undefined);
-  for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight','realm-sovereign']){
+  for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight']){
     const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id);
     assert.ok(parts.filter(node=>node.extras.armour_construction==='anatomical fitted plate').length>=6);
     assert.equal(parts.filter(node=>node.extras.armour_construction==='articulated shoulder').length,6);
-    assert.equal(parts.filter(node=>node.extras.armour_construction==='contoured greave').length,2);
+    assert.equal(parts.filter(node=>node.extras.armour_construction==='contoured greave').length,0);
     assert.ok(parts.some(node=>node.name.includes('hinge rivet')));
+    assert.ok(!parts.some(node=>/shin plate|greave/.test(node.name)), 'greaves must be withdrawn');
     assert.ok(!parts.some(node=>node.name.includes('fitted shoulder plate')||node.name.includes('steel greave')));
   }
 });

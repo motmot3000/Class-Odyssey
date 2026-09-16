@@ -3,18 +3,59 @@ import { createSharedResource } from "./shared-resource.mjs";
 
 const MAX_CACHED_PORTRAITS = 64;
 const PRELOAD_MARGIN = "120px";
+const STORAGE_KEY = "classquest.portrait-cache.v1";
+const MAX_PERSISTED_PORTRAITS = 48;
 const cache = new Map();
 const pending = new Map();
 let queue = Promise.resolve();
 let observer;
+let hydrated = false;
+let persistTimer = 0;
 
 // Bake-proof the cache key on the live base so a base change never reuses old images.
-const portraitKey = look => `${BASE_CATALOGUE_REVISION}/${PORTRAIT_REVISION}` + JSON.stringify(look);
+const KEY_PREFIX = `${BASE_CATALOGUE_REVISION}/${PORTRAIT_REVISION}`;
+const portraitKey = look => KEY_PREFIX + JSON.stringify(look);
+
+/* Keep the last portraits across reloads so the equipped look is on screen
+ * immediately instead of flashing the baked unequipped fallback. */
+function hydrate() {
+  if (hydrated) return;
+  hydrated = true;
+  if (typeof localStorage === "undefined") return;
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    if (!Array.isArray(stored)) return;
+    for (const entry of stored) {
+      if (!Array.isArray(entry) || typeof entry[0] !== "string" || typeof entry[1] !== "string") continue;
+      if (!entry[0].startsWith(KEY_PREFIX) || cache.has(entry[0])) continue;
+      cache.set(entry[0], entry[1]);
+    }
+  } catch { /* Private mode or corrupt entry: fall back to the baked portraits. */ }
+}
+
+function persist() {
+  persistTimer = 0;
+  if (typeof localStorage === "undefined") return;
+  const entries = [...cache].slice(-MAX_PERSISTED_PORTRAITS);
+  for (let limit = entries.length; limit > 0; limit -= 8) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(-limit)));
+      return;
+    } catch { /* Quota: try fewer entries, then give up on persistence. */ }
+  }
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* Nothing else to do. */ }
+}
+
+function schedulePersist() {
+  if (persistTimer) return;
+  persistTimer = setTimeout(persist, 600);
+}
 
 /** Use a cached image during HTML rendering, before IntersectionObserver fires.
  * This avoids flashing an unequipped fallback when returning to the pupil list.
  */
 export function cachedHeroPortrait(look) {
+  hydrate();
   const key = portraitKey(look);
   const url = cache.get(key);
   if (url) {
@@ -53,6 +94,7 @@ const resource = createSharedResource(async () => {
 function rememberPortrait(key, url) {
   cache.set(key, url);
   while (cache.size > MAX_CACHED_PORTRAITS) cache.delete(cache.keys().next().value);
+  schedulePersist();
 }
 
 function showPortrait(image, url) {

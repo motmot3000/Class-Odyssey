@@ -153,6 +153,14 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .hero-title-tag[data-title-tier="4"] { --title-color: #a23b3b; --title-glow: rgba(162,59,59,.40); }
 .hero-title-tag[data-title-tier="5"] { --title-color: #a07a1e; --title-glow: rgba(197,150,42,.55); }
 
+/* Four prestige titles carry their own identity instead of inheriting the tier
+ * colour: Explorer teal, Champion amber, King royal violet, Legend rose. Names
+ * are unchanged; only the visual treatment differs. */
+.hero-title-tag[data-title-id="pathfinder"] { --title-color: #1f7f88; --title-glow: rgba(31,127,136,.32); }
+.hero-title-tag[data-title-id="realm-champion"] { --title-color: #9c5f12; --title-glow: rgba(156,95,18,.36); }
+.hero-title-tag[data-title-id="paragon-sovereign"] { --title-color: #5c3f9c; --title-glow: rgba(92,63,156,.36); }
+.hero-title-tag[data-title-id="class-legend"] { --title-color: #a83a72; --title-glow: rgba(168,58,114,.40); }
+
 .hero-title-tag[data-title-tier="3"] .title-ornament,
 .hero-title-tag[data-title-tier="4"] .title-ornament,
 .hero-title-tag[data-title-tier="5"] .title-ornament { width: 38px; height: 28px; }

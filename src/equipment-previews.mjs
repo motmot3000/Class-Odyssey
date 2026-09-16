@@ -15,7 +15,9 @@ export function previewAsset(path) {
 
 export function renderHeroPortrait(pupil, { className = 'hero-fig', alt = '', large = false, dynamic = true } = {}) {
   const look = pupilLook(pupil);
-  const cached = dynamic && cachedHeroPortrait(look);
+  // A cached (or reloaded) portrait of the real equipped look beats the baked
+  // unequipped fallback, whether or not this image will be re-rendered.
+  const cached = cachedHeroPortrait(look);
   return `<img class="${escapeHtml(className)}" ${dynamic ? 'data-hero-portrait' : ''} ${cached ? 'data-portrait-ready="true"' : ''} data-look='${escapeHtml(JSON.stringify(look))}' src="${cached || previewAsset(`portraits/${look.persona}.webp`)}" alt="${escapeHtml(alt)}" width="256" height="384" loading="${large ? 'eager' : 'lazy'}" decoding="async" />`;
 }
 

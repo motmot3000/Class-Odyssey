@@ -86,7 +86,9 @@ def apply_body_shape(obj,gender,revision='v1'):
         if vertex.index in protected:
             continue
         source=matrix @ vertex.co
-        target=(athletic_body_point if revision=='v2' else body_shape_point)(source,gender)
+        field={'v2':athletic_body_point,'stylized':stylized_body_point,
+           'stylized-plain':(lambda p,g:stylized_body_point(p,g,False))}.get(revision,body_shape_point)
+        target=field(source,gender)
         if (target-source).length>.000001:count+=1
         vertex.co=inverse @ target
     if count:
@@ -95,3 +97,42 @@ def apply_body_shape(obj,gender,revision='v1'):
         obj.data.normals_split_custom_set([source_normals[loop.index] if loop.vertex_index in protected else (0,0,0) for loop in obj.data.loops])
         obj.data.update()
     return count
+
+
+def stylized_body_point(point, gender, bust=True):
+    """Silhouette pass for the delivered stylized base.
+
+    Male: flatter rear and clearer, fit leg muscles while keeping the
+    delivered volumes. Female: the source torso is rebuilt before clothing
+    generation in refit_female_base; no extra deformation is applied here.
+    """
+    p = point.copy(); x, y, z = p
+    if not .28 < z < 1.455:
+        return p
+    edge = smooth((z - .28) / .06) * smooth((1.455 - z) / .045)
+    torso = (1 - smooth((abs(x) - .19) / .055)) * (1 - smooth((abs(y) - .17) / .05))
+    front = smooth((-y - .005) / .10)
+    rear = smooth(y / .085)
+
+    def band(center, width):
+        return math.exp(-((z - center) / width) ** 4)
+
+    if gender == 'boy':
+        # Flatter glutes plus a narrower pelvis: masculine, not bulky.
+        seat = band(.875, .095) * rear * torso * edge
+        p.y *= 1 - .26 * seat
+        hip = band(.89, .085) * torso * edge
+        p.x *= 1 - .030 * hip
+        # Fit legs: slight taper under the hip, quadriceps and calf volume,
+        # and no change to the boots or the ankles.
+        thigh = band(.760, .120) * (1 - smooth((abs(x) - .185) / .045)) * edge
+        sign = 1 if x >= 0 else -1
+        p.x += (x - sign * .098) * -.045 * thigh
+        quad = band(.735, .085) * math.exp(-((abs(x) - .088) / .045) ** 2) * front * edge
+        p.y -= .0042 * quad
+        calf = band(.430, .070) * math.exp(-((abs(x) - .083) / .040) ** 2) * edge
+        p.y -= .0036 * calf * front
+        p.x += (x - (1 if x >= 0 else -1) * .083) * .040 * calf
+    # Female anatomy is rebuilt on the source mesh by refit_female_base before
+    # garments are generated; applying another field here would double it.
+    return p

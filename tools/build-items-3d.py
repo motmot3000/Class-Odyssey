@@ -23,7 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # previous face reshaping, eye swap or body deformation. It never overwrites
 # assets/items-3d, so the proposal can be inspected before any integration.
 STYLIZED = bool(os.environ.get('STYLIZED'))
-OUT = ROOT / 'assets' / ('character-stylized' if STYLIZED else 'items-3d')
+# STYLIZED_OUT lets a review build go to its own folder so the atelier can
+# show it before anything is integrated into the live base.
+OUT = ROOT / 'assets' / (os.environ.get('STYLIZED_OUT', 'character-stylized') if STYLIZED else 'items-3d')
 SOURCES = ROOT / 'assets' / 'items-3d' / 'sources'
 CONTRACT = json.loads((SOURCES / 'manifest.json').read_text())
 OUT.mkdir(parents=True, exist_ok=True)
@@ -39,7 +41,18 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v1' if STYLIZED else 'catalogue-v7-approved-bases'
+APPEARANCE_REVISION = 'stylized-v4' if STYLIZED else 'catalogue-v8-scoped-cosmetics'
+# Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
+# build to a comma-separated subset; an empty value ships a shaved head only.
+# Unset keeps every authored cut for studio experiments.
+HAIR_ITEMS = ['short', 'long', 'curly', 'braided', 'royal-hair']
+if 'HAIR_ITEMS' in os.environ:
+    _wanted = {name.strip() for name in os.environ['HAIR_ITEMS'].split(',') if name.strip()}
+    HAIR_ITEMS = [name for name in HAIR_ITEMS if name in _wanted]
+# Delivered cuts (source file, item id), fitted to every head. Authored-in-
+# Blender families are sculpted per item id.
+SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short')]
+SCULPTED_HAIR = ['curly', 'braided', 'royal-hair']
 REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
 HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
 # Validated face, eye and expression maps. The frozen snapshots in
@@ -52,6 +65,7 @@ WARM_EYES = STUDY / 'warm-eyes'
 # Single source of truth for the validated body silhouettes.
 sys.path.insert(0, str(ROOT / 'tools' / 'blender'))
 from refit_body_shapes import apply_body_shape
+from refit_female_base import rebuild_torso, clear_ear_space, swept_temple_locks, fit_posterior_hair
 
 
 def texture_node(mat, filename):
@@ -272,8 +286,8 @@ def make_surface_textures():
             ny = .025*np.sin(v*TAU*7+u*TAU)
             rough = .43 + .055*np.sin(flow*TAU) + .045*np.sin(v*TAU*3+u*11)
         else:
-            nx = .09*np.sin(u*TAU*126)*np.cos(v*TAU*126)
-            ny = .09*np.cos(u*TAU*126)*np.sin(v*TAU*126)
+            nx = .055*np.sin(u*TAU*26)*np.cos(v*TAU*26)
+            ny = .055*np.cos(u*TAU*26)*np.sin(v*TAU*26)
             rough = .85+.035*np.sin(u*TAU*23)*np.cos(v*TAU*27)
         nz = np.sqrt(1-nx*nx-ny*ny)
         normal = np.stack((nx*.5+.5, ny*.5+.5, nz*.5+.5, np.ones_like(u)), axis=-1)
@@ -626,31 +640,6 @@ def articulated_armour(shirt):
             obj['armour_construction']='articulated shoulder'
             line(side+' shoulder rolled rim',[tuple(p) for p in rows[-1]],.0017,edge)
             for p in [rows[1][2],rows[1][-3]]: ell('shoulder hinge rivet',p,(.003,.003,.003),GOLD,12)
-        sign=1 if side=='left' else -1
-        # Shin plates are shallow shaped shields, not solid ellipsoids.
-        heights=[.17,.23,.32,.40,.465]
-        widths=[.022,.030,.035,.034,.018]
-        rows=[]
-        for z,width in zip(heights,widths):
-            row=[]
-            for u in [-1+i*.1 for i in range(21)]:
-                x=sign*.128+width*u
-                hits=[]
-                for source in bases[persona]['surfaces']:
-                    hit,point,normal,index=source.ray_cast(Vector((x,-.5,z)),Vector((0,1,0)))
-                    if hit: hits.append(point.y)
-                y=min(hits)-.006 if hits else -.085
-                row.append((x,y,z))
-            rows.append(row)
-        greave=mesh(side+' contoured shin plate',[p for r in rows for p in r],
-                    [(j*21+i,j*21+i+1,(j+1)*21+i+1,(j+1)*21+i) for j in range(4) for i in range(20)],plate)
-        greave.modifiers.new('Shin plate thickness','SOLIDIFY').thickness=.003
-        greave['armour_construction']='contoured greave'
-        line(side+' shin centre flute',[(r[10][0],r[10][1]-.0016,r[10][2]) for r in rows[1:-1]],.0012,edge)
-        for edge_index in [0,-1]: line(side+' greave bound edge',[r[edge_index] for r in rows],.0015,GOLD)
-        for row in [rows[1],rows[-2]]:
-            for index in [2,-3]:
-                x,y,z=row[index];ell('greave fastening rivet',(x,y-.002,z),(.0025,.002,.0025),GOLD,12)
 
 
 def prepare():
@@ -674,6 +663,8 @@ def prepare():
             part = obj.get('part')
             if STYLIZED:
                 stylize_materials(obj)
+                if swap_clean_skin_maps(obj, gender):
+                    repair_skin_vertex_colours(obj)
             else:
                 refine_source_materials(obj, gender)
             # Skin, eyelids and eyeballs share the same facial field, so the
@@ -685,7 +676,10 @@ def prepare():
                     sculpt_head(obj, gender)
                     soften_face(obj, gender)
                     refine_eyelids(obj, gender)
-            if part == 'clothes' and 'shirt' in obj.name.lower():
+            is_shirt = part == 'clothes' and 'shirt' in obj.name.lower()
+            if STYLIZED and gender == 'girl' and (part == 'skin' or is_shirt):
+                rebuild_torso(obj, garment=is_shirt)
+            if is_shirt:
                 shirts.append(obj); continue
             if part not in ['skin','eyes','clothes']:
                 raise ValueError(f'Unclassified character source mesh: {obj.name}')
@@ -712,14 +706,13 @@ def garments(shirt):
     global slot, item
     slot = 'outfit'
     for item, color in [('starter', '#536776'), ('vocab-ranger', '#38634D'), ('grammar-mage', '#604571'),
-                        ('story-keeper', '#913E37'), ('honor-knight', '#375B80'),
-                        ('grand-archmage', '#453555'), ('realm-sovereign', '#853A42')]:
+                        ('story-keeper', '#913E37'), ('honor-knight', '#375B80')]:
         cloth = material(f'{item} / woven cloth', color, .92)
         surface_maps(cloth, OUT/'textures/cloth-normal.png', OUT/'textures/cloth-roughness.png', .28)
         top = duplicate(shirt, 'fitted long-sleeve tunic', cloth)
         trim_under_belt(top)
         cloth_uv(top)
-        hem = .83 if item in ['starter', 'vocab-ranger'] else .42 if item in ['grammar-mage', 'grand-archmage'] else .67
+        hem = .83 if item in ['starter', 'vocab-ranger'] else .42 if item == 'grammar-mage' else .67
         # A close-cut tunic below the waist, not the previous rigid flared skirt.
         rx = .204 if persona == 'male' else .194
         ry = .169 if persona == 'male' else .160
@@ -733,33 +726,37 @@ def garments(shirt):
                     [(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)], LEATHER)
         belt.modifiers.new('Leather band thickness','SOLIDIFY').thickness=.003
         line('belt upper stitching', upper, .00065, GOLD, True)
-        front = min(y for x, y, z in belt_points)
-        box('belt buckle', (0, front - .007, 1.035), (.044, .009, .035), GOLD, .003)
-        box('buckle inset', (0, front - .013, 1.035), (.030, .003, .023), LEATHER, .001)
+        if STYLIZED and persona == 'female':
+            # Seat the buckle on the actual band midpoint, including its slope.
+            # Its back embeds in the leather instead of hovering in front.
+            lo, hi = Vector(lower[3*n//4]), Vector(upper[3*n//4])
+            center = (lo+hi)*.5
+            angle = math.atan2(-(hi.y-lo.y), hi.z-lo.z)
+            normal = Vector((0,-math.cos(angle),-math.sin(angle)))
+            buckle = box('belt buckle', center+normal*.001, (.044,.007,.035), GOLD,.0015)
+            inset = box('buckle inset', center+normal*.004, (.030,.002,.023), LEATHER,.0007)
+            buckle.rotation_euler.x = inset.rotation_euler.x = angle
+        else:
+            front = min(y for x, y, z in belt_points)
+            box('belt buckle', (0, front - .007, 1.035), (.044, .009, .035), GOLD, .003)
+            box('buckle inset', (0, front - .013, 1.035), (.030, .003, .023), LEATHER, .001)
         if item == 'starter':
             # The base outfit stays plain: no neckerchief, scarf or pendant.
             pass
         else:
-            cape_mat = cloth if item in ['vocab-ranger', 'realm-sovereign'] else CHARCOAL
+            cape_mat = cloth if item == 'vocab-ranger' else CHARCOAL
             cape_hem = .73 if item == 'vocab-ranger' else .42
             rows = [(cape_hem, .30, .17, .105), (.80, .295, .185, .083), (1.12, .257, .166, .075), (1.37, .20, .13, .045), (1.438, .077, .078, .008)]
             cape = shell('draped travelling cape', rows, cape_mat, -.07, math.pi + .14, .008)
             for sign in [-1, 1]:
-                line('cape edge', [(sign * rx, cy - .01, z) for z, rx, ry, cy in rows], .004, GOLD if item in ['grand-archmage', 'realm-sovereign'] else LEATHER)
+                line('cape edge', [(sign * rx, cy - .01, z) for z, rx, ry, cy in rows], .004, LEATHER)
                 ell('cape clasp', (sign * .075, -.093, 1.408), (.015, .008, .015), GOLD)
-            if item in ['grammar-mage', 'grand-archmage']:
+            if item == 'grammar-mage':
                 for sign in [-1, 1]:
                     line('robe front embroidery', [(sign * .048, -.143, 1.375), (sign * .073, -.186, 1.21), (sign * .070, -.197, 1.045), (sign * .095, -.196, .78), (sign * .12, -.184, hem + .018)], .005, GOLD)
                 prism('arcane chest crystal', [(0, .04), (.025, 0), (0, -.04), (-.025, 0)], (0, -.192, 1.257), .018, GEM)
-            if item in ['story-keeper', 'honor-knight', 'realm-sovereign']:
+            if item in ['story-keeper', 'honor-knight']:
                 articulated_armour(shirt)
-            if item == 'grand-archmage':
-                shell('high ceremonial mantle', [(1.30, .265, .166, 0), (1.385, .205, .14, 0), (1.435, .079, .082, 0)], cloth)
-                ring('mantle gold edge', 0, 0, 1.30, .265, .166, .007, GOLD)
-            if item == 'realm-sovereign':
-                for i in range(18):
-                    a = -.15 + (math.pi + .3) * i / 17
-                    ell('ivory cape collar', (.172 * math.cos(a), .132 * math.sin(a), 1.405), (.038, .032, .029), IVORY, 12)
     bpy.data.objects.remove(shirt, do_unlink=True)
 
 
@@ -854,8 +851,41 @@ def parted_fringe(short=False):
                   [.019, .016, .001], [.009, .007, .001], HAIR, True)
 
 
+def swap_clean_skin_maps(obj, gender):
+    """Stylized keeps the delivered art but swaps in the speck-free palettes."""
+    touched = False
+    for mat in obj.data.materials:
+        if not mat or not mat.use_nodes: continue
+        key = mat.get('base_skin_map')
+        if not key: continue
+        shader = mat.node_tree.nodes.get('Principled BSDF')
+        if not shader: continue
+        filename = f'head-{gender}-medium.png' if key == 'head' else 'skin-medium.png'
+        stem = filename[:-4]
+        for node in mat.node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.image and stem in node.image.name:
+                node.image = bpy.data.images.load(str(REFINED / filename), check_existing=False)
+                node.image.name = f'clean / {filename}'
+                mat['clean_skin_before'] = filename
+                touched = True
+        if not touched:
+            print('SKIN_SWAP_MISS', obj.name[:30], mat.name[:26], flush=True)
+        mat['clean_skin_revision'] = 'characters-refit-v1-clean'
+    return touched
+
+
+def repair_skin_vertex_colours(obj):
+    """Stray black corners on the delivered skin read as dotted scars."""
+    fixed = 0
+    for layer in obj.data.color_attributes:
+        for entry in layer.data:
+            if sum(entry.color[:3])/3 < .5:
+                entry.color = (1.0, 1.0, 1.0, entry.color[3]); fixed += 1
+    if fixed: print('VCOL_REPAIR', obj.name[:34], fixed, flush=True)
+
+
 def complete_back_hair(hair):
-    """A fitted, combed underlayer behind Mila's approved outer locks.
+    """A fitted, combed underlayer behind the approved outer locks.
 
     The supplied cut leaves the occiput exposed at the nape. This smooth
     underlayer closes it while every validated outer strand keeps its place.
@@ -867,8 +897,10 @@ def complete_back_hair(hair):
         for i in range(cols+1):
             a = math.pi*i/cols
             ripple = .0009*math.sin(a*44 + theta*3)
-            vertices.append(((.118+ripple)*math.sin(theta)*math.cos(a),
-                             -.012+(.134+ripple)*math.sin(theta)*math.sin(a),
+            # Keep the side edge inside the scalp, under the supplied locks.
+            # The old .118 side radius exposed a rectangular plate at the ear.
+            vertices.append(((.095+ripple)*math.sin(theta)*math.cos(a),
+                             -.012+(.128+ripple)*math.sin(theta)*math.sin(a),
                              1.625+.147*math.cos(theta)))
     for j in range(rows-1):
         for i in range(cols):
@@ -876,7 +908,7 @@ def complete_back_hair(hair):
             faces.append((p, p+cols+1, p+cols+2, p+1))
     material_node = hair.data.materials[0] if hair.data.materials else None
     cap = mesh('filled posterior hair', vertices, faces, material_node)
-    cap['template_persona'] = hair.get('template_persona')
+    if hair.get('template_persona'): cap['template_persona'] = hair['template_persona']
     cap['hair_repair'] = 'Fitted underlayer closes the exposed occiput without changing approved outer locks'
     return cap
 
@@ -886,7 +918,9 @@ def hairstyles(source):
     for pieces in source.values():
         for obj in pieces: bpy.data.objects.remove(obj, do_unlink=True)
     slot = 'hair'
-    for item in ['short', 'long', 'curly', 'braided', 'royal-hair']:
+    # Only the authored-in-Blender families are sculpted here. Short and Long
+    # come from the delivered cuts below, so both characters share one styling.
+    for item in [name for name in HAIR_ITEMS if name in SCULPTED_HAIR]:
         scalp(item == 'curly')
         if item == 'curly':
             # Continuous fine irregular curl volume, without repeated stamped
@@ -933,13 +967,13 @@ def hairstyles(source):
                 tress('tapered braid end', [(sign*.122, .064, 1.248), (sign*.123, .064, 1.222), (sign*.115, .067, 1.203)],
                       [.012, .015, .001], [.009, .009, .001], HAIR)
     bpy.context.view_layer.update()
-    # Refit base cuts: the supplied hairstyles replace one persona's default
-    # cut at a time; the other persona keeps the sculpted catalogue hair.
-    for obj in objects:
-        if obj.get('shop_slot') != 'hair': continue
-        if obj.get('shop_id') == 'long': obj['template_persona'] = 'male'
-        elif obj.get('shop_id') == 'short': obj['template_persona'] = 'female'
-    for gender, persona, hair_id in [('girl', 'female', 'long'), ('boy', 'male', 'short')]:
+    # The delivered cuts are shared by both personas: no `template_persona`, so
+    # `fit_equipment` fits the same Long (girl source) and Short (boy source) to
+    # each head through that character's hat-seat transform. A boy wearing Long
+    # gets the girl's default cut adapted to his head, and vice versa.
+    use_supplied_hair = os.environ.get('HAIR_SUPPLIED', '1') != '0'
+    supplied = [entry for entry in SUPPLIED_HAIR if entry[1] in HAIR_ITEMS] if use_supplied_hair else []
+    for gender, hair_id in supplied:
         item = hair_id
         before = set(bpy.context.scene.objects)
         bpy.ops.import_scene.gltf(filepath=str(HAIR_REFIT / f'{gender}.glb'))
@@ -953,14 +987,14 @@ def hairstyles(source):
             obj.data.transform(matrix)
             obj.matrix_world = Matrix.Identity(4)
             tag(obj, f'{gender} / supplied hairstyle', hair_material)
-            obj['template_persona'] = persona
         for obj in imported:
             if obj.type != 'MESH': bpy.data.objects.remove(obj, do_unlink=True)
-    # Close the exposed occiput behind Mila's approved outer locks with a
-    # fitted, combed underlayer. The validated outer strands stay untouched.
-    slot, item = 'hair', 'long'
-    complete_back_hair(next(obj for obj in objects if obj.get('shop_slot') == 'hair'
-                            and obj.get('shop_id') == 'long' and obj.get('template_persona') == 'female'))
+    # Close the exposed occiput behind the approved outer locks with a fitted,
+    # combed underlayer. The validated outer strands stay untouched.
+    if use_supplied_hair and 'long' in HAIR_ITEMS:
+        slot, item = 'hair', 'long'
+        complete_back_hair(next(obj for obj in objects if obj.get('shop_slot') == 'hair'
+                                and obj.get('shop_id') == 'long'))
     bpy.context.view_layer.update()
     # Hats compress and cover the crown; open crowns preserve the coiffure.
     for original in [o for o in objects if o.get('shop_slot') == 'hair']:
@@ -1255,11 +1289,30 @@ def export():
     bpy.context.view_layer.objects.active = objects[0]
     bpy.ops.object.convert(target='MESH')
     if STYLIZED:
-        # Keep the delivered silhouette. Mila only receives the light feminine
-        # field (hips, waist, chest, arms); Noa stays exactly as delivered.
+        # Mila's surface is rebuilt before wardrobe fitting, so shirts, belts
+        # and armour all follow the same base. No second additive chest pass.
+        # Both personas wear the shared cuts, so the ear clearance, the fitted
+        # occiput and the temple locks are applied per character against that
+        # character's own skin.
+        skins = {obj.get('fit_persona'): obj for obj in bpy.context.selected_objects
+                 if obj.get('part') == 'skin' and obj.get('fit_persona')}
+        hair_variants = {}
         for obj in bpy.context.selected_objects:
-            if obj.get('fit_persona') == 'female':
-                apply_body_shape(obj, 'girl', 'v1')
+            persona_id = obj.get('fit_persona')
+            gender = CHARACTERS.get(persona_id)
+            if not gender: continue
+            if obj.get('shop_slot') == 'hair':
+                if 'filled posterior hair' in obj.name and skins.get(persona_id):
+                    fit_posterior_hair(obj, skins[persona_id])
+                clear_ear_space(obj)
+                if obj.get('shop_id') == 'long' and 'supplied hairstyle' in obj.name:
+                    hair_variants[(persona_id, obj.get('hat_fit', 'open'))] = obj
+            elif gender == 'boy':
+                apply_body_shape(obj, gender, 'stylized')
+        for reference in hair_variants.values():
+            for obj in swept_temple_locks(reference):
+                objects.append(obj)
+                obj.select_set(True)
     else:
         refine_seat_silhouette(bpy.context.selected_objects)
         # Validated athletic silhouettes: the first pass softens the rear, the
@@ -1284,7 +1337,7 @@ def export():
               'parts': manifest, 'staticPose': True, 'headFit': HEAD_FIT, 'headFits': HEAD_FITS}
     (OUT / 'manifest.json').write_text(json.dumps(report, indent=2) + '\n')
     # Saved workspace opens on one coherent loadout, all alternatives in Outliner.
-    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'hat': 'explorer-cap', 'weapon': 'lore-lantern'}
+    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'hat': 'explorer-cap', 'weapon': 'no-weapon'}
     for obj in bpy.context.scene.objects:
         visible = defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit', 'open') == 'open' and obj.get('fit_persona','male') == 'male'
         obj.hide_render = not visible
@@ -1333,8 +1386,10 @@ HAIR.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default
 for persona in CHARACTERS:
     garments(bases[persona]['shirt'])
 persona = None
-hairstyles({})
+# Haircuts under sign-off: HAIR_ITEMS decides which families ship. The hair
+# category stays in the game either way, with the shaved head always available.
+if HAIR_ITEMS:
+    hairstyles({})
 hats()
-weapons()
 fit_equipment()
 export()

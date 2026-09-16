@@ -5,17 +5,46 @@
 ### Base de personnage live
 
 Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
-`assets/character-stylized/catalogue.glb` (`stylized-v1`) via
+`assets/character-stylized/catalogue.glb` (`stylized-v4`) via
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v7-approved-bases`) reste la référence de la chaîne d'outils et des
+(`catalogue-v8-scoped-cosmetics`) reste la référence de la chaîne d'outils et des
 tests.
+
+Le **catalogue de cosmétiques est réduit** :
+
+- **Tenues** : Scout, Ranger, Mage, Guerrier (niveau 4, 55) et Chevalier
+  (niveau 6, 75). Archimage et Roi sont retirés ; le **titre** Roi reste.
+  Guerrier et Chevalier n'ont plus de jambières.
+- **Objets** : catégorie retirée (armes, boucliers, livre, lanterne). L'état
+  interne `no-weapon` subsiste pour les sauvegardes, sans onglet.
+- **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
+  personnages — un garçon en Long reçoit la coupe longue livrée adaptée à sa
+  tête, une fille en Short la coupe courte livrée adaptée à la sienne. **Bald**
+  (niveau 2, 10) et **Afro** (niveau 3, 30) sont les premiers déblocages.
+  Braids et Royal Hair sont retirés.
+- **Visages** : catégorie conservée mais vide ; l'expression vient de la base 3D.
+- **Teints** : tatouages et Peau dorée retirés ; les cinq teints naturels
+  restent.
+- **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
+  une identité visuelle propre (accent et badge distincts, `data-title-id`).
+
+Les coupes partagées utilisent les deux coiffures livrées
+(`SUPPLIED_HAIR`), ajustées à chaque tête par la transformation du siège de
+chapeau ; `SCULPTED_HAIR` reste réservé aux familles sculptées dans Blender.
+`HAIR_ITEMS=short,long,curly` limite le build à ces trois familles.
+
+La **couleur de peau** est fonctionnelle : une seule peau est cuite (médium) et
+le viewer multiplie son albédo par le teint cible (`SKIN_TONE_COLORS` dans
+`items-3d-model.mjs`), corps, visage et pont de cou. Le teint se choisit à la
+création (console professeur), dans la section Peau du dressing et sous l'onglet
+Peaux de la boutique.
 
 Pour reconstruire la base stylisée :
 
 ```sh
-STYLIZED=1 blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
+STYLIZED=1 HAIR_ITEMS=short,long,curly blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
 ```
 
 L'atelier autonome peut inspecter n'importe quelle base : `items-3d.html?model=/assets/character-stylized/catalogue.glb`.
@@ -26,16 +55,16 @@ personnage ne peut donc plus apparaître avant le rendu live.
 
 ### Détails
 
-La passe `catalogue-v7-approved-bases` intègre les visages et les silhouettes
+La passe `catalogue-v8-scoped-cosmetics` intègre les visages et les silhouettes
 validés. Les cartes approuvées de l'expression Douce et les yeux de référence
 remplacent les précédentes ; la seconde passe de corps applique les morphologies
 sportives (fesses moins projetées, épaules/torse/bras plus dessinés chez Noa,
 hanches et cuisses plus pleines chez Mila) en protégeant tout ce qui dépasse
 1,455 m. Les géométries source du corps et le contrat d'ancrage restent
 inchangés.
-La taille des sept tenues suit désormais le contour réel de la ceinture,
-sans bord elliptique rapporté. Warrior, Knight et King portent des plaques
-ajustées, des lames d'épaule articulées et des jambières projetées sur les jambes.
+La taille des cinq tenues suit désormais le contour réel de la ceinture,
+sans bord elliptique rapporté. Guerrier et Chevalier portent des plaques
+ajustées et des lames d'épaule articulées, sans jambières.
 
 Les cartes de classe et la sélection d’élève sont rendues depuis le même
 catalogue que le workshop. Deux portraits actuels servent de secours, puis

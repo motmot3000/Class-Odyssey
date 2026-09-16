@@ -2,7 +2,7 @@
  * the domain enforces purchases, and the runtime owns the shared 3D canvas.
  */
 
-import { HATS, HAIRS, SKINS, WEAPONS, HAIR_COLORS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, HAIR_COLORS, SKIN_TONES, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
@@ -64,6 +64,9 @@ export function shopPreviewItem(pupil, ui = {}) {
 
 export function shopPreviewLook(pupil, ui = {}) {
   const item = shopPreviewItem(pupil, ui);
+  // Skin tones have no mesh of their own: show the equipped hero wearing the
+  // tone, so the swatch is not the only feedback.
+  if (item?.type === 'tone') return { ...gameLook(pupil), tone: item.id };
   if (!isModeledItem(item)) return null;
   return { ...gameLook(pupil, { [SHOP_FIELD[item.type]]: item.id }), preview: { slot:item.type, id:item.id } };
 }
@@ -74,7 +77,8 @@ export function cosmeticChangesFromDraft(draft = {}) {
     ...(draft.hat ? { hat: draft.hat } : {}),
     ...(draft.weapon ? { weapon: draft.weapon } : {}),
     ...(draft.hair ? { hair: draft.hair } : {}),
-    ...(draft.hairColor ? { hairColor: draft.hairColor } : {})
+    ...(draft.hairColor ? { hairColor: draft.hairColor } : {}),
+    ...(draft.skinTone ? { skinTone: draft.skinTone } : {})
   };
 }
 
@@ -341,9 +345,9 @@ export function renderSheikahPersonalize(pupil, ui) {
 
           ${section(t("app.gear.outfit"), SKINS, "skin")}
           ${section(t("app.gear.hat"), HATS, "hat")}
-          ${section(t("app.gear.item"), WEAPONS, "weapon")}
           ${section(t("app.gear.hair"), HAIRS, "hair")}
           ${section(t("app.gear.hairColor"), HAIR_COLORS, "hairColor")}
+          ${section(t("app.gear.skin"), SKIN_TONES, "skinTone")}
 
           <div class="atelier-actions">
             <button class="btn btn-primary btn-lg" data-action="sheikah-equip" data-pupil-id="${escapeHtml(pupil.id)}">${ico("rune")}<span>${t("sheikah.saveLook")}</span></button>

@@ -10,7 +10,6 @@ import { t, tItem } from "../i18n.mjs";
 export const SHOP_CATEGORIES = [
   { type: "outfit", label: () => t("shop.cat.outfit") },
   { type: "hat", label: () => t("shop.cat.hat") },
-  { type: "weapon", label: () => t("shop.cat.item") },
   { type: "hair", label: () => t("shop.cat.hair") },
   { type: "hairColor", label: () => t("shop.cat.hairColor") },
   { type: "face", label: () => t("shop.cat.face") },

@@ -1,5 +1,5 @@
 {
-  "appearanceRevision": "catalogue-v7-approved-bases",
+  "appearanceRevision": "catalogue-v8-scoped-cosmetics",
   "sourceRevision": "base-v2-2026-09",
   "sourcePose": {
     "armsFromT": 82,
@@ -20,15 +20,11 @@
     "outfit:starter": 14,
     "outfit:vocab-ranger": 24,
     "outfit:grammar-mage": 30,
-    "outfit:story-keeper": 146,
-    "outfit:honor-knight": 146,
-    "outfit:grand-archmage": 34,
-    "outfit:realm-sovereign": 182,
-    "hair:long": 423,
+    "outfit:story-keeper": 114,
+    "outfit:honor-knight": 114,
     "hair:curly": 6,
-    "hair:braided": 570,
-    "hair:royal-hair": 990,
-    "hair:short": 258,
+    "hair:long": 12,
+    "hair:short": 6,
     "hat:explorer-cap": 12,
     "hat:sunglasses": 14,
     "hat:feather-beret": 10,
@@ -36,14 +32,7 @@
     "hat:classy-hat": 8,
     "hat:gold-crown": 20,
     "hat:celestial-crown": 26,
-    "hat:steel-helm": 14,
-    "weapon:star-shield": 16,
-    "weapon:pencil-sword": 20,
-    "weapon:dual-daggers": 40,
-    "weapon:swords-and-shield": 56,
-    "weapon:lore-lantern": 18,
-    "weapon:spell-grimoire": 18,
-    "weapon:word-wand": 14
+    "hat:steel-helm": 14
   },
   "staticPose": true,
   "headFit": {

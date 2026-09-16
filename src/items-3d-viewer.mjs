@@ -1,8 +1,21 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION } from './items-3d-model.mjs';
+import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
 import { renderPortraitImage } from './portrait-image.mjs';
+
+// The single baked body is multiplied by the target skin tone. Ratios are
+// computed in linear working space so the result matches the tone palette.
+const skinTints = new Map();
+function skinTint(tone) {
+  const key = SKIN_TONE_COLORS[tone] ? tone : SKIN_TONE_NEUTRAL;
+  if (!skinTints.has(key)) {
+    const neutral = new THREE.Color(SKIN_TONE_COLORS[SKIN_TONE_NEUTRAL]);
+    const target = new THREE.Color(SKIN_TONE_COLORS[key]);
+    skinTints.set(key, new THREE.Color(target.r / neutral.r, target.g / neutral.g, target.b / neutral.b));
+  }
+  return skinTints.get(key);
+}
 
 export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = `/assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, theme = 'light' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
@@ -90,6 +103,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   function applyLook(next) {
     const wasPreview = Boolean(look.preview);
     look = { ...next };
+    const tint = skinTint(look.tone);
     ground.visible = !look.preview;
     model.userData.game_of_more_loadout = { ...look };
     model.traverse(obj => {
@@ -97,10 +111,16 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       if (obj.isMesh) {
         const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
         for (const mat of materials) {
-          if (!mat.name.startsWith('Hair /')) continue;
-          mat.color.set(HAIR_PALETTE[look.hairColor] || HAIR_PALETTE['brown-hair']);
-          if (mat.name.includes('shadow')) mat.color.multiplyScalar(.78);
-          if (mat.name.includes('highlight')) mat.color.multiplyScalar(1.18);
+          if (!mat) continue;
+          if (mat.name.startsWith('Hair /')) {
+            mat.color.set(HAIR_PALETTE[look.hairColor] || HAIR_PALETTE['brown-hair']);
+            if (mat.name.includes('shadow')) mat.color.multiplyScalar(.78);
+            if (mat.name.includes('highlight')) mat.color.multiplyScalar(1.18);
+            continue;
+          }
+          if (!mat.userData?.base_skin_map && !mat.userData?.skin_plain) continue;
+          if (!mat.userData.baseSkinColor) mat.userData.baseSkinColor = mat.color.clone();
+          mat.color.copy(mat.userData.baseSkinColor).multiply(tint);
         }
       }
     });

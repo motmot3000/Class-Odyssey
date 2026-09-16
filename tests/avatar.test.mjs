@@ -57,7 +57,7 @@ test("hair colors recolor every haircut without changing its geometry or leaking
 
 test("haircut previews use the equipped color and color previews use their own color", () => {
   const pupil = samplePupil({ hairColor: "blue-hair" });
-  assert.match(renderItemArt(getShopItem("curly"), pupil), /#487FB8/);
+  assert.match(renderItemArt(getShopItem("short"), pupil), /#487FB8/);
   const blond = renderItemArt(getShopItem("blond-hair"), pupil);
   assert.match(blond, /#D2AF5E/);
   assert.doesNotMatch(blond, /#487FB8/);

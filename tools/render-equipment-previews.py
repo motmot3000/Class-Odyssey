@@ -27,8 +27,12 @@ scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Medium High Contrast'
 camera.data.type = 'ORTHO'
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj.get('shop_slot')]
+def manifest_revision(path):
+    return json.loads(path.read_text())['appearanceRevision']
+
+
 report = {
-    'revision': 'catalogue-v7-approved-bases',
+    'revision': manifest_revision(ROOT/'assets/items-3d/manifest.json'),
     'catalogueSha256': hashlib.sha256((ROOT/'assets/items-3d/catalogue.glb').read_bytes()).hexdigest(),
     'renderSource': 'catalogue.blend',
     'items': {}, 'portraits': {}
@@ -36,7 +40,7 @@ report = {
 PORTRAITS_ONLY = '--portraits-only' in sys.argv
 if PORTRAITS_ONLY:
     report = json.loads((OUT/'manifest.json').read_text())
-report['portraitRevision'] = 'catalogue-v7-approved-bases-front-hd'
+report['portraitRevision'] = f"{manifest_revision(ROOT/'assets/character-stylized/manifest.json')}-front-hd"
 
 
 def set_visibility(predicate):
