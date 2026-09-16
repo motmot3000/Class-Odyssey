@@ -6,7 +6,7 @@ export const TEACHER_UNLOCK_MS = 5 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;
 
-export const MIN_PASSWORD_LENGTH = 4;
+export const MIN_PASSWORD_LENGTH = 10;
 export const MAX_PASSWORD_LENGTH = 128;
 
 function readStored(key) {

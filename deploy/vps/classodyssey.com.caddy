@@ -1,0 +1,26 @@
+# Live site: https://classodyssey.com/  (www redirects to the apex).
+#
+# The container publishes 127.0.0.1:5180 only, so this vhost is the single
+# public entry point. `security_headers` is the snippet in `security-headers.caddy`
+# (defined once in the VPS /etc/caddy/Caddyfile). HSTS is added here because the
+# apex is the canonical HTTPS origin.
+www.classodyssey.com {
+	import security_headers
+	redir https://classodyssey.com{uri} permanent
+}
+
+classodyssey.com {
+	import security_headers
+	header Strict-Transport-Security "max-age=31536000"
+	encode zstd gzip
+
+	# Game state is per-user and must never be cached by an intermediary.
+	@api path /api/*
+	header @api Cache-Control "no-store"
+
+	reverse_proxy 127.0.0.1:5180
+
+	log {
+		format json
+	}
+}

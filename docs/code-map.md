@@ -17,7 +17,7 @@
 | Authentication client | `src/session.mjs`, `src/api.mjs` | Session tokens, bounded API calls, offline verifier and account-bound teacher unlock |
 | Screens | `src/views/` | Escaped HTML; the active game screens live in `sheikah.mjs` |
 | Shared UI and languages | `src/ui.mjs`, `src/i18n*.mjs` | Icons, titles, stats and keyed FR/EN copy |
-| HTTP routes | `server/server.mjs` | Authentication, request validation, rate limits and revision conflict responses |
+| HTTP routes | `server/server.mjs` | Authentication, request validation, per-client rate limits (trust-proxy aware), account caps and revision conflict responses |
 | Disk persistence | `server/api.mjs` | Password hashing, token index, atomic writes and backup recovery |
 | Public files | `server/static.mjs` | Allowlisted paths, symlink checks, correct 404 responses and streamed assets |
 

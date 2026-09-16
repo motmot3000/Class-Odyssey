@@ -8,6 +8,10 @@ node_modules/
 preview-*.png
 step1-*.png
 
+# Scratch review catalogues built by the character pipeline. Regenerable and
+# never shipped; keeping them out of the repo also avoids huge untracked trees.
+/assets/character-review*/
+
 # État du jeu : les données vivent sur le serveur, jamais dans le dépôt.
 /data/
 server/data/

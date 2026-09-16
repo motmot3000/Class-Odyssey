@@ -1,13 +1,19 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { promisify } from "node:util";
 import { isStateDocument } from "../src/state-schema.mjs";
 
-const MIN_PASSWORD_LENGTH = 4;
+const MIN_PASSWORD_LENGTH = 10;
 const MAX_PASSWORD_LENGTH = 128;
 const MAX_DISPLAY_NAME_LENGTH = 60;
-const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
+const MAX_CLASS_NAME_LENGTH = 80;
+const MAX_ACCOUNTS = Number(process.env.MAX_ACCOUNTS || 500);
+const SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
 const DEFAULT_MAX_BACKUPS = 60;
+// Bound scrypt's memory so a burst of hashing cannot exhaust the container.
+const SCRYPT_OPTIONS = { maxmem: 64 * 1024 * 1024 };
+const scrypt = promisify(crypto.scrypt);
 
 function emptyState() {
   return {
@@ -92,31 +98,44 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     return null;
   }
 
-  function hashPassword(password) {
+  async function hashPassword(password) {
     const salt = crypto.randomBytes(16);
-    const derived = crypto.scryptSync(String(password), salt, 32);
+    const derived = await scrypt(String(password), salt, 32, SCRYPT_OPTIONS);
     return `scrypt$${salt.toString("hex")}$${derived.toString("hex")}`;
   }
 
-  function passwordMatches(password, hash) {
-    const [scheme, saltHex, expectedHex] = String(hash || "").split("$");
-    if (scheme !== "scrypt" || !/^[0-9a-f]{32}$/.test(saltHex) || !/^[0-9a-f]{64}$/.test(expectedHex)) return false;
-    const actual = crypto.scryptSync(String(password), Buffer.from(saltHex, "hex"), 32);
-    return crypto.timingSafeEqual(actual, Buffer.from(expectedHex, "hex"));
+  // Startup-only: the founder hash is computed once, before the server accepts
+  // requests, so a synchronous derivation here never blocks a live event loop.
+  function hashPasswordSync(password) {
+    const salt = crypto.randomBytes(16);
+    const derived = crypto.scryptSync(String(password), salt, 32, SCRYPT_OPTIONS);
+    return `scrypt$${salt.toString("hex")}$${derived.toString("hex")}`;
   }
 
-  function newAccount(username, displayName, password, role = "teacher") {
+  async function passwordMatches(password, hash) {
+    const [scheme, saltHex, expectedHex] = String(hash || "").split("$");
+    if (scheme !== "scrypt" || !/^[0-9a-f]{32}$/.test(saltHex) || !/^[0-9a-f]{64}$/.test(expectedHex)) return false;
+    const expected = Buffer.from(expectedHex, "hex");
+    const actual = await scrypt(String(password), Buffer.from(saltHex, "hex"), 32, SCRYPT_OPTIONS);
+    return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+  }
+
+  function buildAccount(username, displayName, role, hash) {
     const now = new Date().toISOString();
     return {
       id: crypto.randomBytes(12).toString("hex"),
       username,
       displayName,
       role,
-      hash: hashPassword(password),
+      hash,
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null
     };
+  }
+
+  async function newAccount(username, displayName, password, role = "teacher") {
+    return buildAccount(username, displayName, role, await hashPassword(password));
   }
 
   function validAccountsIndex(index) {
@@ -229,7 +248,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     if (problem) throw new Error(`invalid founder credentials: ${problem}`);
 
     ensureDir(dataDir);
-    const account = newAccount(username, `Classes de ${username}`, founderPassword, "admin");
+    const account = buildAccount(username, `Classes de ${username}`, "admin", hashPasswordSync(founderPassword));
     const directory = accountDirectory(account.id);
     ensureDir(path.join(directory, "backups"));
     const legacyState = path.join(dataDir, "state.json");
@@ -337,6 +356,6 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     publicAccount,
     emptyState,
     ensureDir,
-    limits: { MAX_DISPLAY_NAME_LENGTH }
+    limits: { MAX_DISPLAY_NAME_LENGTH, MAX_CLASS_NAME_LENGTH, MAX_ACCOUNTS }
   };
 }

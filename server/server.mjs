@@ -13,7 +13,9 @@ function sendJson(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
-    "Cache-Control": "no-store"
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
   });
   res.end(body);
 }
@@ -61,7 +63,27 @@ async function readJsonObject(req, res, limit = 4 * 1024) {
 
 const stringField = (payload, key) => (typeof payload[key] === "string" ? payload[key] : "");
 
+// Strip control and bidirectional characters that could spoof the interface.
+const UNSAFE_NAME_CHARS = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+function cleanDisplayName(value) {
+  return String(value || "").replace(UNSAFE_NAME_CHARS, "").replace(/\s+/g, " ").trim();
+}
+
+// Behind the VPS reverse proxy every socket comes from 127.0.0.1, so the client
+// address must come from the proxy headers. Opt in only when a trusted proxy
+// fronts the server (TRUST_PROXY=1); otherwise a client could spoof the header.
+// The container port is published on the loopback, so only Caddy can reach it.
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 function clientAddress(req) {
+  if (TRUST_PROXY) {
+    const forwarded = req.headers["x-forwarded-for"];
+    if (typeof forwarded === "string" && forwarded.length) {
+      const first = forwarded.split(",")[0].trim();
+      if (first) return first.slice(0, 64);
+    }
+    const realIp = req.headers["x-real-ip"];
+    if (typeof realIp === "string" && realIp.trim()) return realIp.trim().slice(0, 64);
+  }
   return req.socket.remoteAddress || "unknown";
 }
 
@@ -143,7 +165,7 @@ export function createGameServer({
     if (!payload) return;
     const username = api.normalizeUsername(stringField(payload, "username"));
     const password = stringField(payload, "password");
-    const displayName = stringField(payload, "displayName").trim() || username;
+    const displayName = cleanDisplayName(stringField(payload, "displayName")) || username;
     const problem = api.usernameProblem(username) || api.passwordProblem(password);
     if (problem) {
       sendJson(res, 400, { error: problem });
@@ -154,13 +176,17 @@ export function createGameServer({
       return;
     }
     const index = api.readAccounts();
+    if (Object.keys(index.accounts).length >= api.limits.MAX_ACCOUNTS) {
+      sendJson(res, 403, { error: "account limit reached" });
+      return;
+    }
     if (api.findByUsername(index, username)) {
       // Match the expensive successful path and avoid confirming account existence.
-      api.hashPassword(password);
+      await api.hashPassword(password);
       sendJson(res, 400, { error: "account could not be created" });
       return;
     }
-    const account = api.newAccount(username, displayName, password);
+    const account = await api.newAccount(username, displayName, password);
     api.createAccountWithState(index, account);
     sendJson(res, 201, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(account) });
   }
@@ -174,8 +200,8 @@ export function createGameServer({
     const index = api.readAccounts();
     const account = api.findByUsername(index, username);
     let matches = false;
-    if (account) matches = api.passwordMatches(stringField(payload, "password"), account.hash);
-    else api.hashPassword(stringField(payload, "password"));
+    if (account) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
+    else await api.hashPassword(stringField(payload, "password"));
     if (!matches) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
@@ -198,7 +224,7 @@ export function createGameServer({
     // The request body may arrive after another request revoked this token.
     session = requireSession(req, res);
     if (!session) return;
-    if (!api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
+    if (!await api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
@@ -216,7 +242,7 @@ export function createGameServer({
     if (!payload) return;
     session = requireSession(req, res);
     if (!session) return;
-    if (!api.passwordMatches(stringField(payload, "current"), session.account.hash)) {
+    if (!await api.passwordMatches(stringField(payload, "current"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
@@ -229,7 +255,7 @@ export function createGameServer({
     }
     const index = api.readAccounts();
     const updatedAt = new Date().toISOString();
-    index.accounts[session.account.id] = { ...session.account, hash: api.hashPassword(next), updatedAt };
+    index.accounts[session.account.id] = { ...session.account, hash: await api.hashPassword(next), updatedAt };
     api.writeAccounts(index);
     api.revokeAccountTokens(session.account.id, session.token);
     limiter.clear(rateKey);
@@ -305,7 +331,7 @@ export function createGameServer({
       sendJson(res, 404, { error: "account not found" });
       return;
     }
-    index.accounts[accountId] = { ...target, hash: api.hashPassword(password), updatedAt: new Date().toISOString() };
+    index.accounts[accountId] = { ...target, hash: await api.hashPassword(password), updatedAt: new Date().toISOString() };
     api.writeAccounts(index);
     api.revokeAccountTokens(accountId);
     sendJson(res, 200, { ok: true });

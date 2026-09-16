@@ -8,8 +8,8 @@
 import { getLang, t } from "../i18n.mjs";
 
 const EMAIL = "thomas.walter.wunsche@gmail.com";
-const SITE = "https://classquest.lecagibi.ch";
-const SITE_LABEL = "classquest.lecagibi.ch";
+const SITE = "https://classodyssey.com/";
+const SITE_LABEL = "classodyssey.com";
 const MAILTO = `<a href="mailto:${EMAIL}">${EMAIL}</a>`;
 
 const MENTIONS_LEGALES = {
