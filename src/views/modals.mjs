@@ -54,6 +54,19 @@ export function renderAddPupilDialog(classroom) {
   </dialog>`;
 }
 
+export function renderNewClassDialog() {
+  return `<dialog class="dialog dialog-new-class" aria-labelledby="new-class-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="new-class-title">${t('class.new.title')}</h2>
+    <p class="panel-note">${t('class.new.hint')}</p>
+    <form class="add-form" data-action="create-class">
+      <label class="field"><span>${t('class.new.name')}</span><input id="new-class-name" name="name" autocomplete="off" required autofocus /></label>
+      <label class="field"><span>${t('class.new.students')}</span><textarea name="students" rows="5" placeholder="${t('class.new.studentsPlaceholder')}"></textarea></label>
+      <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.new.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
+    </form>
+  </dialog>`;
+}
+
 // Read-only hero details remain safe to display on a classroom touch screen.
 export function renderPupilDialog(pupil) {
   const progress = xpProgress(pupil);

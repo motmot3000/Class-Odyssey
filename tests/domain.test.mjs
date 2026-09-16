@@ -8,6 +8,7 @@ import {
   changeHp,
   changeHpMany,
   clearSelection,
+  createClass,
   createInitialState,
   getCurrentClass,
   getNextReward,
@@ -94,6 +95,18 @@ test("a girl defaults to long hair and keeps her skin tone", () => {
   assert.equal(pupil.skinTone, "brown");
   assert.equal(pupil.hair, "long");
   assert.equal(pupil.face, "smile");
+});
+
+test("a new class can be created with a name and its first students", () => {
+  let state = createInitialState({ samples: false });
+  const before = state.classes.length;
+  state = createClass(state, { name: "  9P  ", students: ["Zoé", "Max", "   "] });
+  const created = state.classes.at(-1);
+  assert.equal(state.classes.length, before + 1);
+  assert.equal(created.name, "9P");
+  assert.equal(state.activeClassId, created.id);
+  assert.deepEqual(created.pupils.map((pupil) => pupil.name), ["Zoé", "Max"]);
+  assert.deepEqual(createClass(state, { name: "   " }), state);
 });
 
 test("faces are paused and the shared haircuts ship with Bald and the Afro", () => {

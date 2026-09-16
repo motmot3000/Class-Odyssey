@@ -243,6 +243,29 @@ export function addPupil(state, classId, { name, gender, skinTone } = {}) {
   }));
 }
 
+/* Selecting a class focuses its board and clears any cross-class selection. */
+export function setActiveClass(state, classId) {
+  if (!getClassById(state, classId)) return state;
+  return {
+    ...state,
+    activeClassId: classId,
+    selectedPupilId: null,
+    selectMode: false,
+    selectedPupilIds: []
+  };
+}
+
+/* A brand-new classroom starts empty unless the teacher lists student names.
+ * The new class becomes active so its roster is immediately ready to fill. */
+export function createClass(state, { name, students = [] } = {}) {
+  const trimmedName = String(name || "").trim();
+  if (!trimmedName) return state;
+
+  const classroom = { id: cryptoId(), name: trimmedName, pupils: [] };
+  const next = setActiveClass({ ...state, classes: [...state.classes, classroom] }, classroom.id);
+  return students.reduce((acc, studentName) => addPupil(acc, classroom.id, { name: studentName }), next);
+}
+
 export function removePupil(state, pupilId) {
   return {
     ...state,

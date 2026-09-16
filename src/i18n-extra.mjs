@@ -1,6 +1,14 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
   "console.accessRemaining": ["Verrouillage auto dans {time}", "Auto lock in {time}"],
+  "class.new.title": ["Nouvelle classe", "New class"],
+  "class.new.hint": ["Donne un nom à la classe et, si tu veux, la liste des élèves (un par ligne).", "Name the class and, optionally, list the students (one per line)."],
+  "class.new.name": ["Nom de la classe", "Class name"],
+  "class.new.students": ["Élèves (un par ligne)", "Students (one per line)"],
+  "class.new.studentsPlaceholder": ["Alex\nMia\nNoah", "Alex\nMia\nNoah"],
+  "class.new.submit": ["Créer la classe", "Create class"],
+  "class.new.nameRequired": ["Indique un nom de classe.", "Enter a class name."],
+  "notice.classCreated": ["Classe {name} créée.", "Class {name} created."],
   "console.accessExpired": ["Accès expiré — saisis le mot de passe pour continuer.", "Access expired — enter the password to continue."],
   "nav.class": ["Classe", "Class"],
   "nav.classes": ["Classe :", "Class:"],

@@ -12,6 +12,7 @@ import {
   changeHpMany,
   clearSelection,
   createInitialState,
+  createClass,
   getCurrentClass,
   getPupilById,
   getRewardsBetween,
@@ -54,7 +55,7 @@ import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderAddPupilDialog, renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
@@ -353,9 +354,9 @@ function updateClock() {
 // authorization. Recheck it on each mutation because an open screen can expire.
 const TEACHER_ACTIONS = new Set([
   "award-xp", "award-money", "hp-minus", "hp-plus", "heal-all",
-  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add"
+  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add", "add-class"
 ]);
-const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset"]);
+const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset", "create-class"]);
 function allowTeacherAction() {
   if (isAdultUnlocked()) return true;
   openTeacherGate();
@@ -640,6 +641,13 @@ const ACTIONS = {
     rememberStudent(null);
     state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
     navigate('#class');
+  },
+
+  // A new classroom is a teacher action: the "+" in the class menu opens a
+  // small form for the name and, optionally, the first students.
+  "add-class": () => {
+    disarmDanger();
+    showDialog(renderNewClassDialog(), 'add');
   },
 
   // Selecting a hero also focuses its details in the teacher console.
@@ -928,6 +936,29 @@ const FORMS = {
     if (returnToConsole) { ui.addFromConsole=false; openTeacherConsole(); }
     toast(t("notice.joined", { name, classroom: classroom.name }), "success");
     dialogRoot.querySelector('[data-action="focus-add"]')?.focus({ preventScroll: true });
+  },
+
+  "create-class": (form) => {
+    const data = new FormData(form);
+    const name = String(data.get("name") || "").trim();
+    if (!name) {
+      toast(t("class.new.nameRequired"), "info");
+      form.querySelector("#new-class-name")?.focus();
+      return;
+    }
+    const students = String(data.get("students") || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const next = createClass(state, { name, students });
+    if (next === state) return;
+    closeDialog({ resumeConsole:false });
+    ui.sheikahView = "board";
+    ui.draft = null;
+    rememberStudent(null);
+    commit(next);
+    navigate("#class");
+    toast(t("notice.classCreated", { name }), "success");
   },
 
   "rename-pupil": (form) => {
