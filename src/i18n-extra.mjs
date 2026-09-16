@@ -153,6 +153,12 @@ export const messages = {
   "domain.blue-hair.description": ["Des cheveux bleu électrique.", "Vivid blue hair."],
   "domain.yakuza-tattoos.name": ["Tatouages Yakuza", "Yakuza Tattoos"],
   "domain.yakuza-tattoos.description": ["Des tatouages traditionnels de style Yakuza.", "Traditional Yakuza-style tattoos."],
+  "footer.legal": ["Informations légales", "Legal information"],
+  "footer.mentions": ["Mentions légales", "Legal notice"],
+  "footer.privacy": ["Politique de confidentialité", "Privacy policy"],
+  "footer.rights": ["développé par Thomas Wünsche · Tous droits réservés.", "developed by Thomas Wünsche · All rights reserved."],
+  "doc.back": ["Retour", "Back"],
+  "doc.updated": ["Dernière mise à jour : {date}", "Last updated: {date}"],
 };
 
 // API error contracts stay stable. Only presentation is localized.
