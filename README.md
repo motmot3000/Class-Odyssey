@@ -1,4 +1,4 @@
-# ClassQuest
+# Class Odyssey
 
 For maintainers: [code map, data flow and build ownership](docs/code-map.md).
 

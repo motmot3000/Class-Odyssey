@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'assets/items-3d/previews'
-RAW = Path('/tmp/opencode/classquest-equipment-previews')
+RAW = Path('/tmp/opencode/class-odyssey-equipment-previews')
 report = json.loads((OUT/'manifest.json').read_text())
 portraits_only = '--portraits-only' in sys.argv
 for entry in ([] if portraits_only else list(report['items'].values())) + list(report['portraits'].values()):

@@ -1,15 +1,20 @@
-/* Static, light-only entry screen. In-game theme preferences are independent. */
+/* Static, light-only entry screen. In-game theme preferences are independent.
+   Habillage Class Odyssey : logo empilé, titres Chakra Petch, textes Barlow,
+   palette sauge / teal / or du pack de marque. */
 #app[data-view="welcome"] {
-  --welcome-ink: #193c32;
-  --welcome-muted: #526358;
-  --welcome-paper: #f9f8ee;
+  --welcome-ink: #101f25;
+  --welcome-text: #283d35;
+  --welcome-muted: #4a6055;
+  --welcome-paper: #f8f7ef;
   --welcome-rule: #d4d9ca;
-  --cyan: #285b46;
+  --welcome-teal: #1c5b56;
+  --welcome-gold: #ad7123;
+  --cyan: #1c5b56;
   --ink: var(--welcome-ink);
   --ink-2: var(--welcome-muted);
   --muted: var(--welcome-muted);
-  color: var(--welcome-ink);
-  background: #dce5cf;
+  color: var(--welcome-text);
+  background: #e7e9df;
   color-scheme: light;
   isolation: isolate;
 }
@@ -17,57 +22,72 @@
 .topbar-welcome::after { display: none; }
 .topbar-welcome .brand-logo { height: 40px; }
 .topbar-welcome .top-end { gap: 24px; padding-right: 60px; }
-.welcome-nav-link { color: var(--welcome-ink); text-decoration: none; font-weight: 600; padding-block: 12px; text-underline-offset: 5px; }
-.welcome-nav-link:hover { text-decoration: underline; }
+.welcome-nav-link { color: var(--welcome-text); text-decoration: none; font: 600 15px var(--font-ui); padding-block: 12px; text-underline-offset: 5px; }
+.welcome-nav-link:hover { text-decoration: underline; color: var(--welcome-teal); }
 .welcome-page { position: relative; min-height: 100svh; overflow: clip; padding: 142px clamp(24px,4.5vw,80px) 48px; }
-.welcome-landscape { position: absolute; inset: 0; z-index: -1; background: #d4dfc9; overflow: hidden; }
+.welcome-landscape { position: absolute; inset: 0; z-index: -1; background: #cfdcc4; overflow: hidden; }
 .welcome-landscape > img { width: 100%; height: 100%; object-fit: cover; object-position: center 54%; }
-.welcome-landscape::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg,rgba(243,246,224,.88),rgba(243,246,224,.48) 48%,rgba(243,246,224,.12)),linear-gradient(0deg,rgba(232,239,217,.55),transparent 45%); }
+.welcome-landscape::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg,rgba(231,233,223,.94),rgba(231,233,223,.6) 46%,rgba(231,233,223,.14)),linear-gradient(0deg,rgba(214,226,208,.55),transparent 48%); }
 .welcome-content { display: grid; grid-template-columns: minmax(0,1fr) minmax(330px,390px); align-items: center; gap: clamp(32px,5vw,88px); max-width: 1360px; min-height: calc(100svh - 190px); margin-inline: auto; }
 .welcome-intro { min-width: 0; }
-.welcome-intro h1 { font: 400 clamp(56px,6.1vw,88px)/1.025 "Marcellus",Georgia,serif; letter-spacing: -.035em; text-wrap: initial; overflow-wrap: normal; }
-.welcome-intro h1 span { color: #31583d; }
-.welcome-intro > p { max-width: 410px; margin-top: 22px; color: #304e3e; font-size: 18px; font-weight: 500; line-height: 1.65; }
+.welcome-brand { margin: 0 0 26px; }
+.welcome-lockup { display: block; width: clamp(220px,24vw,320px); height: auto; }
+.welcome-lockup-dark { display: none; }
+:root[data-theme="dark"] .welcome-lockup-light { display: none; }
+:root[data-theme="dark"] .welcome-lockup-dark { display: block; }
+.welcome-rule { display: block; width: 68px; height: 3px; margin: 0 0 18px; background: var(--welcome-gold); }
+.welcome-kicker { margin: 0 0 14px; font: 600 12.5px/1.35 var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--welcome-gold); }
+.welcome-intro h1 { margin: 0; font: 700 clamp(40px,5vw,66px)/1.06 var(--font-display); letter-spacing: -.01em; color: var(--welcome-ink); text-wrap: initial; overflow-wrap: normal; }
+.welcome-intro h1 span { color: var(--welcome-teal); }
+.welcome-intro > p { max-width: 430px; margin-top: 22px; color: var(--welcome-muted); font: 400 18px/1.6 var(--font-ui); }
 .welcome-mobile-enter { display: none; }
 .welcome-gate { min-width: 0; position: relative; }
-.welcome-gate .gate-card { position: relative; gap: 0; border: 0; border-radius: 12px; padding: 32px; background: var(--welcome-paper); box-shadow: 0 22px 70px rgba(20,44,31,.18); }
-.welcome-gate-seal { width: auto; height: 37px; margin-bottom: 18px; }
-.welcome-gate .gate-card h2 { font: 400 32px/1.18 "Marcellus",Georgia,serif; letter-spacing: -.025em; text-align: left; text-wrap: initial; }
-.welcome-gate .gate-lede { margin-top: 12px; max-width: 30ch; font-size: 15px; line-height: 1.6; }
+.welcome-gate .gate-card { position: relative; gap: 0; border: 1px solid rgba(28,91,86,.14); border-radius: 14px; padding: 32px; background: var(--welcome-paper); box-shadow: 0 22px 60px rgba(16,31,37,.16); }
+.welcome-gate-seal { width: auto; height: 38px; margin-bottom: 18px; }
+.welcome-gate-seal-dark { display: none; }
+:root[data-theme="dark"] .welcome-gate-seal-light { display: none; }
+:root[data-theme="dark"] .welcome-gate-seal-dark { display: block; }
+.welcome-gate .gate-card h2 { font: 700 30px/1.18 var(--font-display); letter-spacing: -.005em; text-align: left; color: var(--welcome-ink); text-wrap: initial; }
+.welcome-gate .gate-lede { margin-top: 12px; max-width: 30ch; font: 400 15px/1.6 var(--font-ui); color: var(--welcome-muted); }
 .welcome-gate .gate-tabs { margin: 26px 0 24px; border: 0; border-bottom: 1px solid var(--welcome-rule); border-radius: 0; overflow: visible; }
 .welcome-gate .gate-tabs button { font: 600 14px var(--font-ui); padding: 12px 4px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--welcome-muted); }
-.welcome-gate .gate-tabs button.is-active { border-bottom-color: #325c43; background: transparent; color: var(--welcome-ink); }
-.welcome-gate .gate-tabs button:hover:not(:disabled) { background: #edf0e3; }
+.welcome-gate .gate-tabs button.is-active { border-bottom-color: var(--welcome-teal); background: transparent; color: var(--welcome-ink); }
+.welcome-gate .gate-tabs button:hover:not(:disabled) { background: #eef0e6; }
 .welcome-gate .gate-form { gap: 18px; }
 .welcome-gate .field { gap: 7px; }
-.welcome-gate .field > span { font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #3c5344; }
-.welcome-gate .field input { min-height: 48px; background: #fff; color: #1b392d; border: 1px solid #c3ccbb; border-radius: 5px; padding: 11px 13px; caret-color: #31583d; }
+.welcome-gate .field > span { font: 500 13px var(--font-ui); letter-spacing: 0; text-transform: none; color: var(--welcome-text); }
+.welcome-gate .field input { min-height: 48px; background: #fff; color: #1b392d; border: 1px solid #c3ccbb; border-radius: 6px; padding: 11px 13px; caret-color: var(--welcome-teal); font-family: var(--font-ui); }
 .welcome-gate .field input:hover { border-color: #819a79; }
-.welcome-gate .field input:focus { border-color: #31583d; outline: 2px solid #31583d; outline-offset: 2px; }
-.welcome-gate .field-hint { margin-top: -12px; font-size: 12px; line-height: 1.45; }
-.welcome-gate .gate-form .btn-primary { justify-content: space-between; margin-top: 6px; min-height: 52px; padding: 14px 17px; background: #e5bb65; border: 1px solid #e5bb65; border-radius: 5px; color: #283723; font: 600 15px var(--font-ui); }
-.welcome-gate .gate-form .btn-primary:hover:not(:disabled) { background: #efcc80; border-color: #efcc80; color: #1a2e20; }
+.welcome-gate .field input:focus { border-color: var(--welcome-teal); outline: 2px solid var(--welcome-teal); outline-offset: 2px; }
+.welcome-gate .field-hint { margin-top: -12px; font: 400 12px/1.45 var(--font-ui); color: var(--welcome-muted); }
+.welcome-gate .gate-form .btn-primary { justify-content: space-between; margin-top: 6px; min-height: 52px; padding: 14px 17px; background: #f0b554; border: 1px solid #f0b554; border-radius: 8px; color: #101f25; font: 600 15px var(--font-ui); }
+.welcome-gate .gate-form .btn-primary:hover:not(:disabled) { background: #f5c878; border-color: #f5c878; color: #101f25; }
 .welcome-gate .btn-primary:disabled { opacity: .65; }
 .welcome-arrow { transform: rotate(180deg); }
-.welcome-account-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 22px; color: #566552; font-size: 11px; line-height: 1.5; }
+.welcome-account-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 22px; color: #566552; font: 400 11px/1.5 var(--font-ui); }
 .welcome-account-note .icon { width: 14px; height: 14px; }
+.welcome-disclaimer { margin: 16px 0 0; padding-top: 14px; border-top: 1px dashed var(--welcome-rule); color: #6b7866; font: 400 11.5px/1.5 var(--font-ui); text-align: center; }
+.welcome-beta { display: inline-block; margin-right: 6px; padding: 2px 7px; border-radius: 999px; background: #e7e9df; border: 1px solid #c3ccbb; color: var(--welcome-teal); font: 700 10px/1.4 var(--font-display); letter-spacing: .12em; text-transform: uppercase; vertical-align: 1px; }
 .welcome-gate .gate-error { margin-top: 18px; color: #792f23; background: #f9e7dc; border: 1px solid #c47e61; }
-.welcome-page :focus-visible { outline-color: #31583d; }
+.welcome-page :focus-visible { outline-color: var(--welcome-teal); }
 body:has(#app[data-view="welcome"]) #language-switcher { position: absolute; top: 28px; right: clamp(24px,4.5vw,80px); bottom: auto; z-index: 40; }
-body:has(#app[data-view="welcome"]) #lang-toggle { background: rgba(250,249,231,.85); border-color: rgba(43,80,54,.25); color: #193c32; box-shadow: none; }
+body:has(#app[data-view="welcome"]) #lang-toggle { background: rgba(248,247,239,.9); border-color: rgba(28,91,86,.25); color: var(--welcome-ink); box-shadow: none; }
 @media (min-width: 761px) and (max-height: 950px) {
   .welcome-page { padding-top: 112px; }
-  .welcome-intro h1 { font-size: clamp(50px,5.4vw,78px); }
+  .welcome-brand { margin-bottom: 18px; }
+  .welcome-lockup { width: clamp(190px,20vw,250px); }
+  .welcome-intro h1 { font-size: clamp(34px,4vw,50px); }
   .welcome-gate .gate-card { padding: 28px; }
-  .welcome-gate-seal { width: 28px; height: 28px; margin-bottom: 14px; }
+  .welcome-gate-seal { height: 30px; margin-bottom: 14px; }
   .welcome-gate .gate-tabs { margin-block: 20px; }
 }
 @media (max-width: 1100px) and (min-width: 761px) {
   .welcome-content { grid-template-columns: minmax(0,1fr) 330px; gap: 24px; }
-  .welcome-intro h1 { font-size: clamp(46px,6.1vw,67px); }
+  .welcome-lockup { width: clamp(180px,20vw,240px); }
+  .welcome-intro h1 { font-size: clamp(32px,4.6vw,48px); }
   .welcome-intro > p { max-width: 350px; font-size: 16px; }
   .welcome-gate .gate-card { padding: 26px; }
-  .welcome-gate .gate-card h2 { font-size: 28px; }
+  .welcome-gate .gate-card h2 { font-size: 26px; }
 }
 @media (max-width: 760px) {
   .topbar-welcome { min-height: 88px; padding: 20px 22px; }
@@ -76,17 +96,19 @@ body:has(#app[data-view="welcome"]) #lang-toggle { background: rgba(250,249,231,
   .topbar-welcome .top-end { display: none; }
   .welcome-page { padding: 118px 22px 32px; }
   .welcome-content { display: flex; flex-direction: column; gap: 28px; min-height: 0; }
-  .welcome-intro h1 { font-size: clamp(40px,12vw,72px); }
+  .welcome-lockup { width: min(260px,72vw); }
+  .welcome-brand { margin-bottom: 20px; }
+  .welcome-intro h1 { font-size: clamp(32px,9vw,52px); }
   .welcome-intro > p { font-size: 16px; line-height: 1.55; margin-top: 18px; max-width: 370px; }
-  .welcome-mobile-enter { display: inline-flex; align-items: center; gap: 14px; min-height: 44px; margin-top: 12px; color: #24462f; font-size: 14px; font-weight: 600; text-underline-offset: 5px; }
+  .welcome-mobile-enter { display: inline-flex; align-items: center; gap: 14px; min-height: 44px; margin-top: 12px; color: var(--welcome-teal); font: 600 14px var(--font-ui); text-underline-offset: 5px; }
   .welcome-mobile-enter .icon { width: 16px; height: 16px; }
   .welcome-gate { width: 100%; max-width: 460px; align-self: center; }
   .welcome-gate .gate-card { padding: 27px; }
-  .welcome-gate .gate-card h2 { font-size: 30px; }
+  .welcome-gate .gate-card h2 { font-size: 28px; }
   .welcome-gate-seal { display: none; }
   .welcome-gate .gate-lede { max-width: none; }
   .welcome-landscape > img { object-position: 42% center; }
-  .welcome-landscape::after { background: linear-gradient(180deg,rgba(242,247,221,.55),rgba(235,243,221,.78)); }
+  .welcome-landscape::after { background: linear-gradient(180deg,rgba(231,233,223,.6),rgba(231,233,223,.82)); }
   body:has(#app[data-view="welcome"]) #language-switcher { top: 22px; right: 22px; }
   body:has(#app[data-view="welcome"]) #lang-toggle { width: 44px; height: 44px; }
 }

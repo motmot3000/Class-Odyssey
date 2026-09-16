@@ -15,7 +15,7 @@ for (const { name, autoPort, dynamicPort } of [
   { name: "normal startup preserves the configured port on a conflict", autoPort: false, dynamicPort: false }
 ]) {
   test(name, { timeout: 5000 }, async (t) => {
-    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-startup-"));
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "class-odyssey-startup-"));
     const blocker = net.createServer();
     let server;
     t.after(async () => {
@@ -51,7 +51,7 @@ for (const { name, autoPort, dynamicPort } of [
     assert.ok(port > 0);
     assert.notEqual(port, occupiedPort);
     assert.deepEqual(log.mock.calls.map((call) => call.arguments), [
-      [`ClassQuest backend on http://127.0.0.1:${port}`]
+      [`Class Odyssey backend on http://127.0.0.1:${port}`]
     ]);
     assert.equal(warn.mock.callCount(), autoPort ? 1 : 0);
     const response = await fetch(`http://127.0.0.1:${port}/api/health`);
@@ -61,7 +61,7 @@ for (const { name, autoPort, dynamicPort } of [
 }
 
 async function fixture({ legacyState, rateLimit, publicDir } = {}) {
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-"));
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "class-odyssey-"));
   if (legacyState) fs.writeFileSync(path.join(dataDir, "state.json"), JSON.stringify(legacyState));
   const server = createGameServer({
     dataDir,
@@ -128,7 +128,7 @@ test("oversized request bodies produce a usable 413 response", async () => {
 });
 
 test("static serving handles indexes and rejects missing assets, dotfiles and private symlinks", async () => {
-  const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-public-"));
+  const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), "class-odyssey-public-"));
   fs.mkdirSync(path.join(publicDir, "assets", "demo"), { recursive: true });
   fs.writeFileSync(path.join(publicDir, "index.html"), "<h1>App</h1>");
   fs.writeFileSync(path.join(publicDir, "assets", "demo", "index.html"), "<h1>Workshop</h1>");
@@ -183,7 +183,7 @@ async function signUp(request, username, password = "teacher-secret") {
 }
 
 test("first initialization requires environment-supplied founder credentials", () => {
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "classquest-init-"));
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "class-odyssey-init-"));
   try {
     assert.throws(() => createGameServer({ dataDir }), /FOUNDER_USERNAME and FOUNDER_PASSWORD/);
     assert.equal(fs.existsSync(path.join(dataDir, "accounts.json")), false);

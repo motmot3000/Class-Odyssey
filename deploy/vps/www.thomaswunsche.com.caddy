@@ -9,12 +9,12 @@ www.thomaswunsche.com {
 	encode zstd gzip
 
 	# Temporary relay used by the classic hosting during the DNS cutover.
-	handle_path /_classquest-site/* {
+	handle_path /_class-odyssey-site/* {
 		reverse_proxy 127.0.0.1:5180
 	}
 
 	# Kept during the rollback window for the previous API-only relay.
-	handle_path /_classquest-api/* {
+	handle_path /_class-odyssey-api/* {
 		reverse_proxy 127.0.0.1:5180
 	}
 

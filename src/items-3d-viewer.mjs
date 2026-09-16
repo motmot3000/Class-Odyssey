@@ -46,7 +46,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     model = gltf.scene;
   } catch (error) { environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
   scene.add(model);
-  model.userData.source_credit = 'Noa/Mila — characters-base, base-v2-2026-09, test-modelisation. Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: ClassQuest study.';
+  model.userData.source_credit = 'Noa/Mila — characters-base, base-v2-2026-09, test-modelisation. Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: Class Odyssey study.';
   let look = { ...initialLook };
   let angle = 'quarter';
   let yaw = .55;

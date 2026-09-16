@@ -156,7 +156,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
   function parseStateFile(file) {
     const state = readJsonFile(file);
     if (!isStateDocument(state)) {
-      throw new Error("not a ClassQuest state");
+      throw new Error("not a Class Odyssey state");
     }
     const revision = Number.isSafeInteger(state.revision) && state.revision >= 0 ? state.revision : 0;
     return { ...state, revision };

@@ -1,6 +1,6 @@
 # Première collection d’équipements 3D
 
-## Intégration courante dans ClassQuest
+## Intégration courante dans Class Odyssey
 
 ### Base de personnage live
 

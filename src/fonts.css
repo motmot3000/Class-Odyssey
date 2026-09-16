@@ -1,0 +1,59 @@
+/* ============================================================
+   fonts.css — polices locales de la marque Class Odyssey
+   Barlow (textes) et Chakra Petch (titres), servies depuis
+   assets/brand/fonts/. Aucun appel à Google Fonts.
+   ============================================================ */
+
+@font-face {
+  font-family: "Barlow";
+  src: url("../assets/brand/fonts/barlow/Barlow-Regular.woff2") format("woff2"),
+       url("../assets/brand/fonts/barlow/Barlow-Regular.ttf") format("truetype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../assets/brand/fonts/barlow/Barlow-Italic.woff2") format("woff2"),
+       url("../assets/brand/fonts/barlow/Barlow-Italic.ttf") format("truetype");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../assets/brand/fonts/barlow/Barlow-Medium.woff2") format("woff2"),
+       url("../assets/brand/fonts/barlow/Barlow-Medium.ttf") format("truetype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../assets/brand/fonts/barlow/Barlow-SemiBold.woff2") format("woff2"),
+       url("../assets/brand/fonts/barlow/Barlow-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../assets/brand/fonts/barlow/Barlow-Bold.woff2") format("woff2"),
+       url("../assets/brand/fonts/barlow/Barlow-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../assets/brand/fonts/chakrapetch/ChakraPetch-Medium.woff2") format("woff2"),
+       url("../assets/brand/fonts/chakrapetch/ChakraPetch-Medium.ttf") format("truetype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../assets/brand/fonts/chakrapetch/ChakraPetch-SemiBold.woff2") format("woff2"),
+       url("../assets/brand/fonts/chakrapetch/ChakraPetch-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../assets/brand/fonts/chakrapetch/ChakraPetch-Bold.woff2") format("woff2"),
+       url("../assets/brand/fonts/chakrapetch/ChakraPetch-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}

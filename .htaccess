@@ -13,4 +13,4 @@ RewriteEngine On
 
 # Temporary cutover relay. Frontend and API both come from the VPS while DNS
 # for classquest.lecagibi.ch still points to this classic hosting.
-RewriteRule ^(.*)$ https://www.thomaswunsche.com/_classquest-site/$1 [P,L]
+RewriteRule ^(.*)$ https://www.thomaswunsche.com/_class-odyssey-site/$1 [P,L]

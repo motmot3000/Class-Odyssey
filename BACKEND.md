@@ -1,4 +1,4 @@
-# ClassQuest — Backend
+# Class Odyssey — Backend
 
 Le backend Node sauvegarde les comptes, classes, élèves, XP, niveaux, HP, skins
 et monnaie sur le VPS Infomaniak. Le `localStorage` du navigateur reste un cache
@@ -21,8 +21,8 @@ conteneur Docker Node
 
 Le frontend, l'API et les données sont donc centralisés sur le VPS. Pendant la
 propagation DNS, l'ancien hébergement peut relayer provisoirement toutes les
-requêtes vers `www.thomaswunsche.com/_classquest-site/`. Le navigateur garde
-dans tous les cas l'URL ClassQuest.
+requêtes vers `www.thomaswunsche.com/_class-odyssey-site/`. Le navigateur garde
+dans tous les cas l'URL Class Odyssey.
 
 ## Configuration obligatoire
 

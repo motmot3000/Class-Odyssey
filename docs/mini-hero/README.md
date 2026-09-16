@@ -4,7 +4,7 @@
 
 Le modèle prend la référence fournie comme direction de proportions et de
 matières : grande tête arrondie, yeux noirs ovales, cheveux dorés en volumes
-larges et tenue verte. Le bouclier reprend une boussole originale ClassQuest.
+larges et tenue verte. Le bouclier reprend une boussole originale Class Odyssey.
 
 Après le retour sur les jambes trop courtes, la silhouette a été allongée :
 jambes +0,18 unité, tête à 89 %, oreilles raccourcies, bottes affinées et fusionnées

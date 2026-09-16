@@ -1,4 +1,4 @@
-# ClassQuest code map
+# Class Odyssey code map
 
 ## Start here
 

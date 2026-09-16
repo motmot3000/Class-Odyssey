@@ -310,7 +310,7 @@ export function importState(jsonText) {
 
   if (Array.isArray(raw?.classes) && !raw.classes.length) throw new Error("No classes found in the file.");
   if (!isStateDocument(raw)) {
-    throw new Error("This file is not a ClassQuest backup.");
+    throw new Error("This file is not a Class Odyssey backup.");
   }
 
   const state = normalizeState(raw);
