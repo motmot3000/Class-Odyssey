@@ -6,6 +6,8 @@ import { renderWelcome } from "../src/views/welcome.mjs";
 import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
+import { renderMentions, renderPrivacy } from "../src/views/legal.mjs";
+import { renderAppFooter } from "../src/views/footer.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
 import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
 
@@ -170,6 +172,26 @@ test("new public, pupil and recovery copy renders in both application languages"
       assert.doesNotMatch(html, /welcome\.adventure|view\.simplified|view\.retry|sheikah\.equipment/);
       assert.match(html, /data-action="retry-viewer"/);
       assert.match(html, /class="viewer-fallback"/);
+    }
+  } finally { setLang("en"); }
+});
+
+test("legal pages and the footer carry the publisher, cookie notice and current year", () => {
+  const year = String(new Date().getFullYear());
+  try {
+    for (const lang of ["fr", "en"]) {
+      setLang(lang);
+      const mentions = renderMentions();
+      const privacy = renderPrivacy();
+      assert.match(mentions, lang === "fr" ? /Éditeur de l'application/ : /Publisher/);
+      assert.match(privacy, lang === "fr" ? /Cookies et technologies de suivi/ : /Cookies and tracking technologies/);
+      assert.match(mentions, /class="legal-section"/);
+      assert.match(privacy, /class="legal-section"/);
+      assert.doesNotMatch(mentions + privacy, /VG_EMAIL|undefined/);
+      const footer = renderAppFooter();
+      assert.ok(footer.includes(year), `footer shows ${year}`);
+      assert.match(footer, /#mentions-legales/);
+      assert.match(footer, /#politique-de-confidentialite/);
     }
   } finally { setLang("en"); }
 });
