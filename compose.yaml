@@ -24,7 +24,6 @@ services:
       PORT: 5180
       DATA_DIR: /data
       MAX_BACKUPS: 60
-      MAX_ACCOUNTS: 500
       # Caddy terminates TLS and forwards to 127.0.0.1:5180; trusting its
       # X-Forwarded-For restores per-client rate limiting.
       TRUST_PROXY: "1"

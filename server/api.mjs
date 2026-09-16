@@ -9,9 +9,12 @@ const MAX_PASSWORD_LENGTH = 128;
 const MAX_DISPLAY_NAME_LENGTH = 60;
 const MAX_CLASS_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 160;
-const MAX_ACCOUNTS = Number(process.env.MAX_ACCOUNTS || 500);
 const SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
 const DEFAULT_MAX_BACKUPS = 60;
+// A real classroom state is far smaller; these caps bound the disk a single
+// account can use without limiting how many accounts exist.
+const MAX_STATE_BYTES = 4 * 1024 * 1024;
+const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
 // Bound scrypt's memory so a burst of hashing cannot exhaust the container.
 const SCRYPT_OPTIONS = { maxmem: 64 * 1024 * 1024 };
 const scrypt = promisify(crypto.scrypt);
@@ -106,8 +109,19 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
   }
 
   function pruneBackups(directory, prefix) {
-    const files = backupFiles(directory, prefix).reverse();
+    const files = backupFiles(directory, prefix).reverse(); // oldest first
     while (files.length > maxBackups) fs.rmSync(files.shift());
+    // Cap total backup bytes as well, so one large state cannot grow the disk
+    // without bound even while staying under the version count.
+    let total = 0;
+    for (const file of files) {
+      try { total += fs.statSync(file).size; } catch { /* skip unreadable */ }
+    }
+    while (files.length && total > MAX_BACKUP_BYTES) {
+      const oldest = files.shift();
+      try { total -= fs.statSync(oldest).size; } catch { /* skip unreadable */ }
+      fs.rmSync(oldest);
+    }
   }
 
   const normalizeUsername = (username) => String(username || "").trim().toLowerCase();
@@ -393,6 +407,6 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     emailProblem,
     emptyState,
     ensureDir,
-    limits: { MAX_DISPLAY_NAME_LENGTH, MAX_CLASS_NAME_LENGTH, MAX_EMAIL_LENGTH, MAX_ACCOUNTS }
+    limits: { MAX_DISPLAY_NAME_LENGTH, MAX_CLASS_NAME_LENGTH, MAX_EMAIL_LENGTH, MAX_STATE_BYTES }
   };
 }

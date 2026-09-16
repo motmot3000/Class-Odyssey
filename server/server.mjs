@@ -181,10 +181,6 @@ export function createGameServer({
       return;
     }
     const index = api.readAccounts();
-    if (Object.keys(index.accounts).length >= api.limits.MAX_ACCOUNTS) {
-      sendJson(res, 403, { error: "account limit reached" });
-      return;
-    }
     if (api.findByUsername(index, username)) {
       // Match the expensive successful path and avoid confirming account existence.
       await api.hashPassword(password);
@@ -276,7 +272,7 @@ export function createGameServer({
       sendJson(res, state ? 200 : 404, state || { error: "no state yet" });
       return;
     }
-    const state = await readJsonObject(req, res, 10 * 1024 * 1024);
+    const state = await readJsonObject(req, res, api.limits.MAX_STATE_BYTES);
     if (!state) return;
     if (!requireSession(req, res)) return;
     if (!isStateDocument(state) || !Number.isSafeInteger(state.revision) || state.revision < 0) {

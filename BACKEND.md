@@ -33,8 +33,8 @@ Le premier démarrage requiert exclusivement ces variables d'environnement :
 
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
-écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS`, `MAX_ACCOUNTS`
-et `TRUST_PROXY` restent configurables ; le conteneur utilise `HOST=0.0.0.0`,
+écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
+restent configurables ; le conteneur utilise `HOST=0.0.0.0`,
 tandis que son port est publié uniquement sur la boucle locale du VPS.
 
 `TRUST_PROXY=1` fait lire l'adresse client dans `X-Forwarded-For` (posée par
@@ -79,7 +79,10 @@ n'expose ces valeurs. Le mot de passe fait au minimum 10 caractères. Une sessio
 dure 14 jours ; le changement de mot de passe révoque les autres sessions.
 Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
 `TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
-inconnu, et le nombre de comptes est plafonné par `MAX_ACCOUNTS`.
+inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est
+bornée : un état fait au plus 4 Mo et les sauvegardes d'un compte au plus 64 Mo
+au total (en plus de la rotation des 60 versions), donc un compte ne peut pas
+remplir le disque à lui seul.
 
 Les réponses API portent `Cache-Control: no-store`, `X-Content-Type-Options:
 nosniff` et `Referrer-Policy`. Caddy, seul service public, ajoute HSTS et les
