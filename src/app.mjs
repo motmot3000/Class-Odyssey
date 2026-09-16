@@ -54,6 +54,8 @@ import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
+import { renderMentions, renderPrivacy } from "./views/legal.mjs";
+import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
@@ -162,6 +164,8 @@ function applyTheme() {
 /* ---------- Hash routing ---------- */
 
 function currentView() {
+  if (location.hash === "#mentions-legales") return "mentions";
+  if (location.hash === "#politique-de-confidentialite") return "privacy";
   if (!isSignedIn()) return "welcome";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
@@ -199,8 +203,15 @@ function render() {
     ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
     ${renderViewBody(view)}
+    ${renderAppFooter()}
   `;
-  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : "nav.class")} · ${BRAND.name}`;
+  const titleKey = view === "welcome" ? "welcome.title.signin"
+    : view === "rules" ? "app.aria.rules"
+    : view === "admin" ? "app.aria.accounts"
+    : view === "mentions" ? "footer.mentions"
+    : view === "privacy" ? "footer.privacy"
+    : "nav.class";
+  document.title = `${t(titleKey)} · ${BRAND.name}`;
   renderTeacherDialog();
   restoreUiMemory(memory);
   flushFlash();
@@ -247,6 +258,12 @@ function renderViewBody(view) {
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked() })}</main>`;
+  }
+  if (view === "mentions") {
+    return `<main class="page page-narrow legal-page">${renderMentions()}</main>`;
+  }
+  if (view === "privacy") {
+    return `<main class="page page-narrow legal-page">${renderPrivacy()}</main>`;
   }
 
   return renderSheikahBody(view);
