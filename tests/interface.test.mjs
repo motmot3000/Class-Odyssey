@@ -6,6 +6,8 @@ import { renderWelcome } from "../src/views/welcome.mjs";
 import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
+import { renderMentions, renderPrivacy } from "../src/views/legal.mjs";
+import { renderAppFooter } from "../src/views/footer.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
 import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
 
@@ -141,6 +143,41 @@ test("locked pupils can return from the rules without hitting the teacher gate",
   assert.match(renderRules({ unlocked: true }), /data-action="show-board"/);
 });
 
+test("the teacher console links to the rules page after the hero details", () => {
+  const classroom = getCurrentClass(createInitialState());
+  const ui = { openPanels: new Set(), xpAmount: 100, coinAmount: 20, shopCategory: "outfit" };
+  const html = renderConsole({ classroom, ui, targets: [], focused: null, canUndo: false, events: [], armedReset: false });
+  assert.match(html, /data-panel="rules"/);
+  assert.match(html, /data-action="show-rules"/);
+  assert.ok(html.indexOf('data-panel="hero"') < html.indexOf('data-panel="rules"'));
+});
+
+test("teachers edit rules through a dialog while pupils only read them", () => {
+  const rules = { journey: [{ fr: "Une règle", en: "One rule" }], xp: [], money: [] };
+  const reading = renderRules({ unlocked: true, rules, editing: false });
+  assert.match(reading, /data-action="rules-edit"/);
+  assert.doesNotMatch(reading, /data-action="rule-add"|data-action="rule-edit"|data-action="rule-remove"/);
+
+  const editing = renderRules({ unlocked: true, rules, editing: true });
+  assert.match(editing, /data-action="rules-done"/);
+  assert.match(editing, /data-action="rule-add" data-section="xp"/);
+  assert.match(editing, /data-action="rule-edit" data-section="journey" data-index="0"/);
+  assert.match(editing, /data-action="rule-remove" data-section="journey" data-index="0"/);
+
+  // A locked viewer never enters edit mode, even if the flag is set.
+  const locked = renderRules({ unlocked: false, rules, editing: true });
+  assert.doesNotMatch(locked, /data-action="rule-add"|data-action="rules-done"/);
+  assert.match(locked, /data-action="rules-edit"/);
+});
+
+test("signup asks for email, username and password without a class name", () => {
+  const html = renderWelcome({ tab: "signup" });
+  assert.match(html, /name="email"[^>]*type="email"/);
+  assert.match(html, /name="username"/);
+  assert.match(html, /name="password"/);
+  assert.doesNotMatch(html, /name="displayName"|welcome\.field\.class/);
+});
+
 test("a pending account request prevents changing form modes and retains safe identity fields", () => {
   const html = renderWelcome({ tab: "signup", pending: true, values: { username: '"><script>', displayName: "7P" } });
   assert.match(html, /aria-busy="true"/);
@@ -170,6 +207,26 @@ test("new public, pupil and recovery copy renders in both application languages"
       assert.doesNotMatch(html, /welcome\.adventure|view\.simplified|view\.retry|sheikah\.equipment/);
       assert.match(html, /data-action="retry-viewer"/);
       assert.match(html, /class="viewer-fallback"/);
+    }
+  } finally { setLang("en"); }
+});
+
+test("legal pages and the footer carry the publisher, cookie notice and current year", () => {
+  const year = String(new Date().getFullYear());
+  try {
+    for (const lang of ["fr", "en"]) {
+      setLang(lang);
+      const mentions = renderMentions();
+      const privacy = renderPrivacy();
+      assert.match(mentions, lang === "fr" ? /Éditeur de l'application/ : /Publisher/);
+      assert.match(privacy, lang === "fr" ? /Cookies et technologies de suivi/ : /Cookies and tracking technologies/);
+      assert.match(mentions, /class="legal-section"/);
+      assert.match(privacy, /class="legal-section"/);
+      assert.doesNotMatch(mentions + privacy, /VG_EMAIL|undefined/);
+      const footer = renderAppFooter();
+      assert.ok(footer.includes(year), `footer shows ${year}`);
+      assert.match(footer, /#mentions-legales/);
+      assert.match(footer, /#politique-de-confidentialite/);
     }
   } finally { setLang("en"); }
 });

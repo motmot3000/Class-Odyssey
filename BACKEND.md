@@ -33,9 +33,14 @@ Le premier démarrage requiert exclusivement ces variables d'environnement :
 
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
-écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR` et `MAX_BACKUPS` restent
-configurables ; le conteneur utilise `HOST=0.0.0.0`, tandis que son port est
-publié uniquement sur la boucle locale du VPS.
+écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
+restent configurables ; le conteneur utilise `HOST=0.0.0.0`,
+tandis que son port est publié uniquement sur la boucle locale du VPS.
+
+`TRUST_PROXY=1` fait lire l'adresse client dans `X-Forwarded-For` (posée par
+Caddy) : nécessaire pour que la limitation de débit soit par visiteur et non
+partagée par toute l'instance derrière le reverse proxy. À ne pas activer sans
+proxy de confiance devant l'application, car l'en-tête serait alors falsifiable.
 
 En développement local, `npm run dev` (utilisé par Go Live) et `npm start`
 chargent automatiquement le fichier `.env` à la racine du worktree. Copier `.env.example`
@@ -68,9 +73,22 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 
 Les routes autres que `health`, inscription et connexion exigent
 `X-Session-Token`. Les jetons ne sont stockés que sous forme de condensat
-SHA-256, les mots de passe avec `scrypt`, et aucune réponse d'administration
-n'expose ces valeurs. Connexion et inscription sont limitées par adresse sans
-différencier un identifiant existant d'un identifiant inconnu.
+SHA-256, les mots de passe avec `scrypt` (asynchrone, sel de 16 octets, dérivé
+de 32 octets, comparaison en temps constant), et aucune réponse d'administration
+n'expose ces valeurs. Le mot de passe fait au minimum 10 caractères. Une session
+dure 14 jours ; le changement de mot de passe révoque les autres sessions.
+Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
+`TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
+inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est
+bornée : un état fait au plus 4 Mo et les sauvegardes d'un compte au plus 64 Mo
+au total (en plus de la rotation des 60 versions), donc un compte ne peut pas
+remplir le disque à lui seul.
+
+Les réponses API portent `Cache-Control: no-store`, `X-Content-Type-Options:
+nosniff` et `Referrer-Policy`. Caddy, seul service public, ajoute HSTS et les
+en-têtes de sécurité du snippet `deploy/vps/security-headers.caddy`.
+L'état écrit est borné (classes, élèves, longueurs, caractères de contrôle
+interdits) avant persistance.
 
 Chaque état porte une `revision`. Un `PUT` obsolète reçoit `409` et ne remplace
 jamais une sauvegarde plus récente. Les écritures sont atomiques et les 60

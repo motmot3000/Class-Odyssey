@@ -153,7 +153,7 @@ les oreilles *après* la coiffure.
 `docs/heroes-proposal.html` (4 directions comparées) et
 `docs/explorer-direction.html` (l'étape « explorateur », avant le pivot médiéval)
 sont conservés pour comprendre pourquoi le vecteur a gagné.
-`docs/hero-explorer.mjs` est le module de l'étape explorateur, superseded par
+`docs/archive/hero-explorer.mjs` est le module de l'étape explorateur, superseded par
 `src/avatar.mjs`.
 
 - v1, les 4 directions : https://claude.ai/code/artifact/ddcf7814-2025-4d6d-a286-0f85fe187a83

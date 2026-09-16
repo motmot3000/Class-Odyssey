@@ -5,24 +5,30 @@
 
 import {
   STORAGE_KEY,
+  RULE_SECTIONS,
   addPupil,
+  addRule,
   awardMoney,
   awardXp,
   canBuyItem,
   changeHpMany,
   clearSelection,
   createInitialState,
+  createClass,
   getCurrentClass,
   getPupilById,
   getRewardsBetween,
+  getRules,
   getShopItem,
   importState,
   isItemOwned,
   normalizeState,
   purchaseItem,
   removePupil,
+  removeRule,
   renamePupil,
   restoreHpAll,
+  setRule,
   toggleSelection,
   toggleClassSelection,
   updateCosmetics
@@ -44,6 +50,7 @@ import {
   signUp,
   unlockAdult,
   unlockUntil,
+  updateSettings,
   validateNewPassword,
   verifyPassword
 } from "./session.mjs";
@@ -54,7 +61,11 @@ import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderAddPupilDialog, renderItemDialog, renderPupilDialog } from "./views/modals.mjs";
+import { renderMentions, renderPrivacy } from "./views/legal.mjs";
+import { renderAppFooter } from "./views/footer.mjs";
+import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
+import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
+import { loadTourGuide } from "./tourguide.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
@@ -82,6 +93,7 @@ const dialogRoot = document.querySelector("#dialog-root");
 let releaseCharacterViewer = null;
 let teacherUnlockRequest = 0;
 let releaseWelcomeScene = null;
+let activeTour = null;
 
 // Remember the chosen pupil on this device only, never in shared server state.
 const STUDENT_KEY = "classquest:student";
@@ -112,6 +124,8 @@ const ui = {
   openPanels: new Set(["hero"]),
   lockError: "",
   lockPending: false,
+  rulesEditing: false,
+  onboardingStep: null,
   teacherDialog: null,
   teacherAfterUnlock: 'console',
   addFromConsole: false,
@@ -143,6 +157,8 @@ setSheikahFreeViewHandler(() => {
 
 const THEME_KEY = "classquest:theme";
 let theme = (() => {
+  const fromAccount = account?.settings?.theme;
+  if (fromAccount === "light" || fromAccount === "dark") return fromAccount;
   try {
     const stored = localStorage.getItem(THEME_KEY);
     if (stored === "light" || stored === "dark") return stored;
@@ -162,6 +178,8 @@ function applyTheme() {
 /* ---------- Hash routing ---------- */
 
 function currentView() {
+  if (location.hash === "#mentions-legales") return "mentions";
+  if (location.hash === "#politique-de-confidentialite") return "privacy";
   if (!isSignedIn()) return "welcome";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
@@ -175,12 +193,14 @@ function navigate(hash) {
 }
 
 window.addEventListener("hashchange", () => {
+  if (activeTour) endSetupTour({ complete: true, silent: true });
   closeDialog({ resumeConsole: false });
   ui.query = "";
   ui.consoleOpen = false;
   ui.lockError = "";
   ui.sheikahView = "board";
   ui.draft = null;
+  if (location.hash !== "#rules") ui.rulesEditing = false;
   window.scrollTo({ top: 0 });
   if (currentView() === "admin") loadAdminAccounts();
   else render();
@@ -199,8 +219,15 @@ function render() {
     ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
     ${renderViewBody(view)}
+    ${renderAppFooter()}
   `;
-  document.title = `${t(view === "welcome" ? "welcome.title.signin" : view === "rules" ? "app.aria.rules" : view === "admin" ? "app.aria.accounts" : "nav.class")} · ${BRAND.name}`;
+  const titleKey = view === "welcome" ? "welcome.title.signin"
+    : view === "rules" ? "app.aria.rules"
+    : view === "admin" ? "app.aria.accounts"
+    : view === "mentions" ? "footer.mentions"
+    : view === "privacy" ? "footer.privacy"
+    : "nav.class";
+  document.title = `${t(titleKey)} · ${BRAND.name}`;
   renderTeacherDialog();
   restoreUiMemory(memory);
   flushFlash();
@@ -213,6 +240,8 @@ function render() {
     app.querySelector('.picker h1')?.focus({ preventScroll:true });
     window.scrollTo({ top:0 });
   }
+  // The setup tour highlights live DOM, so re-anchor it after any rebuild.
+  if (activeTour) Promise.resolve(activeTour.refresh?.()).catch(() => {});
 }
 
 function renderSheikahBody(view) {
@@ -246,7 +275,13 @@ function renderViewBody(view) {
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   if (view === "rules") {
-    return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked() })}</main>`;
+    return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked(), rules: getRules(state), editing: ui.rulesEditing })}</main>`;
+  }
+  if (view === "mentions") {
+    return `<main class="page page-narrow legal-page">${renderMentions()}</main>`;
+  }
+  if (view === "privacy") {
+    return `<main class="page page-narrow legal-page">${renderPrivacy()}</main>`;
   }
 
   return renderSheikahBody(view);
@@ -353,9 +388,9 @@ function updateClock() {
 // authorization. Recheck it on each mutation because an open screen can expire.
 const TEACHER_ACTIONS = new Set([
   "award-xp", "award-money", "hp-minus", "hp-plus", "heal-all",
-  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add"
+  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add", "add-class"
 ]);
-const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset"]);
+const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset", "save-rule", "create-class"]);
 function allowTeacherAction() {
   if (isAdultUnlocked()) return true;
   openTeacherGate();
@@ -401,7 +436,7 @@ function handleInput(event) {
     render();
     return;
   }
-  if (field.form?.classList.contains("gate-form") && ["username", "displayName"].includes(field.name)) {
+  if (field.form?.classList.contains("gate-form") && ["username", "email"].includes(field.name)) {
     ui.gateValues[field.name] = field.value;
   }
   if (field.dataset.action === "search") {
@@ -504,12 +539,54 @@ const ACTIONS = {
   "show-class": showClassRoster,
   "show-board": showClassRoster,
   "show-student": showClassRoster,
-  "show-rules": () => navigate("#rules"),
+  "show-rules": () => {
+    ui.rulesEditing = false;
+    navigate("#rules");
+  },
+
+  /* ---------- Editable classroom rules ---------- */
+  "rules-edit": () => {
+    if (!allowRulesEdit()) return;
+    ui.rulesEditing = true;
+    render();
+  },
+  "rules-done": () => {
+    ui.rulesEditing = false;
+    render();
+  },
+  "rule-add": (el) => {
+    if (!allowRulesEdit()) return;
+    openRuleDialog(el.dataset.section, null);
+  },
+  "rule-edit": (el) => {
+    if (!allowRulesEdit()) return;
+    openRuleDialog(el.dataset.section, Number(el.dataset.index));
+  },
+  "rule-remove": (el) => {
+    if (!allowRulesEdit()) return;
+    const section = el.dataset.section;
+    const index = Number(el.dataset.index);
+    const next = removeRule(state, section, index);
+    if (next === state) return;
+    commit(next);
+    toast(t("rules.edit.remove"), "warn", { undo: true });
+  },
+
+  /* ---------- First-run setup and classes ---------- */
+  "onboarding-next": () => advanceOnboarding(),
+  "onboarding-skip": () => finishOnboarding(),
+  "onboarding-language": (el) => {
+    const lang = el.dataset.lang === "en" ? "en" : "fr";
+    setLang(lang);
+    rememberAccountLanguage(lang);
+    advanceOnboarding();
+  },
 
   /* ---------- Sheikah navigation and customization ---------- */
   "toggle-theme": () => {
     theme = theme === "light" ? "dark" : "light";
     applyTheme();
+    if (account) persistSettings({ theme });
     renderPreservingForms();
   },
   "sheikah-open": (el) => {
@@ -640,6 +717,13 @@ const ACTIONS = {
     rememberStudent(null);
     state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
     navigate('#class');
+  },
+
+  // A new classroom is a teacher action: the "+" in the class menu opens a
+  // small form for the name and, optionally, the first students.
+  "add-class": () => {
+    disarmDanger();
+    showDialog(renderNewClassDialog(), 'add');
   },
 
   // Selecting a hero also focuses its details in the teacher console.
@@ -799,9 +883,9 @@ const FORMS = {
     const request = ++gateRequest;
     const data = new FormData(form);
     const username = String(data.get("username") || "").trim();
-    const displayName = String(data.get("displayName") || "").trim();
+    const email = String(data.get("email") || "").trim();
     const password = String(data.get("password") || "");
-    ui.gateValues = { username, displayName };
+    ui.gateValues = { username, email };
     const problem = validateNewPassword(password, data.get("confirm"));
     if (problem) {
       ui.gateError = problem;
@@ -811,7 +895,7 @@ const FORMS = {
     ui.gatePending = true;
     ui.gateError = "";
     render();
-    const result = await signUp({ username, displayName, password });
+    const result = await signUp({ username, email, password });
     if (request !== gateRequest) return;
     ui.gatePending = false;
     if (!result.ok) {
@@ -853,6 +937,7 @@ const FORMS = {
     const target = ui.teacherAfterUnlock;
     closeDialog({ resumeConsole:false });
     if (target === 'admin' && account?.role === 'admin') navigate('#admin');
+    else if (target === 'rules') { ui.rulesEditing = true; navigate('#rules'); }
     else openTeacherConsole();
     toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
   },
@@ -930,12 +1015,55 @@ const FORMS = {
     dialogRoot.querySelector('[data-action="focus-add"]')?.focus({ preventScroll: true });
   },
 
+  "create-class": (form) => {
+    const data = new FormData(form);
+    const name = String(data.get("name") || "").trim();
+    if (!name) {
+      toast(t("class.new.nameRequired"), "info");
+      form.querySelector("#new-class-name")?.focus();
+      return;
+    }
+    const students = String(data.get("students") || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const next = createClass(state, { name, students });
+    if (next === state) return;
+    closeDialog({ resumeConsole:false });
+    ui.sheikahView = "board";
+    ui.draft = null;
+    rememberStudent(null);
+    commit(next);
+    navigate("#class");
+    toast(t("notice.classCreated", { name }), "success");
+  },
+
   "rename-pupil": (form) => {
     if (!state.selectedPupilId) return;
     const name = String(new FormData(form).get("name") || "").trim();
     if (!name) return;
     commit(renamePupil(state, state.selectedPupilId, name));
     toast("Name updated.", "success");
+  },
+
+  "save-rule": (form) => {
+    const section = form.dataset.section;
+    if (!RULE_SECTIONS.includes(section)) return;
+    const data = new FormData(form);
+    const fr = String(data.get("fr") || "").trim();
+    const en = String(data.get("en") || "").trim();
+    if (!fr) {
+      toast(t("rules.edit.required"), "info");
+      form.querySelector('textarea[name="fr"]')?.focus();
+      return;
+    }
+    const index = form.dataset.index === "" ? null : Number(form.dataset.index);
+    const next = index === null
+      ? addRule(state, section, { fr, en })
+      : setRule(state, section, index, { fr, en });
+    closeDialog();
+    if (next === state) render();
+    else commit(next);
   },
 
   "order-bespoke": (form) => {
@@ -1091,8 +1219,24 @@ function openTeacherConsole() {
   window.history.replaceState(null, '', '#class');
   ui.sheikahView = 'board';
   ui.draft = null;
+  ui.rulesEditing = false;
   ui.teacherDialog = 'console';
   render();
+}
+
+/* Editing rules is a teacher action; the gate reopens if the unlock expired. */
+function allowRulesEdit() {
+  if (isAdultUnlocked()) return true;
+  openTeacherGate('rules');
+  return false;
+}
+
+function openRuleDialog(section, index = null) {
+  if (!RULE_SECTIONS.includes(section)) return;
+  const list = getRules(state)[section] || [];
+  const rule = index === null || index === undefined ? null : list[index] || null;
+  showDialog(renderRuleDialog({ section, index, rule }));
+  dialogRoot.querySelector('.dialog-rule textarea[name="fr"]')?.focus();
 }
 
 function renderTeacherDialog() {
@@ -1215,12 +1359,153 @@ function loadState(accountId) {
   }
 }
 
+function accountLangKey(id) {
+  return `classquest.lang:${id}`;
+}
+
+function rememberAccountLanguage(language = getLang()) {
+  if (!account) return;
+  try { localStorage.setItem(accountLangKey(account.id), language); } catch { /* storage unavailable */ }
+  persistSettings({ language });
+}
+
+// Each account keeps its language on the server; a device-local copy covers
+// offline use, and a first sign-in adopts whatever the welcome page shows.
+function applyAccountLanguage() {
+  const fromAccount = account?.settings?.language;
+  if (fromAccount === "fr" || fromAccount === "en") { setLang(fromAccount); return; }
+  let preferred = null;
+  try { preferred = localStorage.getItem(accountLangKey(account.id)); } catch { /* storage unavailable */ }
+  if (preferred === "fr" || preferred === "en") setLang(preferred);
+  else rememberAccountLanguage();
+}
+
+/* ---------- Account settings (server-backed, changeable at any time) ---------- */
+
+function accountSettings() {
+  return account?.settings || { language: null, theme: null, onboarding: { completed: false, step: 0 } };
+}
+
+function persistSettings(patch) {
+  if (!account) return;
+  const current = accountSettings();
+  account = { ...account, settings: { ...current, ...patch, onboarding: { ...current.onboarding, ...(patch.onboarding || {}) } } };
+  void updateSettings(patch).then((result) => {
+    if (result.ok && account && account.id === result.account.id) {
+      account = { ...account, settings: result.account.settings };
+    }
+  }).catch(() => { /* Offline: the local copy keeps the preference. */ });
+}
+
+/* ---------- First-run setup (resumable, once per account) ---------- */
+
+const ONBOARDING_LAST_STEP = 5;
+let onboardingFinishing = false;
+
+function onboardingState() {
+  return accountSettings().onboarding;
+}
+
+function setOnboardingStep(step) {
+  const next = { ...onboardingState(), step };
+  persistSettings({ onboarding: next });
+}
+
+function maybeStartOnboarding() {
+  if (!account) return;
+  const onboarding = onboardingState();
+  if (onboarding.completed) return;
+  // The tour highlights the class workspace; resume it there so targets exist.
+  if (currentView() !== "class") return;
+  if (onboarding.step <= 1) {
+    render();
+    showOnboardingDialog(onboarding.step);
+  } else {
+    startSetupTour();
+  }
+}
+
+function showOnboardingDialog(step) {
+  ui.onboardingStep = step;
+  const html = step === 0
+    ? renderOnboardingWelcome(account?.displayName || account?.username || "")
+    : renderOnboardingLanguage();
+  showDialog(html);
+}
+
+function advanceOnboarding() {
+  const next = Math.min(ONBOARDING_LAST_STEP, (ui.onboardingStep ?? onboardingState().step) + 1);
+  ui.onboardingStep = next;
+  setOnboardingStep(next);
+  if (next <= 1) {
+    closeDialog({ resumeConsole: false });
+    render();
+    showOnboardingDialog(next);
+  } else {
+    closeDialog({ resumeConsole: false });
+    render();
+    startSetupTour();
+  }
+}
+
+function finishOnboarding() {
+  if (onboardingFinishing) return;
+  onboardingFinishing = true;
+  closeDialog({ resumeConsole: false });
+  ui.onboardingStep = null;
+  endSetupTour({ complete: true, silent: true });
+  persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
+  render();
+  toast(t("onboarding.done"), "success");
+  onboardingFinishing = false;
+}
+
+function endSetupTour({ complete = true, silent = false } = {}) {
+  const tour = activeTour;
+  activeTour = null;
+  if (tour) { try { tour.exit?.(); } catch { /* already gone */ } }
+  if (complete && account && !onboardingState().completed) {
+    persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
+    if (!silent) toast(t("onboarding.done"), "success");
+  }
+}
+
+async function startSetupTour() {
+  if (!account || activeTour) return;
+  try {
+    const TourGuideClient = await loadTourGuide();
+    if (!account) return;
+    const tg = new TourGuideClient({
+      nextLabel: t("onboarding.next"),
+      prevLabel: t("onboarding.prev"),
+      finishLabel: t("onboarding.finish"),
+      exitOnClickOutside: false,
+      keyboardControls: true,
+      activeStepInteraction: true,
+      dialogMaxWidth: 360,
+      steps: [
+        { order: 1, target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), content: t("onboarding.theme.body"), propagateEvents: true },
+        { order: 2, target: ".class-picker", title: t("onboarding.class.title"), content: t("onboarding.class.body"), propagateEvents: true },
+        { order: 3, target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), content: t("onboarding.rules.body"), propagateEvents: true },
+        { order: 4, target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), content: t("onboarding.console.body"), propagateEvents: true }
+      ]
+    });
+    tg.onFinish(() => finishOnboarding());
+    tg.onBeforeExit(() => { if (!onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } }); });
+    activeTour = tg;
+    await tg.start();
+  } catch {
+    endSetupTour({ complete: true, silent: false });
+  }
+}
+
 function openAccount(next) {
   closeDialog({ resumeConsole:false });
   clearTimeout(persistTimer);
   persistTimer = null;
   saveQueued = false;
   account = next;
+  applyAccountLanguage();
   activeSession = captureSessionContext();
   state = loadState(next.id);
   localDirty = loadDirty(next.id);
@@ -1235,10 +1520,16 @@ function openAccount(next) {
   studentPupilId = loadStudentId();
   ui.sheikahView = "board";
   ui.draft = null;
+  const storedTheme = next?.settings?.theme;
+  if (storedTheme === "light" || storedTheme === "dark") {
+    theme = storedTheme;
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* keep in memory */ }
+  }
   render();
   window.scrollTo({ top: 0 });
   if (currentView() === "admin") loadAdminAccounts();
   bootstrapFromServer();
+  maybeStartOnboarding();
 }
 
 function endSession(message = "", context = null) {
@@ -1532,8 +1823,11 @@ function renderPreservingForms() {
 }
 
 initLanguage();
+// A restored session applies the account's saved language, exactly like a fresh sign-in.
+if (account) applyAccountLanguage();
 document.getElementById("lang-toggle")?.addEventListener("click", () => {
   setLang(getLang() === "fr" ? "en" : "fr");
+  rememberAccountLanguage();
   if (!ui.teacherDialog) closeDialog();
   renderPreservingForms();
 });
@@ -1541,4 +1835,5 @@ applyTheme();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
+maybeStartOnboarding();
 setInterval(updateClock, 1000);

@@ -12,6 +12,11 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    # Contain a memory leak or a password-hashing burst without starving the host.
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
     ports:
       - "127.0.0.1:5180:5180"
     environment:
@@ -19,6 +24,9 @@ services:
       PORT: 5180
       DATA_DIR: /data
       MAX_BACKUPS: 60
+      # Caddy terminates TLS and forwards to 127.0.0.1:5180; trusting its
+      # X-Forwarded-For restores per-client rate limiting.
+      TRUST_PROXY: "1"
       FOUNDER_USERNAME: ${FOUNDER_USERNAME:?FOUNDER_USERNAME is required}
       FOUNDER_PASSWORD: ${FOUNDER_PASSWORD:?FOUNDER_PASSWORD is required}
       NODE_ENV: production

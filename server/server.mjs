@@ -13,7 +13,9 @@ function sendJson(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
-    "Cache-Control": "no-store"
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
   });
   res.end(body);
 }
@@ -61,7 +63,27 @@ async function readJsonObject(req, res, limit = 4 * 1024) {
 
 const stringField = (payload, key) => (typeof payload[key] === "string" ? payload[key] : "");
 
+// Strip control and bidirectional characters that could spoof the interface.
+const UNSAFE_NAME_CHARS = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+function cleanDisplayName(value) {
+  return String(value || "").replace(UNSAFE_NAME_CHARS, "").replace(/\s+/g, " ").trim();
+}
+
+// Behind the VPS reverse proxy every socket comes from 127.0.0.1, so the client
+// address must come from the proxy headers. Opt in only when a trusted proxy
+// fronts the server (TRUST_PROXY=1); otherwise a client could spoof the header.
+// The container port is published on the loopback, so only Caddy can reach it.
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 function clientAddress(req) {
+  if (TRUST_PROXY) {
+    const forwarded = req.headers["x-forwarded-for"];
+    if (typeof forwarded === "string" && forwarded.length) {
+      const first = forwarded.split(",")[0].trim();
+      if (first) return first.slice(0, 64);
+    }
+    const realIp = req.headers["x-real-ip"];
+    if (typeof realIp === "string" && realIp.trim()) return realIp.trim().slice(0, 64);
+  }
   return req.socket.remoteAddress || "unknown";
 }
 
@@ -143,8 +165,9 @@ export function createGameServer({
     if (!payload) return;
     const username = api.normalizeUsername(stringField(payload, "username"));
     const password = stringField(payload, "password");
-    const displayName = stringField(payload, "displayName").trim() || username;
-    const problem = api.usernameProblem(username) || api.passwordProblem(password);
+    const email = stringField(payload, "email").trim();
+    const displayName = cleanDisplayName(stringField(payload, "displayName")) || username;
+    const problem = api.usernameProblem(username) || api.passwordProblem(password) || api.emailProblem(email);
     if (problem) {
       sendJson(res, 400, { error: problem });
       return;
@@ -153,14 +176,18 @@ export function createGameServer({
       sendJson(res, 400, { error: "the class name is too long" });
       return;
     }
+    if (email.length > api.limits.MAX_EMAIL_LENGTH) {
+      sendJson(res, 400, { error: "the email is too long" });
+      return;
+    }
     const index = api.readAccounts();
     if (api.findByUsername(index, username)) {
       // Match the expensive successful path and avoid confirming account existence.
-      api.hashPassword(password);
+      await api.hashPassword(password);
       sendJson(res, 400, { error: "account could not be created" });
       return;
     }
-    const account = api.newAccount(username, displayName, password);
+    const account = await api.newAccount(username, displayName, password, "teacher", email);
     api.createAccountWithState(index, account);
     sendJson(res, 201, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(account) });
   }
@@ -174,8 +201,8 @@ export function createGameServer({
     const index = api.readAccounts();
     const account = api.findByUsername(index, username);
     let matches = false;
-    if (account) matches = api.passwordMatches(stringField(payload, "password"), account.hash);
-    else api.hashPassword(stringField(payload, "password"));
+    if (account) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
+    else await api.hashPassword(stringField(payload, "password"));
     if (!matches) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
@@ -198,7 +225,7 @@ export function createGameServer({
     // The request body may arrive after another request revoked this token.
     session = requireSession(req, res);
     if (!session) return;
-    if (!api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
+    if (!await api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
@@ -216,7 +243,7 @@ export function createGameServer({
     if (!payload) return;
     session = requireSession(req, res);
     if (!session) return;
-    if (!api.passwordMatches(stringField(payload, "current"), session.account.hash)) {
+    if (!await api.passwordMatches(stringField(payload, "current"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
@@ -229,7 +256,7 @@ export function createGameServer({
     }
     const index = api.readAccounts();
     const updatedAt = new Date().toISOString();
-    index.accounts[session.account.id] = { ...session.account, hash: api.hashPassword(next), updatedAt };
+    index.accounts[session.account.id] = { ...session.account, hash: await api.hashPassword(next), updatedAt };
     api.writeAccounts(index);
     api.revokeAccountTokens(session.account.id, session.token);
     limiter.clear(rateKey);
@@ -245,7 +272,7 @@ export function createGameServer({
       sendJson(res, state ? 200 : 404, state || { error: "no state yet" });
       return;
     }
-    const state = await readJsonObject(req, res, 10 * 1024 * 1024);
+    const state = await readJsonObject(req, res, api.limits.MAX_STATE_BYTES);
     if (!state) return;
     if (!requireSession(req, res)) return;
     if (!isStateDocument(state) || !Number.isSafeInteger(state.revision) || state.revision < 0) {
@@ -264,6 +291,40 @@ export function createGameServer({
     sendJson(res, 200, { ok: true, revision, updatedAt });
   }
 
+  /* Settings are account-scoped and additive: a partial patch only touches the
+   * keys it sends, so preferences survive and stay changeable later. */
+  async function handleSettings(req, res) {
+    const session = requireSession(req, res);
+    if (!session) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account) {
+      sendJson(res, 404, { error: "account not found" });
+      return;
+    }
+    const current = api.settingsWithDefaults(account.settings);
+    const next = {
+      language: current.language,
+      theme: current.theme,
+      onboarding: { ...current.onboarding }
+    };
+    if (Object.hasOwn(payload, "language") && (payload.language === null || payload.language === "fr" || payload.language === "en")) {
+      next.language = payload.language;
+    }
+    if (Object.hasOwn(payload, "theme") && (payload.theme === null || payload.theme === "light" || payload.theme === "dark")) {
+      next.theme = payload.theme;
+    }
+    if (payload.onboarding && typeof payload.onboarding === "object" && !Array.isArray(payload.onboarding)) {
+      if (Object.hasOwn(payload.onboarding, "completed")) next.onboarding.completed = Boolean(payload.onboarding.completed);
+      if (Number.isSafeInteger(payload.onboarding.step) && payload.onboarding.step >= 0) next.onboarding.step = payload.onboarding.step;
+    }
+    index.accounts[account.id] = { ...account, settings: next, updatedAt: new Date().toISOString() };
+    api.writeAccounts(index);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(index.accounts[account.id]) });
+  }
+
   function handleAdminList(req, res) {
     if (!requireAdmin(req, res)) return;
     const counts = api.activeSessionCounts();
@@ -273,6 +334,7 @@ export function createGameServer({
       return {
         id: account.id,
         username: account.username,
+        email: account.email || "",
         role: account.role || "teacher",
         createdAt: account.createdAt,
         lastLoginAt: account.lastLoginAt || null,
@@ -305,7 +367,7 @@ export function createGameServer({
       sendJson(res, 404, { error: "account not found" });
       return;
     }
-    index.accounts[accountId] = { ...target, hash: api.hashPassword(password), updatedAt: new Date().toISOString() };
+    index.accounts[accountId] = { ...target, hash: await api.hashPassword(password), updatedAt: new Date().toISOString() };
     api.writeAccounts(index);
     api.revokeAccountTokens(accountId);
     sendJson(res, 200, { ok: true });
@@ -330,6 +392,7 @@ export function createGameServer({
       }
       if (pathname === "/api/session/verify" && req.method === "POST") return await handleVerify(req, res);
       if (pathname === "/api/session/password" && req.method === "PUT") return await handlePasswordChange(req, res);
+      if (pathname === "/api/account/settings" && req.method === "PUT") return await handleSettings(req, res);
       if (pathname === "/api/state" && ["GET", "HEAD", "PUT"].includes(req.method)) return await handleState(req, res);
       if (pathname === "/api/admin/accounts" && req.method === "GET") return handleAdminList(req, res);
       const resetMatch = pathname.match(/^\/api\/admin\/accounts\/([0-9a-f]{24})\/password$/);

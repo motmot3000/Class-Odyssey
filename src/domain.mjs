@@ -1,9 +1,13 @@
 import { isStateDocument, isRecord } from "./state-schema.mjs";
+import { defaultRules } from "./i18n.mjs";
 
 export const STORAGE_KEY = "classquest:v1";
 // Imported counters must remain renderable and exactly representable as numbers.
 const MAX_HEARTS = 100;
 const MAX_COUNTER = Number.MAX_SAFE_INTEGER;
+export const RULE_SECTIONS = ["journey", "xp", "money"];
+const MAX_RULE_LENGTH = 240;
+const MAX_RULES_PER_SECTION = 30;
 
 export const SKINS = [
   {
@@ -161,6 +165,7 @@ export function createInitialState({ samples = true } = {}) {
       { id: "7p", name: "7P", pupils: pupilsOf("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
       { id: "8p", name: "8P", pupils: pupilsOf("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
     ],
+    rules: defaultRules(),
     events: []
   };
 }
@@ -196,6 +201,8 @@ export function normalizeState(rawState) {
       : []
   };
 
+  state.rules = normalizeRules(rawState.rules);
+
   if (!getClassById(state, state.activeClassId)) {
     state.activeClassId = state.classes[0]?.id || "7p";
   }
@@ -217,6 +224,83 @@ export function normalizeState(rawState) {
 
 function migrateClassValue(value) {
   return Object.hasOwn(LEGACY_CLASS_MAP, value) ? LEGACY_CLASS_MAP[value] : value;
+}
+
+/* ---------- Classroom rules ----------
+ * Rules are account data so each teacher adapts them and the server keeps one
+ * copy per account. Each entry is a {fr, en} pair; an empty list is preserved,
+ * while a missing list falls back to the current defaults.
+ */
+
+export function normalizeRules(rawRules) {
+  const defaults = defaultRules();
+  const source = isRecord(rawRules) ? rawRules : {};
+  const rules = {};
+  for (const section of RULE_SECTIONS) {
+    rules[section] = Array.isArray(source[section])
+      ? source[section].map(normalizeRule).filter(Boolean).slice(0, MAX_RULES_PER_SECTION)
+      : defaults[section];
+  }
+  return rules;
+}
+
+export function getRules(state) {
+  const rules = state?.rules;
+  return rules && RULE_SECTIONS.every((section) => Array.isArray(rules[section]))
+    ? rules
+    : defaultRules();
+}
+
+export function addRule(state, section, text) {
+  const rule = normalizeRule(text);
+  if (!rule) return state;
+  return updateRules(state, section, (list) => [...list, rule].slice(0, MAX_RULES_PER_SECTION));
+}
+
+export function setRule(state, section, index, text) {
+  const rule = normalizeRule(text);
+  if (!rule) return state;
+  return updateRules(state, section, (list) => list.map((item, position) => (position === index ? rule : item)));
+}
+
+export function removeRule(state, section, index) {
+  return updateRules(state, section, (list) => list.filter((_, position) => position !== index));
+}
+
+function updateRules(state, section, updater) {
+  if (!RULE_SECTIONS.includes(section)) return state;
+  const rules = getRules(state);
+  const list = rules[section] || [];
+  const next = updater(list);
+  if (next === list) return state;
+  return { ...state, rules: { ...rules, [section]: next } };
+}
+
+function normalizeRule(rule) {
+  if (typeof rule === "string") {
+    const text = rule.trim().slice(0, MAX_RULE_LENGTH);
+    return text ? { fr: text, en: text } : null;
+  }
+  if (!isRecord(rule)) return null;
+  const fr = String(rule.fr ?? rule.en ?? "").trim().slice(0, MAX_RULE_LENGTH);
+  const en = String(rule.en ?? "").trim().slice(0, MAX_RULE_LENGTH);
+  if (!fr && !en) return null;
+  return { fr: fr || en, en: en || fr };
+}
+
+/* A new class starts empty and becomes the active one so its hero roster is
+ * the obvious next workspace. Names are trimmed and capped for safety. */
+export function addClass(state, name) {
+  const trimmed = String(name || "").trim().slice(0, 60);
+  if (!trimmed) return state;
+  const id = cryptoId();
+  return {
+    ...state,
+    activeClassId: id,
+    selectedPupilId: null,
+    selectedPupilIds: [],
+    classes: [...state.classes, { id, name: trimmed, pupils: [] }]
+  };
 }
 
 export function addPupil(state, classId, { name, gender, skinTone } = {}) {
@@ -241,6 +325,29 @@ export function addPupil(state, classId, { name, gender, skinTone } = {}) {
       })
     ]
   }));
+}
+
+/* Selecting a class focuses its board and clears any cross-class selection. */
+export function setActiveClass(state, classId) {
+  if (!getClassById(state, classId)) return state;
+  return {
+    ...state,
+    activeClassId: classId,
+    selectedPupilId: null,
+    selectMode: false,
+    selectedPupilIds: []
+  };
+}
+
+/* A brand-new classroom starts empty unless the teacher lists student names.
+ * The new class becomes active so its roster is immediately ready to fill. */
+export function createClass(state, { name, students = [] } = {}) {
+  const trimmedName = String(name || "").trim();
+  if (!trimmedName) return state;
+
+  const classroom = { id: cryptoId(), name: trimmedName, pupils: [] };
+  const next = setActiveClass({ ...state, classes: [...state.classes, classroom] }, classroom.id);
+  return students.reduce((acc, studentName) => addPupil(acc, classroom.id, { name: studentName }), next);
 }
 
 export function removePupil(state, pupilId) {

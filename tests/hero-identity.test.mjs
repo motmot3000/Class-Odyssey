@@ -59,9 +59,18 @@ test('hero cards and the hero sheet expose the title backdrop layer',()=>{
 });
 
 test('Rules preserves the original text and reading order in both languages',()=>{
-  const text=html=>html.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<\/(li|h1|h2|p)>/g,' ').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
-  const keys=['rules.title.how','rules.lede',...Array.from({length:7},(_,i)=>`rules.game.${i}`),'rules.title.xp','rules.xp.0','rules.xp.1','rules.title.money','rules.money.0','rules.money.1','rules.money.2','rules.back'];
+  const text=html=>html.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<\/(li|h1|h2|p)>/g,' ').replace(/<[^>]*>/g,'').replace(/&#039;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+  const keys=['rules.title.how','rules.lede',...Array.from({length:7},(_,i)=>`rules.game.${i}`),'rules.title.xp','rules.xp.0','rules.xp.1','rules.title.money','rules.money.0','rules.money.1','rules.back'];
   try{
-    for(const lang of ['fr','en']){setLang(lang);assert.equal(text(renderRules()),text(keys.map(key=>t(key)).join(' ')));}
+    for(const lang of ['fr','en']){
+      setLang(lang);
+      const rendered=text(renderRules());
+      let cursor=0;
+      for(const key of keys){
+        const at=rendered.indexOf(t(key),cursor);
+        assert.ok(at>=cursor,`${key} missing or out of order in ${lang}`);
+        cursor=at;
+      }
+    }
   }finally{setLang('en');}
 });

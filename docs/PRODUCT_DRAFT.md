@@ -2,7 +2,7 @@
 
 Sources utilisées :
 
-- `decription.md`
+- `description.md`
 - `Class Odyssey.docx`
 
 ## Périmètre du premier draft
@@ -30,7 +30,7 @@ Fonctions incluses :
 
 ## Règles retenues
 
-Le DOCX dit "Every 1000XP, you level up". `decription.md` demande une progression où les niveaux deviennent plus difficiles. Le draft combine les deux : le premier passage de niveau demande 1000 XP, puis chaque niveau ajoute 500 XP au seuil suivant.
+Le DOCX dit "Every 1000XP, you level up". `description.md` demande une progression où les niveaux deviennent plus difficiles. Le draft combine les deux : le premier passage de niveau demande 1000 XP, puis chaque niveau ajoute 500 XP au seuil suivant.
 
 Exemples :
 

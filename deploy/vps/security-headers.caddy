@@ -1,0 +1,19 @@
+# Caddy snippet shared by every site on the VPS.
+#
+# The live VPS defines this once in /etc/caddy/Caddyfile and imports it from each
+# site block (`import security_headers`). It is versioned here so the deployment
+# is auditable from the repository. `-Server` hides the Caddy banner.
+#
+# Recommended hardening not enabled yet: a Content-Security-Policy. The app keeps
+# its session token in localStorage and serves an inline bootstrap script, so a
+# CSP must whitelist that script (hash) and the three.js runtime (blob:/data:),
+# then be tested against the 3D viewer before it is switched on.
+(security_headers) {
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+}

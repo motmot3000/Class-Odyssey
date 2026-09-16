@@ -208,6 +208,14 @@ input { caret-color: var(--cyan); }
   text-align: left;
   cursor: pointer;
 }
+.class-picker-menu .class-picker-add {
+  justify-content: flex-start;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-2);
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  color: var(--cyan);
+}
 .class-picker-menu button:hover { background: var(--cyan-soft); color: var(--ink); }
 .class-picker-menu button.on { background: var(--cyan-soft); color: var(--cyan); }
 .class-picker-menu .ic { width: 16px; height: 16px; flex: none; }

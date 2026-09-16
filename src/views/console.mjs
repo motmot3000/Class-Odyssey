@@ -26,7 +26,10 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
       <h2>${t("console.title")}</h2>
       <button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>
     </div>
-    ${unlockedUntil ? `<p class="teacher-session-status" role="timer" aria-live="off" data-teacher-time data-until="${Number(unlockedUntil)}"></p>` : ''}
+    ${unlockedUntil ? `<div class="teacher-session-lock">
+      <button class="btn btn-sm" type="button" data-action="lock-adult">${icon('lock')}<span>${t('console.account.lock')}</span></button>
+      <span class="teacher-session-status" role="timer" aria-live="off" data-teacher-time data-until="${Number(unlockedUntil)}"></span>
+    </div>` : ''}
     <div class="console-history">
       <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="${t("console.undoHint")}">
         ${icon("undo")}<span>${t("console.undo")}</span>
@@ -36,6 +39,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     ${renderTarget(classroom, ui, targets)}
     ${renderAward(ui, targets)}
     ${renderHeroPanel(focused, ui, open)}
+    ${renderRulesPanel(open)}
     ${renderActivityPanel(events, open)}
     ${renderDataPanel(open, armedReset)}
     ${renderAccountPanel(open, unlockedUntil, account)}
@@ -58,7 +62,7 @@ function renderAccountPanel(open, unlockedUntil, account) {
         <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" /></label>
         <button class="btn btn-primary btn-sm" type="submit">${t("console.account.change")}</button>
       </form>
-       <hr class="rule" /><div class="button-row"><button class="btn btn-sm" data-action="lock-adult">${icon("lock")}${t("console.account.lock")}</button><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button><a class="btn btn-sm" href="./assets/labs/index.html">${t("app.labs")}</a></div>
+       <hr class="rule" /><div class="button-row"><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button><a class="btn btn-sm" href="./assets/labs/index.html">${t("app.labs")}</a></div>
     </details>`;
 }
 
@@ -204,6 +208,16 @@ function renderHeroPanel(pupil, ui, open) {
     <details class="panel" data-panel="shop" ${open("shop")}>
       <summary>${icon("shop")}<span>${t("console.shop.summary", { name: escapeHtml(pupil.name) })}</span></summary>
       ${renderShop(pupil, ui.shopCategory)}
+    </details>
+  `;
+}
+
+function renderRulesPanel(open) {
+  return `
+    <details class="panel" data-panel="rules" ${open("rules")}>
+      <summary>${icon("book")}<span>${t("console.rules.summary")}</span></summary>
+      <p class="panel-note">${t("console.rules.note")}</p>
+      <button class="btn btn-primary btn-sm" type="button" data-action="show-rules">${icon("book")}<span>${t("console.rules.change")}</span></button>
     </details>
   `;
 }

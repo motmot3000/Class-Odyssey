@@ -14,7 +14,7 @@ const dict = {
     "welcome.title.welcome": "Bon retour",
     "welcome.title.signin": "Connexion",
     "welcome.title.new": "Nouveau compte",
-    "welcome.field.class": "Nom de la classe",
+    "welcome.field.email": "Adresse e-mail",
     "welcome.field.username": "Nom d'utilisateur",
     "welcome.field.password": "Mot de passe",
     "welcome.field.repeat": "Répète le mot de passe",
@@ -55,7 +55,6 @@ const dict = {
     "rules.xp.1": "Apprends ton vocabulaire.",
     "rules.money.0": "Sois gentil.",
     "rules.money.1": "Travaille bien.",
-    "rules.money.2": "De bonnes notes.",
 
     /* ---------- admin ---------- */
     "admin.title": "Administration",
@@ -408,7 +407,7 @@ const dict = {
     "welcome.title.welcome": "Welcome back",
     "welcome.title.signin": "Sign in",
     "welcome.title.new": "New account",
-    "welcome.field.class": "Class name",
+    "welcome.field.email": "Email address",
     "welcome.field.username": "Username",
     "welcome.field.password": "Password",
     "welcome.field.repeat": "Repeat password",
@@ -447,7 +446,6 @@ const dict = {
     "rules.xp.1": "Learn your vocabulary.",
     "rules.money.0": "Be nice.",
     "rules.money.1": "Work hard.",
-    "rules.money.2": "Good marks.",
 
     "admin.title": "Administration",
     "admin.accounts": "Accounts",
@@ -665,7 +663,9 @@ export function setLang(next) {
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
     const label = document.getElementById("current-lang");
-    if (label) label.textContent = lang.toUpperCase();
+    // The control shows the language it switches TO, with an arrow, so the
+    // welcome page reads as "switch to English" rather than a bare code.
+    if (label) label.textContent = lang === "fr" ? "EN →" : "FR →";
     const toggle = document.getElementById("lang-toggle");
     toggle?.setAttribute("aria-label", lang === "fr" ? "Passer en anglais" : "Switch to French");
     toggle?.setAttribute("title", lang === "fr" ? "Passer en anglais" : "Switch to French");
@@ -692,6 +692,18 @@ export function hasTranslation(key, language = lang) {
   return Object.hasOwn(dict[language], key) || Object.hasOwn(messages, key);
 }
 
+/* The three classroom-rule lists are account data now, but an existing account
+ * must keep the current copy. Derive that seed from the shared FR/EN dictionary
+ * so both languages are preserved and one source stays authoritative. */
+export function defaultRules() {
+  const pair = (key) => ({ fr: dict.fr[key] ?? "", en: dict.en[key] ?? "" });
+  return {
+    journey: Array.from({ length: 7 }, (_, index) => pair(`rules.game.${index}`)),
+    xp: Array.from({ length: 2 }, (_, index) => pair(`rules.xp.${index}`)),
+    money: Array.from({ length: 2 }, (_, index) => pair(`rules.money.${index}`))
+  };
+}
+
 export function translateMessage(message = "") {
   if (lang !== "fr") return message;
   if (Object.hasOwn(frenchMessages, message)) return frenchMessages[message];
@@ -701,6 +713,12 @@ export function translateMessage(message = "") {
   if (match) return `Le mot de passe ne doit pas dépasser ${match[1]} caractères.`;
   match = message.match(/^Too many tries\. Wait (\d+) minutes? and try again\.$/);
   if (match) return `Trop de tentatives. Attends ${match[1]} minute(s) et réessaie.`;
+  match = message.match(/^an email address is required$/i);
+  if (match) return "Une adresse e-mail est requise.";
+  match = message.match(/^the email address is not valid$/i);
+  if (match) return "L’adresse e-mail n’est pas valide.";
+  match = message.match(/^the email address is too long$/i);
+  if (match) return "L’adresse e-mail est trop longue.";
   return message;
 }
 
