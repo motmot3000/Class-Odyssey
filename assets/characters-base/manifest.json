@@ -6,7 +6,7 @@
   "quaternionOrder": "xyzw",
   "origin": "ground between feet",
   "originToleranceMetres": 0.0001,
-  "sourceCredit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and hair: ClassQuest study.",
+  "sourceCredit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Base-character adaptation, neck repair and hair: Class Odyssey study.",
   "pose": {
     "armsFromT": 82,
     "elbowFlexion": 8,

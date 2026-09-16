@@ -10,7 +10,7 @@ product
 
 ## Product Purpose
 
-ClassQuest transforme la progression en anglais en aventure collective. Chaque élève possède un personnage nominatif qui gagne des niveaux, débloque des éléments visuels et rend l'effort visible tout au long de l'année, sans ralentir la gestion du cours.
+Class Odyssey transforme la progression en anglais en aventure collective. Chaque élève possède un personnage nominatif qui gagne des niveaux, débloque des éléments visuels et rend l'effort visible tout au long de l'année, sans ralentir la gestion du cours.
 
 ## Brand Personality
 

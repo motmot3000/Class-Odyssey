@@ -1,0 +1,79 @@
+/* À conserver dans integration/ ; les polices sont dans ../fonts/. */
+@font-face {
+  font-family: "Barlow";
+  src: url("../fonts/barlow/Barlow-Regular.woff2") format("woff2"),
+       url("../fonts/barlow/Barlow-Regular.ttf") format("truetype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../fonts/barlow/Barlow-Italic.woff2") format("woff2"),
+       url("../fonts/barlow/Barlow-Italic.ttf") format("truetype");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../fonts/barlow/Barlow-Medium.woff2") format("woff2"),
+       url("../fonts/barlow/Barlow-Medium.ttf") format("truetype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../fonts/barlow/Barlow-SemiBold.woff2") format("woff2"),
+       url("../fonts/barlow/Barlow-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Barlow";
+  src: url("../fonts/barlow/Barlow-Bold.woff2") format("woff2"),
+       url("../fonts/barlow/Barlow-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../fonts/chakrapetch/ChakraPetch-Medium.woff2") format("woff2"),
+       url("../fonts/chakrapetch/ChakraPetch-Medium.ttf") format("truetype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../fonts/chakrapetch/ChakraPetch-SemiBold.woff2") format("woff2"),
+       url("../fonts/chakrapetch/ChakraPetch-SemiBold.ttf") format("truetype");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Chakra Petch";
+  src: url("../fonts/chakrapetch/ChakraPetch-Bold.woff2") format("woff2"),
+       url("../fonts/chakrapetch/ChakraPetch-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+:root { --co-font-body: "Barlow", system-ui, sans-serif; --co-font-title: "Chakra Petch", system-ui, sans-serif; }
+:root, :root[data-theme="light"] {
+  --co-text: #283D35;
+  --co-secondary: #4A6055;
+  --co-muted: #5C6B5E;
+  --co-accent: #245B51;
+  --co-gold: #7F612C;
+  --co-background: #E7E9DF;
+  --co-surface: #F8F7EF;
+}
+:root[data-theme="dark"] {
+  --co-text: #E4F5FB;
+  --co-secondary: #BBCDCF;
+  --co-muted: #99B1B4;
+  --co-accent: #8ADBD3;
+  --co-gold: #F0B554;
+  --co-background: #101B20;
+  --co-surface: #1B2C32;
+}
+/* Appliquer co-app à la zone de l’interface concernée. */
+.co-app { color: var(--co-text); background: var(--co-background); font-family: var(--co-font-body); font-size: 18px; line-height: 1.5; }
+.co-app :is(h1,h2,h3,.co-heading) { font-family: var(--co-font-title); font-weight: 700; line-height: 1.2; }
+.co-app h1 { font-size: 36px; } .co-app h2 { font-size: 28px; } .co-app h3 { font-size: 22px; }
+.co-app :is(button,input,select,textarea) { font-family: var(--co-font-body); font-size: 1rem; }
+.co-app button { font-weight: 600; }
+.co-app a { color: var(--co-accent); text-decoration: underline; text-underline-offset: .15em; }
+.co-secondary { color: var(--co-secondary); } .co-muted { color: var(--co-muted); }
+.co-reward { color: var(--co-gold); font-weight: 600; }
+.co-number { font-variant-numeric: tabular-nums; }
+.co-app.co-projection { font-size: 24px; }

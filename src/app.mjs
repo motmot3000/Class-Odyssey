@@ -744,7 +744,7 @@ const ACTIONS = {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `classquest-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.download = `class-odyssey-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
     toast("Backup file downloaded.", "success");

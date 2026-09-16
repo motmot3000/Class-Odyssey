@@ -2,7 +2,7 @@
 
 Reference: the user's supplied Link's Awakening-style character image.
 Shape language: generous rounded head, glossy oval eyes, broad golden locks,
-small cloth body and readable blue shield. The compass emblem is ClassQuest's.
+small cloth body and readable blue shield. The compass emblem is Class Odyssey's.
 MCP entry points: build_body(), build_head(), equipment_and_studio(), export().
 """
 import bpy

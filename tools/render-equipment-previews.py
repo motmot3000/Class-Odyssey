@@ -12,7 +12,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'assets/items-3d/previews'
-RAW = Path('/tmp/opencode/classquest-equipment-previews')
+RAW = Path('/tmp/opencode/class-odyssey-equipment-previews')
 RAW.mkdir(parents=True, exist_ok=True)
 OUT.mkdir(parents=True, exist_ok=True)
 scene = bpy.context.scene

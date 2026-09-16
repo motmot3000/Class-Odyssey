@@ -123,7 +123,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
     <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
       <div class="brand">
         <button class="brand-home" type="button" data-action="show-class" aria-label="${t('nav.class')}">
-        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="ClassQuest" width="869" height="212" />
+        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="Class Odyssey" width="869" height="212" />
         <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
         </button>
       </div>

@@ -9,12 +9,19 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
     <div class="welcome-landscape" aria-hidden="true"><img src="./assets/welcome-valley.webp" alt="" width="1536" height="1024" fetchpriority="high" /></div>
     <div class="welcome-content">
       <section class="welcome-intro" aria-labelledby="adventure-title">
+        <p class="welcome-brand">
+          <img class="welcome-lockup welcome-lockup-light" src="${BRAND.assets.lockupStackedLight}" alt="${BRAND.name}" width="861" height="409" />
+          <img class="welcome-lockup welcome-lockup-dark" src="${BRAND.assets.lockupStackedDark}" alt="" width="861" height="409" />
+        </p>
+        <span class="welcome-rule" aria-hidden="true"></span>
+        <p class="welcome-kicker">${t("welcome.kicker")}</p>
         <h1 id="adventure-title">${t("welcome.headlineStart")}<br /><span>${t("welcome.headlineEnd")}</span></h1>
         <p>${t("welcome.adventureHint")}</p>
         <a class="welcome-mobile-enter" href="#gate-title" data-welcome-enter>${t("welcome.enter")}${icon("back", "welcome-arrow")}</a>
       </section>
       <section class="gate welcome-gate" aria-labelledby="gate-title"><div class="gate-card">
         <img class="welcome-gate-seal welcome-gate-seal-light" src="${BRAND.assets.emblemLight}" alt="" width="48" height="48" />
+        <img class="welcome-gate-seal welcome-gate-seal-dark" src="${BRAND.assets.emblemDark}" alt="" width="48" height="48" />
         <h2 id="gate-title" tabindex="-1">${t(signup ? "welcome.createTitle" : "welcome.formTitle")}</h2>
         <p class="gate-lede">${t(signup ? "welcome.createHint" : "welcome.formHint")}</p>
         <div class="segmented gate-tabs" role="group" aria-label="${t("welcome.aria")}">
@@ -38,6 +45,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
           </form>`}
         ${error ? `<p id="gate-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
         <p class="welcome-account-note">${icon("user")}<span>${t("welcome.classAccount")}</span></p>
+        <p class="welcome-disclaimer"><span class="welcome-beta">${t("welcome.beta")}</span>${t("welcome.disclaimer")}</p>
       </div></section>
     </div>`;
 }

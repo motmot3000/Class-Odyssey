@@ -122,7 +122,7 @@ $('#export').addEventListener('click', async () => {
     const data = await viewer.exportLook(onlyItems);
     const url = URL.createObjectURL(new Blob([data], { type: 'model/gltf-binary' }));
     const link = document.createElement('a'); link.href = url;
-    link.download = `classquest-${onlyItems ? 'items' : names[look.persona].toLowerCase()}-${look.skin}-${look.weapon}.glb`;
+    link.download = `class-odyssey-${onlyItems ? 'items' : names[look.persona].toLowerCase()}-${look.skin}-${look.weapon}.glb`;
     link.click(); setTimeout(() => URL.revokeObjectURL(url), 30000);
     $('#action-status').textContent = 'La combinaison affichée a été exportée.';
   } catch (error) { console.error('Equipment export:', error); $('#action-status').textContent = 'L’export a échoué. Réessayez.'; }

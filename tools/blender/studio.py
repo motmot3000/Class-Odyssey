@@ -1,4 +1,4 @@
-"""Presentation/export for the Rodin-reconstructed ClassQuest ranger.
+"""Presentation/export for the Rodin-reconstructed Class Odyssey ranger.
 
 Run through Blender MCP after importing the image-to-3D result and orienting
 it upright (Z). Geometry comes from the documented reference in provenance.json.

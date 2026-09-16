@@ -1,5 +1,5 @@
 ---
-name: "ClassQuest — Atelier du rôdeur"
+name: "Class Odyssey — Atelier du rôdeur"
 description: "Relevé du prototype local avant/après et de son exploration 3D."
 colors:
   bg: "#0a1220"
@@ -49,7 +49,7 @@ components:
     height: "345px"
 ---
 
-# Design System: ClassQuest — Atelier du rôdeur
+# Design System: Class Odyssey — Atelier du rôdeur
 
 ## Overview
 

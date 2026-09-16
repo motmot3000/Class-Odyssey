@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 940" fill="none" role="img" aria-labelledby="title description">
   <title id="title">Personnage masculin 2.0 — base neutre</title>
   <desc id="description">Personnage masculin debout de face, visage naturel, cheveux châtains. Haut simple vert grisé, pantalon ardoise et chaussures sobres. Sans équipement, capuche, cape ni accessoire.</desc>
-  <metadata>Original ClassQuest 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=base; feminine=false</metadata>
+  <metadata>Original Class Odyssey 2.0 SVG. Exported from ranger-vector.svg and tools/svg/base-parts.svg by tools/svg/build-character-variants.py. Native editable paths; no bitmap or external dependency. Outfit=base; feminine=false</metadata>
   <view id="face" viewBox="219 86 122 159" />
   <view id="materials" viewBox="193 237 174 278" />
   <defs>

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-12T00:00:00Z",
-  "title": "Design System: ClassQuest — Atelier du rôdeur",
+  "title": "Design System: Class Odyssey — Atelier du rôdeur",
   "extensions": {
     "shadows": [
       { "name": "portrait", "value": "drop-shadow(0 22px 18px #02081260)", "purpose": "Filtre du portrait transparent, pas une ombre de panneau." },
