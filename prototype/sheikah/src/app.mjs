@@ -1,7 +1,7 @@
 import { createHeroViewer } from './viewer.mjs';
 
 /* ============================================================
-   ClassQuest — Tablette Sheikah (prototype complet)
+   Class Odyssey — Tablette Sheikah (prototype complet)
    Le plateau, la fiche et le vestiaire partagent une seule dalle 3D :
    on ne recharge jamais le modèle, on change l'état du vestiaire.
    ============================================================ */
@@ -487,7 +487,7 @@ function renderLogin() {
       <header class="gate-top">
         <div class="brand">
           <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-          <span class="brand-name">ClassQuest</span>
+          <span class="brand-name">Class Odyssey</span>
           <span class="brand-sub">Tablette Sheikah</span>
         </div>
         <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${theme === 'light'}" title="${theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}">${ico(theme === 'light' ? 'moon' : 'sun')}<span>${theme === 'light' ? 'Sombre' : 'Clair'}</span></button>
@@ -537,7 +537,7 @@ function renderTopbar() {
     <header class="topbar">
       <div class="brand">
         <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
-        <span class="brand-name">ClassQuest</span>
+        <span class="brand-name">Class Odyssey</span>
         <span class="brand-sub">Tablette Sheikah</span>
       </div>
       <nav class="tabs" aria-label="Classes">

@@ -1,5 +1,5 @@
 ---
-name: ClassQuest — personnages de base
+name: Class Odyssey — personnages de base
 description: Documentation de finition de l’intégration existante, UI historique anglaise et bleu nuit.
 colors:
   bg: "#0a1220"
@@ -24,7 +24,7 @@ components:
   hero-card: { backgroundColor: "{colors.surface-1}", rounded: "{rounded.lg}", padding: "12px" }
 ---
 
-# Design System: ClassQuest — personnages de base
+# Design System: Class Odyssey — personnages de base
 
 ## Overview
 **Creative North Star: "Le plateau de classe bleu nuit"**

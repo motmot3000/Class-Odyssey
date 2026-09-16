@@ -7,7 +7,7 @@
   "characters": {
     "files": ["ranger.webp", "mage.webp", "knight.webp"],
     "source": "Rendered from ../items-3d/catalogue.glb with the existing createHeroViewer and snapshot API. Catalogue revision: catalogue-v5-tailored-armour; base-v2 arms-lowered geometry. No generated or repainted anatomy.",
-    "credit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: ClassQuest study.",
+    "credit": "Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: Class Odyssey study.",
     "looks": {
       "ranger": { "persona": "male", "skin": "vocab-ranger", "hat": "explorer-cap", "weapon": "lore-lantern", "hair": "short", "hairColor": "brown-hair" },
       "mage": { "persona": "female", "skin": "grammar-mage", "hat": "no-hat", "weapon": "word-wand", "hair": "long", "hairColor": "red-hair" },

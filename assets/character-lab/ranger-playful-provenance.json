@@ -1,11 +1,11 @@
 {
-  "character": "ClassQuest \u2014 Jeune \u00e9claireur",
+  "character": "Class Odyssey \u2014 Jeune \u00e9claireur",
   "date": "2026-09-12",
   "method": "Procedural Blender mesh modeling, no generated reference or reconstruction service",
   "blender": "4.5.3 LTS",
   "script": "tools/blender/playful_ranger.py",
   "direction": "Jeune \u00e9claireur: a simple stylized adolescent adventurer, approximately four heads tall, relaxed asymmetric stance, small calm eyes, subtle smile, matte fern-green tunic, understated ochre scarf and brass lantern. Approachable video-game character, neither epic realism nor a child mascot.",
-  "sourceCostume": "ClassQuest: vocab-ranger, shadow-hood, lore-lantern",
+  "sourceCostume": "Class Odyssey: vocab-ranger, shadow-hood, lore-lantern",
   "model": {
     "file": "ranger-playful.glb",
     "triangles": 88840,

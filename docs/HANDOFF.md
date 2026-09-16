@@ -1,4 +1,4 @@
-# ClassQuest — note de passation
+# Class Odyssey — note de passation
 
 Dernière mise à jour : 20 août 2026 (passe bras / mains).
 

@@ -1,0 +1,78 @@
+[
+  {
+    "family": "barlow",
+    "commit": "6cdf01867df0813c2390f90dff7dc66c87f14cf7",
+    "commit_date": "2026-02-26T09:24:27Z",
+    "retrieved": "2026-09-16",
+    "files": [
+      {
+        "file": "fonts/barlow/Barlow-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/Barlow-Regular.ttf",
+        "sha256": "95aa02c7c43096e0dd44d787ba6216864a67157e402adab59b35572e0c1577ea"
+      },
+      {
+        "file": "fonts/barlow/Barlow-Italic.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/Barlow-Italic.ttf",
+        "sha256": "70cf45c354af39e55082fd506e748cc6a0a1812949875f99ded3f76bf691e4ca"
+      },
+      {
+        "file": "fonts/barlow/Barlow-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/Barlow-Medium.ttf",
+        "sha256": "f8906f762cb73dca441da034bc363b2d8e2e68bc10d5c05e58717646c20cc4b4"
+      },
+      {
+        "file": "fonts/barlow/Barlow-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/Barlow-SemiBold.ttf",
+        "sha256": "86577cb32f8abe3673db53ca0f4221e6856751a4f6730c867e00f720f8bb1fc5"
+      },
+      {
+        "file": "fonts/barlow/Barlow-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/Barlow-Bold.ttf",
+        "sha256": "84e6a4d61e7c3e21f3c50ea6a4f7e5303a3467864c038be6ea3759bab8d547f9"
+      },
+      {
+        "file": "fonts/barlow/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/OFL.txt",
+        "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+      },
+      {
+        "file": "fonts/barlow/METADATA.pb",
+        "url": "https://raw.githubusercontent.com/google/fonts/6cdf01867df0813c2390f90dff7dc66c87f14cf7/ofl/barlow/METADATA.pb",
+        "sha256": "636e983a5a87c2d7aa3ff9f6544f65910eac0c8537a2a8b29c584d786770d878"
+      }
+    ]
+  },
+  {
+    "family": "chakrapetch",
+    "commit": "a4c8c2a0f77efa06765d596d64d077af1d7f0dae",
+    "commit_date": "2026-02-26T09:24:31Z",
+    "retrieved": "2026-09-16",
+    "files": [
+      {
+        "file": "fonts/chakrapetch/ChakraPetch-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/a4c8c2a0f77efa06765d596d64d077af1d7f0dae/ofl/chakrapetch/ChakraPetch-Medium.ttf",
+        "sha256": "d480f4f97405fac3600652e2e14fd0b14339031c0af4da11582994878f04d919"
+      },
+      {
+        "file": "fonts/chakrapetch/ChakraPetch-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/a4c8c2a0f77efa06765d596d64d077af1d7f0dae/ofl/chakrapetch/ChakraPetch-SemiBold.ttf",
+        "sha256": "45264de3204ddbd5fb3e14a2402acd5c630d16650ae5fc221d2c52da46a6734b"
+      },
+      {
+        "file": "fonts/chakrapetch/ChakraPetch-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/a4c8c2a0f77efa06765d596d64d077af1d7f0dae/ofl/chakrapetch/ChakraPetch-Bold.ttf",
+        "sha256": "65fbf76d95651697275e19db4d717c0e95a789ddd3476478b05292104db278a0"
+      },
+      {
+        "file": "fonts/chakrapetch/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/a4c8c2a0f77efa06765d596d64d077af1d7f0dae/ofl/chakrapetch/OFL.txt",
+        "sha256": "13831d02389d917d22fcfa6c79f98f8acbf61d230add0e73a4d4dc5f3bfb9e56"
+      },
+      {
+        "file": "fonts/chakrapetch/METADATA.pb",
+        "url": "https://raw.githubusercontent.com/google/fonts/a4c8c2a0f77efa06765d596d64d077af1d7f0dae/ofl/chakrapetch/METADATA.pb",
+        "sha256": "d008cbaed83da54bb765bbcdc33f913a57a110b1e59e381b1d424797cf33f5a2"
+      }
+    ]
+  }
+]

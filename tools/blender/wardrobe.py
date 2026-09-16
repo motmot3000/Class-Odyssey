@@ -94,7 +94,7 @@ def bob_back(hairmat):
 
 def characters():
     global collection
-    scene=bpy.context.scene;scene.name='ClassQuest • Noa & Mila wardrobe'
+    scene=bpy.context.scene;scene.name='Class Odyssey • Noa & Mila wardrobe'
     OUT.mkdir(parents=True,exist_ok=True)
     collection=bpy.data.collections.new('Wardrobe • tagged modular pieces');scene.collection.children.link(collection)
     for obj in list(neutral.character.objects):

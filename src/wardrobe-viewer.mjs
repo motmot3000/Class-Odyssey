@@ -57,7 +57,7 @@ export async function createWardrobeViewer(container, initialState, { onProgress
   function release(){pointer=undefined;}
   renderer.domElement.addEventListener('pointerup',release);renderer.domElement.addEventListener('pointercancel',release);
   renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;setVisible(false);onError('La session 3D a été interrompue. Rechargez la page pour retrouver le vestiaire.');});
-  async function exportLook(){const {GLTFExporter}=await import('three/addons/exporters/GLTFExporter.js');model.updateMatrixWorld(true);model.userData.source_credit='Source morphology: Nintendo / The Models Resource — Trikeboy. Wardrobe adaptation: ClassQuest prototype.';return new GLTFExporter().parseAsync(model,{binary:true,onlyVisible:true,trs:true,animations:[],maxTextureSize:1024});}
+  async function exportLook(){const {GLTFExporter}=await import('three/addons/exporters/GLTFExporter.js');model.updateMatrixWorld(true);model.userData.source_credit='Source morphology: Nintendo / The Models Resource — Trikeboy. Wardrobe adaptation: Class Odyssey prototype.';return new GLTFExporter().parseAsync(model,{binary:true,onlyVisible:true,trs:true,animations:[],maxTextureSize:1024});}
   applyState(initialState);
   container.append(renderer.domElement);
   const observer=new ResizeObserver(resize);observer.observe(container);resize();

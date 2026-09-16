@@ -7,21 +7,23 @@
    ============================================================ */
 
 export const BRAND = {
-  id: "classquest",
-  name: "ClassQuest",
+  id: "class-odyssey",
+  name: "Class Odyssey",
   assets: {
     base: "./assets/brand/",
     favicon: "./assets/brand/icons/favicon.svg",
     faviconIco: "./assets/brand/icons/favicon.ico",
     appleTouchIcon: "./assets/brand/icons/apple-touch-icon.png",
     manifest: "./assets/brand/icons/site.webmanifest",
-    logoLight: "./assets/brand/svg/classquest-horizontal-light.svg",
-    logoDark: "./assets/brand/svg/classquest-horizontal-dark.svg",
-    lockupStackedLight: "./assets/brand/svg/classquest-stacked-light.svg",
-    lockupStackedDark: "./assets/brand/svg/classquest-stacked-dark.svg",
-    emblemLight: "./assets/brand/svg/classquest-emblem-light.svg",
-    emblemDark: "./assets/brand/svg/classquest-emblem-dark.svg",
-    titleLight: "./assets/brand/svg/classquest-wordmark-light.svg",
-    titleDark: "./assets/brand/svg/classquest-wordmark-dark.svg"
+    logoLight: "./assets/brand/svg/class-odyssey-horizontal-light.svg",
+    logoDark: "./assets/brand/svg/class-odyssey-horizontal-dark.svg",
+    lockupStackedLight: "./assets/brand/svg/class-odyssey-stacked-light.svg",
+    lockupStackedDark: "./assets/brand/svg/class-odyssey-stacked-dark.svg",
+    emblemLight: "./assets/brand/svg/class-odyssey-emblem-light.svg",
+    emblemDark: "./assets/brand/svg/class-odyssey-emblem-dark.svg",
+    titleLight: "./assets/brand/svg/class-odyssey-wordmark-light.svg",
+    titleDark: "./assets/brand/svg/class-odyssey-wordmark-dark.svg",
+    pngEmblemLight: "./assets/brand/png/class-odyssey-emblem-light-512.png",
+    pngEmblemDark: "./assets/brand/png/class-odyssey-emblem-dark-512.png"
   }
 };

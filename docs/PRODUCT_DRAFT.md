@@ -1,9 +1,9 @@
-# ClassQuest - Draft produit
+# Class Odyssey - Draft produit
 
 Sources utilisées :
 
 - `decription.md`
-- `ClassQuest.docx`
+- `Class Odyssey.docx`
 
 ## Périmètre du premier draft
 
