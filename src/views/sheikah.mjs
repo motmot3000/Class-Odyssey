@@ -34,9 +34,10 @@ const ico = (name, cls = "") => {
     menu: `<path d="M4 5h12M4 10h12M4 15h12"/>`,
     // Lucide "settings": a cog, so the options control reads as parameters.
     settings: `<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>`,
-    shop: `<path d="M4 7.5h12l-1 8.5H5z"/><path d="M7.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5"/>`
+    shop: `<path d="M4 7.5h12l-1 8.5H5z"/><path d="M7.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5"/>`,
+    logout: `<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>`
   };
-  const VIEWBOXES = { settings: "0 0 24 24", book: "0 0 24 24" };
+  const VIEWBOXES = { settings: "0 0 24 24", book: "0 0 24 24", logout: "0 0 24 24" };
   const path = paths[name];
   if (!path) return "";
   return `<svg class="ic ${cls}" viewBox="${VIEWBOXES[name] || "0 0 20 20"}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
@@ -153,6 +154,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
             <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
             ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-current="${view === "admin" ? "page" : "false"}" aria-label="${t("app.aria.accounts")}" title="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}
             ${unlocked ? `<button type="button" class="ghost" data-action="lock-adult" aria-label="${t("console.account.lock")}" title="${t("console.account.lock")}">${ico("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
+            <button type="button" class="ghost" data-action="sign-out" aria-label="${t("console.account.signout")}" title="${t("console.account.signout")}">${ico("logout")}<span>${t("console.account.signout")}</span></button>
           </div>
         </details>
       </div>`}

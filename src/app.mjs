@@ -1215,12 +1215,31 @@ function loadState(accountId) {
   }
 }
 
+function accountLangKey(id) {
+  return `classquest.lang:${id}`;
+}
+
+function rememberAccountLanguage(language = getLang()) {
+  if (!account) return;
+  try { localStorage.setItem(accountLangKey(account.id), language); } catch { /* storage unavailable */ }
+}
+
+// Each account keeps its last language: on sign-in the stored choice wins, and
+// a first sign-in adopts whatever language the welcome page is showing.
+function applyAccountLanguage() {
+  let preferred = null;
+  try { preferred = localStorage.getItem(accountLangKey(account.id)); } catch { /* storage unavailable */ }
+  if (preferred === "fr" || preferred === "en") setLang(preferred);
+  else rememberAccountLanguage();
+}
+
 function openAccount(next) {
   closeDialog({ resumeConsole:false });
   clearTimeout(persistTimer);
   persistTimer = null;
   saveQueued = false;
   account = next;
+  applyAccountLanguage();
   activeSession = captureSessionContext();
   state = loadState(next.id);
   localDirty = loadDirty(next.id);
@@ -1532,8 +1551,11 @@ function renderPreservingForms() {
 }
 
 initLanguage();
+// A restored session applies the account's saved language, exactly like a fresh sign-in.
+if (account) applyAccountLanguage();
 document.getElementById("lang-toggle")?.addEventListener("click", () => {
   setLang(getLang() === "fr" ? "en" : "fr");
+  rememberAccountLanguage();
   if (!ui.teacherDialog) closeDialog();
   renderPreservingForms();
 });

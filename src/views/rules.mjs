@@ -15,7 +15,7 @@ export function renderRules({ unlocked = true } = {}) {
   return `
     <article class="rules">
       <header class="rules-head">
-        <span class="rules-emblem" aria-hidden="true">${icon('book')}</span>
+        <span class="rules-emblem" aria-hidden="true">${icon('bookOpen')}</span>
         <div class="rules-heading-copy">
         <h1>${t("rules.title.how")}</h1>
         <p class="lede">${t("rules.lede")}</p>

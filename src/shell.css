@@ -395,6 +395,8 @@ dialog.dialog:not([open]) { display: none; }
   border-radius: 12px 0 0 12px; overflow: hidden; z-index: 45;
 }
 .teacher-session-status { min-height: 18px; padding-top: 10px; color: var(--muted); font-size: 12px; }
+.teacher-session-lock { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; }
+.teacher-session-lock .teacher-session-status { padding-top: 0; }
 .hero-class-return { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
 body[data-teacher-panel="open"] .teacher-console-tab { z-index: 46; right: min(480px,calc(100vw - 44px)); }
 @media (min-width: 1101px) {

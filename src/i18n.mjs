@@ -665,7 +665,9 @@ export function setLang(next) {
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
     const label = document.getElementById("current-lang");
-    if (label) label.textContent = lang.toUpperCase();
+    // The control shows the language it switches TO, with an arrow, so the
+    // welcome page reads as "switch to English" rather than a bare code.
+    if (label) label.textContent = lang === "fr" ? "EN →" : "FR →";
     const toggle = document.getElementById("lang-toggle");
     toggle?.setAttribute("aria-label", lang === "fr" ? "Passer en anglais" : "Switch to French");
     toggle?.setAttribute("title", lang === "fr" ? "Passer en anglais" : "Switch to French");
