@@ -7,7 +7,6 @@ import {
   STORAGE_KEY,
   RULE_SECTIONS,
   addPupil,
-  addClass,
   addRule,
   awardMoney,
   awardXp,
@@ -15,6 +14,7 @@ import {
   changeHpMany,
   clearSelection,
   createInitialState,
+  createClass,
   getCurrentClass,
   getPupilById,
   getRewardsBetween,
@@ -63,7 +63,7 @@ import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderMentions, renderPrivacy } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
-import { renderAddPupilDialog, renderAddClassDialog, renderItemDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { loadTourGuide } from "./tourguide.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
@@ -388,9 +388,9 @@ function updateClock() {
 // authorization. Recheck it on each mutation because an open screen can expire.
 const TEACHER_ACTIONS = new Set([
   "award-xp", "award-money", "hp-minus", "hp-plus", "heal-all",
-  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add"
+  "remove-pupil", "reset-all", "export", "import", "refresh-admin", "focus-add", "add-class"
 ]);
-const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset", "save-rule"]);
+const TEACHER_FORMS = new Set(["custom-xp", "custom-money", "add-pupil", "rename-pupil", "change-password", "admin-reset", "save-rule", "create-class"]);
 function allowTeacherAction() {
   if (isAdultUnlocked()) return true;
   openTeacherGate();
@@ -581,10 +581,6 @@ const ACTIONS = {
     rememberAccountLanguage(lang);
     advanceOnboarding();
   },
-  "add-class": () => {
-    showDialog(renderAddClassDialog());
-    dialogRoot.querySelector('.dialog-add-pupil input[name="name"]')?.focus();
-  },
 
   /* ---------- Sheikah navigation and customization ---------- */
   "toggle-theme": () => {
@@ -721,6 +717,13 @@ const ACTIONS = {
     rememberStudent(null);
     state = { ...state, activeClassId: el.dataset.classId, selectedPupilId: null, selectedPupilIds: [] };
     navigate('#class');
+  },
+
+  // A new classroom is a teacher action: the "+" in the class menu opens a
+  // small form for the name and, optionally, the first students.
+  "add-class": () => {
+    disarmDanger();
+    showDialog(renderNewClassDialog(), 'add');
   },
 
   // Selecting a hero also focuses its details in the teacher console.
@@ -1013,15 +1016,26 @@ const FORMS = {
   },
 
   "create-class": (form) => {
-    const name = String(new FormData(form).get("name") || "").trim();
+    const data = new FormData(form);
+    const name = String(data.get("name") || "").trim();
     if (!name) {
-      toast(t("class.add.invalid"), "info");
-      form.querySelector('input[name="name"]')?.focus();
+      toast(t("class.new.nameRequired"), "info");
+      form.querySelector("#new-class-name")?.focus();
       return;
     }
-    closeDialog();
-    commit(addClass(state, name));
-    toast(t("class.add.done"), "success");
+    const students = String(data.get("students") || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const next = createClass(state, { name, students });
+    if (next === state) return;
+    closeDialog({ resumeConsole:false });
+    ui.sheikahView = "board";
+    ui.draft = null;
+    rememberStudent(null);
+    commit(next);
+    navigate("#class");
+    toast(t("notice.classCreated", { name }), "success");
   },
 
   "rename-pupil": (form) => {
