@@ -30,7 +30,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         </div>
         ${signup ? `
           <form class="gate-form" data-action="sign-up" aria-busy="${pending}" ${error ? 'aria-describedby="gate-error"' : ""}>
-            <label class="field"><span>${t("welcome.field.class")}</span><input name="displayName" maxlength="80" autocomplete="organization" value="${escapeHtml(values.displayName || "")}" ${off} /></label>
+            <label class="field"><span>${t("welcome.field.email")}</span><input id="gate-email" name="email" type="email" autocomplete="email" required maxlength="160" value="${escapeHtml(values.email || "")}" ${off} /></label>
             <label class="field"><span>${t("welcome.field.username")}</span><input id="gate-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required minlength="3" maxlength="32" aria-describedby="username-hint" value="${escapeHtml(values.username || "")}" ${off} /></label>
             <p class="field-hint" id="username-hint">${t("welcome.usernameHint")}</p>
             <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="new-password" required minlength="4" maxlength="128" aria-describedby="password-hint" ${off} /></label>

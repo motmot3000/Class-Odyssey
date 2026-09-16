@@ -42,9 +42,10 @@ const PATHS = {
   unlock: `<rect x="4.5" y="8.5" width="11" height="8" rx="1.8"/><path d="M7.2 8.5V6.6a2.8 2.8 0 0 1 5.5-.6"/><path d="M10 11.6v2"/>`,
   /* Same Lucide "book-open" as the rules button in the topbar, so the rules
    * emblem and its entry point share one mark. */
-  bookOpen: `<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>`
+  bookOpen: `<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>`,
+  edit: `<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>`
 };
-const VIEWBOXES = { bookOpen: "0 0 24 24" };
+const VIEWBOXES = { bookOpen: "0 0 24 24", edit: "0 0 24 24" };
 
 export function icon(name, extraClass = "") {
   const path = PATHS[name];

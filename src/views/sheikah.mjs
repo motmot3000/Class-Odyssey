@@ -147,6 +147,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
               <span class="class-picker-name">${escapeHtml(classroom.name)}</span>${active ? ico("check") : ""}
             </button>`;
           }).join("")}
+          <button type="button" class="class-picker-add" data-action="add-class">${ico("plus")}<span>${t("class.add")}</span></button>
         </div>
       </details>
       <div class="top-end">
