@@ -168,12 +168,28 @@ async function openSession(path, credentials) {
 export const signIn = (username, password) =>
   openSession("session", { username: String(username ?? "").trim(), password: String(password ?? "") });
 
-export const signUp = ({ username, displayName, password }) =>
+export const signUp = ({ username, email, password }) =>
   openSession("accounts", {
     username: String(username ?? "").trim(),
-    displayName: String(displayName ?? "").trim(),
+    email: String(email ?? "").trim(),
     password: String(password ?? "")
   });
+
+/* Account settings (language, theme, onboarding) live on the server account so
+ * they survive across devices while remaining changeable at any time. */
+export async function updateSettings(patch) {
+  const context = captureSessionContext();
+  const { offline, response, payload } = await callApi("account/settings", { method: "PUT", body: patch, context });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
+  const session = readStored(SESSION_KEY);
+  if (session && session.account?.id === payload.account.id) {
+    writeStored(SESSION_KEY, { ...session, account: payload.account });
+  }
+  return { ok: true, account: payload.account };
+}
 
 export async function signOut() {
   ++authGeneration;

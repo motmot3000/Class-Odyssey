@@ -176,7 +176,7 @@ test("a token revoked while a state body arrives cannot perform a late write", a
 async function signUp(request, username, password = "teacher-secret") {
   const result = await request("/api/accounts", {
     method: "POST",
-    body: { username, displayName: `Class ${username}`, password }
+    body: { username, email: `${username}@example.test`, displayName: `Class ${username}`, password }
   });
   assert.equal(result.response.status, 201);
   return result.payload;
@@ -261,6 +261,42 @@ test("signup, sessions, empty state, isolation, backups and revision conflicts w
   }
 });
 
+test("account settings and email persist per account and stay changeable", async () => {
+  const app = await fixture();
+  try {
+    const teacher = await signUp(app.request, "settings.teacher");
+    assert.ok(teacher.account.email.startsWith("settings.teacher@") && teacher.account.email.includes("."));
+    assert.deepEqual(teacher.account.settings, { language: null, theme: null, onboarding: { completed: false, step: 0 } });
+
+    const updated = await app.request("/api/account/settings", {
+      method: "PUT", token: teacher.token,
+      body: { language: "fr", theme: "dark", onboarding: { step: 2 } }
+    });
+    assert.equal(updated.response.status, 200);
+    assert.deepEqual(updated.payload.account.settings, { language: "fr", theme: "dark", onboarding: { completed: false, step: 2 } });
+
+    // A partial patch keeps the keys it does not send.
+    const completed = await app.request("/api/account/settings", {
+      method: "PUT", token: teacher.token, body: { onboarding: { completed: true } }
+    });
+    assert.deepEqual(completed.payload.account.settings, { language: "fr", theme: "dark", onboarding: { completed: true, step: 2 } });
+
+    // Invalid values are ignored rather than stored.
+    const invalid = await app.request("/api/account/settings", {
+      method: "PUT", token: teacher.token, body: { theme: "neon", language: "de" }
+    });
+    assert.equal(invalid.payload.account.settings.theme, "dark");
+    assert.equal(invalid.payload.account.settings.language, "fr");
+
+    // Settings are protected and signup requires a usable email address.
+    assert.equal((await app.request("/api/account/settings", { method: "PUT", body: { theme: "dark" } })).response.status, 401);
+    assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "noemail", password: "password" } })).response.status, 400);
+    assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "bademail", email: "nope", password: "password" } })).response.status, 400);
+  } finally {
+    await app.close();
+  }
+});
+
 test("password changes revoke other sessions while preserving the requesting session", async () => {
   const app = await fixture();
   try {
@@ -299,7 +335,7 @@ test("admin listing and password reset are protected, sanitized and revoke targe
     assert.equal(item.activeSessionCount, 2);
     assert.ok(item.createdAt);
     assert.ok(item.lastLoginAt);
-    assert.deepEqual(Object.keys(item).sort(), ["activeSessionCount", "createdAt", "id", "lastLoginAt", "pupilCount", "role", "username"]);
+    assert.deepEqual(Object.keys(item).sort(), ["activeSessionCount", "createdAt", "email", "id", "lastLoginAt", "pupilCount", "role", "username"]);
     assert.equal(JSON.stringify(listing.payload).includes("hash"), false);
     assert.equal(JSON.stringify(listing.payload).includes(teacher.token), false);
 

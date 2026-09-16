@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   addPupil,
+  addClass,
+  addRule,
   awardMoney,
   awardXp,
   canBuyItem,
@@ -15,6 +17,7 @@ import {
   getPupilById,
   getRewardsForLevel,
   getRewardsBetween,
+  getRules,
   getShopItem,
   getShopItems,
   getUnlockedSkins,
@@ -23,9 +26,11 @@ import {
   isItemOwned,
   normalizeState,
   purchaseItem,
+  removeRule,
   renamePupil,
   restoreHpAll,
   selectAllInClass,
+  setRule,
   setSelectMode,
   toggleSelection,
   toggleClassSelection,
@@ -522,6 +527,16 @@ test("normalizePupil keeps equipped cosmetics even if they are missing from owne
   assert.equal(isItemOwned(pupil, "grammar-mage"), true);
 });
 
+test("a new class is appended, becomes active and starts empty", () => {
+  const state = addClass(createInitialState(), "  9P  ");
+  assert.equal(state.classes.length, 3);
+  const created = state.classes.at(-1);
+  assert.equal(created.name, "9P");
+  assert.deepEqual(created.pupils, []);
+  assert.equal(state.activeClassId, created.id);
+  assert.equal(addClass(state, "   "), state);
+});
+
 test("normalizePupil migrates the legacy coins field to money", () => {
   const state = createInitialState();
   const pupilId = getCurrentClass(state).pupils[0].id;
@@ -540,4 +555,29 @@ test("normalizePupil migrates the legacy coins field to money", () => {
   const normalized = normalizeState(legacy);
   assert.equal(getPupilById(normalized, pupilId).money, 42);
   assert.equal(getPupilById(normalized, pupilId).coins, undefined);
+});
+
+test("rules are account data with three bilingual lists that survive a round trip", () => {
+  const initial = createInitialState();
+  assert.deepEqual(Object.keys(getRules(initial)).sort(), ["journey", "money", "xp"]);
+  assert.ok(getRules(initial).journey.every((rule) => rule.fr && rule.en));
+
+  let state = addRule(initial, "xp", { fr: "Range ton bureau.", en: "Tidy your desk." });
+  assert.equal(getRules(state).xp.at(-1).en, "Tidy your desk.");
+  state = setRule(state, "xp", 0, { fr: "Fais tes devoirs !", en: "" });
+  assert.deepEqual(getRules(state).xp[0], { fr: "Fais tes devoirs !", en: "Fais tes devoirs !" });
+  state = removeRule(state, "xp", 0);
+  assert.equal(getRules(state).xp[0].en, "Learn your vocabulary.");
+
+  // A reload keeps an edited empty list instead of restoring the defaults.
+  state = removeRule(removeRule(state, "money", 1), "money", 1);
+  state = removeRule(state, "money", 0);
+  assert.deepEqual(normalizeState(state).rules.money, []);
+
+  // Old accounts with no rules keep the current copy in both languages.
+  const legacy = { ...createInitialState(), classes: createInitialState().classes };
+  delete legacy.rules;
+  const restored = getRules(normalizeState(legacy));
+  assert.ok(restored.journey.length === 7 && restored.journey[0].fr.length > 0);
+  assert.ok(restored.money[0].en.length > 0);
 });

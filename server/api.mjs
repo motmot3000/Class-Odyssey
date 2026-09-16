@@ -8,12 +8,40 @@ const MIN_PASSWORD_LENGTH = 10;
 const MAX_PASSWORD_LENGTH = 128;
 const MAX_DISPLAY_NAME_LENGTH = 60;
 const MAX_CLASS_NAME_LENGTH = 80;
+const MAX_EMAIL_LENGTH = 160;
 const MAX_ACCOUNTS = Number(process.env.MAX_ACCOUNTS || 500);
 const SESSION_TTL_SECONDS = 14 * 24 * 60 * 60;
 const DEFAULT_MAX_BACKUPS = 60;
 // Bound scrypt's memory so a burst of hashing cannot exhaust the container.
 const SCRYPT_OPTIONS = { maxmem: 64 * 1024 * 1024 };
 const scrypt = promisify(crypto.scrypt);
+
+export const DEFAULT_SETTINGS = Object.freeze({ language: null, theme: null, onboarding: Object.freeze({ completed: false, step: 0 }) });
+
+/* Account settings are additive: missing or invalid values fall back to the
+ * neutral defaults so legacy accounts and partial updates stay renderable. */
+export function settingsWithDefaults(settings) {
+  const source = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : {};
+  const onboarding = source.onboarding && typeof source.onboarding === "object" && !Array.isArray(source.onboarding)
+    ? source.onboarding
+    : {};
+  return {
+    language: source.language === "fr" || source.language === "en" ? source.language : null,
+    theme: source.theme === "light" || source.theme === "dark" ? source.theme : null,
+    onboarding: {
+      completed: Boolean(onboarding.completed),
+      step: Number.isSafeInteger(onboarding.step) && onboarding.step >= 0 ? onboarding.step : 0
+    }
+  };
+}
+
+function emailProblem(email) {
+  const value = String(email || "").trim();
+  if (!value) return "an email address is required";
+  if (value.length > MAX_EMAIL_LENGTH) return "the email address is too long";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "the email address is not valid";
+  return null;
+}
 
 function emptyState() {
   return {
@@ -120,22 +148,24 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
   }
 
-  function buildAccount(username, displayName, role, hash) {
+  function buildAccount(username, displayName, role, hash, email = "") {
     const now = new Date().toISOString();
     return {
       id: crypto.randomBytes(12).toString("hex"),
       username,
+      email: String(email || "").trim(),
       displayName,
       role,
       hash,
       createdAt: now,
       updatedAt: now,
-      lastLoginAt: null
+      lastLoginAt: null,
+      settings: settingsWithDefaults(null)
     };
   }
 
-  async function newAccount(username, displayName, password, role = "teacher") {
-    return buildAccount(username, displayName, role, await hashPassword(password));
+  async function newAccount(username, displayName, password, role = "teacher", email = "") {
+    return buildAccount(username, displayName, role, await hashPassword(password), email);
   }
 
   function validAccountsIndex(index) {
@@ -232,8 +262,11 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       let changed = false;
       for (const [id, account] of Object.entries(index.accounts)) {
         const role = founder && account.username === founder ? "admin" : (account.role || "teacher");
-        if (role !== account.role) {
-          index.accounts[id] = { ...account, role };
+        const email = typeof account.email === "string" ? account.email : "";
+        // Backfill settings and email on legacy accounts without touching data.
+        const settings = account.settings === undefined ? settingsWithDefaults(null) : account.settings;
+        if (role !== account.role || email !== account.email || settings !== account.settings) {
+          index.accounts[id] = { ...account, role, email, settings };
           changed = true;
         }
       }
@@ -327,10 +360,12 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
   const publicAccount = (account) => ({
     id: account.id,
     username: account.username,
+    email: account.email || "",
     displayName: account.displayName,
     role: account.role || "teacher",
     createdAt: account.createdAt,
-    lastLoginAt: account.lastLoginAt || null
+    lastLoginAt: account.lastLoginAt || null,
+    settings: settingsWithDefaults(account.settings)
   });
 
   return {
@@ -354,8 +389,10 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     sessionFor,
     activeSessionCounts,
     publicAccount,
+    settingsWithDefaults,
+    emailProblem,
     emptyState,
     ensureDir,
-    limits: { MAX_DISPLAY_NAME_LENGTH, MAX_CLASS_NAME_LENGTH, MAX_ACCOUNTS }
+    limits: { MAX_DISPLAY_NAME_LENGTH, MAX_CLASS_NAME_LENGTH, MAX_EMAIL_LENGTH, MAX_ACCOUNTS }
   };
 }

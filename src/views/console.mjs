@@ -39,6 +39,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     ${renderTarget(classroom, ui, targets)}
     ${renderAward(ui, targets)}
     ${renderHeroPanel(focused, ui, open)}
+    ${renderRulesPanel(open)}
     ${renderActivityPanel(events, open)}
     ${renderDataPanel(open, armedReset)}
     ${renderAccountPanel(open, unlockedUntil, account)}
@@ -207,6 +208,16 @@ function renderHeroPanel(pupil, ui, open) {
     <details class="panel" data-panel="shop" ${open("shop")}>
       <summary>${icon("shop")}<span>${t("console.shop.summary", { name: escapeHtml(pupil.name) })}</span></summary>
       ${renderShop(pupil, ui.shopCategory)}
+    </details>
+  `;
+}
+
+function renderRulesPanel(open) {
+  return `
+    <details class="panel" data-panel="rules" ${open("rules")}>
+      <summary>${icon("book")}<span>${t("console.rules.summary")}</span></summary>
+      <p class="panel-note">${t("console.rules.note")}</p>
+      <button class="btn btn-primary btn-sm" type="button" data-action="show-rules">${icon("book")}<span>${t("console.rules.change")}</span></button>
     </details>
   `;
 }

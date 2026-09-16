@@ -165,14 +165,19 @@ export function createGameServer({
     if (!payload) return;
     const username = api.normalizeUsername(stringField(payload, "username"));
     const password = stringField(payload, "password");
+    const email = stringField(payload, "email").trim();
     const displayName = cleanDisplayName(stringField(payload, "displayName")) || username;
-    const problem = api.usernameProblem(username) || api.passwordProblem(password);
+    const problem = api.usernameProblem(username) || api.passwordProblem(password) || api.emailProblem(email);
     if (problem) {
       sendJson(res, 400, { error: problem });
       return;
     }
     if (displayName.length > api.limits.MAX_DISPLAY_NAME_LENGTH) {
       sendJson(res, 400, { error: "the class name is too long" });
+      return;
+    }
+    if (email.length > api.limits.MAX_EMAIL_LENGTH) {
+      sendJson(res, 400, { error: "the email is too long" });
       return;
     }
     const index = api.readAccounts();
@@ -186,7 +191,7 @@ export function createGameServer({
       sendJson(res, 400, { error: "account could not be created" });
       return;
     }
-    const account = await api.newAccount(username, displayName, password);
+    const account = await api.newAccount(username, displayName, password, "teacher", email);
     api.createAccountWithState(index, account);
     sendJson(res, 201, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(account) });
   }
@@ -290,6 +295,40 @@ export function createGameServer({
     sendJson(res, 200, { ok: true, revision, updatedAt });
   }
 
+  /* Settings are account-scoped and additive: a partial patch only touches the
+   * keys it sends, so preferences survive and stay changeable later. */
+  async function handleSettings(req, res) {
+    const session = requireSession(req, res);
+    if (!session) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account) {
+      sendJson(res, 404, { error: "account not found" });
+      return;
+    }
+    const current = api.settingsWithDefaults(account.settings);
+    const next = {
+      language: current.language,
+      theme: current.theme,
+      onboarding: { ...current.onboarding }
+    };
+    if (Object.hasOwn(payload, "language") && (payload.language === null || payload.language === "fr" || payload.language === "en")) {
+      next.language = payload.language;
+    }
+    if (Object.hasOwn(payload, "theme") && (payload.theme === null || payload.theme === "light" || payload.theme === "dark")) {
+      next.theme = payload.theme;
+    }
+    if (payload.onboarding && typeof payload.onboarding === "object" && !Array.isArray(payload.onboarding)) {
+      if (Object.hasOwn(payload.onboarding, "completed")) next.onboarding.completed = Boolean(payload.onboarding.completed);
+      if (Number.isSafeInteger(payload.onboarding.step) && payload.onboarding.step >= 0) next.onboarding.step = payload.onboarding.step;
+    }
+    index.accounts[account.id] = { ...account, settings: next, updatedAt: new Date().toISOString() };
+    api.writeAccounts(index);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(index.accounts[account.id]) });
+  }
+
   function handleAdminList(req, res) {
     if (!requireAdmin(req, res)) return;
     const counts = api.activeSessionCounts();
@@ -299,6 +338,7 @@ export function createGameServer({
       return {
         id: account.id,
         username: account.username,
+        email: account.email || "",
         role: account.role || "teacher",
         createdAt: account.createdAt,
         lastLoginAt: account.lastLoginAt || null,
@@ -356,6 +396,7 @@ export function createGameServer({
       }
       if (pathname === "/api/session/verify" && req.method === "POST") return await handleVerify(req, res);
       if (pathname === "/api/session/password" && req.method === "PUT") return await handlePasswordChange(req, res);
+      if (pathname === "/api/account/settings" && req.method === "PUT") return await handleSettings(req, res);
       if (pathname === "/api/state" && ["GET", "HEAD", "PUT"].includes(req.method)) return await handleState(req, res);
       if (pathname === "/api/admin/accounts" && req.method === "GET") return handleAdminList(req, res);
       const resetMatch = pathname.match(/^\/api\/admin\/accounts\/([0-9a-f]{24})\/password$/);

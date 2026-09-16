@@ -22,6 +22,12 @@ import {
 } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
 
+const RULE_SECTION_LABEL = {
+  journey: "rules.title.how",
+  xp: "rules.title.xp",
+  money: "rules.title.money"
+};
+
 const TYPE_LABEL = {
   outfit: () => t("modal.type.outfit"),
   hat: () => t("modal.type.hat"),
@@ -34,8 +40,18 @@ const TYPE_LABEL = {
   bespoke: () => t("modal.type.bespoke")
 };
 
-export function renderAddPupilDialog(classroom) {
-  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
+export function renderAddClassDialog() {
+  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-class-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="add-class-title">${t('class.add.title')}</h2>
+    <form class="add-form" data-action="create-class">
+      <label class="field"><span>${t('class.add.name')}</span><input name="name" autocomplete="off" required maxlength="60" placeholder="${t('class.add.placeholder')}" autofocus /></label>
+      <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.add.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
+    </form>
+  </dialog>`;
+}
+
+export function renderAddPupilDialog(classroom) {  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
     <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
     <h2 id="add-pupil-title">${t('console.roster.add')}</h2>
     <p class="panel-note">${t('console.roster.joining',{name:escapeHtml(classroom.name)})}</p>
@@ -143,4 +159,21 @@ export function renderItemDialog(item, pupil) {
       ` : ""}
     </dialog>
   `;
+}
+
+/* One rule is a bilingual pair: the French text is required, the English one
+ * falls back to it. Editing reuses the same dialog as adding, with the index
+ * telling app.mjs which list entry to replace. */
+export function renderRuleDialog({ section, index = null, rule = null } = {}) {
+  const editing = index !== null && index !== undefined;
+  return `<dialog class="dialog dialog-rule" aria-labelledby="rule-dialog-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="rule-dialog-title">${editing ? t("rules.edit.title") : t("rules.edit.new")}</h2>
+    <p class="panel-note">${t(RULE_SECTION_LABEL[section] || "rules.title.how")}</p>
+    <form class="rule-form" data-action="save-rule" data-section="${escapeHtml(section)}" data-index="${editing ? Number(index) : ""}">
+      <label class="field"><span>${t("rules.edit.fr")}</span><textarea name="fr" rows="3" maxlength="240" required autofocus>${escapeHtml(rule?.fr || "")}</textarea></label>
+      <label class="field"><span>${t("rules.edit.en")}</span><textarea name="en" rows="3" maxlength="240" placeholder="${t("rules.edit.enFallback")}">${escapeHtml(rule?.en || "")}</textarea></label>
+      <div class="row"><button class="btn btn-primary" type="submit">${t("common.save")}</button><button class="btn" type="button" data-action="close-dialog">${t("common.cancel")}</button></div>
+    </form>
+  </dialog>`;
 }
