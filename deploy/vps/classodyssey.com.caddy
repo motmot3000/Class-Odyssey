@@ -1,0 +1,8 @@
+# Temporary redirect: the app is served from www.thomaswunsche.com/classodyssey
+# while classodyssey.com is still categorised as a Newly Registered Domain by
+# the Geneva school proxy (art. 16a LIP) and the school DNS does not resolve
+# classodyssey.thomaswunsche.com yet.
+classodyssey.com, www.classodyssey.com {
+	import security_headers
+	redir https://www.thomaswunsche.com/classodyssey{uri} temporary
+}
