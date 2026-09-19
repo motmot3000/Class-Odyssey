@@ -4,7 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { isStateDocument } from "../src/state-schema.mjs";
 
-const MIN_PASSWORD_LENGTH = 10;
+const MIN_PASSWORD_LENGTH = 6;
 const MAX_PASSWORD_LENGTH = 128;
 const MAX_DISPLAY_NAME_LENGTH = 60;
 const MAX_CLASS_NAME_LENGTH = 80;
@@ -174,6 +174,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
+      terms: null,
       settings: settingsWithDefaults(null)
     };
   }
@@ -215,6 +216,38 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
 
   const findByUsername = (index, username) =>
     Object.values(index.accounts).find((account) => account.username === username) || null;
+
+  const findByEmail = (index, email) =>
+    Object.values(index.accounts).find((account) => String(account.email || "").trim().toLowerCase() === String(email || "").trim().toLowerCase()) || null;
+
+  // Accounts identify themselves by email; the username used for storage and
+  // state folders is derived once from the address so users type only the
+  // email and a password.
+  function usernameFromEmail(email) {
+    const local = String(email || "").split("@")[0].toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "_")
+      .replace(/^[._-]+/, "")
+      .replace(/[._-]+$/, "");
+    if (/^[a-z0-9][a-z0-9._-]{2,31}$/.test(local)) return local;
+    const padded = `teacher-${local}`.slice(0, 32).replace(/[^a-z0-9._-]$/, "");
+    if (/^[a-z0-9][a-z0-9._-]{2,31}$/.test(padded)) return padded;
+    return `teacher-${crypto.randomBytes(4).toString("hex")}`;
+  }
+
+  /* Google sign-in creates a free username when the address local part is
+   * already taken, instead of refusing the account. */
+  function availableUsername(index, base) {
+    const candidate = /^[a-z0-9][a-z0-9._-]{2,31}$/.test(base) ? base : usernameFromEmail(base);
+    let username = candidate;
+    let counter = 2;
+    while (findByUsername(index, username)) {
+      const room = Math.max(3, 32 - String(counter).length - 1);
+      username = `${candidate.slice(0, room)}-${counter}`;
+      counter += 1;
+      if (counter > 1000) return `teacher-${crypto.randomBytes(4).toString("hex")}`;
+    }
+    return username;
+  }
 
   function parseStateFile(file) {
     const state = readJsonFile(file);
@@ -379,6 +412,9 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     role: account.role || "teacher",
     createdAt: account.createdAt,
     lastLoginAt: account.lastLoginAt || null,
+    terms: account.terms && typeof account.terms === "object" && account.terms.acceptedAt
+      ? { acceptedAt: account.terms.acceptedAt, version: account.terms.version || null }
+      : null,
     settings: settingsWithDefaults(account.settings)
   });
 
@@ -391,6 +427,9 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     writeState,
     readState,
     findByUsername,
+    findByEmail,
+    usernameFromEmail,
+    availableUsername,
     normalizeUsername,
     usernameProblem,
     passwordProblem,

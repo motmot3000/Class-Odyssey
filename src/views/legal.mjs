@@ -67,11 +67,11 @@ const MENTIONS_LEGALES = {
       },
       {
         heading: "Protection des données personnelles",
-        body: `<p>La collecte et le traitement des données personnelles dans le cadre de l'utilisation de Class Odyssey sont décrits dans notre <a href="#politique-de-confidentialite">Politique de confidentialité</a>, conforme à la loi fédérale sur la protection des données (LPD révisée, en vigueur depuis le 1er septembre 2023) et, pour les personnes concernées, au Règlement général sur la protection des données de l'Union européenne (RGPD).</p>`
+        body: `<p>La collecte et le traitement des données personnelles dans le cadre de l'utilisation de Class Odyssey sont décrits dans notre <a href="#politique-de-confidentialite">Politique de confidentialité</a>, conforme à la loi fédérale sur la protection des données (LPD révisée, en vigueur depuis le 1er septembre 2023) et, pour les personnes concernées, au Règlement général sur la protection des données de l'Union européenne (RGPD). Les règles d'utilisation du service sont précisées dans nos <a href="#conditions-utilisation">Conditions d'utilisation</a>.</p>`
       },
       {
         heading: "Cookies",
-        body: `<p>Class Odyssey utilise des cookies et un stockage local strictement nécessaires à son fonctionnement, notamment pour maintenir la session d'un compte connecté. Ces cookies sont obligatoires pour créer un compte et pour se connecter ; leur utilisation est confirmée par une case à cocher lors de la création de compte ou de la connexion. Leurs catégories, leurs finalités et les moyens de les gérer sont détaillés dans la section « Cookies et technologies de suivi » de notre <a href="#politique-de-confidentialite">Politique de confidentialité</a>.</p>`
+        body: `<p>Class Odyssey utilise des cookies et un stockage local strictement nécessaires à son fonctionnement, notamment pour maintenir la session d'un compte connecté. La création d'un compte suppose l'acceptation des <a href="#conditions-utilisation">Conditions d'utilisation</a> et de la <a href="#politique-de-confidentialite">Politique de confidentialité</a>. Une mesure d'audience (Google Analytics 4) n'est déposée qu'avec votre consentement, recueilli via le bandeau dédié et révocable à tout moment. Le détail figure dans la section « Cookies et technologies de suivi » de la Politique de confidentialité.</p>`
       },
       {
         heading: "Droit applicable et for juridique",
@@ -133,15 +133,132 @@ const MENTIONS_LEGALES = {
       },
       {
         heading: "Personal data protection",
-        body: `<p>The collection and processing of personal data in connection with the use of Class Odyssey are described in our <a href="#politique-de-confidentialite">Privacy policy</a>, which complies with the Swiss Federal Act on Data Protection (revised FADP, in force since 1 September 2023) and, where applicable, the European Union General Data Protection Regulation (GDPR).</p>`
+        body: `<p>The collection and processing of personal data in connection with the use of Class Odyssey are described in our <a href="#politique-de-confidentialite">Privacy policy</a>, which complies with the Swiss Federal Act on Data Protection (revised FADP, in force since 1 September 2023) and, where applicable, the European Union General Data Protection Regulation (GDPR). The rules for using the service are set out in our <a href="#conditions-utilisation">Terms of use</a>.</p>`
       },
       {
         heading: "Cookies",
-        body: `<p>Class Odyssey uses cookies and local storage that are strictly necessary for its operation, in particular to maintain a signed-in account session. These cookies are required to create an account and to sign in; their use is confirmed by a checkbox on account creation or sign-in. Their categories, purposes and the means to manage them are detailed in the “Cookies and tracking technologies” section of our <a href="#politique-de-confidentialite">Privacy policy</a>.</p>`
+        body: `<p>Class Odyssey uses cookies and local storage that are strictly necessary for its operation, in particular to maintain a signed-in account session. Creating an account requires accepting the <a href="#conditions-utilisation">Terms of use</a> and the <a href="#politique-de-confidentialite">Privacy policy</a>. Audience measurement (Google Analytics 4) is only stored with your consent, collected through the dedicated banner and revocable at any time. Details appear in the “Cookies and tracking technologies” section of the Privacy policy.</p>`
       },
       {
         heading: "Governing law and jurisdiction",
         body: `<p>This application and its content are governed by Swiss law. Subject to mandatory provisions on jurisdiction, any dispute relating to its use or content falls under the exclusive jurisdiction of the ordinary courts of the canton of Geneva, Switzerland.</p>`
+      }
+    ]
+  }
+};
+
+const CONDITIONS = {
+  fr: {
+    kicker: "Cadre d'utilisation",
+    title: "Conditions d'utilisation",
+    lede: "Les règles qui encadrent la création d'un compte et l'usage de Class Odyssey.",
+    updated: "18 septembre 2026",
+    sections: [
+      {
+        heading: "Objet et acceptation",
+        body: `<p>Class Odyssey est un service en ligne de gamification des leçons d'anglais destiné aux enseignants. La création d'un compte et l'utilisation du service supposent l'acceptation pleine et entière des présentes conditions ainsi que de la <a href="#politique-de-confidentialite">Politique de confidentialité</a> et des <a href="#mentions-legales">Mentions légales</a>. Lors de l'inscription, cette acceptation est confirmée par une case à cocher ; pour un compte créé via Google, elle est demandée à la première connexion.</p>`
+      },
+      {
+        heading: "Compte enseignant",
+        body: `
+          <p>L'utilisateur crée un compte personnel avec une adresse e-mail valide. Il s'engage à fournir des informations exactes et à les tenir à jour.</p>
+          <p>Il est responsable de la confidentialité de ses identifiants et de toute activité effectuée depuis son compte. En cas d'accès non autorisé, il doit prévenir l'éditeur dans les meilleurs délais à ${MAILTO}.</p>`
+      },
+      {
+        heading: "Usage acceptable",
+        body: `
+          <p>L'utilisateur s'engage à utiliser Class Odyssey dans un cadre pédagogique licite, sans porter atteinte aux droits de tiers. Il est notamment interdit de :</p>
+          <ul>
+            <li>tenter d'accéder sans autorisation à des comptes, données ou parties du service ;</li>
+            <li>contourner ou perturber les mesures de sécurité, l'authentification ou les limitations d'usage ;</li>
+            <li>extraire massivement les données, copier le service ou en faire un usage commercial sans autorisation écrite ;</li>
+            <li>publier des contenus illicites, diffamatoires ou portant atteinte à la vie privée d'autrui.</li>
+          </ul>`
+      },
+      {
+        heading: "Données des élèves",
+        body: `<p>L'enseignant est seul responsable des données de ses élèves qu'il saisit dans le service. Il s'engage à respecter le cadre légal applicable à son établissement, notamment l'information des parents et les autorisations éventuelles. Il lui est recommandé de ne saisir que les informations nécessaires. Le traitement de ces données est décrit dans la <a href="#politique-de-confidentialite">Politique de confidentialité</a>.</p>`
+      },
+      {
+        heading: "Propriété intellectuelle",
+        body: `<p>Class Odyssey et l'ensemble de ses éléments sont la propriété exclusive de l'éditeur, dans les conditions détaillées dans les <a href="#mentions-legales">Mentions légales</a>. L'utilisation pédagogique en classe par un enseignant et ses élèves est autorisée gratuitement pour le moment, à des fins non lucratives et sans revente.</p>`
+      },
+      {
+        heading: "Disponibilité et version bêta",
+        body: `<p>Le service est proposé en <strong>version bêta</strong>, gratuitement pour le moment. L'éditeur s'efforce de le maintenir disponible et à jour, sans garantir une disponibilité ininterrompue ni l'absence d'erreurs ou de pertes de données. Il est recommandé d'exporter régulièrement une sauvegarde de ses classes. Les fonctionnalités et les conditions d'accès peuvent évoluer à tout moment.</p>`
+      },
+      {
+        heading: "Responsabilité",
+        body: `<p>Dans les limites permises par le droit suisse, la responsabilité de l'éditeur ne saurait être engagée pour les dommages directs ou indirects résultant de l'utilisation ou de l'impossibilité d'utiliser le service, notamment en cas de perte de données. L'utilisateur demeure responsable de la sauvegarde de ses données et de l'usage qu'il fait du service.</p>`
+      },
+      {
+        heading: "Suspension et suppression",
+        body: `<p>L'utilisateur peut cesser d'utiliser le service à tout moment et demander la suppression de son compte. L'éditeur peut suspendre ou supprimer un compte en cas de manquement grave aux présentes conditions, notamment pour un usage illicite ou une atteinte à la sécurité du service, après information lorsque cela est possible.</p>`
+      },
+      {
+        heading: "Modification des conditions",
+        body: `<p>Les présentes conditions peuvent être mises à jour pour refléter des évolutions légales ou techniques. La date de dernière modification figure en haut de page. En cas de changement substantiel, l'utilisateur est invité à accepter la nouvelle version lors de sa prochaine connexion.</p>`
+      },
+      {
+        heading: "Droit applicable",
+        body: `<p>Les présentes conditions sont régies par le droit suisse. Sous réserve des dispositions impératives en matière de for, tout litige relève de la compétence exclusive des tribunaux ordinaires du canton de Genève, Suisse.</p>`
+      }
+    ]
+  },
+  en: {
+    kicker: "Usage framework",
+    title: "Terms of use",
+    lede: "The rules that apply when creating an account and using Class Odyssey.",
+    updated: "18 September 2026",
+    sections: [
+      {
+        heading: "Purpose and acceptance",
+        body: `<p>Class Odyssey is an online service that gamifies English lessons for teachers. Creating an account and using the service require full acceptance of these terms, the <a href="#politique-de-confidentialite">Privacy policy</a> and the <a href="#mentions-legales">Legal notice</a>. At sign-up this acceptance is confirmed by a checkbox; for an account created through Google, it is requested at first sign-in.</p>`
+      },
+      {
+        heading: "Teacher account",
+        body: `
+          <p>The user creates a personal account with a valid email address and undertakes to provide accurate information and keep it up to date.</p>
+          <p>The user is responsible for keeping their credentials confidential and for all activity carried out from their account. In the event of unauthorised access, they must notify the publisher promptly at ${MAILTO}.</p>`
+      },
+      {
+        heading: "Acceptable use",
+        body: `
+          <p>The user undertakes to use Class Odyssey for lawful educational purposes, without infringing the rights of others. In particular, it is prohibited to:</p>
+          <ul>
+            <li>attempt to access accounts, data or parts of the service without authorisation;</li>
+            <li>circumvent or disrupt security measures, authentication or usage limits;</li>
+            <li>mass-extract data, copy the service or use it commercially without written authorisation;</li>
+            <li>publish unlawful or defamatory content, or content that breaches the privacy of others.</li>
+          </ul>`
+      },
+      {
+        heading: "Pupil data",
+        body: `<p>The teacher is solely responsible for the data of their pupils entered into the service. They undertake to comply with the legal framework applicable to their institution, in particular informing parents and obtaining any required authorisations. They should enter only the information that is necessary. The processing of that data is described in the <a href="#politique-de-confidentialite">Privacy policy</a>.</p>`
+      },
+      {
+        heading: "Intellectual property",
+        body: `<p>Class Odyssey and all of its components are the exclusive property of the publisher, as detailed in the <a href="#mentions-legales">Legal notice</a>. Classroom use by a teacher and their pupils is authorised free of charge for the time being, for non-profit purposes and without resale.</p>`
+      },
+      {
+        heading: "Availability and beta version",
+        body: `<p>The service is offered as a <strong>beta version</strong>, free of charge for the time being. The publisher strives to keep it available and up to date, without guaranteeing uninterrupted availability or the absence of errors or data loss. Exporting a backup of your classes regularly is recommended. Features and access conditions may change at any time.</p>`
+      },
+      {
+        heading: "Liability",
+        body: `<p>To the extent permitted by Swiss law, the publisher cannot be held liable for direct or indirect damage resulting from the use of, or inability to use, the service, in particular in the event of data loss. The user remains responsible for backing up their data and for their use of the service.</p>`
+      },
+      {
+        heading: "Suspension and deletion",
+        body: `<p>The user may stop using the service at any time and request the deletion of their account. The publisher may suspend or delete an account in the event of a serious breach of these terms, in particular for unlawful use or an attack on the security of the service, informing the user where possible.</p>`
+      },
+      {
+        heading: "Changes to the terms",
+        body: `<p>These terms may be updated to reflect legal or technical developments. The last update date appears at the top of the page. In the event of a substantial change, the user is invited to accept the new version at their next sign-in.</p>`
+      },
+      {
+        heading: "Governing law",
+        body: `<p>These terms are governed by Swiss law. Subject to mandatory provisions on jurisdiction, any dispute falls under the exclusive jurisdiction of the ordinary courts of the canton of Geneva, Switzerland.</p>`
       }
     ]
   }
@@ -152,7 +269,7 @@ const CONFIDENTIALITE = {
     kicker: "Vie privée",
     title: "Politique de confidentialité",
     lede: "Comment nous collectons, utilisons et protégeons vos données personnelles.",
-    updated: "16 septembre 2026",
+    updated: "18 septembre 2026",
     sections: [
       {
         heading: "Responsable du traitement",
@@ -169,9 +286,9 @@ const CONFIDENTIALITE = {
           <h3>2. Données de classe et des élèves</h3>
           <p>Pour faire fonctionner le jeu, l'enseignant saisit des données concernant ses élèves : prénom, personnage choisi, apparence, niveau, XP, points de vie, pièces et achats. Ces données peuvent concerner des mineurs (élèves d'environ 11 à 13 ans). Elles sont saisies par l'enseignant, qui est responsable de disposer du fondement légal ou de l'accord nécessaire pour ce traitement.</p>
           <h3>3. Données conservées sur votre appareil</h3>
-          <p>Le navigateur conserve localement, pour le compte connecté, un jeton de session, vos préférences (thème, langue), l'identifiant de l'élève consulté et une copie de progression hors ligne. Aucun cookie publicitaire ni traceur tiers n'est déposé à ce jour.</p>
+          <p>Le navigateur conserve localement, pour le compte connecté, un jeton de session, vos préférences (thème, langue), l'identifiant de l'élève consulté et une copie de progression hors ligne. Ces éléments sont strictement nécessaires au service. La mesure d'audience (Google Analytics 4) n'est activée qu'après votre consentement : aucun cookie de mesure n'est déposé avant ce choix.</p>
           <h3>4. Données techniques</h3>
-          <p>L'hébergeur peut traiter votre adresse IP et des journaux de connexion à des fins de sécurité, de diagnostic et de bon fonctionnement de l'application.</p>`
+          <p>L'hébergeur peut traiter votre adresse IP et des journaux de connexion à des fins de sécurité, de diagnostic et de bon fonctionnement de l'application. Lorsque vous y consentez, Google Analytics 4 traite des données de navigation agrégées et une adresse IP anonymisée (voir « Cookies et technologies de suivi »).</p>`
       },
       {
         heading: "Finalités et bases légales",
@@ -181,18 +298,21 @@ const CONFIDENTIALITE = {
             <li><strong>Fournir le service</strong> (comptes, classes, progression, boutique) — exécution du contrat ou de mesures précontractuelles (art. 6 §1 lit. b RGPD).</li>
             <li><strong>Assurer la sécurité</strong> et prévenir les abus — intérêt légitime (art. 6 §1 lit. f RGPD).</li>
             <li><strong>Répondre à vos demandes</strong> — votre consentement ou l'exécution de mesures précontractuelles (art. 6 §1 lit. a et b RGPD).</li>
+            <li><strong>Mesurer l'audience</strong> afin d'améliorer le service — votre consentement (art. 6 §1 lit. a RGPD), révocable à tout moment via le bouton « Gérer les cookies ».</li>
           </ul>`
       },
       {
         heading: "Cookies et technologies de suivi",
         body: `
-          <p>Class Odyssey utilise des cookies et technologies similaires <strong>strictement nécessaires</strong> à son fonctionnement. Ces cookies sont <strong>obligatoires</strong> pour créer un compte et pour se connecter : sans eux, aucune session ne peut être maintenue. Leur utilisation est portée à votre connaissance et confirmée par une case à cocher lors de la création de compte ou de la connexion.</p>
+          <p>Class Odyssey utilise des cookies et technologies similaires <strong>strictement nécessaires</strong> à son fonctionnement, ainsi qu'une mesure d'audience soumise à votre <strong>consentement</strong>. Rien n'est déposé pour la mesure d'audience tant que vous n'avez pas fait un choix explicite dans le bandeau de consentement.</p>
           <h3>Cookies strictement nécessaires</h3>
-          <p>Session et authentification du compte, sécurité des requêtes, préférences d'affichage (thème, langue). Ils ne servent à aucun suivi publicitaire ni profilage et ne peuvent être désactivés sans empêcher la connexion.</p>
-          <h3>Mesure d'audience et publicité</h3>
-          <p>Class Odyssey n'utilise à ce jour ni mesure d'audience tierce ni cookie publicitaire. Si de telles technologies étaient ajoutées, votre consentement préalable serait recueilli et la présente politique mise à jour.</p>
+          <p>Session et authentification du compte, sécurité des requêtes, préférences d'affichage (thème, langue). Ils ne servent à aucun suivi publicitaire ni profilage et ne peuvent être désactivés sans empêcher la connexion. Le cookie <code>tarteaucitron</code> mémorise vos choix de consentement ; il est lui aussi strictement nécessaire.</p>
+          <h3>Mesure d'audience (Google Analytics 4)</h3>
+          <p>Avec votre accord uniquement, nous utilisons <strong>Google Analytics 4</strong> pour comprendre comment l'application est utilisée : pages consultées, durée de visite, parcours, type d'appareil, source de la visite et interactions (défilement, clics sortants). L'adresse IP est anonymisée avant enregistrement et les données sont exploitées sous forme agrégée, à des fins d'amélioration du service uniquement. Durée de conservation : jusqu'à 14 mois. Vous pouvez retirer votre accord à tout moment sans que cela affecte l'utilisation du service.</p>
+          <h3>Publicité (Google Ads)</h3>
+          <p>Class Odyssey ne diffuse pas de publicité à ce jour. Si des campagnes Google Ads étaient lancées, leur mesure d'efficacité et le remarketing reposeraient sur votre consentement préalable, recueilli via le même bandeau et révocable à tout moment. Les cookies publicitaires Google ont une durée pouvant aller jusqu'à 13 mois.</p>
           <h3>Gérer ou refuser les cookies</h3>
-          <p>Conformément à l'art. 45c de la loi fédérale sur les télécommunications (LTC), vous pouvez à tout moment configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies strictement nécessaires empêche toutefois la connexion et l'utilisation du compte.</p>`
+          <p>Vous pouvez modifier ou retirer votre choix à tout moment grâce au bouton <strong>« Gérer les cookies »</strong> présent en pied de page. Conformément à l'art. 45c de la loi fédérale sur les télécommunications (LTC), vous pouvez également configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies strictement nécessaires empêche toutefois la connexion et l'utilisation du compte.</p>`
       },
       {
         heading: "Hébergement et destinataires des données",
@@ -200,7 +320,7 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Transferts de données à l'étranger",
-        body: `<p>Les données sont hébergées en Suisse et Class Odyssey ne les transfère pas hors de Suisse. Les polices de caractères sont servies localement depuis le site : aucun appel à un service de polices tiers n'est effectué.</p>`
+        body: `<p>Les données sont hébergées en Suisse et Class Odyssey ne les transfère pas hors de Suisse, à l'exception suivante : si vous consentez à la mesure d'audience, les données de navigation agrégées sont traitées par Google (Google Ireland Limited et, le cas échéant, Google LLC) dans le cadre des garanties appropriées prévues par le RGPD. Sans ce consentement, aucune donnée de navigation n'est transmise à Google. Les polices de caractères sont servies localement depuis le site : aucun appel à un service de polices tiers n'est effectué.</p>`
       },
       {
         heading: "Durée de conservation",
@@ -243,7 +363,7 @@ const CONFIDENTIALITE = {
     kicker: "Privacy",
     title: "Privacy policy",
     lede: "How we collect, use and protect your personal data.",
-    updated: "16 September 2026",
+    updated: "18 September 2026",
     sections: [
       {
         heading: "Data controller",
@@ -260,9 +380,9 @@ const CONFIDENTIALITE = {
           <h3>2. Class and pupil data</h3>
           <p>To run the game, the teacher enters data about their pupils: first name, chosen character, appearance, level, XP, hit points, coins and purchases. This data may concern minors (pupils aged roughly 11 to 13). It is entered by the teacher, who is responsible for having the legal basis or necessary consent for that processing.</p>
           <h3>3. Data stored on your device</h3>
-          <p>The browser stores locally, for the signed-in account, a session token, your preferences (theme, language), the selected pupil identifier and an offline progress copy. No advertising cookie or third-party tracker is used to date.</p>
+          <p>The browser stores locally, for the signed-in account, a session token, your preferences (theme, language), the selected pupil identifier and an offline progress copy. These are strictly necessary for the service. Audience measurement (Google Analytics 4) is only activated after your consent: no measurement cookie is stored before that choice.</p>
           <h3>4. Technical data</h3>
-          <p>The host may process your IP address and connection logs for security, diagnostics and the proper operation of the application.</p>`
+          <p>The host may process your IP address and connection logs for security, diagnostics and the proper operation of the application. When you consent to it, Google Analytics 4 processes aggregated browsing data and an anonymised IP address (see “Cookies and tracking technologies”).</p>`
       },
       {
         heading: "Purposes and legal bases",
@@ -272,18 +392,21 @@ const CONFIDENTIALITE = {
             <li><strong>Providing the service</strong> (accounts, classes, progress, shop) — performance of the contract or pre-contractual steps (Art. 6(1)(b) GDPR).</li>
             <li><strong>Ensuring security</strong> and preventing abuse — legitimate interest (Art. 6(1)(f) GDPR).</li>
             <li><strong>Responding to your requests</strong> — your consent or performance of pre-contractual steps (Art. 6(1)(a) and (b) GDPR).</li>
+            <li><strong>Measuring audience</strong> in order to improve the service — your consent (Art. 6(1)(a) GDPR), revocable at any time via the “Manage cookies” button.</li>
           </ul>`
       },
       {
         heading: "Cookies and tracking technologies",
         body: `
-          <p>Class Odyssey uses cookies and similar technologies that are <strong>strictly necessary</strong> for its operation. These cookies are <strong>mandatory</strong> to create an account and to sign in: without them, no session can be maintained. Their use is brought to your attention and confirmed by a checkbox on account creation or sign-in.</p>
+          <p>Class Odyssey uses cookies and similar technologies that are <strong>strictly necessary</strong> for its operation, as well as audience measurement subject to your <strong>consent</strong>. Nothing is stored for audience measurement until you have made an explicit choice in the consent banner.</p>
           <h3>Strictly necessary cookies</h3>
-          <p>Account session and authentication, request security, display preferences (theme, language). They are not used for advertising or profiling and cannot be disabled without preventing sign-in.</p>
-          <h3>Analytics and advertising</h3>
-          <p>Class Odyssey currently uses no third-party analytics and no advertising cookie. If such technologies were added, your prior consent would be collected and this policy updated.</p>
+          <p>Account session and authentication, request security, display preferences (theme, language). They are not used for advertising or profiling and cannot be disabled without preventing sign-in. The <code>tarteaucitron</code> cookie remembers your consent choices; it is itself strictly necessary.</p>
+          <h3>Audience measurement (Google Analytics 4)</h3>
+          <p>Only with your agreement do we use <strong>Google Analytics 4</strong> to understand how the application is used: pages viewed, visit duration, navigation paths, device type, traffic source and interactions (scrolling, outbound clicks). The IP address is anonymised before storage and the data is used in aggregate form, solely to improve the service. Retention period: up to 14 months. You may withdraw your agreement at any time without affecting your use of the service.</p>
+          <h3>Advertising (Google Ads)</h3>
+          <p>Class Odyssey currently displays no advertising. If Google Ads campaigns were launched, their effectiveness measurement and remarketing would rely on your prior consent, collected through the same banner and revocable at any time. Google advertising cookies have a lifetime of up to 13 months.</p>
           <h3>Managing or refusing cookies</h3>
-          <p>In accordance with Art. 45c of the Swiss Federal Act on Telecommunications (TCA), you may configure your browser at any time to block or delete cookies. Blocking strictly necessary cookies will, however, prevent sign-in and use of the account.</p>`
+          <p>You can change or withdraw your choice at any time using the <strong>“Manage cookies”</strong> button in the page footer. In accordance with Art. 45c of the Swiss Federal Act on Telecommunications (TCA), you may also configure your browser to block or delete cookies. Blocking strictly necessary cookies will, however, prevent sign-in and use of the account.</p>`
       },
       {
         heading: "Hosting and recipients of the data",
@@ -291,7 +414,7 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Transfers of data abroad",
-        body: `<p>The data is hosted in Switzerland and Class Odyssey does not transfer it outside Switzerland. Fonts are served locally from the site: no third-party font service is called.</p>`
+        body: `<p>The data is hosted in Switzerland and Class Odyssey does not transfer it outside Switzerland, with the following exception: if you consent to audience measurement, the aggregated browsing data is processed by Google (Google Ireland Limited and, where applicable, Google LLC) under the appropriate safeguards provided by the GDPR. Without that consent, no browsing data is transmitted to Google. Fonts are served locally from the site: no third-party font service is called.</p>`
       },
       {
         heading: "Retention period",
@@ -363,4 +486,8 @@ export function renderMentions() {
 
 export function renderPrivacy() {
   return renderDoc(localized(CONFIDENTIALITE));
+}
+
+export function renderTerms() {
+  return renderDoc(localized(CONDITIONS));
 }

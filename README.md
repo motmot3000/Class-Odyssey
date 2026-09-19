@@ -15,7 +15,7 @@ cp .env.example .env
 
 Dans `.env`, choisir `FOUNDER_USERNAME` (3 à 32 caractères : lettres minuscules,
 chiffres, points, tirets ou underscores) et renseigner `FOUNDER_PASSWORD`
-(4 à 128 caractères). Puis lancer :
+(6 à 128 caractères). Puis lancer :
 
 ```bash
 npm run dev
@@ -38,6 +38,18 @@ par Git. Les variables déjà exportées dans le terminal sont prioritaires.
 Les deux identifiants servent à créer le compte administrateur lors de la
 première initialisation ; modifier `.env` ensuite ne réinitialise pas son mot
 de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
+
+### Connexion Google (facultatif)
+
+Le bouton **Continuer avec Google** apparaît dès que `GOOGLE_CLIENT_ID` et
+`GOOGLE_CLIENT_SECRET` sont renseignés. Dans la console Google Cloud, créer un
+identifiant OAuth 2.0 de type « application Web » et autoriser l'URI de
+redirection `https://<domaine>/api/auth/google/callback` (en local,
+`http://127.0.0.1:5180/api/auth/google/callback`, ou le port choisi). À la
+première connexion, Class Odyssey crée le compte à partir de l'adresse Google
+vérifiée ; si un compte existe déjà avec cet e-mail, Google ouvre ce compte.
+Aucun mot de passe n'est nécessaire : un administrateur peut en définir un plus
+tard depuis **Accounts**.
 
 Les données locales sont conservées dans `server/data/`, propre à chaque
 worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
@@ -70,6 +82,12 @@ Chaque enseignant dispose d'un compte, d'un état et de sauvegardes isolés. Le
 compte fondateur a le rôle `admin` et voit en plus la page **Accounts**, qui
 permet de consulter les comptes et de réinitialiser le mot de passe d'un autre
 compte.
+
+À l'inscription, une case à cocher obligatoire recueille l'acceptation des
+[Conditions d'utilisation](src/views/legal.mjs) et de la Politique de
+confidentialité ; la date et la version acceptées sont conservées sur le compte
+(`src/terms.mjs`). Un compte créé via Google valide ces textes à sa première
+connexion.
 
 ## Production (sauvegarde partagée)
 

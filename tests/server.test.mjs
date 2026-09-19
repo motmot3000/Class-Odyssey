@@ -176,7 +176,7 @@ test("a token revoked while a state body arrives cannot perform a late write", a
 async function signUp(request, username, password = "teacher-secret") {
   const result = await request("/api/accounts", {
     method: "POST",
-    body: { username, email: `${username}@example.test`, displayName: `Class ${username}`, password }
+    body: { username, email: `${username}@example.test`, displayName: `Class ${username}`, password, termsAccepted: true }
   });
   assert.equal(result.response.status, 201);
   return result.payload;
@@ -292,6 +292,24 @@ test("account settings and email persist per account and stay changeable", async
     assert.equal((await app.request("/api/account/settings", { method: "PUT", body: { theme: "dark" } })).response.status, 401);
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "noemail", password: "password" } })).response.status, 400);
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "bademail", email: "nope", password: "password" } })).response.status, 400);
+
+    // Signup without a username derives it from the email; signing in works
+    // with either the email or the derived username.
+    const emailOnly = await app.request("/api/accounts", { method: "POST", body: { email: "marie.dupont@example.test", password: "password", termsAccepted: true } });
+    assert.equal(emailOnly.response.status, 201);
+    assert.equal(emailOnly.payload.account.username, "marie.dupont");
+    assert.equal(emailOnly.payload.account.terms.version, "2026-09-18");
+    assert.ok(emailOnly.payload.account.terms.acceptedAt);
+    const emailSignin = await app.request("/api/session", { method: "POST", body: { username: "Marie.Dupont@example.test", password: "password" } });
+    assert.equal(emailSignin.response.status, 200);
+    const duplicateEmail = await app.request("/api/accounts", { method: "POST", body: { email: "marie.dupont@example.test", password: "other-password", termsAccepted: true } });
+    assert.equal(duplicateEmail.response.status, 400);
+    assert.equal(duplicateEmail.payload.error, "account could not be created");
+
+    // The legal texts must be accepted explicitly.
+    const noTerms = await app.request("/api/accounts", { method: "POST", body: { email: "without.terms@example.test", password: "password" } });
+    assert.equal(noTerms.response.status, 400);
+    assert.equal(noTerms.payload.error, "the terms must be accepted");
   } finally {
     await app.close();
   }

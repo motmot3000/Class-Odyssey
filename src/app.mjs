@@ -37,6 +37,7 @@ import { BRAND } from "./brand.mjs";
 import { requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
+  acceptTerms,
   captureSessionContext,
   changePassword,
   forgetSession,
@@ -46,6 +47,7 @@ import {
   isSignedIn,
   lockAdult,
   signIn,
+  signInWithGoogleCode,
   signOut,
   signUp,
   unlockAdult,
@@ -56,12 +58,13 @@ import {
 } from "./session.mjs";
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
+import { renderConsent } from "./views/consent.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderMentions, renderPrivacy } from "./views/legal.mjs";
+import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
@@ -110,6 +113,7 @@ let localDirty = account ? loadDirty(account.id) : false;
 let syncConflict = false;
 let gateRequest = 0;
 let armedDanger = null;
+let googleEnabled = false;
 const pendingFlash = new Set();
 
 /* Transient UI preferences. Resetting them must never change classroom data. */
@@ -138,6 +142,8 @@ const ui = {
   adminAccounts: [],
   adminPending: false,
   adminError: "",
+  consentPending: false,
+  consentError: "",
   /* Interface Sheikah */
   sheikahView: "board",
   angle: "quarter",
@@ -180,7 +186,10 @@ function applyTheme() {
 function currentView() {
   if (location.hash === "#mentions-legales") return "mentions";
   if (location.hash === "#politique-de-confidentialite") return "privacy";
+  if (location.hash === "#conditions-utilisation") return "terms";
   if (!isSignedIn()) return "welcome";
+  // Accounts created through Google accept the legal texts once, after login.
+  if (!account?.terms?.acceptedAt) return "consent";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
   // Older #board/#student bookmarks now enter the same public class space.
@@ -224,8 +233,10 @@ function render() {
   const titleKey = view === "welcome" ? "welcome.title.signin"
     : view === "rules" ? "app.aria.rules"
     : view === "admin" ? "app.aria.accounts"
+    : view === "consent" ? "consent.title"
     : view === "mentions" ? "footer.mentions"
     : view === "privacy" ? "footer.privacy"
+    : view === "terms" ? "footer.terms"
     : "nav.class";
   document.title = `${t(titleKey)} · ${BRAND.name}`;
   renderTeacherDialog();
@@ -242,6 +253,17 @@ function render() {
   }
   // The setup tour highlights live DOM, so re-anchor it after any rebuild.
   if (activeTour) Promise.resolve(activeTour.refresh?.()).catch(() => {});
+  revealCookieControls();
+}
+
+/* The cookie manager is loaded from index.html by the referencement branch.
+ * The footer button only appears once that script is actually available, so
+ * the control is never shown dead on builds without consent management. */
+function revealCookieControls() {
+  const available = typeof window.tarteaucitron !== "undefined";
+  for (const el of document.querySelectorAll("[data-cookies-button], [data-cookies-dot]")) {
+    el.hidden = !available;
+  }
 }
 
 function renderSheikahBody(view) {
@@ -270,10 +292,12 @@ function renderViewBody(view) {
       tab: ui.gateTab,
       error: ui.gateError,
       pending: ui.gatePending,
-      values: ui.gateValues
+      values: ui.gateValues,
+      google: googleEnabled && !isSignedIn()
     })}</main>`;
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
+  if (view === "consent") return renderConsent({ pending: ui.consentPending, error: ui.consentError });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked(), rules: getRules(state), editing: ui.rulesEditing })}</main>`;
   }
@@ -282,6 +306,9 @@ function renderViewBody(view) {
   }
   if (view === "privacy") {
     return `<main class="page page-narrow legal-page">${renderPrivacy()}</main>`;
+  }
+  if (view === "terms") {
+    return `<main class="page page-narrow legal-page">${renderTerms()}</main>`;
   }
 
   return renderSheikahBody(view);
@@ -882,11 +909,10 @@ const FORMS = {
     if (ui.gatePending) return;
     const request = ++gateRequest;
     const data = new FormData(form);
-    const username = String(data.get("username") || "").trim();
     const email = String(data.get("email") || "").trim();
     const password = String(data.get("password") || "");
-    ui.gateValues = { username, email };
-    const problem = validateNewPassword(password, data.get("confirm"));
+    ui.gateValues = { email };
+    const problem = validateNewPassword(password, data.get("confirm")) || (data.get("terms") ? "" : "the terms must be accepted");
     if (problem) {
       ui.gateError = problem;
       render();
@@ -895,7 +921,7 @@ const FORMS = {
     ui.gatePending = true;
     ui.gateError = "";
     render();
-    const result = await signUp({ username, email, password });
+    const result = await signUp({ email, password, termsAccepted: true });
     if (request !== gateRequest) return;
     ui.gatePending = false;
     if (!result.ok) {
@@ -905,6 +931,31 @@ const FORMS = {
     }
     openAccount(result.account);
     toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+  },
+
+  "accept-consent": async (form) => {
+    if (ui.consentPending) return;
+    const data = new FormData(form);
+    if (!data.get("terms")) {
+      ui.consentError = "the terms must be accepted";
+      render();
+      return;
+    }
+    ui.consentPending = true;
+    ui.consentError = "";
+    render();
+    const result = await acceptTerms();
+    if (result.stale) return;
+    ui.consentPending = false;
+    if (!result.ok) {
+      ui.consentError = result.error;
+      render();
+      return;
+    }
+    account = result.account;
+    activeSession = captureSessionContext();
+    render();
+    window.scrollTo({ top: 0 });
   },
 
   unlock: async (form) => {
@@ -1532,6 +1583,48 @@ function openAccount(next) {
   maybeStartOnboarding();
 }
 
+/* Google sign-in redirects back with a one-time code; errors arrive as a
+ * short reason code so the gate can explain what happened. */
+const GOOGLE_ERROR_KEYS = {
+  denied: "google.error.denied",
+  state: "google.error.state",
+  email: "google.error.email",
+  unavailable: "google.error.unavailable",
+  failed: "google.error.failed"
+};
+const googleErrorMessage = (reason) => t(GOOGLE_ERROR_KEYS[reason] || "google.error.failed");
+
+async function completeGoogleSignIn(code) {
+  ui.gateError = "";
+  ui.gatePending = true;
+  render();
+  const result = await signInWithGoogleCode(code);
+  if (result.stale) return;
+  ui.gatePending = false;
+  if (!result.ok) {
+    ui.gateError = result.error;
+    render();
+    return;
+  }
+  openAccount(result.account);
+  toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+}
+
+/* The gate only offers Google when the server has credentials configured. */
+async function loadPublicConfig() {
+  try {
+    const response = await requestApi("config", { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => null);
+    const enabled = Boolean(payload?.google);
+    if (enabled === googleEnabled) return;
+    googleEnabled = enabled;
+    if (currentView() === "welcome") render();
+  } catch {
+    // The button stays hidden while the server is unreachable.
+  }
+}
+
 function endSession(message = "", context = null) {
   if (context && !isCurrentSession(context)) return;
   closeDialog({ resumeConsole:false });
@@ -1831,9 +1924,19 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
   if (!ui.teacherDialog) closeDialog();
   renderPreservingForms();
 });
+const googleParams = new URLSearchParams(location.search);
+const googleCode = googleParams.get("google_code") || "";
+const googleError = googleParams.get("google_error") || "";
+if (googleCode || googleError) {
+  // Never keep the one-time code or the error in the address bar or history.
+  try { window.history.replaceState(null, "", location.pathname + location.hash); } catch { /* keep the query */ }
+}
+if (googleError) ui.gateError = googleErrorMessage(googleError);
 applyTheme();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
+if (googleCode) completeGoogleSignIn(googleCode);
+else loadPublicConfig();
 setInterval(updateClock, 1000);
