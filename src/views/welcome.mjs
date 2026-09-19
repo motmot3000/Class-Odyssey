@@ -17,6 +17,14 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         <p class="welcome-kicker">${t("welcome.kicker")}</p>
         <h1 id="adventure-title">${t("welcome.headlineStart")}<br /><span>${t("welcome.headlineEnd")}</span></h1>
         <p>${t("welcome.adventureHint")}</p>
+        <aside class="welcome-gamification" aria-labelledby="gamification-title">
+          <h2 id="gamification-title">${t("welcome.gamificationQuestion")}</h2>
+          <p>${t("welcome.gamificationTeaser")}</p>
+          <div class="welcome-gamification-foot">
+            <a class="welcome-gamification-cta" href="./gamification.html">${t("welcome.gamificationCta")}${icon("back", "welcome-arrow")}</a>
+            <span class="welcome-gamification-meta">${t("welcome.gamificationMeta")}</span>
+          </div>
+        </aside>
         <a class="welcome-mobile-enter" href="#gate-title" data-welcome-enter>${t("welcome.enter")}${icon("back", "welcome-arrow")}</a>
       </section>
       <section class="gate welcome-gate" aria-labelledby="gate-title"><div class="gate-card">
