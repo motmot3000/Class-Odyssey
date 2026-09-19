@@ -9,7 +9,7 @@ const MIME = {
   ".webp": "image/webp", ".glb": "model/gltf-binary", ".ico": "image/x-icon"
 };
 const CACHEABLE_IMAGES = new Set([".svg", ".jpg", ".jpeg", ".png", ".webp", ".ico"]);
-const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html"]);
+const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html"]);
 const PROTOTYPE_TYPES = new Set([".html", ".css", ".js", ".mjs", ".glb", ".webp"]);
 
 function inside(root, target) {
