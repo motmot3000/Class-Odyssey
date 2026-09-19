@@ -138,9 +138,31 @@ test("robots.txt and sitemap.xml are served for classodyssey.com and internal pa
     const workshop = await fetch(app.base + "/character-lab.html");
     assert.equal(workshop.headers.get("x-robots-tag"), "noindex");
 
+    // The teaching dossier is public and indexable, with its canonical URL.
+    const dossier = await fetch(app.base + "/gamification.html");
+    assert.equal(dossier.status, 200);
+    assert.equal(dossier.headers.get("x-robots-tag"), null);
+    assert.equal(dossier.headers.get("link"), '<https://classodyssey.com/gamification.html>; rel="canonical"');
+    const dossierEn = await fetch(app.base + "/gamification-en.html");
+    assert.equal(dossierEn.status, 200);
+    assert.equal(dossierEn.headers.get("x-robots-tag"), null);
+    assert.equal(dossierEn.headers.get("link"), '<https://classodyssey.com/gamification-en.html>; rel="canonical"');
+    assert.match(sitemapBody, /gamification-en\.html/);
+    assert.match(sitemapBody, /hreflang="en"/);
+    assert.match(sitemapBody, /hreflang="x-default"/);
+
     const home = await fetch(app.base + "/");
     assert.equal(home.headers.get("x-robots-tag"), null);
     assert.equal(home.headers.get("link"), '<https://classodyssey.com/>; rel="canonical"');
+
+    // The relay host keeps the dossier reachable but out of the index.
+    const relayDossier = await new Promise((resolve, reject) => {
+      http.get({ host: "127.0.0.1", port: Number(new URL(app.base).port), path: "/gamification.html", headers: { Host: "www.thomaswunsche.com" } }, (response) => {
+        response.resume();
+        response.on("end", () => resolve(response));
+      }).on("error", reject);
+    });
+    assert.equal(relayDossier.headers["x-robots-tag"], "noindex");
 
     const canonical = await fetch(app.base + "/index.html", { redirect: "manual" });
     assert.equal(canonical.status, 301);

@@ -121,6 +121,20 @@ em { font-style: italic; }
 .btn-ghost:hover { background: var(--paper-2); border-color: var(--teal); color: var(--teal); transform: translateY(-1px); }
 .topbar .btn-ghost { min-height: 40px; padding: 8px 15px; font-size: 14px; }
 
+/* ---------- Bascule de langue ---------- */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px;
+  padding: 8px 14px; border-radius: 8px; border: 1px solid var(--rule-strong);
+  color: var(--ink); font: 600 14px var(--font-ui); text-decoration: none;
+  transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease);
+}
+.lang-switch:hover { background: var(--paper-2); border-color: var(--teal); color: var(--teal); }
+.lang-switch-flag svg { display: block; width: 20px; height: 14px; border-radius: 2px; }
+@media (max-width: 760px) {
+  .lang-switch { padding: 8px; }
+  .lang-switch span:not(.lang-switch-flag) { display: none; }
+}
+
 /* ---------- Héros ---------- */
 .hero { position: relative; overflow: clip; border-bottom: 1px solid var(--rule); }
 .hero-media { position: absolute; inset: 0; z-index: 0; }
