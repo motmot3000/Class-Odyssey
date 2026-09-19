@@ -100,15 +100,16 @@
     <!-- Consentement cookies : rien n'est déposé avant un choix explicite. -->
     <link rel="stylesheet" href="./assets/consent/cookies.css" />
     <script>
-      // Aligne la langue de la bannière et du panneau cookies sur celle de l'app.
+      // Aligne la bannière ET le panneau cookies sur la langue de l'app.
+      // Forcer aussi "fr" évite que tarteaucitron suive la langue du navigateur.
       (function () {
         try {
           var stored = localStorage.getItem("classquest.lang");
-          var lang = (stored || document.documentElement.lang || navigator.language || "fr")
-            .slice(0, 2)
-            .toLowerCase();
-          if (lang === "en") window.tarteaucitronForceLanguage = "en";
-        } catch (error) { /* stockage indisponible : français par défaut */ }
+          var lang = (stored || document.documentElement.lang || "fr").slice(0, 2).toLowerCase();
+          window.tarteaucitronForceLanguage = lang === "en" ? "en" : "fr";
+        } catch (error) {
+          window.tarteaucitronForceLanguage = "fr";
+        }
       })();
     </script>
     <script src="./assets/consent/tarteaucitron/tarteaucitron.js"></script>
