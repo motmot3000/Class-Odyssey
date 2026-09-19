@@ -1,6 +1,22 @@
+# Class Odyssey — https://classodyssey.com/
+# Gamification des leçons d'anglais pour les classes 7P-8P.
+
 User-agent: *
 Allow: /
+
+# API privée : sessions, comptes et sauvegardes de classes.
 Disallow: /api/
+
+# Ateliers internes et prototypes, hors du site public.
+Disallow: /character-lab.html
+Disallow: /character-detail-study.html
+Disallow: /items-3d.html
 Disallow: /prototype/
 
-Sitemap: https://classeodyssey.com/sitemap.xml
+# Sources et fichiers de développement.
+Disallow: /server/
+Disallow: /tests/
+Disallow: /tools/
+Disallow: /docs/
+
+Sitemap: https://classodyssey.com/sitemap.xml

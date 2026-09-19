@@ -550,6 +550,8 @@ body[data-teacher-panel="open"] .teacher-console-tab { z-index: 46; right: min(4
 .app-footer-links { display: flex; align-items: center; gap: var(--s2); }
 .app-footer-links a { color: var(--muted); text-decoration: none; text-underline-offset: 3px; }
 .app-footer-links a:hover { color: var(--cyan); text-decoration: underline; }
+.app-footer-cookie { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer; text-underline-offset: 3px; }
+.app-footer-cookie:hover { color: var(--cyan); text-decoration: underline; }
 .app-footer-dot { color: var(--line-3); }
 
 /* On the full-height landing page the footer floats at the very bottom,

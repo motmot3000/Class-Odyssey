@@ -117,6 +117,65 @@ test("merged workshop entry points are served without exposing private files", a
   } finally { await app.close(); }
 });
 
+test("robots.txt and sitemap.xml are served for classodyssey.com and internal pages are noindex", async () => {
+  const app = await fixture();
+  try {
+    const robots = await fetch(app.base + "/robots.txt");
+    assert.equal(robots.status, 200);
+    assert.match(robots.headers.get("content-type"), /text\/plain/);
+    const robotsBody = await robots.text();
+    assert.match(robotsBody, /User-agent: \*/);
+    assert.match(robotsBody, /Disallow: \/api\//);
+    assert.match(robotsBody, /Sitemap: https:\/\/classodyssey\.com\/sitemap\.xml/);
+
+    const sitemap = await fetch(app.base + "/sitemap.xml");
+    assert.equal(sitemap.status, 200);
+    assert.match(sitemap.headers.get("content-type"), /application\/xml/);
+    const sitemapBody = await sitemap.text();
+    assert.match(sitemapBody, /<loc>https:\/\/classodyssey\.com\/<\/loc>/);
+    assert.match(sitemapBody, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+
+    const workshop = await fetch(app.base + "/character-lab.html");
+    assert.equal(workshop.headers.get("x-robots-tag"), "noindex");
+
+    const home = await fetch(app.base + "/");
+    assert.equal(home.headers.get("x-robots-tag"), null);
+    assert.equal(home.headers.get("link"), '<https://classodyssey.com/>; rel="canonical"');
+
+    const canonical = await fetch(app.base + "/index.html", { redirect: "manual" });
+    assert.equal(canonical.status, 301);
+    assert.equal(canonical.headers.get("location"), "/");
+
+    // The personal relay host keeps working but never enters the index.
+    const relay = await new Promise((resolve, reject) => {
+      http.get({ host: "127.0.0.1", port: Number(new URL(app.base).port), path: "/", headers: { Host: "www.thomaswunsche.com" } }, (response) => {
+        response.resume();
+        response.on("end", () => resolve(response));
+      }).on("error", reject);
+    });
+    assert.equal(relay.headers["x-robots-tag"], "noindex");
+  } finally { await app.close(); }
+});
+
+test("self-hosted consent assets are served with their real content types", async () => {
+  const app = await fixture();
+  try {
+    for (const route of [
+      "/assets/consent/tarteaucitron/tarteaucitron.js",
+      "/assets/consent/tarteaucitron/tarteaucitron.services.js",
+      "/assets/consent/tarteaucitron-init.js",
+      "/assets/consent/cookies.css",
+      "/assets/consent/tarteaucitron/lang/tarteaucitron.fr.min.js",
+      "/assets/consent/tarteaucitron/lang/tarteaucitron.en.min.js"
+    ]) {
+      const response = await fetch(app.base + route);
+      assert.equal(response.status, 200, route);
+    }
+    assert.match((await fetch(app.base + "/assets/consent/tarteaucitron/tarteaucitron.js")).headers.get("content-type"), /javascript/);
+    assert.match((await fetch(app.base + "/assets/consent/cookies.css")).headers.get("content-type"), /text\/css/);
+  } finally { await app.close(); }
+});
+
 test("oversized request bodies produce a usable 413 response", async () => {
   const app = await fixture();
   try {
@@ -145,6 +204,7 @@ test("static serving handles indexes and rejects missing assets, dotfiles and pr
     const head = await fetch(app.base + "/assets/demo/index.html", { method: "HEAD" });
     assert.equal(await head.text(), "");
     assert.equal(head.headers.get("content-length"), String(Buffer.byteLength("<h1>Workshop</h1>")));
+    assert.equal(head.headers.get("x-robots-tag"), "noindex");
   } finally { await app.close(); fs.rmSync(publicDir, { recursive: true, force: true }); }
 });
 

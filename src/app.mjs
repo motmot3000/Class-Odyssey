@@ -550,6 +550,11 @@ const ACTIONS = {
     ui.rulesEditing = false;
     navigate("#rules");
   },
+  // Reopen the consent panel from anywhere. Kept off the hash so the router
+  // is never disturbed by a #tarteaucitron link.
+  "manage-cookies": () => {
+    window.tarteaucitron?.userInterface?.openPanel?.();
+  },
 
   /* ---------- Editable classroom rules ---------- */
   "rules-edit": () => {

@@ -8,7 +8,7 @@ hors ligne isolé par compte. Aucun backend PHP n'est utilisé.
 
 ```text
 navigateur
-    │ https://classquest.lecagibi.ch
+    │ https://classodyssey.com
     ▼
 Caddy sur le VPS
     │ reverse proxy vers 127.0.0.1:5180
@@ -158,7 +158,7 @@ curl -fsS http://127.0.0.1:5180/api/health
 
 Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
 Web exposé publiquement et utilise la configuration versionnée dans
-`deploy/vps/classquest.lecagibi.ch.caddy`.
+`deploy/vps/classodyssey.com.caddy`.
 
 Après une modification Caddy :
 
