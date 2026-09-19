@@ -1,5 +1,5 @@
 /* First-run setup dialogs. The steps run once per account and resume where the
- * teacher left off; each one can be skipped. The tour steps live in tourguide.mjs.
+ * teacher left off; each one can be skipped. The tour steps live in app.mjs.
  */
 
 import { escapeHtml, icon } from "../ui.mjs";

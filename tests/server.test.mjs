@@ -169,7 +169,7 @@ test("a token revoked while a state body arrives cannot perform a late write", a
     const next = await signIn(app.request);
     const state = await app.request("/api/state", { token: next.token });
     assert.equal(state.payload.revision, 0);
-    assert.equal(state.payload.classes[0].pupils.length, 0);
+    assert.equal(state.payload.classes.length, 0);
   } finally { upload?.destroy(); await app.close(); }
 });
 
@@ -226,7 +226,7 @@ test("signup, sessions, empty state, isolation, backups and revision conflicts w
 
     const empty = await app.request("/api/state", { token: alpha.token });
     assert.equal(empty.response.status, 200);
-    assert.deepEqual(empty.payload.classes.map((item) => [item.name, item.pupils.length]), [["7P", 0], ["8P", 0]]);
+    assert.deepEqual(empty.payload.classes, []);
     assert.equal(empty.payload.revision, 0);
     assert.equal((await app.request("/api/state", { method: "PUT", token: alpha.token, rawBody: "[]" })).response.status, 400);
     assert.equal((await app.request("/api/state", { method: "PUT", token: alpha.token, body: { revision: 0, classes: [1] } })).response.status, 400);
@@ -324,7 +324,8 @@ test("admin listing and password reset are protected, sanitized and revoke targe
     const teacher = await signUp(app.request, "teacher.admin", "before-reset");
     const teacherSecond = await signIn(app.request, "teacher.admin", "before-reset");
     const teacherState = await app.request("/api/state", { token: teacher.token });
-    teacherState.payload.classes[0].pupils.push({ id: "pupil", name: "Pupil" });
+    teacherState.payload.classes = [{ id: "7p", name: "7P", pupils: [{ id: "pupil", name: "Pupil" }] }];
+    teacherState.payload.activeClassId = "7p";
     await app.request("/api/state", { method: "PUT", token: teacher.token, body: teacherState.payload });
 
     assert.equal((await app.request("/api/admin/accounts", { token: teacher.token })).response.status, 403);

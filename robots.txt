@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /prototype/
+
+Sitemap: https://classeodyssey.com/sitemap.xml

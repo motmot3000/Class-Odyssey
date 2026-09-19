@@ -39,12 +39,13 @@ import {
 } from "../src/domain.mjs";
 
 test("malformed imports are rejected instead of crashing or duplicating identities", () => {
-  for (const classes of [[], [null], [{ id: "a", pupils: [null] }], [{ id: "a", pupils: [] }, { id: "a", pupils: [] }], [{ id: "a", pupils: [{ id: "same" }, { id: "same" }] }]]) {
+  for (const classes of [[null], [{ id: "a", pupils: [null] }], [{ id: "a", pupils: [] }, { id: "a", pupils: [] }], [{ id: "a", pupils: [{ id: "same" }, { id: "same" }] }]]) {
     assert.throws(() => importState(JSON.stringify({ classes })), /backup|classes/i);
   }
-  const fallback = normalizeState({ classes: [] });
-  assert.equal(fallback.classes.length, 2);
-  assert.ok(fallback.classes.every(classroom => classroom.pupils.length === 0));
+  const empty = normalizeState({ classes: [] });
+  assert.equal(empty.classes.length, 0);
+  assert.equal(empty.activeClassId, null);
+  assert.equal(importState(JSON.stringify({ classes: [] })).classes.length, 0);
 });
 
 test("imported counters stay valid and cannot create an unbounded heart row", () => {

@@ -157,14 +157,14 @@ export function createInitialState({ samples = true } = {}) {
 
   return {
     revision: 0,
-    activeClassId: "7p",
+    activeClassId: samples ? "7p" : null,
     selectedPupilId: null,
     selectMode: false,
     selectedPupilIds: [],
-    classes: [
+    classes: samples ? [
       { id: "7p", name: "7P", pupils: pupilsOf("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
       { id: "8p", name: "8P", pupils: pupilsOf("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
-    ],
+    ] : [],
     rules: defaultRules(),
     events: []
   };
@@ -178,7 +178,7 @@ export function normalizeState(rawState) {
   const state = {
     ...rawState,
     revision: Number.isSafeInteger(rawState.revision) && rawState.revision >= 0 ? rawState.revision : 0,
-    activeClassId: migrateClassValue(rawState.activeClassId) || rawState.classes[0]?.id || "7p",
+    activeClassId: migrateClassValue(rawState.activeClassId) || rawState.classes[0]?.id || null,
     selectedPupilId: rawState.selectedPupilId || null,
     selectMode: Boolean(rawState.selectMode),
     selectedPupilIds: Array.isArray(rawState.selectedPupilIds) ? [...new Set(rawState.selectedPupilIds)] : [],
@@ -204,7 +204,7 @@ export function normalizeState(rawState) {
   state.rules = normalizeRules(rawState.rules);
 
   if (!getClassById(state, state.activeClassId)) {
-    state.activeClassId = state.classes[0]?.id || "7p";
+    state.activeClassId = state.classes[0]?.id || null;
   }
 
   if (state.selectedPupilId && !getPupilById(state, state.selectedPupilId)) {
@@ -387,16 +387,11 @@ export function importState(jsonText) {
     throw new Error("The file is not valid JSON.");
   }
 
-  if (Array.isArray(raw?.classes) && !raw.classes.length) throw new Error("No classes found in the file.");
   if (!isStateDocument(raw)) {
     throw new Error("This file is not a Class Odyssey backup.");
   }
 
-  const state = normalizeState(raw);
-  if (!state.classes.length) {
-    throw new Error("No classes found in the file.");
-  }
-  return state;
+  return normalizeState(raw);
 }
 
 export function awardXp(state, pupilIds, amount, reason = "XP") {
