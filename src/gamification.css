@@ -361,7 +361,7 @@ em { font-style: italic; }
   box-shadow: var(--shadow-md);
 }
 .hero-card > img {
-  display: block; width: 100%; height: auto; aspect-ratio: 6 / 7; object-fit: cover; object-position: top center;
+  display: block; width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; object-position: center top;
   background: radial-gradient(120% 80% at 50% 8%, #dbe7d4, #c3d3ba 55%, #aebfa6);
 }
 .hero-card-body { padding: 18px 20px 20px; }
