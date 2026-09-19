@@ -69,6 +69,7 @@ import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { createGuidedTour } from "./tour.mjs";
+import { TERMS_VERSION } from "./terms.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
@@ -184,13 +185,20 @@ function applyTheme() {
 
 /* ---------- Hash routing ---------- */
 
+/* True only when the account accepted the legal revision currently in force,
+ * so bumping TERMS_VERSION re-asks consent, as the Terms of use state. */
+function hasAcceptedTerms() {
+  return Boolean(account?.terms?.acceptedAt) && account.terms.version === TERMS_VERSION;
+}
+
 function currentView() {
   if (location.hash === "#mentions-legales") return "mentions";
   if (location.hash === "#politique-de-confidentialite") return "privacy";
   if (location.hash === "#conditions-utilisation") return "terms";
   if (!isSignedIn()) return "welcome";
-  // Accounts created through Google accept the legal texts once, after login.
-  if (!account?.terms?.acceptedAt) return "consent";
+  // The current legal revision must be accepted. Accounts created through
+  // Google accept it after login; a new TEXT revision asks it again.
+  if (!hasAcceptedTerms()) return "consent";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
   // Older #board/#student bookmarks now enter the same public class space.
@@ -974,6 +982,7 @@ const FORMS = {
     activeSession = captureSessionContext();
     render();
     window.scrollTo({ top: 0 });
+    maybeStartOnboarding();
   },
 
   unlock: async (form) => {

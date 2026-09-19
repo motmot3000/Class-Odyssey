@@ -56,9 +56,10 @@ tarteaucitron.init({
 
 /* ------------------------------------------------------------
    Google Analytics 4
-   Remplacer G-XXXXXXXXXX par l'identifiant de la propriété
-   « Class Odyssey » (Administration → Flux de données → ID de mesure).
-   Tant que le placeholder est en place, aucun script Google n'est chargé.
+   Identifiant de la propriété « Class Odyssey »
+   (Administration → Flux de données → ID de mesure).
+   Opt-in strict : aucun script Google n'est chargé tant que
+   l'utilisateur n'a pas accepté la mesure d'audience.
    ------------------------------------------------------------ */
 tarteaucitron.user.gtagUa = "G-V25NWDELYQ";
 tarteaucitron.user.gtagMore = function () {};

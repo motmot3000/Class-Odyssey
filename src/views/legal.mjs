@@ -282,7 +282,7 @@ const CONFIDENTIALITE = {
         heading: "Données que nous traitons",
         body: `
           <h3>1. Données de compte (enseignant)</h3>
-          <p>Lors de la création d'un compte, nous traitons : le nom d'affichage de la classe, le nom d'utilisateur, le mot de passe (conservé uniquement sous forme hachée), la date de création et la date de dernière connexion. Le mot de passe n'est jamais conservé en clair.</p>
+          <p>Lors de la création d'un compte, nous traitons : l'adresse e-mail, le nom d'utilisateur qui en dérive, le mot de passe (conservé uniquement sous forme hachée), la date de création et la date de dernière connexion. Le mot de passe n'est jamais conservé en clair.</p>
           <h3>2. Données de classe et des élèves</h3>
           <p>Pour faire fonctionner le jeu, l'enseignant saisit des données concernant ses élèves : prénom, personnage choisi, apparence, niveau, XP, points de vie, pièces et achats. Ces données peuvent concerner des mineurs (élèves d'environ 11 à 13 ans). Elles sont saisies par l'enseignant, qui est responsable de disposer du fondement légal ou de l'accord nécessaire pour ce traitement.</p>
           <h3>3. Données conservées sur votre appareil</h3>
@@ -376,7 +376,7 @@ const CONFIDENTIALITE = {
         heading: "Data we process",
         body: `
           <h3>1. Account data (teacher)</h3>
-          <p>When an account is created, we process: the class display name, the username, the password (stored only in hashed form), the creation date and the last sign-in date. The password is never stored in clear text.</p>
+          <p>When an account is created, we process: the email address, the username derived from it, the password (stored only in hashed form), the creation date and the last sign-in date. The password is never stored in clear text.</p>
           <h3>2. Class and pupil data</h3>
           <p>To run the game, the teacher enters data about their pupils: first name, chosen character, appearance, level, XP, hit points, coins and purchases. This data may concern minors (pupils aged roughly 11 to 13). It is entered by the teacher, who is responsible for having the legal basis or necessary consent for that processing.</p>
           <h3>3. Data stored on your device</h3>
