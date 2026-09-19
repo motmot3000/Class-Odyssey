@@ -99,6 +99,18 @@
     <link rel="stylesheet" href="./src/tour.css" />
     <!-- Consentement cookies : rien n'est déposé avant un choix explicite. -->
     <link rel="stylesheet" href="./assets/consent/cookies.css" />
+    <script>
+      // Aligne la langue de la bannière et du panneau cookies sur celle de l'app.
+      (function () {
+        try {
+          var stored = localStorage.getItem("classquest.lang");
+          var lang = (stored || document.documentElement.lang || navigator.language || "fr")
+            .slice(0, 2)
+            .toLowerCase();
+          if (lang === "en") window.tarteaucitronForceLanguage = "en";
+        } catch (error) { /* stockage indisponible : français par défaut */ }
+      })();
+    </script>
     <script src="./assets/consent/tarteaucitron/tarteaucitron.js"></script>
     <script src="./assets/consent/tarteaucitron-init.js"></script>
   </head>
