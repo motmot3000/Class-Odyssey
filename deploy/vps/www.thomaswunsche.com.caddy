@@ -1,21 +1,36 @@
-thomaswunsche.com {
-	import security_headers
-	redir https://www.thomaswunsche.com{uri} permanent
-}
-
-www.thomaswunsche.com {
+thomaswunsche.com, www.thomaswunsche.com {
 	import security_headers
 	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header Cache-Control "no-cache"
 	encode zstd gzip
 
-	# Temporary relay used by the classic hosting during the DNS cutover.
-	handle_path /_class-odyssey-site/* {
+	# Retired migration relays must not fall through to the static site.
+	@retired_game_relays path /_game-of-more-site /_game-of-more-site/* /_game-of-more-api /_game-of-more-api/* /_class-odyssey-site /_class-odyssey-site/* /_class-odyssey-api /_class-odyssey-api/* /_classquest-site /_classquest-site/* /_classquest-api /_classquest-api/*
+	handle @retired_game_relays {
+		respond 404
+	}
+
+	# The web root is a git clone: keep its metadata and the backend
+	# source out of reach, the way lecagibi.ch already does.
+	handle /.git* {
+		respond 404
+	}
+	handle /server* {
+		respond 404
+	}
+
+	# Class Odyssey app, reachable now for the Geneva school network while the
+	# classodyssey.thomaswunsche.com subdomain is not resolvable there yet.
+	@classodyssey_noslash path /classodyssey
+	redir @classodyssey_noslash /classodyssey/ 308
+	handle /classodyssey/* {
+		uri strip_prefix /classodyssey
 		reverse_proxy 127.0.0.1:5180
 	}
 
-	# Kept during the rollback window for the previous API-only relay.
-	handle_path /_class-odyssey-api/* {
-		reverse_proxy 127.0.0.1:5180
+	# Contact form gateway.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8081
 	}
 
 	handle {

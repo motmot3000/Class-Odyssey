@@ -1,26 +1,36 @@
-# Live site: https://classodyssey.com/  (www redirects to the apex).
+# Adresse canonique : https://classodyssey.com/
 #
-# The container publishes 127.0.0.1:5180 only, so this vhost is the single
-# public entry point. `security_headers` is the snippet in `security-headers.caddy`
-# (defined once in the VPS /etc/caddy/Caddyfile). HSTS is added here because the
-# apex is the canonical HTTPS origin.
-www.classodyssey.com {
+# Redirection temporaire : l'application est servie depuis
+# https://www.thomaswunsche.com/classodyssey tant que classodyssey.com est
+# classé « Newly Registered Domain » par le proxy de l'État de Genève (art. 16a
+# LIP). Le conteneur ne publie que 127.0.0.1:5180, donc ce vhost est le point
+# d'entrée public. `security_headers` est le snippet de security-headers.caddy.
+#
+# Une fois le domaine débloqué, remplacer le bloc actif par la variante directe
+# documentée en commentaire plus bas.
+classodyssey.com, www.classodyssey.com {
 	import security_headers
-	redir https://classodyssey.com{uri} permanent
+	redir https://www.thomaswunsche.com/classodyssey{uri} temporary
 }
 
-classodyssey.com {
-	import security_headers
-	header Strict-Transport-Security "max-age=31536000"
-	encode zstd gzip
-
-	# Game state is per-user and must never be cached by an intermediary.
-	@api path /api/*
-	header @api Cache-Control "no-store"
-
-	reverse_proxy 127.0.0.1:5180
-
-	log {
-		format json
-	}
-}
+# --- Variante à activer une fois classodyssey.com débloqué (service direct) ---
+# www.classodyssey.com {
+# 	import security_headers
+# 	redir https://classodyssey.com{uri} permanent
+# }
+#
+# classodyssey.com {
+# 	import security_headers
+# 	header Strict-Transport-Security "max-age=31536000"
+# 	encode zstd gzip
+#
+# 	# Game state is per-user and must never be cached by an intermediary.
+# 	@api path /api/*
+# 	header @api Cache-Control "no-store"
+#
+# 	reverse_proxy 127.0.0.1:5180
+#
+# 	log {
+# 		format json
+# 	}
+# }
