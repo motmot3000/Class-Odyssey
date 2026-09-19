@@ -368,8 +368,8 @@ export function createGameServer({
     sendJson(res, 200, { ok: true, account: api.publicAccount(index.accounts[account.id]) });
   }
 
-  /* Records the acceptance of the legal texts, once, for accounts created by a
-   * provider (Google) whose sign-up flow could not show the checkbox. */
+  /* Records the acceptance of the legal texts for accounts whose flow could not
+   * show the sign-up checkbox (Google) and renews it when the revision changes. */
   function handleTerms(req, res) {
     const session = requireSession(req, res);
     if (!session) return;
@@ -379,7 +379,8 @@ export function createGameServer({
       sendJson(res, 404, { error: "account not found" });
       return;
     }
-    if (account.terms?.acceptedAt) {
+    // Already accepted at the current revision: keep the original timestamp.
+    if (account.terms?.acceptedAt && account.terms.version === TERMS_VERSION) {
       sendJson(res, 200, { ok: true, account: api.publicAccount(account) });
       return;
     }
