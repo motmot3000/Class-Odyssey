@@ -49,14 +49,11 @@ function emailProblem(email) {
 function emptyState() {
   return {
     revision: 0,
-    activeClassId: "7p",
+    activeClassId: null,
     selectedPupilId: null,
     selectMode: false,
     selectedPupilIds: [],
-    classes: [
-      { id: "7p", name: "7P", pupils: [] },
-      { id: "8p", name: "8P", pupils: [] }
-    ],
+    classes: [],
     events: []
   };
 }

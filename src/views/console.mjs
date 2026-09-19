@@ -24,7 +24,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
   return `
     <div class="console-head">
       <h2>${t("console.title")}</h2>
-      <button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>
+      ${classroom ? `<button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>` : ""}
     </div>
     ${unlockedUntil ? `<div class="teacher-session-lock">
       <button class="btn btn-sm" type="button" data-action="lock-adult">${icon('lock')}<span>${t('console.account.lock')}</span></button>
@@ -70,6 +70,14 @@ function renderAccountPanel(open, unlockedUntil, account) {
  * pupil and pressing it again clears the selection. The pupil picker covers
  * the single-target case, so the console has no hidden scope mode. */
 function renderTarget(classroom, ui, targets) {
+  if (!classroom) {
+    return `
+      <section class="target is-empty">
+        <h3 class="section-label">${t("console.target.giveTo")}</h3>
+        <p class="panel-note">${t("console.target.noClass")}</p>
+        <button class="btn btn-primary btn-sm" type="button" data-action="add-class">${icon("plus")}<span>${t("class.add.title")}</span></button>
+      </section>`;
+  }
   const allIds = classroom.pupils.map((pupil) => pupil.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => targets.includes(id));
   const names = classroom.pupils.filter((pupil) => targets.includes(pupil.id)).map((pupil) => pupil.name);

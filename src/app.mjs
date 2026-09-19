@@ -65,11 +65,12 @@ import { renderMentions, renderPrivacy } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
-import { loadTourGuide } from "./tourguide.mjs";
+import { createGuidedTour } from "./tour.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
   renderSheikahTopbar,
+  renderSheikahNoClass,
   renderSheikahStudent,
   renderSheikahSheet,
   renderSheikahShop,
@@ -193,7 +194,7 @@ function navigate(hash) {
 }
 
 window.addEventListener("hashchange", () => {
-  if (activeTour) endSetupTour({ complete: true, silent: true });
+  if (activeTour && app.dataset.view !== currentView()) endSetupTour({ complete: true, silent: true });
   closeDialog({ resumeConsole: false });
   ui.query = "";
   ui.consoleOpen = false;
@@ -246,6 +247,7 @@ function render() {
 
 function renderSheikahBody(view) {
   const classroom = getCurrentClass(state);
+  if (!classroom) return renderSheikahNoClass();
   const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
   if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
   if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
@@ -303,7 +305,9 @@ function renderConflict() {
 /* Reward targets are always the current selection. "Whole class" is a real
  * selection action, not a hidden mode, so the cards show exactly who receives. */
 function getTargets() {
-  const inClass = new Set(getCurrentClass(state).pupils.map((pupil) => pupil.id));
+  const classroom = getCurrentClass(state);
+  if (!classroom) return [];
+  const inClass = new Set(classroom.pupils.map((pupil) => pupil.id));
   return state.selectedPupilIds.filter((id) => inClass.has(id));
 }
 
@@ -403,7 +407,10 @@ function dispatchActionClick(event) {
   const action = trigger.dataset.action;
   if (!ACTIONS[action]) return;
   event.preventDefault();
-  if (TEACHER_ACTIONS.has(action) && !allowTeacherAction()) return;
+  if (TEACHER_ACTIONS.has(action) && !isAdultUnlocked()) {
+    openTeacherGate(action === "add-class" ? "add" : "console");
+    return;
+  }
   ACTIONS[action](trigger);
 }
 app.addEventListener("click", dispatchActionClick);
@@ -431,7 +438,7 @@ function handleInput(event) {
   const field = event.target;
   if (field.dataset.action === 'teacher-target') {
     if (!allowTeacherAction()) return;
-    const pupil = getCurrentClass(state).pupils.find(item => item.id === field.value);
+    const pupil = getCurrentClass(state)?.pupils.find(item => item.id === field.value);
     state = { ...state, selectedPupilId:pupil?.id || null, selectedPupilIds:pupil ? [pupil.id] : [] };
     render();
     return;
@@ -522,7 +529,7 @@ function showClassRoster() {
 }
 
 function chooseClassPupil(pupilId) {
-  if (!getCurrentClass(state).pupils.some(pupil => pupil.id === pupilId)) return false;
+  if (!getCurrentClass(state)?.pupils.some(pupil => pupil.id === pupilId)) return false;
   state = { ...state, selectedPupilId:pupilId, selectedPupilIds:[pupilId] };
   rememberStudent(pupilId);
   return true;
@@ -754,9 +761,15 @@ const ACTIONS = {
   },
 
   "focus-add": () => {
+    const classroom = getCurrentClass(state);
+    if (!classroom) {
+      showDialog(renderNewClassDialog(), 'add');
+      dialogRoot.querySelector("#new-class-name")?.focus();
+      return;
+    }
     ui.addFromConsole = ui.teacherDialog === 'console';
-    ui.addClassId = state.activeClassId;
-    showDialog(renderAddPupilDialog(getCurrentClass(state)), 'add');
+    ui.addClassId = classroom.id;
+    showDialog(renderAddPupilDialog(classroom), 'add');
     dialogRoot.querySelector('#pupil-name')?.focus();
   },
 
@@ -938,6 +951,7 @@ const FORMS = {
     closeDialog({ resumeConsole:false });
     if (target === 'admin' && account?.role === 'admin') navigate('#admin');
     else if (target === 'rules') { ui.rulesEditing = true; navigate('#rules'); }
+    else if (target === 'add') ACTIONS['add-class']();
     else openTeacherConsole();
     toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
   },
@@ -1109,7 +1123,8 @@ function changeTargetHp(delta) {
 }
 
 function describeTargets(targets) {
-  if (targets.length === getCurrentClass(state).pupils.length) return getCurrentClass(state).name;
+  const classroom = getCurrentClass(state);
+  if (classroom && targets.length === classroom.pupils.length) return classroom.name;
   if (targets.length === 1) return getPupilById(state, targets[0])?.name || t("notice.oneHero");
   return t("notice.heroes", { count: targets.length });
 }
@@ -1254,7 +1269,7 @@ function renderTeacherDialog() {
     return;
   }
   const classroom = getCurrentClass(state);
-  const focused = classroom.pupils.find(item => item.id === state.selectedPupilId) || null;
+  const focused = classroom?.pupils.find(item => item.id === state.selectedPupilId) || null;
   showDialog(`<dialog class="dialog teacher-console-dialog" aria-label="${t('console.title')}" aria-modal="false"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button><div class="teacher-console-content">${renderConsole({classroom,ui,targets:getTargets(),focused,canUndo:history.length>0,events:state.events,armedReset:armedDanger==='reset',unlockedUntil:unlockUntil(),account})}</div></dialog>`, 'console');
 }
 
@@ -1470,33 +1485,37 @@ function endSetupTour({ complete = true, silent = false } = {}) {
   }
 }
 
-async function startSetupTour() {
+function setupTourSteps() {
+  return [
+    { target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), body: t("onboarding.theme.body"), preview: true },
+    {
+      target: () => (state.classes.length ? ".class-picker" : '[data-action="add-class"]'),
+      title: t("onboarding.class.title"),
+      body: () => t(state.classes.length ? "onboarding.class.body" : "onboarding.class.body.empty")
+    },
+    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
+    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") }
+  ];
+}
+
+function startSetupTour() {
   if (!account || activeTour) return;
-  try {
-    const TourGuideClient = await loadTourGuide();
-    if (!account) return;
-    const tg = new TourGuideClient({
-      nextLabel: t("onboarding.next"),
-      prevLabel: t("onboarding.prev"),
-      finishLabel: t("onboarding.finish"),
-      exitOnClickOutside: false,
-      keyboardControls: true,
-      activeStepInteraction: true,
-      dialogMaxWidth: 360,
-      steps: [
-        { order: 1, target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), content: t("onboarding.theme.body"), propagateEvents: true },
-        { order: 2, target: ".class-picker", title: t("onboarding.class.title"), content: t("onboarding.class.body"), propagateEvents: true },
-        { order: 3, target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), content: t("onboarding.rules.body"), propagateEvents: true },
-        { order: 4, target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), content: t("onboarding.console.body"), propagateEvents: true }
-      ]
-    });
-    tg.onFinish(() => finishOnboarding());
-    tg.onBeforeExit(() => { if (!onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } }); });
-    activeTour = tg;
-    await tg.start();
-  } catch {
-    endSetupTour({ complete: true, silent: false });
-  }
+  activeTour = createGuidedTour({
+    steps: setupTourSteps(),
+    labels: {
+      next: t("onboarding.next"),
+      prev: t("onboarding.prev"),
+      finish: t("onboarding.finish"),
+      skip: t("onboarding.skip"),
+      close: t("onboarding.close"),
+      progress: (current, total) => t("onboarding.step", { current, total })
+    },
+    onFinish: () => finishOnboarding(),
+    onExit: () => {
+      if (account && !onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
+    }
+  });
+  activeTour.start();
 }
 
 function openAccount(next) {

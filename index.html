@@ -21,9 +21,44 @@
       } catch { /* Storage may be unavailable in private browsing. */ }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Class Odyssey" />
+    <title>Class Odyssey · Gamifiez vos cours d'anglais</title>
+    <meta name="description" content="Class Odyssey transforme la progression en anglais en aventure collective : XP, niveaux, héros personnalisables et récompenses pour toute la classe. Gratuit pendant la bêta." />
+    <link rel="canonical" href="https://classeodyssey.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#e7e9df" />
-    <title>Class Odyssey</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Class Odyssey" />
+    <meta property="og:title" content="Class Odyssey · Gamifiez vos cours d'anglais" />
+    <meta property="og:description" content="XP, niveaux, héros personnalisables et récompenses : la progression en anglais devient une aventure collective. Gratuit pendant la bêta." />
+    <meta property="og:url" content="https://classeodyssey.com/" />
+    <meta property="og:image" content="https://classeodyssey.com/assets/brand/og/class-odyssey-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Vallée fantastique de Class Odyssey et sa devise : faites de chaque leçon une aventure." />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Class Odyssey · Gamifiez vos cours d'anglais" />
+    <meta name="twitter:description" content="XP, niveaux, héros personnalisables et récompenses : la progression en anglais devient une aventure collective. Gratuit pendant la bêta." />
+    <meta name="twitter:image" content="https://classeodyssey.com/assets/brand/og/class-odyssey-og.jpg" />
+    <meta name="twitter:image:alt" content="Vallée fantastique de Class Odyssey et sa devise : faites de chaque leçon une aventure." />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Class Odyssey",
+        "url": "https://classeodyssey.com/",
+        "description": "Class Odyssey transforme la progression en anglais en aventure collective : XP, niveaux, héros personnalisables et récompenses pour toute la classe.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["fr", "en"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "audience": { "@type": "EducationalAudience", "educationalRole": "teacher" },
+        "image": "https://classeodyssey.com/assets/brand/og/class-odyssey-og.jpg",
+        "publisher": { "@type": "Organization", "name": "Class Odyssey", "url": "https://classeodyssey.com/" }
+      }
+    </script>
     <link rel="icon" href="./assets/brand/icons/favicon-light.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="./assets/brand/icons/favicon-light.svg" />
     <link rel="apple-touch-icon" href="./assets/brand/icons/apple-touch-icon-light.png" sizes="180x180" />
@@ -34,8 +69,16 @@
     <link rel="stylesheet" href="./src/shell.css" />
     <link rel="stylesheet" href="./src/characters.css" />
     <link rel="stylesheet" href="./src/welcome.css" />
+    <link rel="stylesheet" href="./src/tour.css" />
   </head>
   <body>
+    <noscript>
+      <main>
+        <h1>Class Odyssey</h1>
+        <p>Class Odyssey transforme la progression en anglais en aventure collective. Chaque élève fait évoluer son héros en gagnant de l'XP, des niveaux et des récompenses, pendant que l'enseignant garde la main sur la classe en quelques gestes.</p>
+        <p>Activez JavaScript puis rendez-vous sur <a href="https://classeodyssey.com/">classeodyssey.com</a> pour créer votre classe et lancer la première quête.</p>
+      </main>
+    </noscript>
     <!-- Static, light entry screen: landscape, invitation and account form. -->
     <div id="app"></div>
     <div id="toasts" aria-live="polite"></div>
