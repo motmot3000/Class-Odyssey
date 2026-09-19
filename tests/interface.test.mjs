@@ -3,10 +3,11 @@ import test from "node:test";
 import { createInitialState, getCurrentClass } from "../src/domain.mjs";
 import { setLang } from "../src/i18n.mjs";
 import { renderWelcome } from "../src/views/welcome.mjs";
+import { renderConsent } from "../src/views/consent.mjs";
 import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
-import { renderMentions, renderPrivacy } from "../src/views/legal.mjs";
+import { renderMentions, renderPrivacy, renderTerms } from "../src/views/legal.mjs";
 import { renderAppFooter } from "../src/views/footer.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
 import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
@@ -170,21 +171,51 @@ test("teachers edit rules through a dialog while pupils only read them", () => {
   assert.match(locked, /data-action="rules-edit"/);
 });
 
-test("signup asks for email, username and password without a class name", () => {
+test("signup asks for email and password without a username or class name", () => {
   const html = renderWelcome({ tab: "signup" });
   assert.match(html, /name="email"[^>]*type="email"/);
-  assert.match(html, /name="username"/);
   assert.match(html, /name="password"/);
-  assert.doesNotMatch(html, /name="displayName"|welcome\.field\.class/);
+  assert.match(html, /name="terms"[^>]*value="accepted"[^>]*required/);
+  assert.match(html, /href="#conditions-utilisation"/);
+  assert.match(html, /href="#politique-de-confidentialite"/);
+  assert.doesNotMatch(html, /name="username"|name="displayName"|welcome\.field\.class/);
 });
 
 test("a pending account request prevents changing form modes and retains safe identity fields", () => {
-  const html = renderWelcome({ tab: "signup", pending: true, values: { username: '"><script>', displayName: "7P" } });
+  const html = renderWelcome({ tab: "signup", pending: true, values: { email: '"><script>', displayName: "7P" } });
   assert.match(html, /aria-busy="true"/);
   assert.match(html, /data-tab="signin"[^>]*disabled/);
   assert.match(html, /data-tab="signup"[^>]*disabled/);
   assert.match(html, /&quot;&gt;&lt;script&gt;/);
   assert.doesNotMatch(html, /<script>/);
+});
+
+test("the gate offers Google sign-in only when the server advertises it", () => {
+  assert.doesNotMatch(renderWelcome(), /data-action="google-signin"/);
+  for (const lang of ["fr", "en"]) {
+    try {
+      setLang(lang);
+      const html = renderWelcome({ google: true });
+      assert.match(html, /data-action="google-signin"/);
+      assert.match(html, /href="api\/auth\/google"/);
+      assert.match(html, /class="google-mark"/);
+      assert.doesNotMatch(html, /welcome\.google|welcome\.or/);
+    } finally { setLang("en"); }
+  }
+});
+
+test("the legal consent panel is translated and links both documents", () => {
+  for (const lang of ["fr", "en"]) {
+    try {
+      setLang(lang);
+      const html = renderConsent();
+      assert.match(html, /data-action="accept-consent"/);
+      assert.match(html, /name="terms"[^>]*required/);
+      assert.match(html, /href="#conditions-utilisation"/);
+      assert.match(html, /href="#politique-de-confidentialite"/);
+      assert.doesNotMatch(html, /consent\.(lead|terms|and|privacy|title|body|submit|pending)/);
+    } finally { setLang("en"); }
+  }
 });
 
 test("account management connects own-account settings and labels other-account reset inputs", () => {
@@ -218,15 +249,20 @@ test("legal pages and the footer carry the publisher, cookie notice and current 
       setLang(lang);
       const mentions = renderMentions();
       const privacy = renderPrivacy();
+      const terms = renderTerms();
       assert.match(mentions, lang === "fr" ? /Éditeur de l'application/ : /Publisher/);
       assert.match(privacy, lang === "fr" ? /Cookies et technologies de suivi/ : /Cookies and tracking technologies/);
+      assert.match(terms, lang === "fr" ? /Conditions d'utilisation/ : /Terms of use/);
       assert.match(mentions, /class="legal-section"/);
       assert.match(privacy, /class="legal-section"/);
-      assert.doesNotMatch(mentions + privacy, /VG_EMAIL|undefined/);
+      assert.match(terms, /class="legal-section"/);
+      assert.doesNotMatch(mentions + privacy + terms, /VG_EMAIL|undefined/);
       const footer = renderAppFooter();
       assert.ok(footer.includes(year), `footer shows ${year}`);
       assert.match(footer, /#mentions-legales/);
+      assert.match(footer, /#conditions-utilisation/);
       assert.match(footer, /#politique-de-confidentialite/);
+      assert.match(footer, /data-action="manage-cookies"[^>]*hidden/);
     }
   } finally { setLang("en"); }
 });

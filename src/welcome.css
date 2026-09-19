@@ -69,9 +69,18 @@
 .welcome-gate .field input:hover { border-color: #819a79; }
 .welcome-gate .field input:focus { border-color: var(--welcome-teal); outline: 2px solid var(--welcome-teal); outline-offset: 2px; }
 .welcome-gate .field-hint { margin-top: -12px; font: 400 12px/1.45 var(--font-ui); color: var(--welcome-muted); }
+.welcome-gate .field-check { display: flex; align-items: flex-start; gap: 9px; margin-top: -4px; font: 400 12.5px/1.5 var(--font-ui); color: var(--welcome-muted); }
+.welcome-gate .field-check input { width: 17px; height: 17px; min-height: 0; margin-top: 1px; padding: 0; flex: none; accent-color: var(--welcome-teal); }
+.welcome-gate .field-check a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .welcome-gate .gate-form .btn-primary { justify-content: space-between; margin-top: 6px; min-height: 52px; padding: 14px 17px; background: #f0b554; border: 1px solid #f0b554; border-radius: 8px; color: #101f25; font: 600 15px var(--font-ui); }
 .welcome-gate .gate-form .btn-primary:hover:not(:disabled) { background: #f5c878; border-color: #f5c878; color: #101f25; }
 .welcome-gate .btn-primary:disabled { opacity: .65; }
+.welcome-gate .gate-or { display: flex; align-items: center; gap: 14px; margin: 20px 0 0; color: var(--welcome-muted); font: 600 11px var(--font-ui); letter-spacing: .12em; text-transform: uppercase; }
+.welcome-gate .gate-or::before,
+.welcome-gate .gate-or::after { content: ""; flex: 1; height: 1px; background: var(--welcome-rule); }
+.welcome-gate .btn-google { justify-content: center; gap: 10px; width: 100%; min-height: 52px; margin-top: 14px; background: #fff; border: 1px solid #c3ccbb; border-radius: 8px; color: #1b392d; font: 600 15px var(--font-ui); }
+.welcome-gate .btn-google:hover:not(:disabled) { background: #f2f4ec; border-color: #819a79; }
+.welcome-gate .google-mark { width: 18px; height: 18px; flex: none; }
 .welcome-arrow { transform: rotate(180deg); }
 .welcome-account-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 22px; color: #566552; font: 400 11px/1.5 var(--font-ui); }
 .welcome-account-note .icon { width: 14px; height: 14px; }

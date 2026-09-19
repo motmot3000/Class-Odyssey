@@ -6,7 +6,7 @@ export const TEACHER_UNLOCK_MS = 5 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;
 
-export const MIN_PASSWORD_LENGTH = 10;
+export const MIN_PASSWORD_LENGTH = 6;
 export const MAX_PASSWORD_LENGTH = 128;
 
 function readStored(key) {
@@ -168,12 +168,31 @@ async function openSession(path, credentials) {
 export const signIn = (username, password) =>
   openSession("session", { username: String(username ?? "").trim(), password: String(password ?? "") });
 
-export const signUp = ({ username, email, password }) =>
+export const signUp = ({ username, email, password, termsAccepted = false }) =>
   openSession("accounts", {
     username: String(username ?? "").trim(),
     email: String(email ?? "").trim(),
-    password: String(password ?? "")
+    password: String(password ?? ""),
+    termsAccepted: Boolean(termsAccepted)
   });
+
+/* Google sign-in returns a one-time code through the URL; exchanging it stores
+ * the same session shape as password sign-in, without an offline verifier. */
+export async function signInWithGoogleCode(code) {
+  const generation = ++authGeneration;
+  const { offline, response, payload } = await callApi("auth/google/exchange", {
+    body: { code: String(code ?? "") },
+    context: null
+  });
+  if (offline) return { ok: false, error: OFFLINE };
+  if (generation !== authGeneration) return { ok: false, stale: true, error: "A newer sign-in replaced this request." };
+  if (!response.ok || !payload?.token || !payload?.account) {
+    return { ok: false, error: payload?.error || "The server refused the request." };
+  }
+  writeStored(SESSION_KEY, { token: payload.token, account: payload.account });
+  lockAdult();
+  return { ok: true, account: payload.account };
+}
 
 /* Account settings (language, theme, onboarding) live on the server account so
  * they survive across devices while remaining changeable at any time. */
@@ -185,6 +204,21 @@ export async function updateSettings(patch) {
   if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
   if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
   const session = readStored(SESSION_KEY);
+  if (session && session.account?.id === payload.account.id) {
+    writeStored(SESSION_KEY, { ...session, account: payload.account });
+  }
+  return { ok: true, account: payload.account };
+}
+
+/* Records the legal-text acceptance for accounts created through a provider
+ * (Google), whose redirect flow cannot display the sign-up checkbox. */
+export async function acceptTerms() {
+  const context = captureSessionContext();
+  const { offline, response, payload } = await callApi("account/terms", { method: "PUT", context, body: {} });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
+  const session = getSession();
   if (session && session.account?.id === payload.account.id) {
     writeStored(SESSION_KEY, { ...session, account: payload.account });
   }

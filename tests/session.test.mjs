@@ -74,7 +74,7 @@ test("signout forgets authentication but does not delete account-scoped dirty st
 });
 
 test("password validation and API failures are reported safely", async () => {
-  assert.match(session.validateNewPassword("abc", "abc"), /at least 10/);
+  assert.match(session.validateNewPassword("abc", "abc"), /at least 6/);
   assert.match(session.validateNewPassword("long-enough-password", "other-long-password"), /do not match/);
   assert.equal(session.validateNewPassword("valid-password", "valid-password"), "");
 
