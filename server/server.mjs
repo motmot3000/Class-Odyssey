@@ -402,6 +402,11 @@ export function createGameServer({
         res.writeHead(405).end("Method not allowed");
         return;
       }
+      // One URL per page: /index.html canonicalises to the site root.
+      if (pathname === "/index.html") {
+        res.writeHead(301, { Location: "/", "Cache-Control": "no-store" }).end();
+        return;
+      }
       serveStatic(req, res, pathname);
     } catch (error) {
       if (!res.headersSent) sendJson(res, 500, { error: "internal server error" });
