@@ -128,8 +128,21 @@
     <div id="dialog-root"></div>
     <input type="file" id="import-file" accept="application/json,.json" hidden />
     <div id="language-switcher">
-      <button id="lang-toggle" aria-label="Changer de langue" title="Changer de langue">
-        <span id="current-lang">FR</span>
+      <button id="lang-toggle" type="button" aria-label="Changer de langue" title="Changer de langue">
+        <span class="lang-flag lang-flag-fr" aria-hidden="true">
+          <svg viewBox="0 0 30 20" focusable="false"><rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#002395"/><rect x="20" width="10" height="20" fill="#ED2939"/></svg>
+        </span>
+        <span class="lang-flag lang-flag-en" aria-hidden="true">
+          <svg viewBox="0 0 60 30" focusable="false">
+            <clipPath id="lang-uk-clip"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+            <rect width="60" height="30" fill="#012169"/>
+            <path d="M0,0 60,30 M60,0 0,30" stroke="#fff" stroke-width="6"/>
+            <path d="M0,0 60,30 M60,0 0,30" stroke="#C8102E" stroke-width="4" clip-path="url(#lang-uk-clip)"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+          </svg>
+        </span>
+        <span id="current-lang">EN</span>
       </button>
     </div>
     <script type="module" src="./src/app.mjs"></script>

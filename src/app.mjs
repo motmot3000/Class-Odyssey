@@ -1955,6 +1955,13 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
   setLang(getLang() === "fr" ? "en" : "fr");
   rememberAccountLanguage();
   if (!ui.teacherDialog) closeDialog();
+  // tarteaucitron builds its banner and panel once, at load: while either is on
+  // screen, reload so the whole consent UI follows the chosen language.
+  const alertBig = document.getElementById("tarteaucitronAlertBig");
+  const consentPanel = document.getElementById("tarteaucitron");
+  const consentVisible = Boolean(document.getElementById("tarteaucitronRoot"))
+    && ((alertBig && alertBig.style.display !== "none") || (consentPanel && consentPanel.style.display === "block"));
+  if (consentVisible) { location.reload(); return; }
   renderPreservingForms();
 });
 const googleParams = new URLSearchParams(location.search);

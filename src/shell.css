@@ -341,11 +341,13 @@ body:has(.layout) #language-switcher {
 }
 
 #lang-toggle {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 12px;
   font: 700 12px/1 var(--font-display, system-ui);
   letter-spacing: 0.08em;
   color: var(--ink);
@@ -355,6 +357,13 @@ body:has(.layout) #language-switcher {
   box-shadow: 0 8px 24px rgba(3, 9, 20, 0.22);
   cursor: pointer;
 }
+
+/* Mini-drapeau du pays vers lequel la bascule mène. */
+#lang-toggle .lang-flag { display: none; }
+#lang-toggle .lang-flag svg { display: block; width: 20px; height: 14px; border-radius: 2px; }
+html[lang="fr"] #lang-toggle .lang-flag-en,
+html[lang="en"] #lang-toggle .lang-flag-fr { display: block; }
+#lang-toggle:hover { border-color: var(--cyan); }
 
 .hearts { display: flex; gap: 3px; }
 .hp-heart { display: block; width: 22px; height: 21px; flex: none; }

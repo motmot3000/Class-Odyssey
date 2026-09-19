@@ -151,7 +151,7 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
         <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
         </button>
       </div>
-       ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a></div>` : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `${classControl}
+       ${view === "welcome" ? "" : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `${classControl}
       <div class="top-end">
         <button type="button" class="ghost" data-action="show-rules" aria-current="${view === "rules" ? "page" : "false"}" aria-label="${t("app.aria.rules")}" title="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         ${themeControl}
