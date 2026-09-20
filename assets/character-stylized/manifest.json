@@ -11,7 +11,7 @@
     "boy-medium.glb": "5988af9084b11c3717c3c7e21e932725f013bd1c2aeb63bdf82979f5937036ff",
     "girl-medium.glb": "97b2dc79bcc01e4ecba10fc18e2de659674dffd50b87e38dd328846d5bb232e7"
   },
-  "anchorManifestSha256": "77f4ab4dbf4d191512d25a5f24185fd6a9f9e4cf588824aee9b87910fc712b12",
+  "anchorManifestSha256": "d43cf97305fe12a72a5b4342b9bd304bf019e60d0b31bbd264878a1386de0e5a",
   "coordinates": "metres; Blender Z up, front -Y; glTF Y up, front +Z",
   "parts": {
     "persona:male": 4,
@@ -22,9 +22,9 @@
     "outfit:grammar-mage": 30,
     "outfit:story-keeper": 114,
     "outfit:honor-knight": 114,
-    "hair:curly": 6,
     "hair:long": 36,
     "hair:short": 6,
+    "hair:curly": 6,
     "hat:explorer-cap": 12,
     "hat:sunglasses": 14,
     "hat:feather-beret": 10,

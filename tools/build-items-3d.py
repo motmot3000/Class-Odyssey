@@ -51,8 +51,8 @@ if 'HAIR_ITEMS' in os.environ:
     HAIR_ITEMS = [name for name in HAIR_ITEMS if name in _wanted]
 # Delivered cuts (source file, item id), fitted to every head. Authored-in-
 # Blender families are sculpted per item id.
-SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short')]
-SCULPTED_HAIR = ['curly', 'braided', 'royal-hair']
+SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short'), ('curly', 'curly')]
+SCULPTED_HAIR = ['braided', 'royal-hair']
 REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
 HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
 # Validated face, eye and expression maps. The frozen snapshots in

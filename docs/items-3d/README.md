@@ -22,9 +22,10 @@ Le **catalogue de cosmétiques est réduit** :
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
   personnages — un garçon en Long reçoit la coupe longue livrée adaptée à sa
   tête, une fille en Short la coupe courte livrée adaptée à la sienne. **Bald**
-  (niveau 2, 10) et **Afro** (niveau 3, 30) sont les premiers déblocages.
-  Braids et Royal Hair sont retirés.
-- **Visages** : catégorie conservée mais vide ; l'expression vient de la base 3D.
+  (niveau 2, 20) et **Tresse** (niveau 3, 30, coupe portée avec frange et
+  longue natte, `characters-refit/hair/curly.glb`) sont les premiers
+  déblocages. L'ancien Afro sculpté, Braids et Royal Hair sont retirés.
+- **Visages** : catégorie supprimée ; l'expression vient de la base 3D.
 - **Teints** : tatouages et Peau dorée retirés ; les cinq teints naturels
   restent.
 - **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
