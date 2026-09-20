@@ -134,18 +134,21 @@ lanterne et baguette ont des angles de dégagement, le livre est aminci.
 Les sélections utilisent directement les identifiants et les prix de
 `src/domain.mjs` :
 
-- **7 tenues** : Scout, Ranger, Mage, Warrior, Knight, Archmage, King.
-- **8 couvre-chefs** : Goggles, Sunglasses, Beret, Wizard Hat, King’s Crown,
-  Helmet, Classy Hat, Royal Crown.
-- **7 ensembles d’objets** : Shield, Lantern, Magic Book, Daggers, Sword,
-  Wand, Swords & Shield.
-- **5 coiffures avec géométrie** : Short Hair, Long Hair, Afro, Braids,
-  Royal Hair. Bald retire les cheveux.
+- **5 tenues** : Scout, Ranger, Mage, Warrior, Knight. Archmage et King sont
+  retirés ; le **titre** King reste.
+- **9 couvre-chefs** : No Hat, Goggles, Sunglasses, Beret, Wizard Hat, King’s
+  Crown, Helmet, Classy Hat, Royal Crown.
+- **Objets** : catégorie retirée ; Empty Hands reste l’état interne
+  (`no-weapon`) sans onglet.
+- **4 coiffures** : Short Hair et Long Hair (livrées, gratuites et partagées),
+  Bald (niveau 2, 20) et Braid (niveau 3, 30, frange et longue natte).
 - **7 couleurs de cheveux** : Brown, Blond, Black, White, Red, Green, Blue.
+- **5 teints naturels** et **9 titres**.
 - No Hat et Empty Hands retirent les objets de leur emplacement.
 
-Soit **27 modèles équipables**, avec plusieurs pièces nommées par modèle et
-des ajustements par sexe. Les carnations sont celles des deux bases medium.
+Soit **une trentaine de modèles équipables**, avec plusieurs pièces nommées par
+modèle et des ajustements par sexe. Les carnations sont celles des deux bases
+medium.
 
 Les tenues comportent de vrais volumes : jupes de tunique, capes, plastrons,
 épaulières, jambières, mantelet et col. Les anneaux de ceinture suivent la
@@ -155,13 +158,24 @@ de la base livrée sont conservées.
 
 ### Finition actuelle des cheveux et couvre-chefs
 
-Les cinq coupes utilisent des mèches Catmull effilées et aplaties, avec de fins
-brins ; les tresses sont entrelacées en continu et l’Afro est sculpté par bruit,
-sans gros amas de sphères. Wizard Hat et Classy Hat ont des bords annulaires
+Les coupes livrées (Short, Long) et la coupe portée (Braid) partagent la matière
+cheveux de l’app : carte de normales et de rugosité `hair-normal` /
+`hair-roughness`, matière nommée `Hair / …` que le viewer recolore depuis la
+palette de la boutique. Chaque coupe existe en trois variantes — `open`,
+`covered` (beret, chapeau de sorcier, chapeau chic) et `crowned` (les deux
+couronnes) — ajustées une fois pour chaque personnage : une passe de conformité
+mesure la distance signée au crâne de **Noa** et de **Mila** et ne relève que
+les mèches enfoncées, avec un dégagement minimal de 2 mm sur le visage, le
+front et les tempes. `tools/measure-hair-fit.py` rend ce contrôle reproductible
+et `tools/port-braid-cut.py` documente l’import de la natte dans le repère de
+tête du jeu.
+
+Wizard Hat et Classy Hat ont des bords annulaires
 avec une véritable ouverture ; le béret est ajusté et
-incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`
-pour les cinq coupes** : ajustement radial progressif au niveau du bandeau
-métallique, en conservant le sommet et les longueurs.
+incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`**
+pour chaque coupe : ajustement radial progressif au niveau du bandeau
+métallique, en n’écrasant que le volume du crâne et jamais la frange, ce qui
+évite de la faire traverser le visage.
 
 `manifest.json.headFit` conserve l’ancien espace de construction `HEAD_FIT`
 (assise à 1,692 m) ; **`headFits` décrit sa transformation vers chaque base
