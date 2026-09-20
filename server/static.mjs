@@ -13,7 +13,7 @@ const MIME = {
 };
 const CACHEABLE_IMAGES = new Set([".svg", ".jpg", ".jpeg", ".png", ".webp", ".ico"]);
 const CACHEABLE_STATIC = new Set([".xml", ".txt", ".webmanifest", ".woff2", ".woff", ".ttf", ".otf"]);
-const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html", "robots.txt", "sitemap.xml"]);
+const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html", "gamification-en.html", "robots.txt", "sitemap.xml"]);
 const PROTOTYPE_TYPES = new Set([".html", ".css", ".js", ".mjs", ".glb", ".webp"]);
 
 // Only the canonical origin may be indexed. The personal relay path on
@@ -21,6 +21,16 @@ const PROTOTYPE_TYPES = new Set([".html", ".css", ".js", ".mjs", ".glb", ".webp"
 // but are answered with `X-Robots-Tag: noindex`, so Class Odyssey is
 // referenced exclusively under https://classodyssey.com/.
 const CANONICAL_ORIGIN = "https://classodyssey.com";
+
+// Public pages meant for search engines, with their canonical URL. Every other
+// HTML page (workshops, prototypes) stays reachable but is answered with
+// `X-Robots-Tag: noindex`.
+const CANONICAL_PAGES = new Map([
+  ["index.html", `${CANONICAL_ORIGIN}/`],
+  ["gamification.html", `${CANONICAL_ORIGIN}/gamification.html`],
+  ["gamification-en.html", `${CANONICAL_ORIGIN}/gamification-en.html`]
+]);
+
 const CANONICAL_HOSTS = new Set(["classodyssey.com", "www.classodyssey.com", "localhost", "127.0.0.1", "[::1]"]);
 
 function inside(root, target) {
@@ -70,9 +80,11 @@ export function createStaticHandler({ publicDir, dataDir }) {
       "Cache-Control": CACHEABLE_IMAGES.has(ext) || CACHEABLE_STATIC.has(ext) ? "public, max-age=3600" : "no-cache"
     };
     if (ext === ".html") {
-      if (relative === "index.html") headers.Link = `<${CANONICAL_ORIGIN}/>; rel="canonical"`;
-      // Workshop and prototype pages stay reachable but must not be indexed.
-      if (relative !== "index.html" || !CANONICAL_HOSTS.has(host)) headers["X-Robots-Tag"] = "noindex";
+      const canonical = CANONICAL_PAGES.get(relative);
+      if (canonical) headers.Link = `<${canonical}>; rel="canonical"`;
+      // Only canonical public pages on the canonical hosts may be indexed;
+      // workshops, prototypes and relay hosts are noindex.
+      if (!canonical || !CANONICAL_HOSTS.has(host)) headers["X-Robots-Tag"] = "noindex";
     }
     res.writeHead(200, headers);
     if (req.method === "HEAD") return res.end();

@@ -19,10 +19,10 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 export const CATALOGUE_REVISION = 'catalogue-v8-scoped-cosmetics';
 export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
 
-/* Live base characters used by the game. These are the delivered, stylized
- * reference models (isolated stylized build): natural faces, delivered
- * silhouettes and their own painted materials. The baked production catalogue
- * above stays available for the standalone lab and for the pipeline tests. */
+/* Live base characters used by the game and by the 3D workshop. These are the
+ * delivered, stylized reference models (isolated stylized build): natural faces,
+ * delivered silhouettes and their own painted materials. The older baked
+ * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
 export const BASE_CATALOGUE_REVISION = 'stylized-v4';
 export const BASE_CATALOGUE_URL = new URL(`../assets/character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href;
 

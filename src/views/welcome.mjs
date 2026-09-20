@@ -1,5 +1,5 @@
 import { escapeHtml, icon } from "../ui.mjs";
-import { t, translateMessage } from "../i18n.mjs";
+import { t, translateMessage, getLang } from "../i18n.mjs";
 import { BRAND } from "../brand.mjs";
 import { termsConsentMarkup } from "./consent.mjs";
 
@@ -24,7 +24,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
           <h2 id="gamification-title">${t("welcome.gamificationQuestion")}</h2>
           <p>${t("welcome.gamificationTeaser")}</p>
           <div class="welcome-gamification-foot">
-            <a class="welcome-gamification-cta" href="./gamification.html">${t("welcome.gamificationCta")}${icon("back", "welcome-arrow")}</a>
+            <a class="welcome-gamification-cta" href="${getLang() === "en" ? "./gamification-en.html" : "./gamification.html"}">${t("welcome.gamificationCta")}${icon("back", "welcome-arrow")}</a>
             <span class="welcome-gamification-meta">${t("welcome.gamificationMeta")}</span>
           </div>
         </aside>

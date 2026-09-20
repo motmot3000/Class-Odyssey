@@ -79,3 +79,10 @@ window.addEventListener("scroll", () => {
   });
 }, { passive: true });
 updateCurrent();
+
+/* ---------- Bascule de langue : mémorise le choix pour l'app ---------- */
+document.querySelectorAll("[data-lang-switch]").forEach((link) => {
+  link.addEventListener("click", () => {
+    try { localStorage.setItem("classquest.lang", link.dataset.langSwitch); } catch { /* stockage indisponible */ }
+  });
+});
