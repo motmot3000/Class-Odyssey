@@ -94,15 +94,25 @@ for hair in meshes:
             hat_inside = (hat.get('shop_id'), hat_inside_count, hat_worst)
             break
     key = f"{persona}:{hair.get('shop_id')}:{hair.get('hat_fit', 'open')}"
-    report[key] = {
-        'verts': len(hair.data.vertices),
-        'inside_skin': inside_skin,
-        'worst_skin_mm': worst_skin,
-        'face_inside': face_inside,
-        'face_worst_mm': face_worst,
-        'crown_gap_mm': far_skin,
-        'inside_hat': hat_inside
-    }
+    entry = report.setdefault(key, {
+        'verts': 0,
+        'inside_skin': 0,
+        'worst_skin_mm': 0.0,
+        'face_inside': 0,
+        'face_worst_mm': 0.0,
+        'crown_gap_mm': 0.0,
+        'inside_hat': None
+    })
+    # A cut can be several meshes (e.g. the braid cut plus its hairline
+    # underlayer): accumulate them so no piece hides another's clipping.
+    entry['verts'] += len(hair.data.vertices)
+    entry['inside_skin'] += inside_skin
+    entry['worst_skin_mm'] = min(entry['worst_skin_mm'], worst_skin)
+    entry['face_inside'] += face_inside
+    entry['face_worst_mm'] = min(entry['face_worst_mm'], face_worst)
+    entry['crown_gap_mm'] = max(entry['crown_gap_mm'], far_skin)
+    if hat_inside and (not entry['inside_hat'] or hat_inside[1] > entry['inside_hat'][1]):
+        entry['inside_hat'] = hat_inside
 
 print('HAIR_FIT_REPORT ' + json.dumps(report, indent=1, sort_keys=True))
 print('TOTAL_OBJECTS', len(meshes), 'skins', sorted(skins), 'hats', sorted(o.get('shop_id') for o in hats))
