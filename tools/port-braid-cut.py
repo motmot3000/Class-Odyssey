@@ -13,9 +13,10 @@ on the real face, all fixed here at the source:
 * The fringe is an open shell of separated locks, so the bare forehead showed
   through every gap. A skin-tight `hairline underlayer` cap now backs the
   fringe, ending in a scalloped hairline just above the brows.
-* The right temple wisp sat 16 mm inside the head and reached below the brow,
-  so the per-persona conform pass pasted it across the eye. It is shortened
-  and lifted back above the hairline.
+* The long right temple wisp is removed. The central lock is shortened as a
+  whole about its root; the swept fringe is lowered and moved forward.
+* The gathered back is compressed in depth, fading out toward the hanging
+  braid so its interwoven sections keep their clearance above the clothes.
 * The z-compression of the ellipsoid mapping flattened the fringe against the
   forehead; a falloff puff restores the delivered volume.
 
@@ -72,11 +73,9 @@ def clamp(value, lo=0.0, hi=1.0):
     return max(lo, min(hi, value))
 
 
-# Drop the two locks the audit caught crossing the face: the centre spike
-# darting between the brows and the long right temple wisp that sat inside
-# the head (the conform pass used to glue it across the eye). Each lock is a
-# separate mesh island (outer shell + inner lining share the lock's bbox), so
-# deleting whole islands keeps every other lock pixel-identical.
+# Refine complete lock islands, including both their shell and lining, so
+# tapered ends remain smooth. Remove the long right wisp and shorten the
+# central lock instead of folding isolated tip vertices upward.
 import bmesh
 
 bm = bmesh.new()
@@ -106,7 +105,21 @@ for component in islands:
     front_lock = max(ys) < -0.04
     centre_spike = max(ys) < -0.07 and min(zs) < 1.645 and min(xs) > -0.015 and max(xs) < 0.06
     right_wisp = front_lock and min(zs) < 1.58 and min(xs) > 0.04
-    if centre_spike or right_wisp:
+    if centre_spike:
+        # Shorten the whole lock about its root, rather than folding its tip
+        # upward. Keep it forward of the forehead before the character fit.
+        for vertex in component:
+            t = clamp((1.730 - vertex.co.z) / .101)
+            vertex.co.z = 1.730 + (vertex.co.z - 1.730) * .70
+            vertex.co.y -= .025 * t
+    elif max(ys) < -.03 and min(zs) > 1.615 and min(xs) < -.04:
+        # Preserve the supplied tapered tips and sweep, but lower the fringe
+        # continuously from its root for better forehead coverage.
+        for vertex in component:
+            t = clamp((1.735 - vertex.co.z) / .110)
+            vertex.co.z -= .011 * t
+            vertex.co.y -= .020 * t
+    if right_wisp:
         drop.extend(component)
         print('DROP_LOCK', len(component), 'x', round(min(xs), 3), round(max(xs), 3),
               'z', round(min(zs), 3), round(max(zs), 3))
@@ -114,6 +127,17 @@ bmesh.ops.delete(bm, geom=drop, context='VERTS')
 bm.to_mesh(hair.data)
 bm.free()
 hair.data.update()
+
+# Compact the gathered occiput, not the face or the transverse silhouette.
+# Fade out below the nape: moving the hanging braid forward would bury it
+# in the upper back and clothing, which are wider than the neck.
+for vertex in hair.data.vertices:
+    co = vertex.co
+    head_weight = clamp((co.z - 1.48) / .14)
+    head_weight = head_weight * head_weight * (3 - 2 * head_weight)
+    rear = max(0.0, co.y - .025)
+    shift = .24 * rear * head_weight
+    co.y -= shift * clamp((co.y - .015) / .035)
 
 # Restore the fringe volume the z-compression flattened: a smooth puff over
 # the front band only, so the braid and the crown fit stay untouched.

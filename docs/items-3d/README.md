@@ -176,10 +176,12 @@ interstice. `tools/port-braid-cut.py` ajoute donc une **sous-couche de
 chevelure** (`hairline underlayer`) au ras du crâne, qui se termine par une
 ligne de cheveux festonnée au-dessus des sourcils et referme la nuque et les
 côtés ; elle est ajustée par personnage comme le reste de la coupe. La même
-passe retire la mèche centrale entre les sourcils et la mèche longue de la
-tempe droite qui reposaient dans le crâne et que la conformité collait ensuite
-en travers de l’œil, redonne du volume à la frange et descend la sous-couche
-derrière chaque oreille pour combler la poche sombre laissée par les mèches.
+passe retire la mèche longue de la tempe droite et raccourcit la mèche centrale
+autour de sa racine. Les mèches balayées descendent légèrement sur le front,
+en restant avancées devant la peau. Le volume arrière est resserré en
+profondeur, avec une transition progressive vers la natte pour conserver
+ses entrelacs et le dégagement du dos. La sous-couche descend derrière chaque oreille ; des ombres
+entre les mèches restent visibles en très gros plan.
 `measure-hair-fit.py` **cumule désormais tous les maillages d’une coupe** pour
 qu’aucune pièce ne masque le clipping d’une autre.
 
