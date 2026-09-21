@@ -16,6 +16,7 @@ import tempfile
 import numpy as np
 from pathlib import Path
 from mathutils import Matrix, Quaternion, Vector, noise
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[1]
 # STYLIZED=1 builds an isolated review catalogue from the delivered characters
@@ -51,8 +52,8 @@ if 'HAIR_ITEMS' in os.environ:
     HAIR_ITEMS = [name for name in HAIR_ITEMS if name in _wanted]
 # Delivered cuts (source file, item id), fitted to every head. Authored-in-
 # Blender families are sculpted per item id.
-SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short')]
-SCULPTED_HAIR = ['curly', 'braided', 'royal-hair']
+SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short'), ('curly', 'curly')]
+SCULPTED_HAIR = ['braided', 'royal-hair']
 REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
 HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
 # Validated face, eye and expression maps. The frozen snapshots in
@@ -978,8 +979,10 @@ def hairstyles(source):
         before = set(bpy.context.scene.objects)
         bpy.ops.import_scene.gltf(filepath=str(HAIR_REFIT / f'{gender}.glb'))
         imported = list(set(bpy.context.scene.objects) - before)
-        hair_material = material(f'Hair / supplied locks {gender}', '#594432', .58)
-        hair_material.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value = .24
+        # The delivered cuts wear the app hair material: the shared normal and
+        # roughness maps keep the strands readable, and the viewer recolours
+        # every 'Hair /' material from the shop palette.
+        hair_material = HAIR
         for obj in imported:
             if obj.type != 'MESH': continue
             matrix = obj.matrix_world.copy()
@@ -1008,13 +1011,10 @@ def hairstyles(source):
         matrix, inverse = crowned.matrix_world.copy(), crowned.matrix_world.inverted()
         for v in crowned.data.vertices:
             co = matrix @ v.co
-            if item == 'curly':
-                co.x *= .79
-                co.y = HEAD_FIT['center_y'] + (co.y-HEAD_FIT['center_y'])*.86
-            # Fit the hair INSIDE the band's inner wall, including raised
-            # fringe/strand meshes. Ease into the band without removing the
-            # top or lengths of an open-crown hairstyle.
-            entry = max(0, min(1, (co.z-1.650)/.029))
+            # The ported cuts keep their locks: only the crown volume tucks in
+            # under the band. Squeezing the whole head used to pull the fringe
+            # through the forehead, which is exactly the clipping we measure.
+            entry = max(0, min(1, (co.z-(1.712 if item == 'curly' else 1.650))/(.020 if item == 'curly' else .029)))
             exit = max(0, min(1, (1.831-co.z)/.031))
             weight = (entry*entry*(3-2*entry)) * (exit*exit*(3-2*exit))
             radial = math.hypot(co.x/.108, (co.y-HEAD_FIT['center_y'])/.132)
@@ -1027,10 +1027,6 @@ def hairstyles(source):
         clipped = duplicate(original, original.name + ' / beneath hat')
         clipped['hat_fit'] = 'covered'
         bm = bmesh.new(); bm.from_mesh(clipped.data); bm.transform(clipped.matrix_world)
-        for v in bm.verts:
-            if item == 'curly':
-                v.co.x *= .72
-                v.co.y = HEAD_FIT['center_y'] + (v.co.y-HEAD_FIT['center_y'])*.80
         bmesh.ops.bisect_plane(bm, geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
                               plane_co=(0,0,HEAD_FIT['under_hat_z']), plane_no=(0,0,1), clear_outer=True, dist=.00001)
         bm.transform(clipped.matrix_world.inverted()); bm.to_mesh(clipped.data); bm.free()
@@ -1256,6 +1252,38 @@ def fit_equipment():
     persona = None
 
 
+def conform_hair_to_head(hair, skin, clearance=.002, floor_z=1.50, max_distance=.09):
+    """Lift the strands that would sit inside that character's own head.
+
+    A delivered cut is authored once, then fitted to Noa and Mila by the
+    hat-seat transform. The two heads differ, so a strand that clears Mila's
+    brow can still be buried in Noa's temple. Measuring the signed distance to
+    each character's skin gives every head its own correction instead of one
+    approximate global fit, and guarantees a visible hairline everywhere.
+    """
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    evaluated = skin.evaluated_get(depsgraph)
+    mesh = evaluated.to_mesh()
+    matrix = skin.matrix_world
+    world_verts = [matrix @ v.co for v in mesh.vertices]
+    faces = [list(p.vertices) for p in mesh.polygons]
+    tree = BVHTree.FromPolygons(world_verts, faces)
+    evaluated.to_mesh_clear()
+    hair_matrix = hair.matrix_world
+    inverse = hair_matrix.inverted()
+    lifted = 0
+    for vertex in hair.data.vertices:
+        world = hair_matrix @ vertex.co
+        if world.z < floor_z: continue
+        location, normal, _index, _distance = tree.find_nearest(world, max_distance)
+        if location is None: continue
+        if (world - location).dot(normal) < clearance:
+            vertex.co = inverse @ (location + normal * clearance)
+            lifted += 1
+    hair.data.update()
+    return lifted
+
+
 def refine_seat_silhouette(selected):
     """Reduce the posterior hip volume slightly, including every fitted outfit.
 
@@ -1305,6 +1333,11 @@ def export():
                 if 'filled posterior hair' in obj.name and skins.get(persona_id):
                     fit_posterior_hair(obj, skins[persona_id])
                 clear_ear_space(obj)
+                # The occiput filler lives inside the skull on purpose; every
+                # other variant is measured against this character's skin and
+                # lifted out of it, so Noa and Mila each get an exact hairline.
+                if skins.get(persona_id) and 'filled posterior hair' not in obj.name:
+                    obj['conformed_vertices'] = conform_hair_to_head(obj, skins[persona_id])
                 if obj.get('shop_id') == 'long' and 'supplied hairstyle' in obj.name:
                     hair_variants[(persona_id, obj.get('hat_fit', 'open'))] = obj
             elif gender == 'boy':

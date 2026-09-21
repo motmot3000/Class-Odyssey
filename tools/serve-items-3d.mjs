@@ -10,7 +10,9 @@ const server = http.createServer(async (req, res) => {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
     const url = new URL(req.url, 'http://localhost');
     const requested = decodeURIComponent(url.pathname === '/' ? '/items-3d.html' : url.pathname);
-    const allowed = requested === '/items-3d.html' || requested === '/src/items-3d.css' || requested.startsWith('/assets/items-3d/') || requested.startsWith('/assets/brand/');
+    // The workshop shows the deployed avatars, so the live base characters
+    // (assets/character-stylized) must be servable next to the baked items.
+    const allowed = requested === '/items-3d.html' || requested === '/src/items-3d.css' || requested.startsWith('/assets/items-3d/') || requested.startsWith('/assets/character-stylized/') || requested.startsWith('/assets/brand/');
     const file = path.resolve(root, `.${requested}`);
     if (!allowed || !file.startsWith(root + path.sep) || !(await stat(file)).isFile()) { res.writeHead(404).end('Not found'); return; }
     res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });

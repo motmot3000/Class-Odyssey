@@ -115,13 +115,12 @@ test("a new class can be created with a name and its first students", () => {
   assert.deepEqual(createClass(state, { name: "   " }), state);
 });
 
-test("faces are paused and the shared haircuts ship with Bald and the Afro", () => {
-  assert.equal(getShopItems("face").length, 0);
+test("the shared haircuts ship with Bald and the Braid", () => {
   assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
   assert.equal(getShopItem("short").price, 0);
   assert.equal(getShopItem("long").price, 0);
   assert.equal(getShopItem("bald").minLevel, 2);
-  assert.equal(getShopItem("bald").price, 10);
+  assert.equal(getShopItem("bald").price, 20);
   assert.equal(getShopItem("curly").minLevel, 3);
   assert.equal(getShopItem("curly").price, 30);
   assert.equal(getShopItem("braided"), null);
@@ -143,7 +142,7 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
     short: "Short Hair",
     long: "Long Hair",
     bald: "Bald",
-    curly: "Afro",
+    curly: "Braid",
     "custom-bespoke": "Custom Item"
   };
 
@@ -266,9 +265,8 @@ test("shop covers all categories with regular level unlocks up to level 10", () 
     assert.ok(items.length > 0);
     assert.ok(items.some((item) => item.minLevel >= 6));
   }
-  // Faces are paused; Items only keeps the empty-hands state; hair and skin
-  // tones stop at the first unlocks. None of them carries a level-6 item.
-  assert.equal(getShopItems("face").length, 0);
+  // Faces are withdrawn; Items only keeps the empty-hands state; hair and
+  // skin tones stop at the first unlocks. None of them carries a level-6 item.
   assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
   assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
   assert.equal(getShopItems("tone").length, 5);

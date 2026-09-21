@@ -16,15 +16,21 @@ export const SKIN_TONE_COLORS = {
   light: 0xf0c9a4, medium: 0xdfae7e, tan: 0xc68a55, brown: 0x9a6440, dark: 0x6b452f
 };
 export const SKIN_TONE_NEUTRAL = 'medium';
+/* Asset paths resolve against the PAGE, never against this module. The 3D
+ * workshop ships as a bundle under /assets/items-3d/web, where a module-relative
+ * URL would point inside the bundle folder and the deployed avatars would 404. */
+const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
+  ? new URL('../assets/', import.meta.url)
+  : new URL('../assets/', document.baseURI);
 export const CATALOGUE_REVISION = 'catalogue-v8-scoped-cosmetics';
-export const CATALOGUE_URL = new URL(`../assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, import.meta.url).href;
+export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
  * delivered, stylized reference models (isolated stylized build): natural faces,
  * delivered silhouettes and their own painted materials. The older baked
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
 export const BASE_CATALOGUE_REVISION = 'stylized-v4';
-export const BASE_CATALOGUE_URL = new URL(`../assets/character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href;
+export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Baked fallback portraits must match the live base, otherwise the old base
  * flashes on the cards before the live portrait replaces it. */
