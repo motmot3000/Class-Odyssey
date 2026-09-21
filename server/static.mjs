@@ -6,11 +6,32 @@ const MIME = {
   ".mjs": "application/javascript; charset=utf-8", ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml",
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-  ".webp": "image/webp", ".glb": "model/gltf-binary", ".ico": "image/x-icon"
+  ".webp": "image/webp", ".glb": "model/gltf-binary", ".ico": "image/x-icon",
+  ".xml": "application/xml; charset=utf-8", ".txt": "text/plain; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".woff2": "font/woff2", ".woff": "font/woff", ".ttf": "font/ttf", ".otf": "font/otf"
 };
 const CACHEABLE_IMAGES = new Set([".svg", ".jpg", ".jpeg", ".png", ".webp", ".ico"]);
-const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html"]);
+const CACHEABLE_STATIC = new Set([".xml", ".txt", ".webmanifest", ".woff2", ".woff", ".ttf", ".otf"]);
+const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html", "gamification-en.html", "robots.txt", "sitemap.xml"]);
 const PROTOTYPE_TYPES = new Set([".html", ".css", ".js", ".mjs", ".glb", ".webp"]);
+
+// Only the canonical origin may be indexed. The personal relay path on
+// thomaswunsche.com and any legacy host stay fully usable for their owners
+// but are answered with `X-Robots-Tag: noindex`, so Class Odyssey is
+// referenced exclusively under https://classodyssey.com/.
+const CANONICAL_ORIGIN = "https://classodyssey.com";
+
+// Public pages meant for search engines, with their canonical URL. Every other
+// HTML page (workshops, prototypes) stays reachable but is answered with
+// `X-Robots-Tag: noindex`.
+const CANONICAL_PAGES = new Map([
+  ["index.html", `${CANONICAL_ORIGIN}/`],
+  ["gamification.html", `${CANONICAL_ORIGIN}/gamification.html`],
+  ["gamification-en.html", `${CANONICAL_ORIGIN}/gamification-en.html`]
+]);
+
+const CANONICAL_HOSTS = new Set(["classodyssey.com", "www.classodyssey.com", "localhost", "127.0.0.1", "[::1]"]);
 
 function inside(root, target) {
   const relative = path.relative(root, target);
@@ -50,12 +71,22 @@ export function createStaticHandler({ publicDir, dataDir }) {
     } catch { return notFound(); }
 
     const ext = path.extname(target).toLowerCase();
-    res.writeHead(200, {
+    const relative = path.relative(root, target);
+    const host = String(req.headers.host || "").replace(/:\d+$/, "").toLowerCase();
+    const headers = {
       "Content-Type": MIME[ext] || "application/octet-stream",
       "Content-Length": stat.size,
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": CACHEABLE_IMAGES.has(ext) ? "public, max-age=3600" : "no-cache"
-    });
+      "Cache-Control": CACHEABLE_IMAGES.has(ext) || CACHEABLE_STATIC.has(ext) ? "public, max-age=3600" : "no-cache"
+    };
+    if (ext === ".html") {
+      const canonical = CANONICAL_PAGES.get(relative);
+      if (canonical) headers.Link = `<${canonical}>; rel="canonical"`;
+      // Only canonical public pages on the canonical hosts may be indexed;
+      // workshops, prototypes and relay hosts are noindex.
+      if (!canonical || !CANONICAL_HOSTS.has(host)) headers["X-Robots-Tag"] = "noindex";
+    }
+    res.writeHead(200, headers);
     if (req.method === "HEAD") return res.end();
     // Large catalogues must not block sign-in and state requests while reading.
     const stream = fs.createReadStream(target);

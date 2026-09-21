@@ -21,9 +21,71 @@
       } catch { /* Storage may be unavailable in private browsing. */ }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Class Odyssey" />
+    <title>Class Odyssey — Gamifiez vos leçons d'anglais (7P-8P)</title>
+    <meta name="description" content="Des héros nominatifs, de l'XP, des niveaux et des récompenses pour motiver vos élèves d'anglais (7P-8P). Bêta gratuite, compte enseignant." />
+    <link rel="canonical" href="https://classodyssey.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="google-site-verification" content="xBRTmLLMDDJeP_Y9gOJunCa0lFoj78k1ll08LyED4HM" />
+    <meta name="author" content="Thomas Wünsche" />
+    <meta name="application-name" content="Class Odyssey" />
+    <meta name="apple-mobile-web-app-title" content="Class Odyssey" />
     <meta name="theme-color" content="#e7e9df" />
-    <title>Class Odyssey</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Class Odyssey" />
+    <meta property="og:locale" content="fr_CH" />
+    <meta property="og:title" content="Class Odyssey — Gamifiez vos leçons d'anglais (7P-8P)" />
+    <meta property="og:description" content="Des héros nominatifs, de l'XP, des niveaux et des récompenses pour motiver vos élèves d'anglais (7P-8P). Bêta gratuite, compte enseignant." />
+    <meta property="og:url" content="https://classodyssey.com/" />
+    <meta property="og:image" content="https://classodyssey.com/assets/brand/preview/class-odyssey-og-1200x630.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Class Odyssey : une vallée verdoyante et un sentier de pierre, univers d'aventure des leçons d'anglais." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Class Odyssey — Gamifiez vos leçons d'anglais (7P-8P)" />
+    <meta name="twitter:description" content="Des héros nominatifs, de l'XP, des niveaux et des récompenses pour motiver vos élèves d'anglais (7P-8P). Bêta gratuite, compte enseignant." />
+    <meta name="twitter:image" content="https://classodyssey.com/assets/brand/preview/class-odyssey-og-1200x630.png" />
+    <meta name="twitter:image:alt" content="Class Odyssey : une vallée verdoyante et un sentier de pierre, univers d'aventure des leçons d'anglais." />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://classodyssey.com/#website",
+            "url": "https://classodyssey.com/",
+            "name": "Class Odyssey",
+            "description": "Application de gamification des leçons d'anglais pour les classes 7P-8P : héros nominatifs, XP, niveaux, récompenses.",
+            "inLanguage": ["fr", "en"],
+            "publisher": { "@id": "https://classodyssey.com/#publisher" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://classodyssey.com/#publisher",
+            "name": "Thomas Wünsche"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://classodyssey.com/#app",
+            "name": "Class Odyssey",
+            "url": "https://classodyssey.com/",
+            "description": "Des héros nominatifs, de l'XP, des niveaux et des récompenses pour motiver vos élèves d'anglais (7P-8P).",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "browserRequirements": "JavaScript",
+            "inLanguage": ["fr", "en"],
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CHF" },
+            "audience": { "@type": "EducationalAudience", "educationalRole": "teacher" },
+            "publisher": { "@id": "https://classodyssey.com/#publisher" }
+          }
+        ]
+      }
+    </script>
+
     <link rel="icon" href="./assets/brand/icons/favicon-light.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="./assets/brand/icons/favicon-light.svg" />
     <link rel="apple-touch-icon" href="./assets/brand/icons/apple-touch-icon-light.png" sizes="180x180" />
@@ -34,16 +96,54 @@
     <link rel="stylesheet" href="./src/shell.css" />
     <link rel="stylesheet" href="./src/characters.css" />
     <link rel="stylesheet" href="./src/welcome.css" />
+    <link rel="stylesheet" href="./src/tour.css" />
+    <!-- Consentement cookies : rien n'est déposé avant un choix explicite. -->
+    <link rel="stylesheet" href="./assets/consent/cookies.css" />
+    <script>
+      // Aligne la bannière ET le panneau cookies sur la langue de l'app.
+      // Forcer aussi "fr" évite que tarteaucitron suive la langue du navigateur.
+      (function () {
+        try {
+          var stored = localStorage.getItem("classquest.lang");
+          var lang = (stored || document.documentElement.lang || "fr").slice(0, 2).toLowerCase();
+          window.tarteaucitronForceLanguage = lang === "en" ? "en" : "fr";
+        } catch (error) {
+          window.tarteaucitronForceLanguage = "fr";
+        }
+      })();
+    </script>
+    <script src="./assets/consent/tarteaucitron/tarteaucitron.js"></script>
+    <script src="./assets/consent/tarteaucitron-init.js"></script>
   </head>
   <body>
+    <noscript>
+      <main>
+        <h1>Class Odyssey</h1>
+        <p>Class Odyssey transforme la progression en anglais en aventure collective. Chaque élève fait évoluer son héros en gagnant de l'XP, des niveaux et des récompenses, pendant que l'enseignant garde la main sur la classe en quelques gestes.</p>
+        <p>Activez JavaScript puis rendez-vous sur <a href="https://classodyssey.com/">classodyssey.com</a> pour créer votre classe et lancer la première quête.</p>
+      </main>
+    </noscript>
     <!-- Static, light entry screen: landscape, invitation and account form. -->
     <div id="app"></div>
     <div id="toasts" aria-live="polite"></div>
     <div id="dialog-root"></div>
     <input type="file" id="import-file" accept="application/json,.json" hidden />
     <div id="language-switcher">
-      <button id="lang-toggle" aria-label="Changer de langue" title="Changer de langue">
-        <span id="current-lang">FR</span>
+      <button id="lang-toggle" type="button" aria-label="Changer de langue" title="Changer de langue">
+        <span class="lang-flag lang-flag-fr" aria-hidden="true">
+          <svg viewBox="0 0 30 20" focusable="false"><rect width="30" height="20" fill="#fff"/><rect width="10" height="20" fill="#002395"/><rect x="20" width="10" height="20" fill="#ED2939"/></svg>
+        </span>
+        <span class="lang-flag lang-flag-en" aria-hidden="true">
+          <svg viewBox="0 0 60 30" focusable="false">
+            <clipPath id="lang-uk-clip"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+            <rect width="60" height="30" fill="#012169"/>
+            <path d="M0,0 60,30 M60,0 0,30" stroke="#fff" stroke-width="6"/>
+            <path d="M0,0 60,30 M60,0 0,30" stroke="#C8102E" stroke-width="4" clip-path="url(#lang-uk-clip)"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+          </svg>
+        </span>
+        <span id="current-lang">EN</span>
       </button>
     </div>
     <script type="module" src="./src/app.mjs"></script>

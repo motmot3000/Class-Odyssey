@@ -1,9 +1,12 @@
 import http from "node:http";
+import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApi } from "./api.mjs";
+import { createGoogleAuth } from "./google.mjs";
 import { createStaticHandler } from "./static.mjs";
 import { isStateDocument } from "../src/state-schema.mjs";
+import { TERMS_VERSION } from "../src/terms.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, "..");
@@ -117,10 +120,21 @@ export function createGameServer({
   founderUsername = process.env.FOUNDER_USERNAME,
   founderPassword = process.env.FOUNDER_PASSWORD,
   maxBackups = Number(process.env.MAX_BACKUPS || 60),
+  googleClientId = process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret = process.env.GOOGLE_CLIENT_SECRET,
+  googleRedirectUri = process.env.GOOGLE_REDIRECT_URI,
+  fetchImpl,
   rateLimit
 } = {}) {
   const api = createApi({ dataDir, founderUsername, founderPassword, maxBackups });
   const limiter = createRateLimiter(rateLimit);
+  const google = createGoogleAuth({
+    clientId: googleClientId,
+    clientSecret: googleClientSecret,
+    redirectUri: googleRedirectUri,
+    trustProxy: TRUST_PROXY,
+    fetchImpl
+  });
   api.ensureDir(dataDir);
   api.bootstrapAccounts();
   const serveStatic = createStaticHandler({ publicDir, dataDir });
@@ -163,9 +177,12 @@ export function createGameServer({
     limiter.record(rateKey);
     const payload = await readJsonObject(req, res);
     if (!payload) return;
-    const username = api.normalizeUsername(stringField(payload, "username"));
+    // The client only sends the email and password; the username is derived
+    // from the address (still honoring an explicitly provided one for tests).
+    let username = api.normalizeUsername(stringField(payload, "username"));
     const password = stringField(payload, "password");
     const email = stringField(payload, "email").trim();
+    if (!username) username = api.usernameFromEmail(email);
     const displayName = cleanDisplayName(stringField(payload, "displayName")) || username;
     const problem = api.usernameProblem(username) || api.passwordProblem(password) || api.emailProblem(email);
     if (problem) {
@@ -180,14 +197,20 @@ export function createGameServer({
       sendJson(res, 400, { error: "the email is too long" });
       return;
     }
+    // Creating an account requires an explicit acceptance of the legal texts.
+    if (payload.termsAccepted !== true) {
+      sendJson(res, 400, { error: "the terms must be accepted" });
+      return;
+    }
     const index = api.readAccounts();
-    if (api.findByUsername(index, username)) {
+    if (api.findByUsername(index, username) || api.findByEmail(index, email)) {
       // Match the expensive successful path and avoid confirming account existence.
       await api.hashPassword(password);
       sendJson(res, 400, { error: "account could not be created" });
       return;
     }
     const account = await api.newAccount(username, displayName, password, "teacher", email);
+    account.terms = { acceptedAt: new Date().toISOString(), version: TERMS_VERSION };
     api.createAccountWithState(index, account);
     sendJson(res, 201, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(account) });
   }
@@ -199,7 +222,9 @@ export function createGameServer({
     if (!payload) return;
     const username = api.normalizeUsername(stringField(payload, "username"));
     const index = api.readAccounts();
-    const account = api.findByUsername(index, username);
+    // The gate accepts either the email or the derived username.
+    let account = api.findByUsername(index, username);
+    if (!account && username.includes("@")) account = api.findByEmail(index, username);
     let matches = false;
     if (account) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
     else await api.hashPassword(stringField(payload, "password"));
@@ -213,6 +238,24 @@ export function createGameServer({
     index.accounts[account.id] = updated;
     api.writeAccounts(index);
     sendJson(res, 200, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(updated) });
+  }
+
+  /* A verified Google email either opens the matching account or creates one;
+   * the random password keeps password sign-in impossible until an admin reset. */
+  async function handleGoogleLogin(claims) {
+    const email = String(claims.email || "").trim().toLowerCase();
+    const index = api.readAccounts();
+    let account = api.findByEmail(index, email);
+    if (!account) {
+      const username = api.availableUsername(index, api.usernameFromEmail(email));
+      const displayName = cleanDisplayName(String(claims.name || "")).slice(0, api.limits.MAX_DISPLAY_NAME_LENGTH) || username;
+      account = await api.newAccount(username, displayName, crypto.randomBytes(32).toString("base64url"), "teacher", email);
+      api.createAccountWithState(index, account);
+    }
+    const updated = { ...account, lastLoginAt: new Date().toISOString() };
+    index.accounts[account.id] = updated;
+    api.writeAccounts(index);
+    return { token: api.issueToken(account.id), account: api.publicAccount(updated) };
   }
 
   async function handleVerify(req, res) {
@@ -325,6 +368,28 @@ export function createGameServer({
     sendJson(res, 200, { ok: true, account: api.publicAccount(index.accounts[account.id]) });
   }
 
+  /* Records the acceptance of the legal texts for accounts whose flow could not
+   * show the sign-up checkbox (Google) and renews it when the revision changes. */
+  function handleTerms(req, res) {
+    const session = requireSession(req, res);
+    if (!session) return;
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account) {
+      sendJson(res, 404, { error: "account not found" });
+      return;
+    }
+    // Already accepted at the current revision: keep the original timestamp.
+    if (account.terms?.acceptedAt && account.terms.version === TERMS_VERSION) {
+      sendJson(res, 200, { ok: true, account: api.publicAccount(account) });
+      return;
+    }
+    const updatedAt = new Date().toISOString();
+    index.accounts[account.id] = { ...account, terms: { acceptedAt: updatedAt, version: TERMS_VERSION }, updatedAt };
+    api.writeAccounts(index);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(index.accounts[account.id]) });
+  }
+
   function handleAdminList(req, res) {
     if (!requireAdmin(req, res)) return;
     const counts = api.activeSessionCounts();
@@ -377,6 +442,16 @@ export function createGameServer({
     try {
       const pathname = new URL(req.url, "http://localhost").pathname;
       if (pathname === "/api/health" && req.method === "GET") return sendJson(res, 200, { ok: true });
+      if (pathname === "/api/config" && req.method === "GET") return sendJson(res, 200, { google: google.enabled });
+      if (pathname === "/api/auth/google" && req.method === "GET") return google.start(req, res);
+      if (pathname === "/api/auth/google/callback" && req.method === "GET") return await google.callback(req, res, handleGoogleLogin);
+      if (pathname === "/api/auth/google/exchange" && req.method === "POST") {
+        const payload = await readJsonObject(req, res);
+        if (!payload) return;
+        const login = google.consumeExchangeCode(stringField(payload, "code"));
+        if (!login) return sendJson(res, 400, { error: "google sign-in expired" });
+        return sendJson(res, 200, { ok: true, token: login.token, account: login.account });
+      }
       if (pathname === "/api/accounts" && req.method === "POST") return await handleSignUp(req, res);
       if (pathname === "/api/session") {
         if (req.method === "POST") return await handleSignIn(req, res);
@@ -393,6 +468,7 @@ export function createGameServer({
       if (pathname === "/api/session/verify" && req.method === "POST") return await handleVerify(req, res);
       if (pathname === "/api/session/password" && req.method === "PUT") return await handlePasswordChange(req, res);
       if (pathname === "/api/account/settings" && req.method === "PUT") return await handleSettings(req, res);
+      if (pathname === "/api/account/terms" && req.method === "PUT") return handleTerms(req, res);
       if (pathname === "/api/state" && ["GET", "HEAD", "PUT"].includes(req.method)) return await handleState(req, res);
       if (pathname === "/api/admin/accounts" && req.method === "GET") return handleAdminList(req, res);
       const resetMatch = pathname.match(/^\/api\/admin\/accounts\/([0-9a-f]{24})\/password$/);
@@ -400,6 +476,11 @@ export function createGameServer({
       if (pathname.startsWith("/api/")) return sendJson(res, 404, { error: "not found" });
       if (req.method !== "GET" && req.method !== "HEAD") {
         res.writeHead(405).end("Method not allowed");
+        return;
+      }
+      // One URL per page: /index.html canonicalises to the site root.
+      if (pathname === "/index.html") {
+        res.writeHead(301, { Location: "/", "Cache-Control": "no-store" }).end();
         return;
       }
       serveStatic(req, res, pathname);

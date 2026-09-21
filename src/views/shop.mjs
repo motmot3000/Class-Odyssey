@@ -12,7 +12,6 @@ export const SHOP_CATEGORIES = [
   { type: "hat", label: () => t("shop.cat.hat") },
   { type: "hair", label: () => t("shop.cat.hair") },
   { type: "hairColor", label: () => t("shop.cat.hairColor") },
-  { type: "face", label: () => t("shop.cat.face") },
   { type: "title", label: () => t("shop.cat.title") },
   { type: "tone", label: () => t("shop.cat.skin") },
   { type: "bespoke", label: () => t("shop.cat.custom") }

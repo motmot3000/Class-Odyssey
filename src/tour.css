@@ -1,0 +1,172 @@
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms var(--ease);
+  --tour-shade: rgba(6, 15, 19, 0.68);
+  --tour-shade-soft: rgba(6, 15, 19, 0.26);
+  --tour-shade-color: var(--tour-shade);
+  --tour-ring: var(--cyan);
+  --tour-glow: rgba(138, 219, 211, 0.34);
+}
+
+.tour.is-open { opacity: 1; }
+
+.tour[data-preview="true"] { --tour-shade-color: var(--tour-shade-soft); }
+
+:root[data-theme="light"] .tour {
+  --tour-shade: rgba(23, 38, 33, 0.44);
+  --tour-shade-soft: rgba(23, 38, 33, 0.14);
+  --tour-glow: rgba(36, 91, 81, 0.26);
+}
+
+.tour-shade { position: fixed; inset: 0; pointer-events: none; }
+
+.tour-shade i {
+  position: absolute;
+  background-color: var(--tour-shade-color);
+  transition: background-color 420ms var(--ease);
+}
+
+.tour-shade .t { left: 0; top: 0; width: 100%; }
+.tour-shade .b { left: 0; width: 100%; }
+.tour-shade .l { left: 0; }
+.tour-shade .r { right: 0; }
+
+.tour-shade .c { top: 0; left: 0; width: 12px; height: 12px; }
+.tour-shade .tl {
+  -webkit-mask: radial-gradient(circle at 100% 100%, transparent 0 11px, #000 12px);
+  mask: radial-gradient(circle at 100% 100%, transparent 0 11px, #000 12px);
+}
+.tour-shade .tr {
+  -webkit-mask: radial-gradient(circle at 0 100%, transparent 0 11px, #000 12px);
+  mask: radial-gradient(circle at 0 100%, transparent 0 11px, #000 12px);
+}
+.tour-shade .br {
+  -webkit-mask: radial-gradient(circle at 0 0, transparent 0 11px, #000 12px);
+  mask: radial-gradient(circle at 0 0, transparent 0 11px, #000 12px);
+}
+.tour-shade .bl {
+  -webkit-mask: radial-gradient(circle at 100% 0, transparent 0 11px, #000 12px);
+  mask: radial-gradient(circle at 100% 0, transparent 0 11px, #000 12px);
+}
+
+.tour-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border: 2px solid var(--tour-ring);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%), 0 10px 30px var(--tour-glow);
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity 200ms var(--ease);
+}
+
+.tour[data-lost="true"] .tour-ring { opacity: 0; }
+
+.tour-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: min(340px, calc(100vw - 24px));
+  padding: var(--s4);
+  color: var(--ink);
+  background: var(--panel-solid);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  outline: none;
+  pointer-events: auto;
+  will-change: transform;
+  transition: background-color 300ms var(--ease), border-color 300ms var(--ease), color 300ms var(--ease);
+}
+
+.tour-head { display: flex; align-items: flex-start; gap: var(--s3); }
+
+.tour-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.tour-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  margin: -6px -6px 0 auto;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color 160ms var(--ease), background 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.tour-close:hover { color: var(--ink); background: var(--slate-3); border-color: var(--line-2); }
+
+.tour-body { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+
+.tour-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+
+.tour-meta { display: flex; align-items: center; gap: 8px; margin-inline: auto; }
+.tour-dots { display: flex; gap: 6px; }
+
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line-2);
+  transition: background-color 200ms var(--ease), transform 200ms var(--ease);
+}
+
+.tour-dot.on { background: var(--cyan); transform: scale(1.3); }
+
+.tour-counter {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tour-nav { display: flex; gap: var(--s2); }
+
+.tour-skip[hidden] { display: none; }
+
+.tour-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour, .tour-shade i, .tour-card, .tour-ring, .tour-dot { transition: none; }
+}

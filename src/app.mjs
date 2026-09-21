@@ -37,6 +37,7 @@ import { BRAND } from "./brand.mjs";
 import { requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
+  acceptTerms,
   captureSessionContext,
   changePassword,
   forgetSession,
@@ -46,6 +47,7 @@ import {
   isSignedIn,
   lockAdult,
   signIn,
+  signInWithGoogleCode,
   signOut,
   signUp,
   unlockAdult,
@@ -56,20 +58,23 @@ import {
 } from "./session.mjs";
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
+import { renderConsent } from "./views/consent.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
 import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
-import { renderMentions, renderPrivacy } from "./views/legal.mjs";
+import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
-import { loadTourGuide } from "./tourguide.mjs";
+import { createGuidedTour } from "./tour.mjs";
+import { TERMS_VERSION } from "./terms.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
   renderSheikahTopbar,
+  renderSheikahNoClass,
   renderSheikahStudent,
   renderSheikahSheet,
   renderSheikahShop,
@@ -110,6 +115,7 @@ let localDirty = account ? loadDirty(account.id) : false;
 let syncConflict = false;
 let gateRequest = 0;
 let armedDanger = null;
+let googleEnabled = false;
 const pendingFlash = new Set();
 
 /* Transient UI preferences. Resetting them must never change classroom data. */
@@ -138,6 +144,8 @@ const ui = {
   adminAccounts: [],
   adminPending: false,
   adminError: "",
+  consentPending: false,
+  consentError: "",
   /* Interface Sheikah */
   sheikahView: "board",
   angle: "quarter",
@@ -177,10 +185,20 @@ function applyTheme() {
 
 /* ---------- Hash routing ---------- */
 
+/* True only when the account accepted the legal revision currently in force,
+ * so bumping TERMS_VERSION re-asks consent, as the Terms of use state. */
+function hasAcceptedTerms() {
+  return Boolean(account?.terms?.acceptedAt) && account.terms.version === TERMS_VERSION;
+}
+
 function currentView() {
   if (location.hash === "#mentions-legales") return "mentions";
   if (location.hash === "#politique-de-confidentialite") return "privacy";
+  if (location.hash === "#conditions-utilisation") return "terms";
   if (!isSignedIn()) return "welcome";
+  // The current legal revision must be accepted. Accounts created through
+  // Google accept it after login; a new TEXT revision asks it again.
+  if (!hasAcceptedTerms()) return "consent";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
   // Older #board/#student bookmarks now enter the same public class space.
@@ -193,7 +211,7 @@ function navigate(hash) {
 }
 
 window.addEventListener("hashchange", () => {
-  if (activeTour) endSetupTour({ complete: true, silent: true });
+  if (activeTour && app.dataset.view !== currentView()) endSetupTour({ complete: true, silent: true });
   closeDialog({ resumeConsole: false });
   ui.query = "";
   ui.consoleOpen = false;
@@ -224,8 +242,10 @@ function render() {
   const titleKey = view === "welcome" ? "welcome.title.signin"
     : view === "rules" ? "app.aria.rules"
     : view === "admin" ? "app.aria.accounts"
+    : view === "consent" ? "consent.title"
     : view === "mentions" ? "footer.mentions"
     : view === "privacy" ? "footer.privacy"
+    : view === "terms" ? "footer.terms"
     : "nav.class";
   document.title = `${t(titleKey)} · ${BRAND.name}`;
   renderTeacherDialog();
@@ -242,10 +262,22 @@ function render() {
   }
   // The setup tour highlights live DOM, so re-anchor it after any rebuild.
   if (activeTour) Promise.resolve(activeTour.refresh?.()).catch(() => {});
+  revealCookieControls();
+}
+
+/* The cookie manager is loaded from index.html by the referencement branch.
+ * The footer button only appears once that script is actually available, so
+ * the control is never shown dead on builds without consent management. */
+function revealCookieControls() {
+  const available = typeof window.tarteaucitron !== "undefined";
+  for (const el of document.querySelectorAll("[data-cookies-button], [data-cookies-dot]")) {
+    el.hidden = !available;
+  }
 }
 
 function renderSheikahBody(view) {
   const classroom = getCurrentClass(state);
+  if (!classroom) return renderSheikahNoClass();
   const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
   if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
   if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
@@ -270,10 +302,12 @@ function renderViewBody(view) {
       tab: ui.gateTab,
       error: ui.gateError,
       pending: ui.gatePending,
-      values: ui.gateValues
+      values: ui.gateValues,
+      google: googleEnabled && !isSignedIn()
     })}</main>`;
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
+  if (view === "consent") return renderConsent({ pending: ui.consentPending, error: ui.consentError });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked(), rules: getRules(state), editing: ui.rulesEditing })}</main>`;
   }
@@ -282,6 +316,9 @@ function renderViewBody(view) {
   }
   if (view === "privacy") {
     return `<main class="page page-narrow legal-page">${renderPrivacy()}</main>`;
+  }
+  if (view === "terms") {
+    return `<main class="page page-narrow legal-page">${renderTerms()}</main>`;
   }
 
   return renderSheikahBody(view);
@@ -303,7 +340,9 @@ function renderConflict() {
 /* Reward targets are always the current selection. "Whole class" is a real
  * selection action, not a hidden mode, so the cards show exactly who receives. */
 function getTargets() {
-  const inClass = new Set(getCurrentClass(state).pupils.map((pupil) => pupil.id));
+  const classroom = getCurrentClass(state);
+  if (!classroom) return [];
+  const inClass = new Set(classroom.pupils.map((pupil) => pupil.id));
   return state.selectedPupilIds.filter((id) => inClass.has(id));
 }
 
@@ -403,7 +442,10 @@ function dispatchActionClick(event) {
   const action = trigger.dataset.action;
   if (!ACTIONS[action]) return;
   event.preventDefault();
-  if (TEACHER_ACTIONS.has(action) && !allowTeacherAction()) return;
+  if (TEACHER_ACTIONS.has(action) && !isAdultUnlocked()) {
+    openTeacherGate(action === "add-class" ? "add" : "console");
+    return;
+  }
   ACTIONS[action](trigger);
 }
 app.addEventListener("click", dispatchActionClick);
@@ -431,7 +473,7 @@ function handleInput(event) {
   const field = event.target;
   if (field.dataset.action === 'teacher-target') {
     if (!allowTeacherAction()) return;
-    const pupil = getCurrentClass(state).pupils.find(item => item.id === field.value);
+    const pupil = getCurrentClass(state)?.pupils.find(item => item.id === field.value);
     state = { ...state, selectedPupilId:pupil?.id || null, selectedPupilIds:pupil ? [pupil.id] : [] };
     render();
     return;
@@ -522,7 +564,7 @@ function showClassRoster() {
 }
 
 function chooseClassPupil(pupilId) {
-  if (!getCurrentClass(state).pupils.some(pupil => pupil.id === pupilId)) return false;
+  if (!getCurrentClass(state)?.pupils.some(pupil => pupil.id === pupilId)) return false;
   state = { ...state, selectedPupilId:pupilId, selectedPupilIds:[pupilId] };
   rememberStudent(pupilId);
   return true;
@@ -542,6 +584,11 @@ const ACTIONS = {
   "show-rules": () => {
     ui.rulesEditing = false;
     navigate("#rules");
+  },
+  // Reopen the consent panel from anywhere. Kept off the hash so the router
+  // is never disturbed by a #tarteaucitron link.
+  "manage-cookies": () => {
+    window.tarteaucitron?.userInterface?.openPanel?.();
   },
 
   /* ---------- Editable classroom rules ---------- */
@@ -754,9 +801,15 @@ const ACTIONS = {
   },
 
   "focus-add": () => {
+    const classroom = getCurrentClass(state);
+    if (!classroom) {
+      showDialog(renderNewClassDialog(), 'add');
+      dialogRoot.querySelector("#new-class-name")?.focus();
+      return;
+    }
     ui.addFromConsole = ui.teacherDialog === 'console';
-    ui.addClassId = state.activeClassId;
-    showDialog(renderAddPupilDialog(getCurrentClass(state)), 'add');
+    ui.addClassId = classroom.id;
+    showDialog(renderAddPupilDialog(classroom), 'add');
     dialogRoot.querySelector('#pupil-name')?.focus();
   },
 
@@ -882,11 +935,10 @@ const FORMS = {
     if (ui.gatePending) return;
     const request = ++gateRequest;
     const data = new FormData(form);
-    const username = String(data.get("username") || "").trim();
     const email = String(data.get("email") || "").trim();
     const password = String(data.get("password") || "");
-    ui.gateValues = { username, email };
-    const problem = validateNewPassword(password, data.get("confirm"));
+    ui.gateValues = { email };
+    const problem = validateNewPassword(password, data.get("confirm")) || (data.get("terms") ? "" : "the terms must be accepted");
     if (problem) {
       ui.gateError = problem;
       render();
@@ -895,7 +947,7 @@ const FORMS = {
     ui.gatePending = true;
     ui.gateError = "";
     render();
-    const result = await signUp({ username, email, password });
+    const result = await signUp({ email, password, termsAccepted: true });
     if (request !== gateRequest) return;
     ui.gatePending = false;
     if (!result.ok) {
@@ -905,6 +957,32 @@ const FORMS = {
     }
     openAccount(result.account);
     toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+  },
+
+  "accept-consent": async (form) => {
+    if (ui.consentPending) return;
+    const data = new FormData(form);
+    if (!data.get("terms")) {
+      ui.consentError = "the terms must be accepted";
+      render();
+      return;
+    }
+    ui.consentPending = true;
+    ui.consentError = "";
+    render();
+    const result = await acceptTerms();
+    if (result.stale) return;
+    ui.consentPending = false;
+    if (!result.ok) {
+      ui.consentError = result.error;
+      render();
+      return;
+    }
+    account = result.account;
+    activeSession = captureSessionContext();
+    render();
+    window.scrollTo({ top: 0 });
+    maybeStartOnboarding();
   },
 
   unlock: async (form) => {
@@ -938,6 +1016,7 @@ const FORMS = {
     closeDialog({ resumeConsole:false });
     if (target === 'admin' && account?.role === 'admin') navigate('#admin');
     else if (target === 'rules') { ui.rulesEditing = true; navigate('#rules'); }
+    else if (target === 'add') ACTIONS['add-class']();
     else openTeacherConsole();
     toast(result.offline ? "Console unlocked offline." : "Console unlocked.", "success");
   },
@@ -1109,7 +1188,8 @@ function changeTargetHp(delta) {
 }
 
 function describeTargets(targets) {
-  if (targets.length === getCurrentClass(state).pupils.length) return getCurrentClass(state).name;
+  const classroom = getCurrentClass(state);
+  if (classroom && targets.length === classroom.pupils.length) return classroom.name;
   if (targets.length === 1) return getPupilById(state, targets[0])?.name || t("notice.oneHero");
   return t("notice.heroes", { count: targets.length });
 }
@@ -1254,7 +1334,7 @@ function renderTeacherDialog() {
     return;
   }
   const classroom = getCurrentClass(state);
-  const focused = classroom.pupils.find(item => item.id === state.selectedPupilId) || null;
+  const focused = classroom?.pupils.find(item => item.id === state.selectedPupilId) || null;
   showDialog(`<dialog class="dialog teacher-console-dialog" aria-label="${t('console.title')}" aria-modal="false"><button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button><div class="teacher-console-content">${renderConsole({classroom,ui,targets:getTargets(),focused,canUndo:history.length>0,events:state.events,armedReset:armedDanger==='reset',unlockedUntil:unlockUntil(),account})}</div></dialog>`, 'console');
 }
 
@@ -1470,33 +1550,37 @@ function endSetupTour({ complete = true, silent = false } = {}) {
   }
 }
 
-async function startSetupTour() {
+function setupTourSteps() {
+  return [
+    { target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), body: t("onboarding.theme.body"), preview: true },
+    {
+      target: () => (state.classes.length ? ".class-picker" : '[data-action="add-class"]'),
+      title: t("onboarding.class.title"),
+      body: () => t(state.classes.length ? "onboarding.class.body" : "onboarding.class.body.empty")
+    },
+    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
+    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") }
+  ];
+}
+
+function startSetupTour() {
   if (!account || activeTour) return;
-  try {
-    const TourGuideClient = await loadTourGuide();
-    if (!account) return;
-    const tg = new TourGuideClient({
-      nextLabel: t("onboarding.next"),
-      prevLabel: t("onboarding.prev"),
-      finishLabel: t("onboarding.finish"),
-      exitOnClickOutside: false,
-      keyboardControls: true,
-      activeStepInteraction: true,
-      dialogMaxWidth: 360,
-      steps: [
-        { order: 1, target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), content: t("onboarding.theme.body"), propagateEvents: true },
-        { order: 2, target: ".class-picker", title: t("onboarding.class.title"), content: t("onboarding.class.body"), propagateEvents: true },
-        { order: 3, target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), content: t("onboarding.rules.body"), propagateEvents: true },
-        { order: 4, target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), content: t("onboarding.console.body"), propagateEvents: true }
-      ]
-    });
-    tg.onFinish(() => finishOnboarding());
-    tg.onBeforeExit(() => { if (!onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } }); });
-    activeTour = tg;
-    await tg.start();
-  } catch {
-    endSetupTour({ complete: true, silent: false });
-  }
+  activeTour = createGuidedTour({
+    steps: setupTourSteps(),
+    labels: {
+      next: t("onboarding.next"),
+      prev: t("onboarding.prev"),
+      finish: t("onboarding.finish"),
+      skip: t("onboarding.skip"),
+      close: t("onboarding.close"),
+      progress: (current, total) => t("onboarding.step", { current, total })
+    },
+    onFinish: () => finishOnboarding(),
+    onExit: () => {
+      if (account && !onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
+    }
+  });
+  activeTour.start();
 }
 
 function openAccount(next) {
@@ -1530,6 +1614,48 @@ function openAccount(next) {
   if (currentView() === "admin") loadAdminAccounts();
   bootstrapFromServer();
   maybeStartOnboarding();
+}
+
+/* Google sign-in redirects back with a one-time code; errors arrive as a
+ * short reason code so the gate can explain what happened. */
+const GOOGLE_ERROR_KEYS = {
+  denied: "google.error.denied",
+  state: "google.error.state",
+  email: "google.error.email",
+  unavailable: "google.error.unavailable",
+  failed: "google.error.failed"
+};
+const googleErrorMessage = (reason) => t(GOOGLE_ERROR_KEYS[reason] || "google.error.failed");
+
+async function completeGoogleSignIn(code) {
+  ui.gateError = "";
+  ui.gatePending = true;
+  render();
+  const result = await signInWithGoogleCode(code);
+  if (result.stale) return;
+  ui.gatePending = false;
+  if (!result.ok) {
+    ui.gateError = result.error;
+    render();
+    return;
+  }
+  openAccount(result.account);
+  toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+}
+
+/* The gate only offers Google when the server has credentials configured. */
+async function loadPublicConfig() {
+  try {
+    const response = await requestApi("config", { cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => null);
+    const enabled = Boolean(payload?.google);
+    if (enabled === googleEnabled) return;
+    googleEnabled = enabled;
+    if (currentView() === "welcome") render();
+  } catch {
+    // The button stays hidden while the server is unreachable.
+  }
 }
 
 function endSession(message = "", context = null) {
@@ -1829,11 +1955,28 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
   setLang(getLang() === "fr" ? "en" : "fr");
   rememberAccountLanguage();
   if (!ui.teacherDialog) closeDialog();
+  // tarteaucitron builds its banner and panel once, at load: while either is on
+  // screen, reload so the whole consent UI follows the chosen language.
+  const alertBig = document.getElementById("tarteaucitronAlertBig");
+  const consentPanel = document.getElementById("tarteaucitron");
+  const consentVisible = Boolean(document.getElementById("tarteaucitronRoot"))
+    && ((alertBig && alertBig.style.display !== "none") || (consentPanel && consentPanel.style.display === "block"));
+  if (consentVisible) { location.reload(); return; }
   renderPreservingForms();
 });
+const googleParams = new URLSearchParams(location.search);
+const googleCode = googleParams.get("google_code") || "";
+const googleError = googleParams.get("google_error") || "";
+if (googleCode || googleError) {
+  // Never keep the one-time code or the error in the address bar or history.
+  try { window.history.replaceState(null, "", location.pathname + location.hash); } catch { /* keep the query */ }
+}
+if (googleError) ui.gateError = googleErrorMessage(googleError);
 applyTheme();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
+if (googleCode) completeGoogleSignIn(googleCode);
+else loadPublicConfig();
 setInterval(updateClock, 1000);

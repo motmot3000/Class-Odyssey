@@ -1,0 +1,19 @@
+# Alias de secours pour le réseau scolaire genevois.
+# classodyssey.com est enregistré récemment : le proxy de l'Etat de Genève le
+# classe « Newly Registered Domain » et le bloque (art. 16a LIP). Ce sous-domaine
+# de thomaswunsche.com, domaine plus ancien, sert la même application sans
+# redirection, pour que les élèves atteignent l'app depuis le réseau pédagogique.
+classodyssey.thomaswunsche.com {
+	import security_headers
+	header Strict-Transport-Security "max-age=31536000"
+	encode zstd gzip
+
+	@api path /api/*
+	header @api Cache-Control "no-store"
+
+	reverse_proxy 127.0.0.1:5180
+
+	log {
+		format json
+	}
+}

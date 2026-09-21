@@ -22,9 +22,10 @@ Le **catalogue de cosmétiques est réduit** :
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
   personnages — un garçon en Long reçoit la coupe longue livrée adaptée à sa
   tête, une fille en Short la coupe courte livrée adaptée à la sienne. **Bald**
-  (niveau 2, 10) et **Afro** (niveau 3, 30) sont les premiers déblocages.
-  Braids et Royal Hair sont retirés.
-- **Visages** : catégorie conservée mais vide ; l'expression vient de la base 3D.
+  (niveau 2, 20) et **Tresse** (niveau 3, 30, coupe portée avec frange et
+  longue natte, `characters-refit/hair/curly.glb`) sont les premiers
+  déblocages. L'ancien Afro sculpté, Braids et Royal Hair sont retirés.
+- **Visages** : catégorie supprimée ; l'expression vient de la base 3D.
 - **Teints** : tatouages et Peau dorée retirés ; les cinq teints naturels
   restent.
 - **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
@@ -133,18 +134,21 @@ lanterne et baguette ont des angles de dégagement, le livre est aminci.
 Les sélections utilisent directement les identifiants et les prix de
 `src/domain.mjs` :
 
-- **7 tenues** : Scout, Ranger, Mage, Warrior, Knight, Archmage, King.
-- **8 couvre-chefs** : Goggles, Sunglasses, Beret, Wizard Hat, King’s Crown,
-  Helmet, Classy Hat, Royal Crown.
-- **7 ensembles d’objets** : Shield, Lantern, Magic Book, Daggers, Sword,
-  Wand, Swords & Shield.
-- **5 coiffures avec géométrie** : Short Hair, Long Hair, Afro, Braids,
-  Royal Hair. Bald retire les cheveux.
+- **5 tenues** : Scout, Ranger, Mage, Warrior, Knight. Archmage et King sont
+  retirés ; le **titre** King reste.
+- **9 couvre-chefs** : No Hat, Goggles, Sunglasses, Beret, Wizard Hat, King’s
+  Crown, Helmet, Classy Hat, Royal Crown.
+- **Objets** : catégorie retirée ; Empty Hands reste l’état interne
+  (`no-weapon`) sans onglet.
+- **4 coiffures** : Short Hair et Long Hair (livrées, gratuites et partagées),
+  Bald (niveau 2, 20) et Braid (niveau 3, 30, frange et longue natte).
 - **7 couleurs de cheveux** : Brown, Blond, Black, White, Red, Green, Blue.
+- **5 teints naturels** et **9 titres**.
 - No Hat et Empty Hands retirent les objets de leur emplacement.
 
-Soit **27 modèles équipables**, avec plusieurs pièces nommées par modèle et
-des ajustements par sexe. Les carnations sont celles des deux bases medium.
+Soit **une trentaine de modèles équipables**, avec plusieurs pièces nommées par
+modèle et des ajustements par sexe. Les carnations sont celles des deux bases
+medium.
 
 Les tenues comportent de vrais volumes : jupes de tunique, capes, plastrons,
 épaulières, jambières, mantelet et col. Les anneaux de ceinture suivent la
@@ -154,13 +158,39 @@ de la base livrée sont conservées.
 
 ### Finition actuelle des cheveux et couvre-chefs
 
-Les cinq coupes utilisent des mèches Catmull effilées et aplaties, avec de fins
-brins ; les tresses sont entrelacées en continu et l’Afro est sculpté par bruit,
-sans gros amas de sphères. Wizard Hat et Classy Hat ont des bords annulaires
+Les coupes livrées (Short, Long) et la coupe portée (Braid) partagent la matière
+cheveux de l’app : carte de normales et de rugosité `hair-normal` /
+`hair-roughness`, matière nommée `Hair / …` que le viewer recolore depuis la
+palette de la boutique. Chaque coupe existe en trois variantes — `open`,
+`covered` (beret, chapeau de sorcier, chapeau chic) et `crowned` (les deux
+couronnes) — ajustées une fois pour chaque personnage : une passe de conformité
+mesure la distance signée au crâne de **Noa** et de **Mila** et ne relève que
+les mèches enfoncées, avec un dégagement minimal de 2 mm sur le visage, le
+front et les tempes. `tools/measure-hair-fit.py` rend ce contrôle reproductible
+et `tools/port-braid-cut.py` documente l’import de la natte dans le repère de
+tête du jeu.
+
+**Finition de l’avant de la Tresse** : la frange portée est une coquille de
+mèches séparées ; sur la vraie tête, le front nu apparaissait dans chaque
+interstice. `tools/port-braid-cut.py` ajoute donc une **sous-couche de
+chevelure** (`hairline underlayer`) au ras du crâne, qui se termine par une
+ligne de cheveux festonnée au-dessus des sourcils et referme la nuque et les
+côtés ; elle est ajustée par personnage comme le reste de la coupe. La même
+passe retire la mèche longue de la tempe droite et raccourcit la mèche centrale
+autour de sa racine. Les mèches balayées descendent légèrement sur le front,
+en restant avancées devant la peau. Le volume arrière est resserré en
+profondeur, avec une transition progressive vers la natte pour conserver
+ses entrelacs et le dégagement du dos. La sous-couche descend derrière chaque oreille ; des ombres
+entre les mèches restent visibles en très gros plan.
+`measure-hair-fit.py` **cumule désormais tous les maillages d’une coupe** pour
+qu’aucune pièce ne masque le clipping d’une autre.
+
+Wizard Hat et Classy Hat ont des bords annulaires
 avec une véritable ouverture ; le béret est ajusté et
-incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`
-pour les cinq coupes** : ajustement radial progressif au niveau du bandeau
-métallique, en conservant le sommet et les longueurs.
+incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`**
+pour chaque coupe : ajustement radial progressif au niveau du bandeau
+métallique, en n’écrasant que le volume du crâne et jamais la frange, ce qui
+évite de la faire traverser le visage.
 
 `manifest.json.headFit` conserve l’ancien espace de construction `HEAD_FIT`
 (assise à 1,692 m) ; **`headFits` décrit sa transformation vers chaque base

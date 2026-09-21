@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="La gamification en classe : définition, mécanismes psychologiques, résultats des méta-analyses et bonnes pratiques. Pourquoi l’utiliser, comment l’utiliser sans nuire à l’apprentissage — et comment Class Odyssey l’applique.">
+  <title>La gamification en classe : ce que dit la science · Class Odyssey</title>
+  <link rel="canonical" href="https://classodyssey.com/gamification.html">
+  <link rel="alternate" hreflang="fr" href="https://classodyssey.com/gamification.html">
+  <link rel="alternate" hreflang="en" href="https://classodyssey.com/gamification-en.html">
+  <link rel="alternate" hreflang="x-default" href="https://classodyssey.com/gamification.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Class Odyssey">
+  <meta property="og:title" content="La gamification en classe : ce que dit la science">
+  <meta property="og:description" content="Points, quêtes et niveaux peuvent soutenir les apprentissages — à condition de viser un comportement précis. Synthèse de 20+ méta-analyses et bonnes pratiques.">
+  <meta property="og:url" content="https://classodyssey.com/gamification.html">
+  <meta property="og:image" content="https://classodyssey.com/assets/brand/preview/class-odyssey-og-1200x630.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="La vallée de Class Odyssey et sa devise : faites de chaque leçon une aventure.">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="La gamification en classe : ce que dit la science">
+  <meta name="twitter:description" content="Points, quêtes et niveaux peuvent soutenir les apprentissages — à condition de viser un comportement précis. Synthèse de 20+ méta-analyses et bonnes pratiques.">
+  <meta name="twitter:image" content="https://classodyssey.com/assets/brand/preview/class-odyssey-og-1200x630.png">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LearningResource",
+      "name": "La gamification en classe : ce que dit la science",
+      "description": "Définition, mécanismes psychologiques, résultats des méta-analyses et bonnes pratiques pour gamifier une leçon sans nuire à l'apprentissage.",
+      "url": "https://classodyssey.com/gamification.html",
+      "inLanguage": "fr",
+      "learningResourceType": "Article",
+      "educationalLevel": "Formation continue des enseignants",
+      "audience": { "@type": "EducationalAudience", "educationalRole": "teacher" },
+      "isPartOf": { "@type": "WebSite", "name": "Class Odyssey", "url": "https://classodyssey.com/" },
+      "publisher": { "@type": "Organization", "name": "Class Odyssey", "url": "https://classodyssey.com/" },
+      "dateModified": "2026-09-19",
+      "about": "Gamification en éducation"
+    }
+  </script>
+  <link rel="icon" href="./assets/brand/icons/favicon-light.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="./assets/brand/icons/favicon-light.svg">
+  <link rel="stylesheet" href="./src/fonts.css">
+  <link rel="stylesheet" href="./src/gamification.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <span id="top" aria-hidden="true"></span>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div>
+
+  <!-- Jeu d’icônes dessinées, réutilisables et cohérentes (trait 1.75). -->
+  <svg class="icon-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.6 4.2 4.2L19 7"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11"/><path d="M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-team" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.2" r="3.1"/><circle cx="16.7" cy="9.6" r="2.4"/><path d="M3.4 19.2c0-3.1 2.5-5.2 5.6-5.2s5.6 2.1 5.6 5.2"/><path d="M15.1 14.4c2.3.3 4 2 4 4.6"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 20.3S3.6 15.2 3.6 9.9c0-2.9 2.2-5 4.9-5 1.7 0 3 1 3.5 2 .5-1 1.8-2 3.5-2 2.7 0 4.9 2.1 4.9 5 0 5.3-8.4 10.4-8.4 10.4z"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.2v9.6"/><path d="M14.7 9.1c-.6-.8-1.6-1.2-2.7-1.2-1.5 0-2.6.8-2.6 2 0 2.7 5.6 1.5 5.6 4.1 0 1.2-1.2 2-2.8 2-1.2 0-2.3-.5-2.9-1.3"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2 2 0 0 1 6 3.5h5.5v15H6a2 2 0 0 0-2 2z"/><path d="M20 5.5a2 2 0 0 0-2-2h-5.5v15H18a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-loop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a7 7 0 0 1 12.6-3.3L19 8"/><path d="M20 15a7 7 0 0 1-12.6 3.3L5 16"/><path d="M19 4.5V8h-3.5"/><path d="M5 19.5V16h3.5"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a7.5 7.5 0 0 1-10.9 6.7L4.5 20l1.3-4A7.5 7.5 0 1 1 20 12z"/><path d="M8.6 11.5h.01M12 11.5h.01M15.4 11.5h.01"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.2A3 3 0 0 0 6.6 7a2.8 2.8 0 0 0-1.8 4.6A3 3 0 0 0 6 16.9a3 3 0 0 0 3.5 3.1V4.2z"/><path d="M14.5 4.2A3 3 0 0 1 17.4 7a2.8 2.8 0 0 1 1.8 4.6 3 3 0 0 1-1.2 5.3 3 3 0 0 1-3.5 3.1V4.2z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 5 6v5.4c0 4.2 2.9 7.7 7 9.4 4.1-1.7 7-5.2 7-9.4V6z"/><path d="m9.2 12 2 2 3.6-3.8"/></symbol>
+  </svg>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./">
+        <img src="./assets/brand/svg/class-odyssey-horizontal-light.svg" alt="Class Odyssey">
+      </a>
+      <nav class="site-nav" aria-label="Sections de la page">
+        <a href="#definition">Définition</a>
+        <a href="#mecanismes">Mécanismes</a>
+        <a href="#preuves">Preuves</a>
+        <a href="#en-classe">En classe</a>
+        <a href="#class-odyssey">Class Odyssey</a>
+        <a href="#references">Références</a>
+      </nav>
+      <a class="lang-switch" href="./gamification-en.html" data-lang-switch="en" hreflang="en" aria-label="Read this page in English">
+        <span class="lang-switch-flag" aria-hidden="true"><svg viewBox="0 0 60 30"><clipPath id="ls-uk"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><rect width="60" height="30" fill="#012169"/><path d="M0,0 60,30 M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30 M60,0 0,30" stroke="#C8102E" stroke-width="4" clip-path="url(#ls-uk)"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></svg></span>
+        <span>English</span>
+      </a>
+      <a class="btn btn-ghost" href="./">Ouvrir l’appli<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-media" aria-hidden="true">
+      <img src="./assets/welcome-valley.webp" alt="" width="1536" height="1024" fetchpriority="high">
+    </div>
+    <div class="hero-inner">
+      <h1 id="hero-title">La gamification en classe :<br><span>un levier, pas une baguette magique.</span></h1>
+      <p class="hero-lede">Points, quêtes et niveaux peuvent réellement soutenir les apprentissages — mais seulement lorsqu’ils visent un comportement précis et laissent la pédagogie aux commandes. Voici ce que disent les études, comment l’utiliser sans se tromper, et pourquoi nous avons construit Class Odyssey ainsi.</p>
+      <p class="hero-meta">Dossier pédagogique · Synthèse de 20+ méta-analyses · Lecture ≈10 min · Mise à jour septembre 2026</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#preuves">Explorer les preuves<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-ghost" href="#class-odyssey">Voir Class Odyssey en pratique</a>
+      </div>
+    </div>
+  </section>
+
+  <aside class="essentials" aria-label="L’essentiel en trois points">
+    <div class="essentials-inner">
+      <p class="essentials-title">L’essentiel</p>
+      <div class="essentials-grid">
+        <div class="essential">
+          <p class="essential-num">Effet réel, mais modéré</p>
+          <p>En moyenne, +0,25 à +0,50 écart-type sur les résultats cognitifs — un gain comparable à d’autres interventions pédagogiques reconnues.</p>
+        </div>
+        <div class="essential">
+          <p class="essential-num">La conception avant les récompenses</p>
+          <p>Feedback explicatif, objectifs de maîtrise, choix réels et coopération pèsent plus que les points, badges ou classements.</p>
+        </div>
+        <div class="essential">
+          <p class="essential-num">Les mauvais usages nuisent</p>
+          <p>Classements publics, séries obligatoires et récompenses contrôlantes peuvent créer anxiété, triche et désengagement.</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="layout">
+    <aside class="toc" aria-label="Sommaire">
+      <p class="toc-title">Sommaire</p>
+      <nav>
+        <a href="#definition" class="toc-link">Qu’est-ce que la gamification ?</a>
+        <a href="#mecanismes" class="toc-link">Pourquoi ça marche</a>
+        <a href="#preuves" class="toc-link">Ce que disent les études</a>
+        <a href="#en-classe" class="toc-link">En classe : faire et éviter</a>
+        <a href="#methode" class="toc-link">Gamifier une leçon</a>
+        <a href="#class-odyssey" class="toc-link">Class Odyssey</a>
+        <a href="#faq" class="toc-link">Questions fréquentes</a>
+        <a href="#references" class="toc-link">Références</a>
+      </nav>
+    </aside>
+
+    <main id="contenu" class="prose">
+
+      <section class="chapter" id="definition" aria-labelledby="definition-title">
+        <h2 id="definition-title">Qu’est-ce que la gamification&nbsp;?</h2>
+        <p class="lead">La <strong>gamification</strong> — ou ludification — consiste à <strong>utiliser des éléments de conception de jeux dans des contextes qui ne sont pas des jeux</strong> (Deterding, Dixon, Khaled &amp; Nacke, 2011). Dans une classe, cela revient à ajouter des mécaniques familières du jeu — points, niveaux, quêtes, badges, défis, progression visible, coopération — à une activité d’apprentissage qui resterait, sans elles, une activité scolaire ordinaire.</p>
+        <p>Il ne s’agit donc pas de transformer le cours en jeu complet, ni de « faire plaisir » pour lui-même. L’objectif est plus précis&nbsp;: rendre certains <strong>comportements utiles à l’apprentissage</strong> plus fréquents — commencer une tâche, pratiquer davantage, persister face à la difficulté, revenir sur ses erreurs, demander un retour, coopérer.</p>
+
+        <figure class="pullquote">
+          <blockquote>La bonne question n’est pas «&nbsp;comment rendre la leçon plus amusante&nbsp;?&nbsp;» mais «&nbsp;quel comportement d’apprentissage manque, et quelle mécanique minimale peut le soutenir&nbsp;?&nbsp;»</blockquote>
+          <figcaption>Un mauvais exercice reste un mauvais exercice, même avec des badges.</figcaption>
+        </figure>
+
+        <h3>Trois approches qu’on confond souvent</h3>
+        <p>Les publications emploient parfois ces termes de façon interchangeable. Une preuve concernant l’un ne prouve pas automatiquement l’efficacité des autres.</p>
+        <div class="spectrum" role="img" aria-label="Spectre allant de la gamification légère, où l’apprentissage reste l’activité, au serious game, où le jeu devient l’activité.">
+          <div class="spectrum-track" aria-hidden="true"><span></span></div>
+          <div class="spectrum-stops">
+            <div class="stop">
+              <p class="stop-name">Gamification</p>
+              <p class="stop-tag">L’activité reste un apprentissage</p>
+              <p>On ajoute des éléments de jeu à un cours inchangé&nbsp;: une carte de maîtrise, des défis, des niveaux.</p>
+            </div>
+            <div class="stop">
+              <p class="stop-name">Apprentissage par le jeu</p>
+              <p class="stop-tag">Le jeu porte l’apprentissage</p>
+              <p><em>Game-based learning</em>&nbsp;: un jeu complet sert de support, par exemple un jeu de plateau pour les fractions.</p>
+            </div>
+            <div class="stop">
+              <p class="stop-name">Serious game</p>
+              <p class="stop-tag">Le jeu est conçu pour autre chose que jouer</p>
+              <p>Une simulation conçue d’abord pour former, comme un entraînement clinique ou professionnel.</p>
+            </div>
+          </div>
+        </div>
+
+        <h3>Ce que la gamification n’est pas</h3>
+        <ul class="plain-list cross-list">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Un synonyme de «&nbsp;s’amuser&nbsp;».</strong> Le plaisir n’est pas le but&nbsp;: c’est parfois un moyen, jamais une preuve d’apprentissage.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Une collection de gadgets.</strong> Ajouter des points sans changer l’activité ne change pas ce que les élèves apprennent.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Une solution automatique.</strong> Aucune mécanique ne fonctionne partout&nbsp;: l’effet dépend du public, de la matière et de la conception.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Une note déguisée.</strong> Un score interne ne doit pas décider de la réussite scolaire ni transformer l’erreur en statut social.</span></li>
+        </ul>
+      </section>
+
+      <section class="chapter" id="mecanismes" aria-labelledby="mecanismes-title">
+        <h2 id="mecanismes-title">Pourquoi ça marche — quand ça marche</h2>
+        <p class="lead">Les éléments de jeu n’agissent presque jamais directement sur le savoir. Ils modifient d’abord un comportement ou un ressenti, qui influence ensuite l’activité cognitive — et c’est cette activité qui produit l’apprentissage.</p>
+
+        <h3>Un effet indirect, en quatre temps</h3>
+        <p>Selon la théorie de l’apprentissage gamifié de <strong>Landers (2014)</strong>, le contenu pédagogique agit directement sur l’apprentissage&nbsp;; les éléments de jeu, eux, agissent en amont.</p>
+        <ol class="flow">
+          <li><span class="flow-step">1</span><span class="flow-label">Élément de jeu</span><span class="flow-note">badge, quête, niveau</span></li>
+          <li><span class="flow-step">2</span><span class="flow-label">Comportement visé</span><span class="flow-note">revenir, persister, coopérer</span></li>
+          <li><span class="flow-step">3</span><span class="flow-label">Activité cognitive</span><span class="flow-note">récupérer, expliquer, comparer</span></li>
+          <li><span class="flow-step">4</span><span class="flow-label">Apprentissage</span><span class="flow-note">mesuré hors du jeu</span></li>
+        </ol>
+        <p class="after-figure">Conséquence&nbsp;: chaque mécanique doit viser <strong>un comportement intermédiaire explicite</strong> relié au savoir visé. Un système qui récompense le volume de clics ne garantit ni compréhension ni rétention.</p>
+
+        <h3>Trois besoins psychologiques à nourrir</h3>
+        <p>La théorie de l’autodétermination de <strong>Ryan &amp; Deci (2000)</strong> explique pourquoi la conception compte plus que l’habillage. Une gamification efficace soutient trois besoins fondamentaux&nbsp;; mal conçue, elle les attaque.</p>
+        <div class="needs">
+          <article class="need">
+            <p class="need-head"><svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>Autonomie</p>
+            <p class="need-yes"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Choix réels, rythme modulable, droit de ne pas jouer.</p>
+            <p class="need-no"><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg>Participation forcée, récompense qui conditionne chaque action.</p>
+          </article>
+          <article class="need">
+            <p class="need-head"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>Compétence</p>
+            <p class="need-yes"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Défi ajusté, critères clairs, essais multiples, feedback utile.</p>
+            <p class="need-no"><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg>Difficulté arbitraire, classement qui expose publiquement l’échec.</p>
+          </article>
+          <article class="need">
+            <p class="need-head"><svg class="icon" aria-hidden="true"><use href="#i-team"/></svg>Appartenance</p>
+            <p class="need-yes"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Coopération, rôles complémentaires, objectif commun.</p>
+            <p class="need-no"><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg>Rivalité permanente, comparaison sociale, exclusion.</p>
+          </article>
+        </div>
+        <p>Une récompense n’est pas nuisible en soi&nbsp;: elle le devient lorsqu’elle est vécue comme <strong>contrôlante</strong> (Deci, Koestner &amp; Ryan, 1999). Un badge qui <em>atteste</em> une compétence informe&nbsp;; un badge qui <em>sert à faire obéir</em> déplace l’attention de l’apprentissage vers la récompense.</p>
+
+        <h3>Les ingrédients qui font réellement apprendre</h3>
+        <p>La gamification ne remplace aucune de ces mécanismes&nbsp;: elle peut seulement les soutenir. Les quatre plus solides&nbsp;:</p>
+        <div class="ingredients">
+          <article class="ingredient">
+            <p class="ingredient-head"><svg class="icon" aria-hidden="true"><use href="#i-loop"/></svg>Récupération active</p>
+            <p>Se tester plutôt que relire. Produire une réponse avant de voir la solution renforce la mémoire à long terme (Roediger &amp; Karpicke, 2006).</p>
+          </article>
+          <article class="ingredient">
+            <p class="ingredient-head"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Répétition espacée</p>
+            <p>Revoir à intervalles croissants, surtout ce qui a été raté, plutôt que tout réviser d’un bloc (Cepeda et&nbsp;al., 2006).</p>
+          </article>
+          <article class="ingredient">
+            <p class="ingredient-head"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>Feedback explicatif</p>
+            <p>Dire où l’on va, où l’on en est et quelle est la prochaine étape (Hattie &amp; Timperley, 2007)&nbsp;: «&nbsp;+100 XP&nbsp;» ne fait rien apprendre.</p>
+          </article>
+          <article class="ingredient">
+            <p class="ingredient-head"><svg class="icon" aria-hidden="true"><use href="#i-brain"/></svg>Charge cognitive maîtrisée</p>
+            <p>Trop de monnaies, sons, animations et règles détournent l’attention du savoir (Sweller, 1988).</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="chapter" id="preuves" aria-labelledby="preuves-title">
+        <h2 id="preuves-title">Ce que disent les études</h2>
+        <p class="lead">La recherche sur la gamification en éducation repose aujourd’hui sur de nombreuses <strong>méta-analyses</strong> — des synthèses statistiques de dizaines d’études. Le verdict global est positif, mais <strong>conditionnel</strong>&nbsp;: l’effet dépend fortement de la qualité de la conception.</p>
+
+        <figure class="figure figure-chart">
+          <figcaption class="figure-title">Tailles d’effet rapportées par les principales méta-analyses (2020–2026)</figcaption>
+          <div class="chart" role="img" aria-label="Diagramme à barres des tailles d’effet : Sailer et Homner 2020, 0,49 en cognitif ; Bai et al. 2020, 0,50 en apprentissage ; Li et al. 2024, 0,26 en motivation intrinsèque ; Zeng et al. 2024, 0,78 en performance ; Kurnaz et Koçtürk 2025, 0,65 en motivation ; Slamet et Meng 2025, 0,88 en cognitif collaboratif ; Xu et Dai 2026, 0,75 en gamification ; Gyedu et al. 2026, 1,12 en composite, avec une hétérogénéité très élevée.">
+            <div class="chart-scale" aria-hidden="true">
+              <span></span>
+              <span class="chart-scale-axis"><i style="left:0%">0</i><i style="left:16.666%">0,2</i><i style="left:41.666%">0,5</i><i style="left:66.666%">0,8</i><i style="left:100%">1,2</i></span>
+              <span></span>
+            </div>
+            <ul class="chart-rows">
+              <li class="chart-row is-cognitive">
+                <span class="chart-label">Sailer &amp; Homner, 2020<em>cognitif</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:40.8" data-value="40.8"></span></span>
+                <span class="chart-value">0,49</span>
+              </li>
+              <li class="chart-row is-cognitive">
+                <span class="chart-label">Bai, Hew &amp; Huang, 2020<em>apprentissage</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:41.7" data-value="41.7"></span></span>
+                <span class="chart-value">0,50</span>
+              </li>
+              <li class="chart-row is-motivation">
+                <span class="chart-label">Li, Hew &amp; Du, 2024<em>motivation intrinsèque</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:21.4" data-value="21.4"></span></span>
+                <span class="chart-value">0,26</span>
+              </li>
+              <li class="chart-row is-performance">
+                <span class="chart-label">Zeng et&nbsp;al., 2024<em>performance</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:65" data-value="65"></span></span>
+                <span class="chart-value">0,78</span>
+              </li>
+              <li class="chart-row is-motivation">
+                <span class="chart-label">Kurnaz &amp; Koçtürk, 2025<em>motivation</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:54.5" data-value="54.5"></span></span>
+                <span class="chart-value">0,65</span>
+              </li>
+              <li class="chart-row is-cognitive">
+                <span class="chart-label">Slamet &amp; Meng, 2025<em>cognitif, collaboratif</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:72.9" data-value="72.9"></span></span>
+                <span class="chart-value">0,88</span>
+              </li>
+              <li class="chart-row is-performance">
+                <span class="chart-label">Xu &amp; Dai, 2026<em>gamification</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:62.8" data-value="62.8"></span></span>
+                <span class="chart-value">0,75</span>
+              </li>
+              <li class="chart-row is-uncertain">
+                <span class="chart-label">Gyedu et&nbsp;al., 2026<em>composite · très incertain</em></span>
+                <span class="chart-track"><span class="chart-bar" style="--v:93.3" data-value="93.3"></span></span>
+                <span class="chart-value">1,12</span>
+              </li>
+            </ul>
+            <p class="chart-legend"><span class="dot is-cognitive"></span>Cognition / apprentissage <span class="dot is-motivation"></span>Motivation <span class="dot is-performance"></span>Performance <span class="dot is-uncertain"></span>Estimation très hétérogène</p>
+          </div>
+          <figcaption class="figure-source">Repères usuels&nbsp;: 0,2 = petit effet, 0,5 = moyen, 0,8 = grand. Les valeurs supérieures à 0,8 proviennent d’études très hétérogènes&nbsp;: à interpréter avec prudence.</figcaption>
+        </figure>
+
+        <div class="table-wrap">
+          <table class="evidence-table">
+            <caption>Détail des principales synthèses</caption>
+            <thead>
+              <tr><th scope="col">Étude</th><th scope="col">Corpus</th><th scope="col">Effet moyen</th><th scope="col">Ce qu’il faut retenir</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Sailer &amp; Homner (2020)</th>
+                <td>19 études cognitives, N&nbsp;=&nbsp;1&nbsp;686</td>
+                <td><strong>g&nbsp;=&nbsp;0,49</strong> cognitif<br>0,36 motivation · 0,25 comportement</td>
+                <td>L’estimation la plus fiable&nbsp;: effet petit à moyen sur les résultats cognitifs.</td>
+              </tr>
+              <tr>
+                <th scope="row">Bai, Hew &amp; Huang (2020)</th>
+                <td>30 interventions, N&nbsp;=&nbsp;3&nbsp;202</td>
+                <td><strong>g&nbsp;=&nbsp;0,50</strong> apprentissage</td>
+                <td>Effet moyen positif, malgré des interventions très diverses.</td>
+              </tr>
+              <tr>
+                <th scope="row">Li, Hew &amp; Du (2024)</th>
+                <td>35 interventions, N&nbsp;=&nbsp;2&nbsp;500</td>
+                <td><strong>g&nbsp;=&nbsp;0,26</strong> motivation intrinsèque</td>
+                <td>La motivation <em>intrinsèque</em> progresse peu&nbsp;: la conception est décisive.</td>
+              </tr>
+              <tr>
+                <th scope="row">Zeng et&nbsp;al. (2024)</th>
+                <td>22 études, N&nbsp;=&nbsp;3&nbsp;144</td>
+                <td><strong>g&nbsp;=&nbsp;0,78</strong> performance</td>
+                <td>Effet plus grand, mais contextes très dispersés (hétérogénéité&nbsp;≈&nbsp;94&nbsp;%).</td>
+              </tr>
+              <tr>
+                <th scope="row">Kurnaz &amp; Koçtürk (2025)</th>
+                <td>31 études K-12, N&nbsp;≈&nbsp;2&nbsp;907</td>
+                <td><strong>g&nbsp;=&nbsp;0,65</strong> motivation</td>
+                <td>Majorité d’études quasi expérimentales&nbsp;: à considérer avec prudence.</td>
+              </tr>
+              <tr>
+                <th scope="row">Slamet &amp; Meng (2025)</th>
+                <td>35 études collaboratives</td>
+                <td><strong>d&nbsp;=&nbsp;0,88</strong> cognitif</td>
+                <td>Bénéfice net lorsque la gamification est intégrée à un travail d’équipe.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Comment lire une taille d’effet</h3>
+        <p><em>g</em> et <em>d</em> mesurent l’écart moyen entre un groupe gamifié et un groupe témoin, exprimé en écarts-types. Les valeurs prudentes se situent autour de <strong>0,25 à 0,50</strong>&nbsp;: un gain réel, comparable à d’autres interventions pédagogiques efficaces — à condition que l’activité d’apprentissage elle-même soit solide.</p>
+
+        <h3>Ce que ces chiffres ne disent pas</h3>
+        <ul class="plain-list cross-list">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Une hétérogénéité très élevée.</strong> Dans plusieurs synthèses, 88&nbsp;% à 99&nbsp;% de la variance vient du contexte&nbsp;: la moyenne décrit mal une classe particulière.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Un possible effet de nouveauté.</strong> L’engouement des premières semaines n’est pas la preuve d’un gain durable.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Engagement ≠ apprentissage.</strong> Plus de clics, de temps passé ou de niveaux ne démontrent ni compréhension, ni rétention, ni transfert.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Un biais de publication.</strong> Les expériences réussies sont plus souvent publiées&nbsp;: les effets réels sont probablement plus modestes.</span></li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg><span><strong>Peu de suivi à long terme.</strong> Les mesures après plusieurs mois, ou après retrait du dispositif, restent rares.</span></li>
+        </ul>
+
+        <figure class="pullquote">
+          <blockquote>En moyenne, la gamification aide. En pratique, elle n’aide que si l’on sait <em>quel</em> comportement on cherche à installer.</blockquote>
+          <figcaption>La qualité de l’activité et du feedback compte plus que la présence de points ou de badges.</figcaption>
+        </figure>
+      </section>
+
+      <section class="chapter" id="en-classe" aria-labelledby="en-classe-title">
+        <h2 id="en-classe-title">En classe&nbsp;: ce qui aide, ce qui nuit</h2>
+        <p class="lead">La différence tient rarement aux outils&nbsp;: elle tient à ce que le dispositif récompense réellement et à la place qu’il laisse à l’autonomie de l’élève.</p>
+        <div class="compare">
+          <div class="compare-col compare-yes">
+            <p class="compare-head"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Ce qui soutient l’apprentissage</p>
+            <ul>
+              <li><strong>Objectifs de maîtrise</strong> formulés en compétences, exigeants mais atteignables.</li>
+              <li><strong>Feedback explicatif</strong>&nbsp;: où vais-je, où en suis-je, quelle est la prochaine étape&nbsp;?</li>
+              <li><strong>Progression comparée à soi-même</strong>, avec des critères de maîtrise visibles.</li>
+              <li><strong>Essais multiples</strong> et récupération active à faible enjeu.</li>
+              <li><strong>Coopération</strong> avec rôles complémentaires et responsabilité individuelle.</li>
+              <li><strong>Choix réels</strong>&nbsp;: ordre, moyen, rythme, et possibilité de ne pas jouer.</li>
+              <li><strong>Alternative équivalente</strong> non compétitive ou non gamifiée, sans pénalité.</li>
+            </ul>
+          </div>
+          <div class="compare-col compare-no">
+            <p class="compare-head"><svg class="icon" aria-hidden="true"><use href="#i-cross"/></svg>Ce qui peut nuire</p>
+            <ul>
+              <li><strong>Points et badges posés sans changer l’activité</strong>&nbsp;: on récompense présence, vitesse ou volume.</li>
+              <li><strong>Classements publics permanents</strong>&nbsp;: comparaison sociale, honte, baisse de motivation (Hanus &amp; Fox, 2015).</li>
+              <li><strong>Récompenses contrôlantes</strong>&nbsp;: chaque action conditionnée, autonomie mise à mal.</li>
+              <li><strong>Surcharge ludique</strong>&nbsp;: trop de monnaies, sons et règles détournent l’attention.</li>
+              <li><strong>Séries et rareté</strong> destinées à faire revenir&nbsp;: rétention, pas apprentissage.</li>
+              <li><strong>Jeu obligatoire</strong> sans échappatoire&nbsp;: une contrainte de plus sur une activité déjà contrainte.</li>
+              <li><strong>Surveillance ludifiée</strong>&nbsp;: transformer chaque clic ou absence en score.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ethics">
+          <p class="ethics-head"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Éthique, accessibilité, données</p>
+          <p>Expliquer la finalité et les règles, distinguer l’obligatoire du facultatif, garantir une alternative à la compétition, ne jamais exposer l’échec, et ne collecter que les données nécessaires à la régulation pédagogique. Viser WCAG 2.2 et les principes de conception universelle (UDL)&nbsp;: information jamais portée par la seule couleur, mouvement désactivable, temps ajustable.</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="methode" aria-labelledby="methode-title">
+        <h2 id="methode-title">Comment gamifier une leçon, en cinq étapes</h2>
+        <p class="lead">Un ordre volontaire&nbsp;: on choisit la mécanique en dernier, jamais en premier. Elle n’existe que pour soutenir un comportement précis.</p>
+        <ol class="steps">
+          <li>
+            <span class="step-num">1</span>
+            <div><h3>Définir l’apprentissage observable</h3><p>Que devra savoir expliquer, rappeler, distinguer, produire ou transférer l’élève&nbsp;?</p></div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div><h3>Définir la preuve</h3><p>Quelle production ou performance montrera que c’est acquis, en dehors du dispositif ludique&nbsp;?</p></div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div><h3>Choisir l’activité cognitive</h3><p>Récupération, comparaison, explication, résolution, application, création ou coopération.</p></div>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <div><h3>Identifier le comportement manquant</h3><p>Commencer, persister, pratiquer, demander un retour, corriger une erreur, espacer les reprises.</p></div>
+          </li>
+          <li>
+            <span class="step-num">5</span>
+            <div><h3>Ajouter la mécanique minimale</h3><p>Seulement l’élément qui soutient ce comportement — puis vérifier qu’aucun objectif concurrent (vitesse, volume, score) ne prend le dessus.</p></div>
+          </li>
+        </ol>
+        <p class="after-figure">Enfin, mesurer hors du système&nbsp;: apprentissage immédiat, rétention différée, transfert, et effets différents selon les élèves.</p>
+      </section>
+
+      <section class="chapter chapter-product" id="class-odyssey" aria-labelledby="product-title">
+        <h2 id="product-title">Class Odyssey, en pratique</h2>
+        <p class="lead">Class Odyssey est l’application que nous avons construite pour appliquer ces principes dans les cours d’anglais de 7P et 8P&nbsp;: une aventure de classe, projetée sur l’écran, où chaque élève fait grandir un héros à son nom.</p>
+
+        <div class="product-grid">
+          <div class="product-copy">
+            <h3>À quoi ça sert</h3>
+            <p>L’application transforme la progression en anglais en <strong>aventure collective</strong>. Chaque élève possède un personnage nominatif qui gagne de l’expérience, monte de niveau et débloque des éléments visuels au fil de l’année. L’effort — devoirs faits, vocabulaire appris — devient visible et partageable, sans ralentir la conduite du cours.</p>
+            <h3>Pourquoi l’utiliser</h3>
+            <p>Parce qu’elle rend concrètes les conditions qui, dans la recherche, font la différence&nbsp;: progression personnelle, feedback immédiat, autonomie, coopération et récompenses qui informent plutôt qu’elles ne contrôlent. Le jeu n’est pas une récompense plaquée sur le cours&nbsp;: il donne une forme lisible à ce que les élèves accomplissent déjà.</p>
+          </div>
+          <figure class="hero-card-figure">
+            <div class="hero-card">
+              <img src="./assets/items-3d/previews/portraits/female.webp" alt="Portrait de Mila, héros de Class Odyssey, dans sa tenue de base." width="1056" height="1584" loading="lazy">
+              <div class="hero-card-body">
+                <div class="hero-card-top">
+                  <p class="hero-card-name">Mila</p>
+                  <p class="hero-card-title"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>Éclaireur</p>
+                </div>
+                <div class="hero-card-level"><span class="level-badge">Niv 3</span><span class="level-xp">620 / 1 000 XP</span></div>
+                <div class="xp-bar" aria-hidden="true"><span style="width:62%"></span></div>
+                <p class="xp-caption">620 XP avant le niveau 4</p>
+                <div class="hero-stats">
+                  <span class="stat-chip stat-hearts"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>5<em>PV</em></span>
+                  <span class="stat-chip stat-coins"><svg class="icon" aria-hidden="true"><use href="#i-coin"/></svg>120<em>pièces</em></span>
+                </div>
+              </div>
+            </div>
+            <figcaption>Aperçu de la carte de héros, telle qu’elle apparaît sur le tableau de classe. Les valeurs sont des exemples.</figcaption>
+          </figure>
+        </div>
+
+        <h3>Ce que l’application reprend de la recherche</h3>
+        <div class="mapping">
+          <div class="mapping-row">
+            <p class="mapping-key">Progression comparée à soi-même</p>
+            <p class="mapping-val">XP et niveaux individuels, affichés côte à côte&nbsp;: on se mesure à son propre parcours, pas au rang des autres.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Feedback immédiat et lisible</p>
+            <p class="mapping-val">La console enseignant attribue XP, PV ou pièces en quelques secondes, pendant que le cours continue.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Autonomie</p>
+            <p class="mapping-val">Chaque élève choisit et personnalise son héros&nbsp;: tenue, titre, coiffure, couleurs, achetés avec ses pièces.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Compétence visible</p>
+            <p class="mapping-val">Les paliers de niveau débloquent équipements et titres&nbsp;: la progression se voit sans être décrétée.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Coopération</p>
+            <p class="mapping-val">Des récompenses peuvent viser toute la classe, et les soins se donnent collectivement quand le groupe avance.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Priorité à l’apprentissage</p>
+            <p class="mapping-val">L’XP récompense les devoirs et le vocabulaire — l’effort d’apprentissage, jamais la simple présence.</p>
+          </div>
+          <div class="mapping-row">
+            <p class="mapping-key">Garde-fous</p>
+            <p class="mapping-val">Règles de classe affichées, aucun classement public permanent, aucune pénalité de série, interface lisible en projection.</p>
+          </div>
+        </div>
+
+        <div class="product-cta">
+          <div>
+            <p class="product-cta-title">Prêt à faire de chaque leçon une aventure&nbsp;?</p>
+            <p class="product-cta-text">Créez votre classe, ajoutez vos élèves et lancez la première quête. L’accès est gratuit pendant la bêta.</p>
+          </div>
+          <a class="btn btn-primary" href="./">Lancer l’aventure<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </section>
+
+      <section class="chapter" id="faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">Questions fréquentes</h2>
+        <div class="faq">
+          <details>
+            <summary>La gamification, c’est juste des points et des badges&nbsp;?</summary>
+            <p>Non. Les points et les badges ne sont qu’une surface. Ce qui compte, c’est le comportement qu’ils rendent plus fréquent et le lien entre ce comportement et l’apprentissage visé. Sans ce lien, ils décorent sans aider.</p>
+          </details>
+          <details>
+            <summary>Est-ce que ça marche pour tous les élèves&nbsp;?</summary>
+            <p>Pas de la même façon. L’effet moyen est positif, mais très variable selon le contexte. Les élèves déjà performants réagissent parfois mieux aux classements, tandis que ces mêmes classements peuvent démobiliser les autres. D’où la préférence pour des comparaisons avec soi-même et des mécaniques facultatives.</p>
+          </details>
+          <details>
+            <summary>Faut-il beaucoup de temps pour la mettre en place&nbsp;?</summary>
+            <p>Une gamification utile peut être minimale&nbsp;: une carte de maîtrise, un défi court, un feedback clair. Class Odyssey est conçue pour s’intégrer au cours sans le ralentir&nbsp;: les récompenses s’attribuent en quelques secondes depuis la console enseignant.</p>
+          </details>
+          <details>
+            <summary>Les classements sont-ils nécessaires&nbsp;?</summary>
+            <p>Non, et ils sont souvent contre-productifs. Ils ajoutent de la comparaison sociale et exposent les élèves les plus fragiles. Une progression privée, ou comparée à son propre passé, obtient de meilleurs résultats relationnels.</p>
+          </details>
+          <details>
+            <summary>Class Odyssey convient-il à d’autres langues ou matières&nbsp;?</summary>
+            <p>L’application est pensée pour l’anglais en 7P–8P, et ses mécaniques (XP, niveaux, héros, pièces) se transposent facilement à d’autres disciplines. La règle reste la même&nbsp;: adapter l’activité d’abord, choisir la mécanique ensuite.</p>
+          </details>
+          <details>
+            <summary>Les élèves doivent-ils jouer à la maison&nbsp;?</summary>
+            <p>Non. Class Odyssey est un outil de classe, projeté sur l’écran. Les élèves gagnent de l’expérience en faisant leurs devoirs et en apprenant le vocabulaire&nbsp;: l’application rend cet effort visible, elle ne le remplace pas.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="chapter chapter-references" id="references" aria-labelledby="references-title">
+        <h2 id="references-title">Références</h2>
+        <p class="refs-note">Synthèse documentaire arrêtée au 17 septembre 2026, privilégiant les méta-analyses et revues systématiques. Les résultats agrégés ne doivent pas être combinés entre eux&nbsp;: corpus, comparateurs et mesures diffèrent.</p>
+
+        <h3>Définitions et cadres</h3>
+        <ol class="references">
+          <li>Deterding, S., Dixon, D., Khaled, R., &amp; Nacke, L. (2011). From game design elements to gamefulness: Defining “gamification”. <em>Proceedings of the 15th International Academic MindTrek Conference</em>, 9–15. <a href="https://doi.org/10.1145/2181037.2181040">doi.org/10.1145/2181037.2181040</a></li>
+          <li>Landers, R. N. (2014). Developing a theory of gamified learning: Linking serious games and gamification of learning. <em>Simulation &amp; Gaming, 45</em>(6), 752–768. <a href="https://doi.org/10.1177/1046878114563660">doi.org/10.1177/1046878114563660</a></li>
+          <li>Dichev, C., &amp; Dicheva, D. (2017). Gamifying education: What is known, what is believed and what remains uncertain. <em>International Journal of Educational Technology in Higher Education, 14</em>, 9. <a href="https://doi.org/10.1186/s41239-017-0042-5">doi.org/10.1186/s41239-017-0042-5</a></li>
+        </ol>
+
+        <h3>Méta-analyses et revues récentes</h3>
+        <ol class="references">
+          <li>Sailer, M., &amp; Homner, L. (2020). The gamification of learning: A meta-analysis. <em>Educational Psychology Review, 32</em>(1), 77–112. <a href="https://doi.org/10.1007/s10648-019-09498-w">doi.org/10.1007/s10648-019-09498-w</a></li>
+          <li>Bai, S., Hew, K. F., &amp; Huang, B. (2020). Does gamification improve student learning outcome? <em>Educational Research Review, 30</em>, 100322. <a href="https://doi.org/10.1016/j.edurev.2020.100322">doi.org/10.1016/j.edurev.2020.100322</a></li>
+          <li>Li, L., Hew, K. F., &amp; Du, J. (2024). Gamification enhances student intrinsic motivation… but minimal impact on competency. <em>Educational Technology Research and Development, 72</em>, 765–796. <a href="https://doi.org/10.1007/s11423-023-10337-7">doi.org/10.1007/s11423-023-10337-7</a></li>
+          <li>Zeng, J., Sun, D., Looi, C.-K., &amp; Fan, A. C. W. (2024). Exploring the impact of gamification on students’ academic performance. <em>British Journal of Educational Technology, 55</em>(6), 2478–2502. <a href="https://doi.org/10.1111/bjet.13471">doi.org/10.1111/bjet.13471</a></li>
+          <li>Kurnaz, M. F., &amp; Koçtürk, N. (2025). A meta-analysis of gamification’s impact on student motivation in K–12 education. <em>Psychology in the Schools, 62</em>(12), 4997–5009. <a href="https://doi.org/10.1002/pits.70056">doi.org/10.1002/pits.70056</a></li>
+          <li>Slamet, T. I., &amp; Meng, C. (2025). Gamification in collaborative learning: Synthesizing evidence through meta-analysis. <em>Journal of Computers in Education, 12</em>, 1367–1403. <a href="https://doi.org/10.1007/s40692-024-00349-4">doi.org/10.1007/s40692-024-00349-4</a></li>
+          <li>Xu, W., &amp; Dai, W.-A. (2026). Exploring the efficacy of game-based pedagogy: A three-level meta-analysis. <em>Active Learning in Higher Education</em>. <a href="https://doi.org/10.1177/14697874261424519">doi.org/10.1177/14697874261424519</a></li>
+        </ol>
+
+        <h3>Motivation et psychologie</h3>
+        <ol class="references">
+          <li>Ryan, R. M., &amp; Deci, E. L. (2000). Self-determination theory and the facilitation of intrinsic motivation. <em>American Psychologist, 55</em>(1), 68–78. <a href="https://doi.org/10.1037/0003-066X.55.1.68">doi.org/10.1037/0003-066X.55.1.68</a></li>
+          <li>Deci, E. L., Koestner, R., &amp; Ryan, R. M. (1999). A meta-analytic review of experiments examining the effects of extrinsic rewards on intrinsic motivation. <em>Psychological Bulletin, 125</em>(6), 627–668.</li>
+          <li>Mekler, E. D., Brühlmann, F., Tuch, A. N., &amp; Opwis, K. (2017). Towards understanding the effects of individual gamification elements on intrinsic motivation and performance. <em>Computers in Human Behavior, 71</em>, 525–534. <a href="https://doi.org/10.1016/j.chb.2015.08.048">doi.org/10.1016/j.chb.2015.08.048</a></li>
+          <li>Sailer, M., Hense, J. U., Mayr, S. K., &amp; Mandl, H. (2017). How gamification motivates: An experimental study of the effects of specific game design elements. <em>Computers in Human Behavior, 69</em>, 371–380. <a href="https://doi.org/10.1016/j.chb.2016.12.033">doi.org/10.1016/j.chb.2016.12.033</a></li>
+        </ol>
+
+        <h3>Sciences de l’apprentissage</h3>
+        <ol class="references">
+          <li>Hattie, J., &amp; Timperley, H. (2007). The power of feedback. <em>Review of Educational Research, 77</em>(1), 81–112. <a href="https://doi.org/10.3102/003465430298487">doi.org/10.3102/003465430298487</a></li>
+          <li>Roediger, H. L., III, &amp; Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. <em>Psychological Science, 17</em>(3), 249–255.</li>
+          <li>Yang, C., Luo, L., Vadillo, M. A., Yu, R., &amp; Shanks, D. R. (2021). Testing (quizzing) boosts classroom learning: A systematic and meta-analytic review. <em>Psychological Bulletin, 147</em>(4), 399–435.</li>
+          <li>Cepeda, N. J., Pashler, H., Vul, E., Wixted, J. T., &amp; Rohrer, D. (2006). Distributed practice in verbal recall tasks: A review and quantitative synthesis. <em>Psychological Bulletin, 132</em>(3), 354–380.</li>
+          <li>Sweller, J. (1988). Cognitive load during problem solving: Effects on learning. <em>Cognitive Science, 12</em>(2), 257–285.</li>
+        </ol>
+
+        <h3>Risques, éthique et accessibilité</h3>
+        <ol class="references">
+          <li>Hanus, M. D., &amp; Fox, J. (2015). Assessing the effects of gamification in the classroom: A longitudinal study. <em>Computers &amp; Education, 80</em>, 152–161. <a href="https://doi.org/10.1016/j.compedu.2014.08.019">doi.org/10.1016/j.compedu.2014.08.019</a></li>
+          <li>Almeida, C., Kalinowski, M., Uchôa, A., &amp; Feijó, B. (2023). Negative effects of gamification in education software. <em>Information and Software Technology, 156</em>, 107142. <a href="https://doi.org/10.1016/j.infsof.2022.107142">doi.org/10.1016/j.infsof.2022.107142</a></li>
+          <li>Kim, T. W., &amp; Werbach, K. (2016). More than just a game: Ethical issues in gamification. <em>Ethics and Information Technology, 18</em>(2), 157–173. <a href="https://doi.org/10.1007/s10676-016-9401-5">doi.org/10.1007/s10676-016-9401-5</a></li>
+          <li>CAST. (2024). <em>Universal Design for Learning Guidelines version 3.0</em>. <a href="https://udlguidelines.cast.org/">udlguidelines.cast.org</a></li>
+          <li>World Wide Web Consortium. (2024). <em>Web Content Accessibility Guidelines (WCAG) 2.2</em>. <a href="https://www.w3.org/TR/WCAG22/">w3.org/TR/WCAG22</a></li>
+        </ol>
+      </section>
+
+      <p class="cite">Comment citer cette page&nbsp;: <em>Class Odyssey — La gamification en classe : ce que dit la science</em>, 2026.</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div>
+        <img class="footer-emblem" src="./assets/brand/svg/class-odyssey-horizontal-light.svg" alt="Class Odyssey">
+        <p>Faites de chaque leçon une aventure.</p>
+      </div>
+      <nav aria-label="Liens de pied de page">
+        <a href="#definition">Définition</a>
+        <a href="#preuves">Preuves</a>
+        <a href="#class-odyssey">Class Odyssey</a>
+        <a href="./#mentions-legales">Informations légales</a>
+      </nav>
+      <p class="footer-note">Dossier pédagogique · Synthèse arrêtée en septembre 2026 · <a href="#top">Haut de page</a></p>
+    </div>
+  </footer>
+
+  <button class="to-top" id="to-top" type="button" aria-label="Revenir en haut de la page"><svg class="icon" aria-hidden="true"><use href="#i-up"/></svg></button>
+
+  <script type="module" src="./src/gamification.mjs"></script>
+</body>
+</html>

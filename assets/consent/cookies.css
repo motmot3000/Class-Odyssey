@@ -1,0 +1,213 @@
+/* ============================================================
+   Bannière cookies — Class Odyssey
+   Surcharge tarteaucitron.css. Carte sobre en bas à droite,
+   matières et couleurs du système visuel Sheikah.
+   Thèmes clair et sombre via [data-theme] sur <html>.
+   ============================================================ */
+
+:root {
+  --co-cookie-bg: #f8f7ef;
+  --co-cookie-ink: #283d35;
+  --co-cookie-muted: #5c6b5e;
+  --co-cookie-line: #d2d7c9;
+  --co-cookie-accent: #245b51;
+  --co-cookie-accent-ink: #f8f7ef;
+  --co-cookie-amber: #7f612c;
+  --co-cookie-shadow: 0 14px 44px rgba(20, 40, 34, 0.18), 0 0 0 1px rgba(20, 40, 34, 0.05);
+}
+
+:root[data-theme="dark"] {
+  --co-cookie-bg: #1b2c32;
+  --co-cookie-ink: #e4f5fb;
+  --co-cookie-muted: #99b1b4;
+  --co-cookie-line: rgba(98, 200, 224, 0.14);
+  --co-cookie-accent: #8adbd3;
+  --co-cookie-accent-ink: #06222a;
+  --co-cookie-amber: #f0a94a;
+  --co-cookie-shadow: 0 14px 44px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(138, 219, 211, 0.12);
+}
+
+#tarteaucitronBack {
+  display: none !important;
+}
+
+/* --- La carte --- */
+#tarteaucitronRoot #tarteaucitronAlertBig {
+  box-sizing: border-box !important;
+  position: fixed !important;
+  left: auto !important;
+  right: 1.25rem !important;
+  top: auto !important;
+  bottom: 1.25rem !important;
+  transform: none !important;
+  width: 340px !important;
+  max-width: calc(100vw - 2.5rem) !important;
+  margin: 0 !important;
+  padding: 1.4rem 1.4rem 1.25rem !important;
+  background: var(--co-cookie-bg) !important;
+  color: var(--co-cookie-ink) !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--co-cookie-line) !important;
+  box-shadow: var(--co-cookie-shadow) !important;
+  font-family: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  font-size: 13.5px !important;
+  text-align: left !important;
+}
+
+.tarteaucitronAlertBigBottom,
+.tarteaucitronAlertBigTop {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#tarteaucitronAlertBig > * {
+  box-sizing: border-box !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  float: none !important;
+}
+
+/* --- Kicker façon en-tête de panneau de l'app --- */
+#tarteaucitronAlertBig #tarteaucitronDisclaimerAlert::before {
+  content: "COOKIES";
+  display: block;
+  font-family: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--co-cookie-amber);
+  margin-bottom: 0.55rem;
+}
+
+/* --- Message --- */
+#tarteaucitronAlertBig #tarteaucitronDisclaimerAlert {
+  display: block !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 0 0 1.15rem !important;
+  padding: 0 !important;
+  color: var(--co-cookie-muted) !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  font-family: "Barlow", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+#tarteaucitronAlertBig .tarteaucitronCheck,
+#tarteaucitronAlertBig .tarteaucitronCross {
+  display: none !important;
+}
+
+/* --- Boutons Accepter / Refuser : même poids visuel (CNIL) --- */
+#tarteaucitronAlertBig #tarteaucitronPersonalize2,
+#tarteaucitronAlertBig #tarteaucitronAllDenied2 {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 0.5rem !important;
+  padding: 0.65rem 1rem !important;
+  border-radius: 999px !important;
+  font-family: "Barlow", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+}
+
+/* Accepter : vert Sheikah plein */
+#tarteaucitronAlertBig #tarteaucitronPersonalize2 {
+  background: var(--co-cookie-accent) !important;
+  color: var(--co-cookie-accent-ink) !important;
+}
+#tarteaucitronAlertBig #tarteaucitronPersonalize2:hover {
+  filter: brightness(1.08) !important;
+}
+
+/* Refuser : contour de même taille, aussi simple à choisir */
+#tarteaucitronAlertBig #tarteaucitronAllDenied2 {
+  background: transparent !important;
+  color: var(--co-cookie-ink) !important;
+  border-color: var(--co-cookie-line) !important;
+}
+#tarteaucitronAlertBig #tarteaucitronAllDenied2:hover {
+  border-color: var(--co-cookie-accent) !important;
+}
+
+/* --- Liens secondaires : Gérer · En savoir plus --- */
+#tarteaucitronAlertBig #tarteaucitronCloseAlert,
+#tarteaucitronAlertBig #tarteaucitronPrivacyUrl {
+  display: inline-block !important;
+  width: auto !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0.55rem 0 0 !important;
+  padding: 0 0.5rem 0 0 !important;
+  font-family: "Barlow", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+#tarteaucitronAlertBig #tarteaucitronCloseAlert {
+  color: var(--co-cookie-muted) !important;
+}
+#tarteaucitronAlertBig #tarteaucitronCloseAlert:hover {
+  color: var(--co-cookie-ink) !important;
+}
+
+#tarteaucitronAlertBig #tarteaucitronPrivacyUrl {
+  color: var(--co-cookie-amber) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+#tarteaucitronAlertBig #tarteaucitronPrivacyUrl:hover {
+  opacity: 0.85 !important;
+}
+
+/* --- Panneau de gestion détaillé --- */
+#tarteaucitronRoot #tarteaucitron,
+#tarteaucitronRoot #tarteaucitronServices {
+  font-family: "Barlow", ui-sans-serif, system-ui, sans-serif !important;
+}
+#tarteaucitronRoot #tarteaucitronSave.button {
+  border-radius: 999px !important;
+  background: var(--co-cookie-accent) !important;
+  color: var(--co-cookie-accent-ink) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+/* --- Icône de réouverture, discrète --- */
+#tarteaucitronIcon {
+  left: auto !important;
+  right: 1rem !important;
+  bottom: 1rem !important;
+  top: auto !important;
+  transform: none !important;
+  background: var(--co-cookie-bg) !important;
+  border-radius: 999px !important;
+  opacity: 0.85 !important;
+  padding: 5px 11px !important;
+  box-shadow: var(--co-cookie-shadow) !important;
+}
+#tarteaucitronIcon:hover { opacity: 1 !important; }
+#tarteaucitronIcon #tarteaucitronManager {
+  color: var(--co-cookie-muted) !important;
+  font-family: "Barlow", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 11px !important;
+}
+
+/* --- Mobile : bande pleine largeur en bas --- */
+@media (max-width: 600px) {
+  #tarteaucitronRoot #tarteaucitronAlertBig {
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    bottom: 0.5rem !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}

@@ -15,6 +15,7 @@ const dict = {
     "welcome.title.signin": "Connexion",
     "welcome.title.new": "Nouveau compte",
     "welcome.field.email": "Adresse e-mail",
+    "welcome.field.emailOrUsername": "E-mail ou identifiant",
     "welcome.field.username": "Nom d'utilisateur",
     "welcome.field.password": "Mot de passe",
     "welcome.field.repeat": "Répète le mot de passe",
@@ -91,6 +92,7 @@ const dict = {
     "console.target.whole": "Toute la classe",
     "console.target.everyone": "Tout le monde dans {name} — {count} héros.",
     "console.target.tap": "Touche des héros sur le plateau pour choisir qui reçoit la récompense.",
+    "console.target.noClass": "Créez une classe pour ajouter des élèves et distribuer des récompenses.",
     "console.target.selectAll": "Tout sélectionner",
     "console.target.clear": "Effacer la sélection",
     "console.award.experience": "Expérience",
@@ -153,7 +155,6 @@ const dict = {
     "shop.cat.item": "Objets",
     "shop.cat.hair": "Cheveux",
     "shop.cat.hairColor": "Couleur des cheveux",
-    "shop.cat.face": "Visages",
     "shop.cat.title": "Titres",
     "shop.cat.skin": "Peaux",
     "shop.cat.custom": "Personnalisé",
@@ -170,7 +171,6 @@ const dict = {
     "modal.type.outfit": "Tenue",
     "modal.type.hat": "Chapeau",
     "modal.type.weapon": "Objet",
-    "modal.type.face": "Visage",
     "modal.type.hair": "Cheveux",
     "modal.type.hairColor": "Couleur des cheveux",
     "modal.type.title": "Titre",
@@ -211,7 +211,6 @@ const dict = {
     "modal.type.outfit": "Tenue",
     "modal.type.hat": "Chapeau",
     "modal.type.item": "Objet",
-    "modal.type.face": "Visage",
     "modal.type.hair": "Cheveux",
     "modal.type.title": "Titre",
     "modal.type.skin": "Peau",
@@ -338,8 +337,8 @@ const dict = {
     "domain.bald.description": "Une tête entièrement rasée.",
     "domain.buzz-cut.name": "Coupe militaire",
     "domain.buzz-cut.description": "Une coupe très courte et nette.",
-    "domain.curly.name": "Afro",
-    "domain.curly.description": "Un afro rond classique.",
+    "domain.curly.name": "Tresse",
+    "domain.curly.description": "Une tresse longue et nette avec une frange.",
     "domain.spiky.name": "Cheveux pointus",
     "domain.spiky.description": "Des cheveux audacieux avec des pointes visibles.",
     "domain.monk-cut.name": "Coupe moine",
@@ -399,7 +398,6 @@ const dict = {
     "app.gear.hat": "Chapeau",
     "app.gear.item": "Objet",
     "app.gear.hair": "Cheveux",
-    "app.gear.face": "Visage",
     "app.gear.skin": "Peau"
   },
   en: {
@@ -408,6 +406,7 @@ const dict = {
     "welcome.title.signin": "Sign in",
     "welcome.title.new": "New account",
     "welcome.field.email": "Email address",
+    "welcome.field.emailOrUsername": "Email or username",
     "welcome.field.username": "Username",
     "welcome.field.password": "Password",
     "welcome.field.repeat": "Repeat password",
@@ -480,6 +479,7 @@ const dict = {
     "console.target.whole": "Whole class",
     "console.target.everyone": "Everyone in {name} — {count} heroes.",
     "console.target.tap": "Tap heroes on the board to choose who gets the reward.",
+    "console.target.noClass": "Create a class to add pupils and hand out rewards.",
     "console.target.selectAll": "Select all",
     "console.target.clear": "Clear selection",
     "console.award.experience": "Experience",
@@ -541,7 +541,6 @@ const dict = {
     "shop.cat.item": "Items",
     "shop.cat.hair": "Hair",
     "shop.cat.hairColor": "Hair Color",
-    "shop.cat.face": "Faces",
     "shop.cat.title": "Titles",
     "shop.cat.skin": "Skins",
     "shop.cat.custom": "Custom",
@@ -558,7 +557,6 @@ const dict = {
     "modal.type.outfit": "Outfit",
     "modal.type.hat": "Hat",
     "modal.type.weapon": "Item",
-    "modal.type.face": "Face",
     "modal.type.hair": "Hair",
     "modal.type.hairColor": "Hair Color",
     "modal.type.title": "Title",
@@ -598,7 +596,6 @@ const dict = {
     "modal.type.outfit": "Outfit",
     "modal.type.hat": "Hat",
     "modal.type.item": "Item",
-    "modal.type.face": "Face",
     "modal.type.hair": "Hair",
     "modal.type.title": "Title",
     "modal.type.skin": "Skin",
@@ -653,7 +650,6 @@ const dict = {
     "app.gear.hat": "Hat",
     "app.gear.item": "Item",
     "app.gear.hair": "Hair",
-    "app.gear.face": "Face",
     "app.gear.skin": "Skin"
   }
 };
@@ -663,12 +659,12 @@ export function setLang(next) {
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
     const label = document.getElementById("current-lang");
-    // The control shows the language it switches TO, with an arrow, so the
-    // welcome page reads as "switch to English" rather than a bare code.
-    if (label) label.textContent = lang === "fr" ? "EN →" : "FR →";
+    // The control shows the language it switches TO, next to that country's
+    // small flag, so the intent is obvious at a glance.
+    if (label) label.textContent = lang === "fr" ? "EN" : "FR";
     const toggle = document.getElementById("lang-toggle");
     toggle?.setAttribute("aria-label", lang === "fr" ? "Passer en anglais" : "Switch to French");
-    toggle?.setAttribute("title", lang === "fr" ? "Passer en anglais" : "Switch to French");
+    toggle?.setAttribute("title", lang === "fr" ? "Passer en anglais (English)" : "Switch to French (Français)");
     try { localStorage.setItem(LANGUAGE_KEY, lang); } catch { /* private browsing */ }
   }
 }

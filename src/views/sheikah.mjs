@@ -124,17 +124,9 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
   const activeClass = state.classes.find((classroom) => classroom.id === state.activeClassId) || state.classes[0];
   const themeControl = `<button type="button" class="ghost" data-action="toggle-theme" aria-label="${t("common.changeTheme")}" title="${t("common.changeTheme")}">${ico(document.documentElement.dataset.theme === "light" ? "moon" : "sun")}<span>${t("common.theme")}</span></button>`;
   const isDoc = DOC_VIEWS.has(view);
-  return `
-    <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
-      <div class="brand">
-        <button class="brand-home" type="button" data-action="show-class" aria-label="${t('nav.class')}">
-        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="Class Odyssey" width="869" height="212" />
-        <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
-        </button>
-      </div>
-       ${view === "welcome" ? `<div class="top-end"><a class="welcome-nav-link" href="#gate-title" data-welcome-enter>${t("welcome.tab.signin")}</a></div>` : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `
+  const classControl = state.classes.length ? `
       <details class="class-picker">
-        <summary class="class-picker-summary" aria-label="${t("nav.classes")}">
+        <summary class="class-picker-summary" aria-label="${t("nav.classes")} ${escapeHtml(activeClass?.name || "")}">
           ${ico("heroes")}
           <span class="class-picker-label">${t("nav.classes")}</span>
           <span class="class-picker-current">${escapeHtml(activeClass?.name || "")}</span>
@@ -149,7 +141,17 @@ export function renderSheikahTopbar({ view, state, account, unlocked }) {
           }).join("")}
           <button type="button" class="class-picker-add" role="menuitem" data-action="add-class">${ico("plus")}<span>${t("class.new.title")}</span></button>
         </div>
-      </details>
+      </details>` : `
+      <button type="button" class="class-picker-summary class-picker-create" data-action="add-class">${ico("plus")}<span>${t("class.add.title")}</span></button>`;
+  return `
+    <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
+      <div class="brand">
+        <button class="brand-home" type="button" data-action="show-class" aria-label="${t('nav.class')}">
+        <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="Class Odyssey" width="869" height="212" />
+        <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
+        </button>
+      </div>
+       ${view === "welcome" ? "" : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `${classControl}
       <div class="top-end">
         <button type="button" class="ghost" data-action="show-rules" aria-current="${view === "rules" ? "page" : "false"}" aria-label="${t("app.aria.rules")}" title="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         ${themeControl}
@@ -261,6 +263,10 @@ function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = 
 }
 
 /* ---------- Pupil picker and hero views ---------- */
+
+export function renderSheikahNoClass() {
+  return `<main class="single"><div class="empty">${ico("heroes")}<h1>${t("class.empty.title")}</h1><p>${t("class.empty.body")}</p><button class="btn btn-primary" type="button" data-action="add-class">${ico("plus")}<span>${t("class.add.title")}</span></button></div></main>`;
+}
 
 export function renderSheikahStudent({ classroom, ui, pupil, classView = false, selectionMode = false, selectedIds = [] }) {
   if (!pupil) {

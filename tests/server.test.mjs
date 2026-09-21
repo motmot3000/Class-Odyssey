@@ -106,7 +106,7 @@ async function signIn(request, username = FOUNDER.username, password = FOUNDER.p
 test("merged workshop entry points are served without exposing private files", async () => {
   const app = await fixture();
   try {
-    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/prototype/sheikah/index.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
+    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/gamification.html", "/prototype/sheikah/index.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
       const { response } = await app.request(route);
       assert.equal(response.status, 200, route);
       assert.match(response.headers.get("content-type"), /text\/html/);
@@ -114,6 +114,87 @@ test("merged workshop entry points are served without exposing private files", a
     for (const route of ["/.git", "/.env", "/.env.missing", "/server/server.mjs", "/server/missing.mjs", "/package.json"]) {
       assert.equal((await app.request(route)).response.status, 404, route);
     }
+  } finally { await app.close(); }
+});
+
+test("robots.txt and sitemap.xml are served for classodyssey.com and internal pages are noindex", async () => {
+  const app = await fixture();
+  try {
+    const robots = await fetch(app.base + "/robots.txt");
+    assert.equal(robots.status, 200);
+    assert.match(robots.headers.get("content-type"), /text\/plain/);
+    const robotsBody = await robots.text();
+    assert.match(robotsBody, /User-agent: \*/);
+    assert.match(robotsBody, /Disallow: \/api\//);
+    assert.match(robotsBody, /Sitemap: https:\/\/classodyssey\.com\/sitemap\.xml/);
+
+    const sitemap = await fetch(app.base + "/sitemap.xml");
+    assert.equal(sitemap.status, 200);
+    assert.match(sitemap.headers.get("content-type"), /application\/xml/);
+    const sitemapBody = await sitemap.text();
+    assert.match(sitemapBody, /<loc>https:\/\/classodyssey\.com\/<\/loc>/);
+    assert.match(sitemapBody, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+
+    const workshop = await fetch(app.base + "/character-lab.html");
+    assert.equal(workshop.headers.get("x-robots-tag"), "noindex");
+
+    // The teaching dossier is public and indexable, with its canonical URL.
+    const dossier = await fetch(app.base + "/gamification.html");
+    assert.equal(dossier.status, 200);
+    assert.equal(dossier.headers.get("x-robots-tag"), null);
+    assert.equal(dossier.headers.get("link"), '<https://classodyssey.com/gamification.html>; rel="canonical"');
+    const dossierEn = await fetch(app.base + "/gamification-en.html");
+    assert.equal(dossierEn.status, 200);
+    assert.equal(dossierEn.headers.get("x-robots-tag"), null);
+    assert.equal(dossierEn.headers.get("link"), '<https://classodyssey.com/gamification-en.html>; rel="canonical"');
+    assert.match(sitemapBody, /gamification-en\.html/);
+    assert.match(sitemapBody, /hreflang="en"/);
+    assert.match(sitemapBody, /hreflang="x-default"/);
+
+    const home = await fetch(app.base + "/");
+    assert.equal(home.headers.get("x-robots-tag"), null);
+    assert.equal(home.headers.get("link"), '<https://classodyssey.com/>; rel="canonical"');
+
+    // The relay host keeps the dossier reachable but out of the index.
+    const relayDossier = await new Promise((resolve, reject) => {
+      http.get({ host: "127.0.0.1", port: Number(new URL(app.base).port), path: "/gamification.html", headers: { Host: "www.thomaswunsche.com" } }, (response) => {
+        response.resume();
+        response.on("end", () => resolve(response));
+      }).on("error", reject);
+    });
+    assert.equal(relayDossier.headers["x-robots-tag"], "noindex");
+
+    const canonical = await fetch(app.base + "/index.html", { redirect: "manual" });
+    assert.equal(canonical.status, 301);
+    assert.equal(canonical.headers.get("location"), "/");
+
+    // The personal relay host keeps working but never enters the index.
+    const relay = await new Promise((resolve, reject) => {
+      http.get({ host: "127.0.0.1", port: Number(new URL(app.base).port), path: "/", headers: { Host: "www.thomaswunsche.com" } }, (response) => {
+        response.resume();
+        response.on("end", () => resolve(response));
+      }).on("error", reject);
+    });
+    assert.equal(relay.headers["x-robots-tag"], "noindex");
+  } finally { await app.close(); }
+});
+
+test("self-hosted consent assets are served with their real content types", async () => {
+  const app = await fixture();
+  try {
+    for (const route of [
+      "/assets/consent/tarteaucitron/tarteaucitron.js",
+      "/assets/consent/tarteaucitron/tarteaucitron.services.js",
+      "/assets/consent/tarteaucitron-init.js",
+      "/assets/consent/cookies.css",
+      "/assets/consent/tarteaucitron/lang/tarteaucitron.fr.min.js",
+      "/assets/consent/tarteaucitron/lang/tarteaucitron.en.min.js"
+    ]) {
+      const response = await fetch(app.base + route);
+      assert.equal(response.status, 200, route);
+    }
+    assert.match((await fetch(app.base + "/assets/consent/tarteaucitron/tarteaucitron.js")).headers.get("content-type"), /javascript/);
+    assert.match((await fetch(app.base + "/assets/consent/cookies.css")).headers.get("content-type"), /text\/css/);
   } finally { await app.close(); }
 });
 
@@ -145,6 +226,7 @@ test("static serving handles indexes and rejects missing assets, dotfiles and pr
     const head = await fetch(app.base + "/assets/demo/index.html", { method: "HEAD" });
     assert.equal(await head.text(), "");
     assert.equal(head.headers.get("content-length"), String(Buffer.byteLength("<h1>Workshop</h1>")));
+    assert.equal(head.headers.get("x-robots-tag"), "noindex");
   } finally { await app.close(); fs.rmSync(publicDir, { recursive: true, force: true }); }
 });
 
@@ -169,14 +251,14 @@ test("a token revoked while a state body arrives cannot perform a late write", a
     const next = await signIn(app.request);
     const state = await app.request("/api/state", { token: next.token });
     assert.equal(state.payload.revision, 0);
-    assert.equal(state.payload.classes[0].pupils.length, 0);
+    assert.equal(state.payload.classes.length, 0);
   } finally { upload?.destroy(); await app.close(); }
 });
 
 async function signUp(request, username, password = "teacher-secret") {
   const result = await request("/api/accounts", {
     method: "POST",
-    body: { username, email: `${username}@example.test`, displayName: `Class ${username}`, password }
+    body: { username, email: `${username}@example.test`, displayName: `Class ${username}`, password, termsAccepted: true }
   });
   assert.equal(result.response.status, 201);
   return result.payload;
@@ -226,7 +308,7 @@ test("signup, sessions, empty state, isolation, backups and revision conflicts w
 
     const empty = await app.request("/api/state", { token: alpha.token });
     assert.equal(empty.response.status, 200);
-    assert.deepEqual(empty.payload.classes.map((item) => [item.name, item.pupils.length]), [["7P", 0], ["8P", 0]]);
+    assert.deepEqual(empty.payload.classes, []);
     assert.equal(empty.payload.revision, 0);
     assert.equal((await app.request("/api/state", { method: "PUT", token: alpha.token, rawBody: "[]" })).response.status, 400);
     assert.equal((await app.request("/api/state", { method: "PUT", token: alpha.token, body: { revision: 0, classes: [1] } })).response.status, 400);
@@ -292,6 +374,24 @@ test("account settings and email persist per account and stay changeable", async
     assert.equal((await app.request("/api/account/settings", { method: "PUT", body: { theme: "dark" } })).response.status, 401);
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "noemail", password: "password" } })).response.status, 400);
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "bademail", email: "nope", password: "password" } })).response.status, 400);
+
+    // Signup without a username derives it from the email; signing in works
+    // with either the email or the derived username.
+    const emailOnly = await app.request("/api/accounts", { method: "POST", body: { email: "marie.dupont@example.test", password: "password", termsAccepted: true } });
+    assert.equal(emailOnly.response.status, 201);
+    assert.equal(emailOnly.payload.account.username, "marie.dupont");
+    assert.equal(emailOnly.payload.account.terms.version, "2026-09-18");
+    assert.ok(emailOnly.payload.account.terms.acceptedAt);
+    const emailSignin = await app.request("/api/session", { method: "POST", body: { username: "Marie.Dupont@example.test", password: "password" } });
+    assert.equal(emailSignin.response.status, 200);
+    const duplicateEmail = await app.request("/api/accounts", { method: "POST", body: { email: "marie.dupont@example.test", password: "other-password", termsAccepted: true } });
+    assert.equal(duplicateEmail.response.status, 400);
+    assert.equal(duplicateEmail.payload.error, "account could not be created");
+
+    // The legal texts must be accepted explicitly.
+    const noTerms = await app.request("/api/accounts", { method: "POST", body: { email: "without.terms@example.test", password: "password" } });
+    assert.equal(noTerms.response.status, 400);
+    assert.equal(noTerms.payload.error, "the terms must be accepted");
   } finally {
     await app.close();
   }
@@ -324,7 +424,8 @@ test("admin listing and password reset are protected, sanitized and revoke targe
     const teacher = await signUp(app.request, "teacher.admin", "before-reset");
     const teacherSecond = await signIn(app.request, "teacher.admin", "before-reset");
     const teacherState = await app.request("/api/state", { token: teacher.token });
-    teacherState.payload.classes[0].pupils.push({ id: "pupil", name: "Pupil" });
+    teacherState.payload.classes = [{ id: "7p", name: "7P", pupils: [{ id: "pupil", name: "Pupil" }] }];
+    teacherState.payload.activeClassId = "7p";
     await app.request("/api/state", { method: "PUT", token: teacher.token, body: teacherState.payload });
 
     assert.equal((await app.request("/api/admin/accounts", { token: teacher.token })).response.status, 403);

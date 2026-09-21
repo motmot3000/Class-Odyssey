@@ -16,7 +16,7 @@ const isShortText = (value, max = MAX_NAME_LENGTH) =>
   typeof value === "string" && value.length <= max && !CONTROL_CHARS.test(value);
 
 export function isStateDocument(value) {
-  if (!isRecord(value) || !Array.isArray(value.classes) || !value.classes.length) return false;
+  if (!isRecord(value) || !Array.isArray(value.classes)) return false;
   if (value.classes.length > MAX_CLASSES) return false;
   const classIds = new Set();
   const pupilIds = new Set();

@@ -88,19 +88,14 @@ export const WEAPONS = [
   { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." }
 ];
 
-/* Faces are paused while the delivered 3D base owns the expression, so the
- * category ships empty. The persisted `face` field keeps its neutral default
- * for the legacy vector renderer. */
-export const FACES = [];
-
 /* Short and Long are the delivered cuts, free and shared by both characters;
- * Bald and the Afro carry the first cosmetic unlocks. Braids and Royal Hair
- * are withdrawn. */
+ * Bald and the Braid carry the first cosmetic unlocks. The old sculpted Afro
+ * is withdrawn. */
 export const HAIRS = [
   { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
-  { id: "bald", name: "Bald", minLevel: 2, price: 10, description: "A clean fully shaved head." },
-  { id: "curly", name: "Afro", minLevel: 3, price: 30, description: "A classic rounded afro." }
+  { id: "bald", name: "Bald", minLevel: 2, price: 20, description: "A clean fully shaved head." },
+  { id: "curly", name: "Braid", minLevel: 3, price: 30, description: "A neat long braid with bangs." }
 ];
 
 export const HAIR_COLORS = [
@@ -137,7 +132,6 @@ export const SHOP_ITEMS = [
   ...SKINS.map((item) => ({ ...item, type: "outfit" })),
   ...HATS.map((item) => ({ ...item, type: "hat" })),
   ...WEAPONS.map((item) => ({ ...item, type: "weapon" })),
-  ...FACES.map((item) => ({ ...item, type: "face" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
@@ -157,14 +151,14 @@ export function createInitialState({ samples = true } = {}) {
 
   return {
     revision: 0,
-    activeClassId: "7p",
+    activeClassId: samples ? "7p" : null,
     selectedPupilId: null,
     selectMode: false,
     selectedPupilIds: [],
-    classes: [
+    classes: samples ? [
       { id: "7p", name: "7P", pupils: pupilsOf("7p", [["Alex", "boy"], ["Mia", "girl"], ["Noah", "boy"], ["Lina", "girl"]]) },
       { id: "8p", name: "8P", pupils: pupilsOf("8p", [["Emma", "girl"], ["Leo", "boy"], ["Sara", "girl"], ["Niko", "boy"]]) }
-    ],
+    ] : [],
     rules: defaultRules(),
     events: []
   };
@@ -178,7 +172,7 @@ export function normalizeState(rawState) {
   const state = {
     ...rawState,
     revision: Number.isSafeInteger(rawState.revision) && rawState.revision >= 0 ? rawState.revision : 0,
-    activeClassId: migrateClassValue(rawState.activeClassId) || rawState.classes[0]?.id || "7p",
+    activeClassId: migrateClassValue(rawState.activeClassId) || rawState.classes[0]?.id || null,
     selectedPupilId: rawState.selectedPupilId || null,
     selectMode: Boolean(rawState.selectMode),
     selectedPupilIds: Array.isArray(rawState.selectedPupilIds) ? [...new Set(rawState.selectedPupilIds)] : [],
@@ -204,7 +198,7 @@ export function normalizeState(rawState) {
   state.rules = normalizeRules(rawState.rules);
 
   if (!getClassById(state, state.activeClassId)) {
-    state.activeClassId = state.classes[0]?.id || "7p";
+    state.activeClassId = state.classes[0]?.id || null;
   }
 
   if (state.selectedPupilId && !getPupilById(state, state.selectedPupilId)) {
@@ -387,16 +381,11 @@ export function importState(jsonText) {
     throw new Error("The file is not valid JSON.");
   }
 
-  if (Array.isArray(raw?.classes) && !raw.classes.length) throw new Error("No classes found in the file.");
   if (!isStateDocument(raw)) {
     throw new Error("This file is not a Class Odyssey backup.");
   }
 
-  const state = normalizeState(raw);
-  if (!state.classes.length) {
-    throw new Error("No classes found in the file.");
-  }
-  return state;
+  return normalizeState(raw);
 }
 
 export function awardXp(state, pupilIds, amount, reason = "XP") {
@@ -681,7 +670,6 @@ function normalizePupil(pupil) {
   const weapon = WEAPONS.some((item) => item.id === pupil.weapon) ? pupil.weapon : "no-weapon";
   const gender = pupil.gender === "girl" ? "girl" : "boy";
   const skinTone = SKIN_TONES.some((tone) => tone.id === pupil.skinTone) ? pupil.skinTone : "light";
-  const face = FACES.some((item) => item.id === pupil.face) ? pupil.face : "smile";
   const defaultHair = gender === "girl" ? "long" : "short";
   const hair = HAIRS.some((item) => item.id === pupil.hair) ? pupil.hair : defaultHair;
   const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
@@ -692,7 +680,6 @@ function normalizePupil(pupil) {
     title,
     hat,
     weapon,
-    face,
     hair,
     hairColor,
     skinTone,
@@ -724,7 +711,7 @@ function normalizePupil(pupil) {
     weapon: ownedItems.includes(weapon) ? weapon : "no-weapon",
     gender,
     skinTone: ownedItems.includes(skinTone) ? skinTone : "light",
-    face: ownedItems.includes(face) ? face : "smile",
+    face: "smile",
     hair: ownedItems.includes(hair) ? hair : defaultHair,
     hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
     lastLevelUpAt: pupil.lastLevelUpAt || null

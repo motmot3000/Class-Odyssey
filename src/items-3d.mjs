@@ -1,6 +1,6 @@
 import { getShopItems, getShopItem } from './domain.mjs';
 import { renderHero } from './avatar.mjs';
-import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds } from './items-3d-model.mjs';
+import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds, BASE_CATALOGUE_URL } from './items-3d-model.mjs';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -77,7 +77,9 @@ async function load() {
   try {
     const { createItemsViewer } = await import('./items-3d-viewer.mjs');
     viewer = await createItemsViewer($('#viewer'), look, {
-      modelURL: reviewModel || undefined,
+      // The workshop must mirror the deployed game: it loads the live base
+      // characters (character-stylized), never the older baked catalogue.
+      modelURL: reviewModel || BASE_CATALOGUE_URL,
       onProgress: value => { $('#loading-status').textContent = `Chargement des modèles… ${value} %`; },
       onError: text => { setReady(false); $('#loading-status').textContent = text; $('#loading-status').hidden = false; $('#poster').hidden = false; $('#viewer canvas').hidden = true; $('#render-mode').textContent = 'Aperçu Blender'; },
       onFreeView: () => { angle = 'free'; rotating = false; syncView(); }

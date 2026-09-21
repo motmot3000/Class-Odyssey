@@ -8,7 +8,7 @@ hors ligne isolé par compte. Aucun backend PHP n'est utilisé.
 
 ```text
 navigateur
-    │ https://classquest.lecagibi.ch
+    │ https://classodyssey.com
     ▼
 Caddy sur le VPS
     │ reverse proxy vers 127.0.0.1:5180
@@ -30,6 +30,15 @@ Le premier démarrage requiert exclusivement ces variables d'environnement :
 
 - `FOUNDER_USERNAME` : identifiant du compte fondateur ;
 - `FOUNDER_PASSWORD` : mot de passe initial du compte fondateur.
+
+La connexion Google est facultative : renseigner à la fois `GOOGLE_CLIENT_ID` et
+`GOOGLE_CLIENT_SECRET` (identifiants OAuth 2.0 « application Web » créés dans la
+console Google) pour activer le bouton. L'URI de redirection autorisée est
+`https://<domaine>/api/auth/google/callback` (ou l'URL locale
+`http://127.0.0.1:<port>/api/auth/google/callback` en développement).
+`GOOGLE_REDIRECT_URI` force cette adresse si le proxy ne transmet pas le bon
+hôte. Sans ces variables, `/api/config` annonce `google: false` et aucune
+connexion Google n'est proposée.
 
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
@@ -60,12 +69,17 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 | Méthode | Route                                      | Rôle |
 |---------|--------------------------------------------|------|
 | GET     | `/api/health`                              | Vérifie le conteneur |
+| GET     | `/api/config`                              | Fonctionnalités publiques (connexion Google active ou non) |
+| GET     | `/api/auth/google`                         | Redirige vers Google (OAuth 2.0 + PKCE) |
+| GET     | `/api/auth/google/callback`                | Reçoit le code Google et ouvre la session |
+| POST    | `/api/auth/google/exchange`                | Échange le code à usage unique contre un jeton de session |
 | POST    | `/api/accounts`                            | Crée un compte et son état vide |
 | POST    | `/api/session`                             | Ouvre une session |
 | GET     | `/api/session`                             | Vérifie la session courante |
 | DELETE  | `/api/session`                             | Révoque la session courante |
 | POST    | `/api/session/verify`                      | Vérifie le mot de passe pour la console enseignant |
 | PUT     | `/api/session/password`                    | Change le mot de passe et révoque les autres sessions |
+| PUT     | `/api/account/terms`                       | Enregistre l'acceptation des textes légaux (comptes créés via Google) |
 | GET     | `/api/state`                               | Lit l'état du compte connecté |
 | PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |
 | GET     | `/api/admin/accounts`                      | Liste les comptes (`admin`) |
@@ -75,8 +89,13 @@ Les routes autres que `health`, inscription et connexion exigent
 `X-Session-Token`. Les jetons ne sont stockés que sous forme de condensat
 SHA-256, les mots de passe avec `scrypt` (asynchrone, sel de 16 octets, dérivé
 de 32 octets, comparaison en temps constant), et aucune réponse d'administration
-n'expose ces valeurs. Le mot de passe fait au minimum 10 caractères. Une session
+n'expose ces valeurs. Le mot de passe fait au minimum 6 caractères. Une session
 dure 14 jours ; le changement de mot de passe révoque les autres sessions.
+La création d'un compte exige `termsAccepted: true` ; le serveur enregistre
+`terms: { acceptedAt, version }` sur le compte (version issue de
+`src/terms.mjs`). Les comptes créés via Google, dont le flux ne peut pas
+afficher la case, acceptent les textes à la première connexion via
+`PUT /api/account/terms`.
 Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
 `TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
 inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est
@@ -158,7 +177,7 @@ curl -fsS http://127.0.0.1:5180/api/health
 
 Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
 Web exposé publiquement et utilise la configuration versionnée dans
-`deploy/vps/classquest.lecagibi.ch.caddy`.
+`deploy/vps/classodyssey.com.caddy`.
 
 Après une modification Caddy :
 
