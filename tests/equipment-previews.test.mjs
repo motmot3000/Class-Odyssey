@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { createInitialState, getCurrentClass, SHOP_ITEMS } from '../src/domain.mjs';
-import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, PORTRAIT_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
+import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, PORTRAIT_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK, resolveAssetBase } from '../src/items-3d-model.mjs';
 import { renderItemThumbnail, renderHeroPortrait } from '../src/equipment-previews.mjs';
 import { renderSheikahStudent, renderSheikahShop } from '../src/views/sheikah.mjs';
 
@@ -26,6 +26,12 @@ test('the live base characters are the delivered stylized catalogue', () => {
   assert.ok(manifest.parts['hair:short'] > 0 && manifest.parts['hair:long'] > 0 && manifest.parts['hair:curly'] > 0);
   assert.equal(manifest.parts['outfit:grand-archmage'] || 0, 0);
   assert.equal(manifest.parts['weapon:lore-lantern'] || 0, 0);
+});
+
+test('browser catalogues stay inside the deployed page sub-path', () => {
+  assert.equal(resolveAssetBase('https://classodyssey.com/').href, 'https://classodyssey.com/assets/');
+  assert.equal(resolveAssetBase('https://www.thomaswunsche.com/classodyssey/').href, 'https://www.thomaswunsche.com/classodyssey/assets/');
+  assert.equal(resolveAssetBase('https://www.thomaswunsche.com/classodyssey/items-3d.html').href, 'https://www.thomaswunsche.com/classodyssey/assets/');
 });
 
 test('baked fallback portraits match the live base so the old base never flashes', () => {

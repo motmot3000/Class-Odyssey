@@ -16,12 +16,12 @@ export const SKIN_TONE_COLORS = {
   light: 0xf0c9a4, medium: 0xdfae7e, tan: 0xc68a55, brown: 0x9a6440, dark: 0x6b452f
 };
 export const SKIN_TONE_NEUTRAL = 'medium';
-/* Asset paths resolve against the PAGE, never against this module. The 3D
- * workshop ships as a bundle under /assets/items-3d/web, where a module-relative
- * URL would point inside the bundle folder and the deployed avatars would 404. */
-const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
-  ? new URL('../assets/', import.meta.url)
-  : new URL('../assets/', document.baseURI);
+/* Browser assets follow the page deployment path. This also supports the
+ * bundled workshop without escaping a production sub-path such as /classodyssey/. */
+export function resolveAssetBase(pageBase = typeof document === 'undefined' ? null : document.baseURI) {
+  return pageBase ? new URL('./assets/', pageBase) : new URL('../assets/', import.meta.url);
+}
+const ASSET_BASE = resolveAssetBase();
 export const CATALOGUE_REVISION = 'catalogue-v8-scoped-cosmetics';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
