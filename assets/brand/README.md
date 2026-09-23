@@ -44,7 +44,7 @@ assets/brand/
 - `src/fonts.css` charge les polices locales : plus aucun appel à Google Fonts.
 - `src/brand.css` affiche le bon logo selon `data-theme` (clair/sombre).
 - `src/brand.mjs` expose le nom et les chemins aux vues.
-- La barre supérieure de la Tablette Sheikah affiche `class-odyssey-horizontal-*` ;
+- La barre supérieure de la Tablette Odyssey affiche `class-odyssey-horizontal-*` ;
   la page d'accueil affiche `class-odyssey-stacked-*`.
 
 Conserver les proportions, laisser respirer les marges ; pas d'ombre ni de

@@ -69,27 +69,28 @@ import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { createGuidedTour } from "./tour.mjs";
+import { enableDragScroll } from "./touch-scroll.mjs";
 import { TERMS_VERSION } from "./terms.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
-  renderSheikahTopbar,
-  renderSheikahNoClass,
-  renderSheikahStudent,
-  renderSheikahSheet,
-  renderSheikahShop,
-  renderSheikahPersonalize,
+  renderOdysseyTopbar,
+  renderOdysseyNoClass,
+  renderOdysseyStudent,
+  renderOdysseySheet,
+  renderOdysseyShop,
+  renderOdysseyPersonalize,
   cosmeticChangesFromDraft
-} from "./views/sheikah.mjs";
+} from "./views/odyssey.mjs";
 import {
-  mountSheikahViewer,
-  unmountSheikahViewer,
-  setSheikahAngle,
-  setSheikahRotation,
-  setSheikahTheme,
-  retrySheikahViewer,
-  setSheikahFreeViewHandler
-} from "./sheikah-runtime.mjs";
+  mountOdysseyViewer,
+  unmountOdysseyViewer,
+  setOdysseyAngle,
+  setOdysseyRotation,
+  setOdysseyTheme,
+  retryOdysseyViewer,
+  setOdysseyFreeViewHandler
+} from "./odyssey-runtime.mjs";
 import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i18n.mjs";
 
 const app = document.querySelector("#app");
@@ -146,17 +147,17 @@ const ui = {
   adminError: "",
   consentPending: false,
   consentError: "",
-  /* Interface Sheikah */
-  sheikahView: "board",
+  /* Interface Odyssey */
+  odysseyView: "board",
   angle: "quarter",
   rotating: false,
   draft: null,
   shopPreview: null
 };
 
-setSheikahFreeViewHandler(() => {
+setOdysseyFreeViewHandler(() => {
   ui.rotating = false;
-  const control = app.querySelector('[data-action="sheikah-rotate"]');
+  const control = app.querySelector('[data-action="odyssey-rotate"]');
   control?.classList.remove("on");
   control?.setAttribute("aria-pressed", "false");
 });
@@ -180,7 +181,7 @@ function applyTheme() {
   document.documentElement.dataset.theme = displayedTheme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", displayedTheme === "light" ? "#e7e9df" : "#101b20");
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* Keep the in-memory theme. */ }
-  setSheikahTheme(displayedTheme);
+  setOdysseyTheme(displayedTheme);
 }
 
 /* ---------- Hash routing ---------- */
@@ -216,7 +217,7 @@ window.addEventListener("hashchange", () => {
   ui.query = "";
   ui.consoleOpen = false;
   ui.lockError = "";
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   if (location.hash !== "#rules") ui.rulesEditing = false;
   window.scrollTo({ top: 0 });
@@ -234,7 +235,7 @@ function render() {
   app.dataset.view = view;
   const memory = captureUiMemory();
   app.innerHTML = `
-    ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
+    ${renderOdysseyTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
     ${renderViewBody(view)}
     ${renderAppFooter()}
@@ -251,11 +252,11 @@ function render() {
   renderTeacherDialog();
   restoreUiMemory(memory);
   flushFlash();
-  syncSheikahRuntime();
+  syncOdysseyRuntime();
   mountHeroPortraits(document.body);
   if (view === "welcome") releaseWelcomeScene = mountWelcomeScene(app);
   updateClock();
-  if (ui.focusClassHeading && view === 'class' && ui.sheikahView === 'board') {
+  if (ui.focusClassHeading && view === 'class' && ui.odysseyView === 'board') {
     ui.focusClassHeading = false;
     app.querySelector('.picker h1')?.focus({ preventScroll:true });
     window.scrollTo({ top:0 });
@@ -275,25 +276,25 @@ function revealCookieControls() {
   }
 }
 
-function renderSheikahBody(view) {
+function renderOdysseyBody(view) {
   const classroom = getCurrentClass(state);
-  if (!classroom) return renderSheikahNoClass();
-  const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
-  if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
-  if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
-  return renderSheikahStudent({ classroom, ui, pupil, classView:true,
+  if (!classroom) return renderOdysseyNoClass();
+  const pupil = ui.odysseyView === 'board' ? null : getStudentPupil(classroom);
+  if (pupil && ui.odysseyView === "shop") return renderOdysseyShop(pupil, ui);
+  if (pupil && ui.odysseyView === "personalize") return renderOdysseyPersonalize(pupil, ui);
+  return renderOdysseyStudent({ classroom, ui, pupil, classView:true,
     selectionMode:ui.teacherDialog === 'console' && isAdultUnlocked(), selectedIds:state.selectedPupilIds });
 }
 
-function syncSheikahRuntime() {
+function syncOdysseyRuntime() {
   const host = app.querySelector("[data-viewer-host]");
   if (!host) {
-    unmountSheikahViewer();
+    unmountOdysseyViewer();
     return;
   }
   let look = {};
   try { look = JSON.parse(host.dataset.look || "{}"); } catch { /* Retain the fallback look. */ }
-  mountSheikahViewer(host, look);
+  mountOdysseyViewer(host, look);
 }
 
 function renderViewBody(view) {
@@ -321,7 +322,7 @@ function renderViewBody(view) {
     return `<main class="page page-narrow legal-page">${renderTerms()}</main>`;
   }
 
-  return renderSheikahBody(view);
+  return renderOdysseyBody(view);
 }
 
 function getStudentPupil(classroom) {
@@ -556,7 +557,7 @@ function showClassRoster() {
   if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
   rememberStudent(null);
   state = { ...state, selectedPupilId:null, selectedPupilIds:[] };
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   ui.shopPreview = null;
   ui.focusClassHeading = true;
@@ -573,8 +574,8 @@ function chooseClassPupil(pupilId) {
 function resetHeroCamera() {
   ui.angle = 'quarter';
   ui.rotating = false;
-  setSheikahAngle('quarter');
-  setSheikahRotation(false);
+  setOdysseyAngle('quarter');
+  setOdysseyRotation(false);
 }
 
 const ACTIONS = {
@@ -629,17 +630,17 @@ const ACTIONS = {
     advanceOnboarding();
   },
 
-  /* ---------- Sheikah navigation and customization ---------- */
+  /* ---------- Odyssey navigation and customization ---------- */
   "toggle-theme": () => {
     theme = theme === "light" ? "dark" : "light";
     applyTheme();
     if (account) persistSettings({ theme });
     renderPreservingForms();
   },
-  "sheikah-open": (el) => {
+  "odyssey-open": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     render();
     window.scrollTo({ top: 0 });
@@ -648,56 +649,56 @@ const ACTIONS = {
   // "back" from them returns to the hero — never straight to the class.
   "hero-back": () => {
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     ui.shopPreview = null;
     render();
     window.scrollTo({ top: 0 });
   },
-  "sheikah-personalize": (el) => {
+  "odyssey-personalize": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
     resetHeroCamera();
-    ui.sheikahView = "personalize";
+    ui.odysseyView = "personalize";
     ui.draft = null;
     render();
     window.scrollTo({ top: 0 });
   },
-  "retry-viewer": () => retrySheikahViewer(),
-  "sheikah-set": (el) => {
+  "retry-viewer": () => retryOdysseyViewer(),
+  "odyssey-set": (el) => {
     ui.draft = { ...(ui.draft || {}), [el.dataset.field]: el.dataset.value };
     render();
   },
-  "sheikah-angle": (el) => {
+  "odyssey-angle": (el) => {
     ui.angle = el.dataset.value;
     ui.rotating = false;
-    setSheikahAngle(ui.angle);
-    setSheikahRotation(false);
+    setOdysseyAngle(ui.angle);
+    setOdysseyRotation(false);
     render();
   },
-  "sheikah-rotate": () => {
+  "odyssey-rotate": () => {
     ui.rotating = !ui.rotating;
-    setSheikahRotation(ui.rotating);
+    setOdysseyRotation(ui.rotating);
     render();
   },
-  "sheikah-equip": (el) => {
+  "odyssey-equip": (el) => {
     resetHeroCamera();
     const draft = ui.draft;
     const next = draft && el.dataset.pupilId
       ? updateCosmetics(state, el.dataset.pupilId, cosmeticChangesFromDraft(draft))
       : state;
     ui.draft = null;
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     if (draft) commit(next);
     else render();
     window.scrollTo({ top: 0 });
-    toast(t("sheikah.savedLook"), "success");
+    toast(t("odyssey.savedLook"), "success");
   },
-  "sheikah-shop": (el) => {
+  "odyssey-shop": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
     resetHeroCamera();
-    ui.sheikahView = "shop";
+    ui.odysseyView = "shop";
     ui.draft = null;
     ui.shopPreview = null;
     render();
@@ -744,7 +745,7 @@ const ACTIONS = {
     closeDialog({ resumeConsole:false });
     lockAdult();
     ui.consoleOpen = false;
-    ui.sheikahView = 'board';
+    ui.odysseyView = 'board';
     navigate("#class");
     toast("Adult access locked.", "info");
   },
@@ -758,7 +759,7 @@ const ACTIONS = {
 
   "select-class": (el) => {
     disarmDanger();
-    ui.sheikahView = "board";
+    ui.odysseyView = "board";
     ui.draft = null;
     if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
     rememberStudent(null);
@@ -782,7 +783,7 @@ const ACTIONS = {
   },
 
   "zoom-pupil": (el) => {
-    ACTIONS['sheikah-open'](el);
+    ACTIONS['odyssey-open'](el);
   },
   "close-dialog": () => { closeDialog(); render(); },
 
@@ -848,7 +849,7 @@ const ACTIONS = {
   },
 
   "preview-item": (el) => {
-    if (currentView() === 'class' && app.contains(el) && ui.sheikahView === "shop") {
+    if (currentView() === 'class' && app.contains(el) && ui.odysseyView === "shop") {
       ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
       render();
       if (matchMedia('(max-width: 1100px)').matches) {
@@ -865,7 +866,7 @@ const ACTIONS = {
   "student-pick": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     ui.query = "";
     render();
@@ -1109,7 +1110,7 @@ const FORMS = {
     const next = createClass(state, { name, students });
     if (next === state) return;
     closeDialog({ resumeConsole:false });
-    ui.sheikahView = "board";
+    ui.odysseyView = "board";
     ui.draft = null;
     rememberStudent(null);
     commit(next);
@@ -1297,7 +1298,7 @@ function openTeacherGate(after = 'console') {
 function openTeacherConsole() {
   if (!isAdultUnlocked()) { openTeacherGate(); return; }
   window.history.replaceState(null, '', '#class');
-  ui.sheikahView = 'board';
+  ui.odysseyView = 'board';
   ui.draft = null;
   ui.rulesEditing = false;
   ui.teacherDialog = 'console';
@@ -1602,7 +1603,7 @@ function openAccount(next) {
   ui.lockPending = false;
   ui.lockError = "";
   studentPupilId = loadStudentId();
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   const storedTheme = next?.settings?.theme;
   if (storedTheme === "light" || storedTheme === "dark") {
@@ -1973,6 +1974,8 @@ if (googleCode || googleError) {
 }
 if (googleError) ui.gateError = googleErrorMessage(googleError);
 applyTheme();
+// Boards that report fingers as a mouse get drag-to-scroll from anywhere.
+enableDragScroll();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();

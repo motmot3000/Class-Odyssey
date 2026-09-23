@@ -72,7 +72,7 @@ const resource = createSharedResource(async () => {
   document.body.append(host);
   try {
     let ownedResource;
-    const { createHeroViewer } = await import(new URL(`../assets/sheikah/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href);
+    const { createHeroViewer } = await import(new URL(`../assets/odyssey/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href);
     const renderer = await createHeroViewer(host, BASE_CATALOGUE_URL, DEFAULT_LOOK, {
       theme: "light",
       onError: () => { if (ownedResource && resource.peek() === ownedResource) resource.reset(); }

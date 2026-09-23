@@ -17,7 +17,7 @@ let onFreeView = () => {};
 
 function loadRuntime() {
   if (!runtime) {
-    runtime = import(new URL(`../assets/sheikah/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href)
+    runtime = import(new URL(`../assets/odyssey/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href)
       .catch((error) => { runtime = undefined; throw error; });
   }
   return runtime;
@@ -30,7 +30,7 @@ function updateProgress(percent) {
 
 function fail(error, host) {
   if (!host || currentHost !== host || !host.isConnected) return;
-  console.warn("Sheikah viewer:", error);
+  console.warn("Odyssey viewer:", error);
   host?.classList.remove("is-loading");
   const loader = host?.querySelector("[data-load-bar]");
   if (loader) loader.hidden = true;
@@ -63,7 +63,7 @@ const resource = createSharedResource(async (host, look) => {
   return instance;
 });
 
-export function mountSheikahViewer(host, look) {
+export function mountOdysseyViewer(host, look) {
   if (!host) return;
   currentHost = host;
   host.classList.add("is-loading");
@@ -100,35 +100,35 @@ export function mountSheikahViewer(host, look) {
     .catch((error) => fail(error, host));
 }
 
-export function unmountSheikahViewer() {
+export function unmountOdysseyViewer() {
   currentHost = null;
   resource.peek()?.setVisible(false);
 }
 
-export function setSheikahAngle(angle) {
+export function setOdysseyAngle(angle) {
   viewerAngle = angle;
   resource.peek()?.setAngle(angle);
 }
 
-export function setSheikahRotation(rotating) {
+export function setOdysseyRotation(rotating) {
   viewerRotating = rotating;
   resource.peek()?.setRotation(rotating);
 }
 
-export function setSheikahTheme(theme) {
+export function setOdysseyTheme(theme) {
   currentTheme = theme === "dark" ? "dark" : "light";
   resource.peek()?.setTheme?.(currentTheme);
 }
 
-export function setSheikahFreeViewHandler(handler) {
+export function setOdysseyFreeViewHandler(handler) {
   onFreeView = typeof handler === "function" ? handler : () => {};
 }
 
-export function retrySheikahViewer() {
+export function retryOdysseyViewer() {
   resource.reset();
   if (currentHost) {
     let look = {};
     try { look = JSON.parse(currentHost.dataset.look || "{}"); } catch { /* Keep the fallback look. */ }
-    mountSheikahViewer(currentHost, look);
+    mountOdysseyViewer(currentHost, look);
   }
 }

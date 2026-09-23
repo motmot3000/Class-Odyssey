@@ -102,7 +102,7 @@ Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 
 ```text
 index.html          coque HTML (topbar + zones app/toasts/dialogues)
-src/sheikah.css     système visuel partagé, thèmes sombre et clair
+src/odyssey.css     système visuel partagé, thèmes sombre et clair
 src/shell.css       navigation, connexion, règles, comptes, boutique et dialogues
 styles.css          ancien habillage conservé pour les prototypes
 src/app.mjs         état d'interface, routage, événements délégués, persistance

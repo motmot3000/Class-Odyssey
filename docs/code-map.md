@@ -15,13 +15,13 @@
 | Game rules and catalogue | `src/domain.mjs` | Pure state transitions, XP, HP, inventory, purchases and import migration |
 | Persisted shape | `src/state-schema.mjs` | Shared browser/API validation; no DOM or filesystem dependency |
 | Authentication client | `src/session.mjs`, `src/api.mjs` | Session tokens, bounded API calls, offline verifier and account-bound teacher unlock |
-| Screens | `src/views/` | Escaped HTML; the active game screens live in `sheikah.mjs` |
+| Screens | `src/views/` | Escaped HTML; the active game screens live in `odyssey.mjs` |
 | Shared UI and languages | `src/ui.mjs`, `src/i18n*.mjs` | Icons, titles, stats and keyed FR/EN copy |
 | HTTP routes | `server/server.mjs` | Authentication, request validation, per-client rate limits (trust-proxy aware), account caps and revision conflict responses |
 | Disk persistence | `server/api.mjs` | Password hashing, token index, atomic writes and backup recovery |
 | Public files | `server/static.mjs` | Allowlisted paths, symlink checks, correct 404 responses and streamed assets |
 
-`src/views/board.mjs` and `src/views/student.mjs` are retained legacy renderers. They are **not** the active Sheikah picker/board. `src/avatar.mjs` also retains the vector renderer and shared stat icons. Do not mistake either for the source of current 3D portraits.
+`src/views/board.mjs` and `src/views/student.mjs` are retained legacy renderers. They are **not** the active Odyssey picker/board. `src/avatar.mjs` also retains the vector renderer and shared stat icons. Do not mistake either for the source of current 3D portraits.
 
 ## A state change, end to end
 
@@ -50,8 +50,8 @@ Every asynchronous result must check its captured account/token before touching 
 
 - `src/items-3d-model.mjs`: serializable looks, catalogue revision, slot/persona visibility and share-link validation.
 - `src/items-3d-viewer.mjs`: Three.js renderer, framing, item isolation, lighting, export and GPU disposal.
-- `src/sheikah-viewer.mjs`: small adapter between the game screens and the catalogue viewer.
-- `src/sheikah-runtime.mjs`: owns the one visible canvas and moves it between current view hosts.
+- `src/odyssey-viewer.mjs`: small adapter between the game screens and the catalogue viewer.
+- `src/odyssey-runtime.mjs`: owns the one visible canvas and moves it between current view hosts.
 - `src/shared-resource.mjs`: shared in-flight loading with generation-based reset. A late result after a retry is disposed, not mounted.
 - `src/portrait-runtime.mjs`: one offscreen renderer, serialized jobs and a 64-entry LRU image cache. Equal looks share a job.
 - `src/portrait-image.mjs`: transparent-margin detection and full-silhouette image framing.
@@ -69,11 +69,11 @@ Two different lifetime checks matter: **host identity** prevents mounting into a
 
 ## Sources versus generated files
 
-Do not hand-edit minified files in `assets/sheikah/` or `assets/items-3d/web/`:
+Do not hand-edit minified files in `assets/odyssey/` or `assets/items-3d/web/`:
 
 ```sh
 npm run build:items-3d
-npm run build:sheikah
+npm run build:odyssey
 ```
 
 The equipment build removes obsolete, known generated chunk filenames only

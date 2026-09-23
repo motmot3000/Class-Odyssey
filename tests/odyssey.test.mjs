@@ -1,21 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createInitialState, getCurrentClass } from "../src/domain.mjs";
-import { cosmeticChangesFromDraft, gameLook, shopPreviewLook, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
+import { cosmeticChangesFromDraft, gameLook, shopPreviewLook, renderOdysseyPersonalize } from "../src/views/odyssey.mjs";
 
 const pupil = () => getCurrentClass(createInitialState()).pupils[0];
 
 test("Dressing omits item detail and keeps rotation as its final camera control", () => {
-  const html = renderSheikahPersonalize(pupil(), { angle:'quarter' });
+  const html = renderOdysseyPersonalize(pupil(), { angle:'quarter' });
   const bar = html.match(/<div class="angle-bar">([\s\S]*?)<\/div>/)[1];
   assert.doesNotMatch(bar,/data-value="item"/);
   assert.match(bar,/data-value="head"/);
   const actions = [...bar.matchAll(/data-action="([^"]+)"/g)].map(match=>match[1]);
-  assert.equal(actions.at(-1),'sheikah-rotate');
+  assert.equal(actions.at(-1),'odyssey-rotate');
   assert.match(html,/dais-lg is-loading/);
 });
 
-test("the Sheikah preview maps catalog choices to the items-3d look", () => {
+test("the Odyssey preview maps catalog choices to the items-3d look", () => {
   const value = pupil();
   const original = gameLook(value);
   const preview = gameLook(value, {
@@ -53,7 +53,7 @@ test("the shop preview applies only items that have a 3D model", () => {
   assert.equal(title, null);
 });
 
-test("the Sheikah workshop converts its draft to domain cosmetic types", () => {
+test("the Odyssey workshop converts its draft to domain cosmetic types", () => {
   assert.deepEqual(cosmeticChangesFromDraft({
     skin: "vocab-ranger",
     hat: "wizard-hat",

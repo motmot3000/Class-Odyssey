@@ -29,7 +29,7 @@ export function characterAssets(pupil = {}) {
 
 export function renderBaseCharacter(pupil, { large = false } = {}) {
   const assets = characterAssets(pupil);
-  return `<img class="avatar avatar-base3d" data-character-gender="${assets.gender}" data-character-tone="${assets.tone}" src="${escapeHtml(large ? assets.portrait : assets.thumbnail)}" srcset="${escapeHtml(assets.thumbnail)} 256w, ${escapeHtml(assets.portrait)} 512w" sizes="${large ? "(max-width: 700px) 75vw, 340px" : "180px"}" width="512" height="896" alt="${escapeHtml(t("view.character", { name: pupil?.name || t("sheikah.myHero") }))}" loading="${large ? "eager" : "lazy"}" decoding="async" />`;
+  return `<img class="avatar avatar-base3d" data-character-gender="${assets.gender}" data-character-tone="${assets.tone}" src="${escapeHtml(large ? assets.portrait : assets.thumbnail)}" srcset="${escapeHtml(assets.thumbnail)} 256w, ${escapeHtml(assets.portrait)} 512w" sizes="${large ? "(max-width: 700px) 75vw, 340px" : "180px"}" width="512" height="896" alt="${escapeHtml(t("view.character", { name: pupil?.name || t("odyssey.myHero") }))}" loading="${large ? "eager" : "lazy"}" decoding="async" />`;
 }
 
 export function baseStageAttributes() {

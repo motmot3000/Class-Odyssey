@@ -1,7 +1,7 @@
 /* ============================================================
    Bannière cookies — Class Odyssey
    Surcharge tarteaucitron.css. Carte sobre en bas à droite,
-   matières et couleurs du système visuel Sheikah.
+   matières et couleurs du système visuel Odyssey.
    Thèmes clair et sombre via [data-theme] sur <html>.
    ============================================================ */
 
@@ -116,7 +116,7 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s !important;
 }
 
-/* Accepter : vert Sheikah plein */
+/* Accepter : vert Odyssey plein */
 #tarteaucitronAlertBig #tarteaucitronPersonalize2 {
   background: var(--co-cookie-accent) !important;
   color: var(--co-cookie-accent-ink) !important;

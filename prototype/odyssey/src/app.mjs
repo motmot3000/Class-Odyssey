@@ -1,15 +1,15 @@
 import { createHeroViewer } from './viewer.mjs';
 
 /* ============================================================
-   Class Odyssey — Tablette Sheikah (prototype complet)
+   Class Odyssey — Tablette Odyssey (prototype complet)
    Le plateau, la fiche et le vestiaire partagent une seule dalle 3D :
    on ne recharge jamais le modèle, on change l'état du vestiaire.
    ============================================================ */
 
 const GLB_URL = new URL('../assets/wardrobe.glb', import.meta.url).href;
-const STORE_KEY = 'gom-sheikah-demo-v1';
-const THEME_KEY = 'gom-sheikah-theme';
-const SESSION_KEY = 'gom-sheikah-session';
+const STORE_KEY = 'gom-odyssey-demo-v1';
+const THEME_KEY = 'gom-odyssey-theme';
+const SESSION_KEY = 'gom-odyssey-session';
 
 const OUTFITS = [
   { id: 'base', name: 'Essentiel' },
@@ -488,7 +488,7 @@ function renderLogin() {
         <div class="brand">
           <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
           <span class="brand-name">Class Odyssey</span>
-          <span class="brand-sub">Tablette Sheikah</span>
+          <span class="brand-sub">Tablette Odyssey</span>
         </div>
         <button type="button" class="ghost" data-action="toggle-theme" aria-pressed="${theme === 'light'}" title="${theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}">${ico(theme === 'light' ? 'moon' : 'sun')}<span>${theme === 'light' ? 'Sombre' : 'Clair'}</span></button>
       </header>
@@ -538,7 +538,7 @@ function renderTopbar() {
       <div class="brand">
         <svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
         <span class="brand-name">Class Odyssey</span>
-        <span class="brand-sub">Tablette Sheikah</span>
+        <span class="brand-sub">Tablette Odyssey</span>
       </div>
       <nav class="tabs" aria-label="Classes">
         ${state.classes.map((c) => `<button type="button" class="${c.id === state.activeClassId ? 'on' : ''}" data-action="select-class" data-class-id="${c.id}" aria-pressed="${c.id === state.activeClassId}">${c.name}</button>`).join('')}
@@ -848,7 +848,7 @@ function wake() {
   node.innerHTML = `
     <svg class="wake-eye" viewBox="0 0 48 48" aria-hidden="true"><use href="#seal"/></svg>
     <span class="wake-line"></span>
-    <p>Tablette Sheikah · activation</p>`;
+    <p>Tablette Odyssey · activation</p>`;
   document.body.append(node);
   setTimeout(() => node.classList.add('is-open'), 40);
   setTimeout(() => {
