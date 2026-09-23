@@ -5,7 +5,7 @@ import test from 'node:test';
 import { createInitialState, getCurrentClass, SHOP_ITEMS } from '../src/domain.mjs';
 import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, PORTRAIT_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK } from '../src/items-3d-model.mjs';
 import { renderItemThumbnail, renderHeroPortrait } from '../src/equipment-previews.mjs';
-import { renderSheikahStudent, renderSheikahShop } from '../src/views/sheikah.mjs';
+import { renderOdysseyStudent, renderOdysseyShop } from '../src/views/odyssey.mjs';
 
 const root = new URL('../assets/items-3d/', import.meta.url);
 function catalogue() {
@@ -73,12 +73,12 @@ test('picker, fallback portraits and shop markup use current assets and preserve
   const classroom=getCurrentClass(createInitialState());
   const pupil={...classroom.pupils[0],name:'Alex <script>',hat:'wizard-hat',hairColor:'blue-hair'};
   const before=structuredClone(pupil);
-  const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui:{query:''},pupil:null});
+  const picker=renderOdysseyStudent({classroom:{...classroom,pupils:[pupil]},ui:{query:''},pupil:null});
   assert.match(picker,/data-hero-portrait/);
   assert.match(picker,/items-3d\/previews\/portraits\/male\.webp/);
   assert.doesNotMatch(picker,/assets\/wardrobe\/|<script>/);
   assert.match(renderHeroPortrait(pupil),/wizard-hat/);
-  const shop=renderSheikahShop(pupil,{shopCategory:'hat',shopPreview:'wizard-hat',angle:'quarter'});
+  const shop=renderOdysseyShop(pupil,{shopCategory:'hat',shopPreview:'wizard-hat',angle:'quarter'});
   assert.match(shop,/&quot;preview&quot;:\{&quot;slot&quot;:&quot;hat&quot;/);
   assert.match(shop,/items\/wizard-hat\.webp/);
   assert.doesNotMatch(shop,/data-hero-portrait|assets\/wardrobe\/|<svg class="avatar/);

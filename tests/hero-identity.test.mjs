@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createInitialState,getCurrentClass } from '../src/domain.mjs';
 import { renderTitle, titleTierOf, titleBackdropAttributes } from '../src/ui.mjs';
-import { renderSheikahStudent,renderSheikahSheet,renderSheikahPersonalize,renderSheikahTeacher } from '../src/views/sheikah.mjs';
+import { renderOdysseyStudent,renderOdysseySheet,renderOdysseyPersonalize,renderOdysseyTeacher } from '../src/views/odyssey.mjs';
 import { renderRules } from '../src/views/rules.mjs';
 import { t,setLang } from '../src/i18n.mjs';
 
@@ -10,15 +10,15 @@ test('hero identity uses the equipped title, never the outfit or hair colour',()
   const state=createInitialState(), classroom=getCurrentClass(state);
   const pupil={...classroom.pupils[0],name:'Alex <script>',title:'perfect-pupil',skin:'vocab-ranger',hairColor:'brown-hair'};
   const ui={query:'',angle:'quarter',openPanels:new Set(),scope:'selection',shopCategory:'outfit'};
-  const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui,pupil:null});
+  const picker=renderOdysseyStudent({classroom:{...classroom,pupils:[pupil]},ui,pupil:null});
   assert.match(picker,/Pupil/);
   assert.doesNotMatch(picker,/>Ranger<|>Brown<|<script>/);
   assert.ok(picker.indexOf('picker-portrait')<picker.indexOf('rune-card-head'));
-  const sheet=renderSheikahSheet(pupil,ui);
+  const sheet=renderOdysseySheet(pupil,ui);
   assert.match(sheet,/data-title-labelled/);
   assert.doesNotMatch(sheet,/Ranger · Brown/);
-  assert.match(renderSheikahPersonalize(pupil,ui),/data-title-labelled/);
-  const board=renderSheikahTeacher({classroom:{...classroom,pupils:[pupil]},ui,targets:[],selectedIds:[]});
+  assert.match(renderOdysseyPersonalize(pupil,ui),/data-title-labelled/);
+  const board=renderOdysseyTeacher({classroom:{...classroom,pupils:[pupil]},ui,targets:[],selectedIds:[]});
   assert.ok(board.indexOf('dais-card')<board.indexOf('rune-card-head'));
 });
 
@@ -50,10 +50,10 @@ test('titles climb a five-step prestige ladder with a matching backdrop',()=>{
 test('hero cards and the hero sheet expose the title backdrop layer',()=>{
   const classroom=getCurrentClass(createInitialState());
   const pupil={...classroom.pupils[0],title:'grammar-master'};
-  const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui:{},pupil:null});
+  const picker=renderOdysseyStudent({classroom:{...classroom,pupils:[pupil]},ui:{},pupil:null});
   assert.match(picker,/class="dais dais-card" data-title-tier="5" data-title-id="grammar-master"/);
   assert.match(picker,/class="title-halo"/);
-  const sheet=renderSheikahSheet(pupil,{});
+  const sheet=renderOdysseySheet(pupil,{});
   assert.match(sheet,/data-viewer-host[^>]*data-title-tier="5"/);
   assert.match(sheet,/title-halo/);
 });

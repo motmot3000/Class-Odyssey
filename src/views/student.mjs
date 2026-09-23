@@ -1,5 +1,5 @@
 /* Legacy pupil views retained for compatibility. The active picker, sheet,
- * workshop and shop live in views/sheikah.mjs; rewards remain teacher actions.
+ * workshop and shop live in views/odyssey.mjs; rewards remain teacher actions.
  */
 
 import { getNextReward, isEliminated, xpProgress } from "../domain.mjs";

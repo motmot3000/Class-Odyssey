@@ -1,5 +1,5 @@
 /* ============================================================
-   sheikah-viewer.mjs — dalle 3D de l'interface Sheikah
+   odyssey-viewer.mjs — dalle 3D de l'interface Odyssey
    Source unique : le catalogue d'équipements items-3d, le même que
    l'atelier « Les équipements prennent vie ». Le look est celui du jeu
    (persona, tenue, chapeau, objet, coiffure, couleur) et les 27 modèles

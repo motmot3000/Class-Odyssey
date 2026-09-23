@@ -84,7 +84,7 @@ blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.
 blender -b assets/items-3d/catalogue.blend --python-exit-code 1 --python tools/render-equipment-previews.py
 python3 tools/finalize-equipment-previews.py
 npm run build:items-3d
-npm run build:sheikah
+npm run build:odyssey
 npm test
 ```
 

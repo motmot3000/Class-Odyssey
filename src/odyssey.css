@@ -1,5 +1,5 @@
 /* ============================================================
-   Class Odyssey — Tablette Sheikah
+   Class Odyssey — Tablette Odyssey
    Inventaire gravé : une dalle minérale, des héros en pied, des
    sceaux de niveau et une encre d'activation. Au jour : calcaire,
    céladon et bronze. La nuit : schiste et gravures bleu-vert.
@@ -71,6 +71,21 @@
 
   --ease: cubic-bezier(0.2, 0.8, 0.25, 1);
   --topbar-h: 80px;
+
+  /* Scroll rails: a carved channel wide enough to grab on a classroom board. */
+  --scroll-size: 9px;
+  --scroll-page: 12px;
+  --scroll-track: rgba(6, 14, 18, 0.66);
+  --scroll-groove: rgba(138, 219, 211, 0.22);
+  --scroll-thumb: #5b9690;
+  --scroll-thumb-hi: #8adbd3;
+  --scroll-thumb-lo: #33605f;
+  --scroll-thumb-edge: rgba(240, 169, 74, 0.6);
+
+  /* The teacher sidebar reads as its own engraved panel. */
+  --console-bg: var(--slate-2);
+  --console-edge: var(--cyan-2);
+  --console-shadow: inset 26px 0 36px -36px rgba(0, 0, 0, 0.7);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -90,10 +105,45 @@ body {
 /* Browser surfaces carry the design. */
 ::selection { background: var(--cyan); color: var(--cyan-ink); }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
-* { scrollbar-color: var(--line-2) transparent; scrollbar-width: thin; }
-*::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 99px; border: 3px solid transparent; background-clip: padding-box; }
-*::-webkit-scrollbar-thumb:hover { background: var(--line-3); background-clip: padding-box; }
+/* Scrollbars are a first-class control here: the classroom board is driven by
+   finger, so the rail is wide, the grip carries an engraved ridge, and the
+   colours follow the theme instead of the browser default. */
+/* Chromium ignores ::-webkit-scrollbar as soon as scrollbar-color/-width is
+   set, so the standard properties are reserved for engines without the
+   pseudo-element (Firefox). */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-color: var(--scroll-thumb) var(--scroll-track); scrollbar-width: auto; }
+}
+*::-webkit-scrollbar { width: var(--scroll-size); height: var(--scroll-size); background: var(--scroll-track); }
+*::-webkit-scrollbar-track { background: var(--scroll-track); box-shadow: inset 0 0 0 1px var(--scroll-groove); }
+*::-webkit-scrollbar-thumb {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--r-pill);
+  background-color: var(--scroll-thumb);
+  background-image: linear-gradient(180deg, var(--scroll-thumb-hi), var(--scroll-thumb) 60%, var(--scroll-thumb-lo));
+  box-shadow: inset 0 0 0 1px var(--scroll-thumb-edge);
+}
+*::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:active { background-color: var(--scroll-thumb-hi); }
+*::-webkit-scrollbar-corner { background: var(--scroll-track); }
+
+/* The page and the teacher sidebar get the widest rail: the two surfaces the
+   class actually drags across the board. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.console::-webkit-scrollbar,
+.console-body::-webkit-scrollbar,
+.teacher-console-content::-webkit-scrollbar,
+.dialog::-webkit-scrollbar { width: var(--scroll-page); height: var(--scroll-page); }
+
+@media (pointer: coarse) {
+  :root { --scroll-size: 11px; --scroll-page: 14px; }
+}
+
+/* Pointer panning: any press-and-drag on a quiet area scrolls the page. */
+html.is-panning,
+html.is-panning * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 
 h1, h2, h3, h4 { margin: 0; line-height: 1.12; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
 p { margin: 0; }
@@ -266,7 +316,7 @@ input { caret-color: var(--cyan); }
 .board-title h1 { font-size: 30px; letter-spacing: -0.02em; text-wrap: balance; }
 .board-sub { color: var(--muted); font-size: 14px; margin-top: 7px; }
 #clock { font-variant-numeric: tabular-nums; }
-.tablet-inscription { display: block; flex: 0 1 168px; height: 24px; margin-left: auto; background: var(--inlay); mask: url("../assets/sheikah/inscription.svg") center / contain no-repeat; opacity: 0.65; }
+.tablet-inscription { display: block; flex: 0 1 168px; height: 24px; margin-left: auto; background: var(--inlay); mask: url("../assets/odyssey/inscription.svg") center / contain no-repeat; opacity: 0.65; }
 .board-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding-block: 4px 20px; border-bottom: 1px solid var(--line-2); }
 .board-stats { display: flex; gap: 20px; }
 .chip {
@@ -473,8 +523,11 @@ input { caret-color: var(--cyan); }
   min-height: 0;
   max-height: calc(100dvh - var(--topbar-h));
   padding: var(--s6) 22px var(--s7);
-  background: var(--slate);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cyan) 8%, transparent), transparent 240px),
+    var(--console-bg);
   border-left: 1px solid var(--line-2);
+  box-shadow: var(--console-shadow), inset 2px 0 0 -1px var(--console-edge);
   display: flex;
   flex-direction: column;
   gap: var(--s5);
@@ -484,6 +537,16 @@ input { caret-color: var(--cyan); }
 .console-mobile-toggle { display: none; }
 .console-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--line-2); }
 .console-head h2 { font-size: 20px; letter-spacing: 0; line-height: 1.2; }
+/* Sidebar only (the dialog keeps its own grid header): a titled band that
+   states the panel is there, even before the teacher opens it. */
+.console-body > .console-head {
+  margin: calc(-1 * var(--s6)) -22px var(--s2);
+  padding: var(--s4) 22px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 14%, transparent), transparent 88%);
+  border-bottom: 2px solid var(--console-edge);
+}
+.console-body > .console-head h2 { color: var(--ink); letter-spacing: 0.04em; }
+.console-body > .console-head h2::after { content: ""; display: block; width: 34px; height: 2px; margin-top: 7px; background: var(--inlay); }
 .console-head .btn { flex: none; }
 .console-hint { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.12em; color: var(--muted); }
 .panel-block { display: flex; flex-direction: column; gap: var(--s3); }
@@ -647,27 +710,41 @@ input { caret-color: var(--cyan); }
     border: 1px solid var(--line-2);
     border-bottom: 0;
     border-radius: var(--r-lg) var(--r-lg) 0 0;
-    box-shadow: 0 -18px 44px rgba(0, 0, 0, 0.34);
+    box-shadow: 0 -18px 44px rgba(0, 0, 0, 0.34), inset 0 2px 0 -1px var(--console-edge);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .console:not(.is-open) .console-body { display: none; }
   .console-mobile-toggle {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--s3);
     width: 100%;
-    min-height: 60px;
-    padding: 0 var(--s4);
+    min-height: 64px;
+    padding: 10px var(--s4) 0;
     color: var(--ink);
-    background: var(--surface-1);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--cyan) 12%, var(--surface-1)), var(--surface-1));
     border: 0;
     border-bottom: 1px solid var(--line);
     cursor: pointer;
   }
+  .console-mobile-toggle::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 58px;
+    height: 5px;
+    transform: translateX(-50%);
+    border-radius: var(--r-pill);
+    background: var(--console-edge);
+    opacity: 0.85;
+  }
   .console-mobile-toggle span { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
   .console-mobile-toggle strong { color: var(--cyan); font-size: 12px; }
   .console-body { padding: var(--s4); padding-bottom: max(var(--s4), env(safe-area-inset-bottom)); overflow: auto; overscroll-behavior: contain; }
+  .console-body > .console-head { margin: 0 0 var(--s2); padding: 0 0 var(--s3); }
   .console { overflow: hidden; }
   .console.is-open .console-body { max-height: calc(100dvh - 180px - env(safe-area-inset-top)); }
   .sheet, .atelier { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; grid-template-areas: "heading" "stage" "info"; gap: var(--s5); }
@@ -786,6 +863,18 @@ input { caret-color: var(--cyan); }
   --hp: #aa493d;
   --hp-soft: #f0dfd5;
   --ok: #37684c;
+
+  /* Limestone rails: a celadon grip with a bronze engraved edge. */
+  --scroll-track: #dfe3d6;
+  --scroll-groove: #b3bdac;
+  --scroll-thumb: #6d907f;
+  --scroll-thumb-hi: #245b51;
+  --scroll-thumb-lo: #9fb8a9;
+  --scroll-thumb-edge: rgba(139, 121, 80, 0.7);
+
+  --console-bg: #fbfaf2;
+  --console-edge: var(--cyan-2);
+  --console-shadow: inset 26px 0 36px -36px rgba(40, 61, 53, 0.38);
 }
 
 :root[data-theme="light"] .dais::after { background: radial-gradient(closest-side, rgb(40 61 53 / 14%), transparent 74%); }
@@ -798,7 +887,7 @@ input { caret-color: var(--cyan); }
    Compatibilité — composants de l'application
    La console enseignant, la fiche et la boutique partagent leurs
    classes d'origine ; cette section les habille avec la matière
-   Sheikah pour que toutes les pages soient cohérentes.
+   Odyssey pour que toutes les pages soient cohérentes.
    ============================================================ */
 
 .console .panel { border-top: 1px solid var(--line); padding: 10px 0; }
@@ -934,7 +1023,7 @@ input { caret-color: var(--cyan); }
 }
 
 /* --- dialogues (commande sur-mesure, aperçu article) ---
-   Sheikah ne charge pas styles.css : elle fournit son propre habillage,
+   Odyssey ne charge pas styles.css : elle fournit son propre habillage,
    dans les deux thèmes via les variables --panel / --ink. */
 .dialog {
   position: relative;
