@@ -80,6 +80,7 @@ WARM_EYES = STUDY / 'warm-eyes'
 sys.path.insert(0, str(ROOT / 'tools' / 'blender'))
 from refit_body_shapes import apply_body_shape
 from refit_female_base import rebuild_torso, clear_ear_space, swept_temple_locks, fit_posterior_hair
+from human_ears import ear_islands, skull_tree, humanize_points, jewellery_layout
 
 
 def texture_node(mat, filename):
@@ -1273,6 +1274,9 @@ def fit_equipment():
     persona = None
 
 
+SKULL_TREES = {}
+
+
 def conform_hair_to_head(hair, skin, clearance=.002, floor_z=1.50, max_distance=.09):
     """Lift the strands that would sit inside that character's own head.
 
@@ -1282,14 +1286,19 @@ def conform_hair_to_head(hair, skin, clearance=.002, floor_z=1.50, max_distance=
     each character's skin gives every head its own correction instead of one
     approximate global fit, and guarantees a visible hairline everywhere.
     """
-    depsgraph = bpy.context.evaluated_depsgraph_get()
-    evaluated = skin.evaluated_get(depsgraph)
-    mesh = evaluated.to_mesh()
-    matrix = skin.matrix_world
-    world_verts = [matrix @ v.co for v in mesh.vertices]
-    faces = [list(p.vertices) for p in mesh.polygons]
-    tree = BVHTree.FromPolygons(world_verts, faces)
-    evaluated.to_mesh_clear()
+    tree = SKULL_TREES.get(skin.name)
+    if tree is None:
+        # The ears are loose shells worn in several shapes (human by default,
+        # elf or pierced as accessories), so hair is fitted to the skull
+        # alone: it lies under whichever ear is worn, with one contour for
+        # all of them, instead of wrapping the pointed elf ear.
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        evaluated = skin.evaluated_get(depsgraph)
+        bm = bmesh.new(); bm.from_mesh(evaluated.to_mesh()); bm.transform(skin.matrix_world)
+        evaluated.to_mesh_clear()
+        ears = {v.index for shells in ear_islands(bm).values() for shell in shells for v in shell}
+        tree = SKULL_TREES[skin.name] = skull_tree(bm, ears)
+        bm.free()
     hair_matrix = hair.matrix_world
     inverse = hair_matrix.inverted()
     lifted = 0
@@ -1327,6 +1336,129 @@ def refine_seat_silhouette(selected):
             p.x*=1-.035*weight
             vertex.co=inverse @ p
         obj.data.update()
+
+
+def torus(name, center, u, v, radius, wire, mat, segments=28, sides=10):
+    """Closed ring of the circle center + radius*(cos t*u + sin t*v)."""
+    w = u.cross(v).normalized()
+    vertices = []
+    for i in range(segments):
+        t = TAU * i / segments
+        axis = u * math.cos(t) + v * math.sin(t)
+        for j in range(sides):
+            s = TAU * j / sides
+            vertices.append(tuple(center + axis * (radius + wire * math.cos(s)) + w * (wire * math.sin(s))))
+    faces = [(i * sides + j, i * sides + (j + 1) % sides,
+              ((i + 1) % segments) * sides + (j + 1) % sides, ((i + 1) % segments) * sides + j)
+             for i in range(segments) for j in range(sides)]
+    return mesh(name, vertices, faces, mat)
+
+
+def bead(name, center, radius, mat):
+    data = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=14, v_segments=8, radius=radius)
+    bmesh.ops.translate(bm, verts=bm.verts, vec=center)
+    bm.to_mesh(data); bm.free()
+    obj = bpy.data.objects.new(name, data)
+    bpy.context.scene.collection.objects.link(obj)
+    for polygon in data.polygons: polygon.use_smooth = True
+    return tag(obj, name, mat)
+
+
+def ear_copy(skin, name, ear_ids, positions=None):
+    """Copy of the skin keeping only the ear shells (materials, UVs, colours).
+
+    `positions` (vertex index -> world position) reshapes the copy; its
+    normals are then recomputed, shell by shell, from the new surface.
+    """
+    obj = skin.copy()
+    obj.data = skin.data.copy()
+    bpy.context.scene.collection.objects.link(obj)
+    for key in ['head_bounds_min', 'head_bounds_max', 'reference_skin_triangles']:
+        if key in obj: del obj[key]
+    inverse = obj.matrix_world.inverted()
+    bm = bmesh.new(); bm.from_mesh(obj.data); bm.verts.ensure_lookup_table()
+    for index, position in (positions or {}).items():
+        bm.verts[index].co = inverse @ position
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index not in ear_ids], context='VERTS')
+    bm.to_mesh(obj.data); bm.free()
+    if positions:
+        obj.data.normals_split_custom_set([(0, 0, 0)] * len(obj.data.loops))
+        for polygon in obj.data.polygons: polygon.use_smooth = True
+    obj.data.update()
+    obj['part'] = 'ears'
+    return tag(obj, name)
+
+
+def split_ears(selected):
+    """Human ears by default; the delivered elf ears become an accessory.
+
+    The delivered ears are loose shells sunk into the skull, so moving them out
+    of the welded skin opens no seam. Per character this makes:
+      * `persona / human ears` — the default, reshaped by human_ears.py;
+      * `elf-ears / pointed elf ears` — the delivered ears, untouched;
+      * `pierced-ears / ...` — the human ears again, with a few piercings.
+    Hair was fitted around the elf ears (the larger ones) before this step,
+    so every haircut keeps one contour whichever ears are worn.
+    """
+    global slot, item, persona
+    created = []
+    for skin in [obj for obj in selected if obj.get('part') == 'skin' and obj.get('fit_persona')]:
+        persona = skin['fit_persona']; gender = CHARACTERS[persona]
+        bm = bmesh.new(); bm.from_mesh(skin.data); bm.transform(skin.matrix_world)
+        sides = ear_islands(bm)
+        ear_ids = {v.index for shells in sides.values() for shell in shells for v in shell}
+        tree = skull_tree(bm, ear_ids)
+        human, outer_ids = {}, {}
+        for side, shells in sides.items():
+            verts = [v for shell in shells for v in shell]
+            local = {v.index: k for k, v in enumerate(verts)}
+            edges = [(local[e.verts[0].index], local[e.verts[1].index]) for e in bm.edges
+                     if e.verts[0].index in local and e.verts[1].index in local]
+            positions = humanize_points([v.co.copy() for v in verts], side, tree, edges)
+            for vertex, position in zip(verts, positions): human[vertex.index] = position
+            outer_ids[side] = [v.index for v in max(shells, key=len)]
+        bm.free()
+        slot, item = 'persona', persona
+        default = ear_copy(skin, f'{gender} • human ears', ear_ids, human)
+        default['ear_style'] = 'human'
+        slot, item = 'accessory', 'elf-ears'
+        elf = ear_copy(skin, f'{gender} / pointed elf ears', ear_ids)
+        elf['ear_style'] = 'elf'
+        slot, item = 'accessory', 'pierced-ears'
+        pierced = ear_copy(skin, f'{gender} / human ears', ear_ids, human)
+        pierced['ear_style'] = 'human'
+        created += [default, elf, pierced]
+        # Jewellery sits on the reshaped outer shell, with its own normals.
+        probe = bmesh.new(); probe.from_mesh(skin.data); probe.transform(skin.matrix_world)
+        probe.verts.ensure_lookup_table()
+        for index, position in human.items(): probe.verts[index].co = position
+        probe.normal_update()
+        for side, ids in outer_ids.items():
+            outer = []
+            for index in ids:
+                normal = probe.verts[index].normal.copy()
+                if normal.x * side < 0: normal.negate()
+                outer.append((probe.verts[index].co.copy(), normal))
+            name = 'left' if side > 0 else 'right'
+            for number, piece in enumerate(jewellery_layout(outer, side), 1):
+                finish = {'gold': GOLD, 'gem': GEM, 'steel': STEEL}[piece['finish']]
+                label = f'{gender} / {name} ear {piece["kind"]} {number}'
+                if piece['kind'] == 'hoop':
+                    obj = torus(label, piece['center'], piece['u'], piece['v'], piece['radius'], piece['wire'], finish)
+                else:
+                    obj = bead(label, piece['center'], piece['radius'], finish)
+                obj['part'] = 'jewellery'
+                created.append(obj)
+        probe.free()
+        bm = bmesh.new(); bm.from_mesh(skin.data)
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index in ear_ids], context='VERTS')
+        bm.to_mesh(skin.data); bm.free(); skin.data.update()
+        skin['ears'] = 'separate: persona human ears, accessory elf-ears / pierced-ears'
+    slot, item, persona = 'core', 'base', None
+    for obj in created: obj.select_set(True)
+    return created
 
 
 def export():
@@ -1394,6 +1526,8 @@ def export():
                 continue
             if skins.get(persona_id):
                 obj['conformed_vertices'] = conform_hair_to_head(obj, skins[persona_id])
+    # Last geometry step: every haircut is already fitted around the elf ears.
+    split_ears(list(bpy.context.selected_objects))
     bpy.ops.export_scene.gltf(filepath=str(OUT / 'catalogue.glb'), export_format='GLB', use_selection=True,
                               export_apply=True, export_yup=True, export_animations=False, export_extras=True)
     manifest = {}
