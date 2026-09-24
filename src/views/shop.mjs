@@ -12,11 +12,11 @@ export const SHOP_CATEGORIES = [
   { type: "hat", label: () => t("shop.cat.hat") },
   { type: "hair", label: () => t("shop.cat.hair") },
   { type: "hairColor", label: () => t("shop.cat.hairColor") },
+  { type: "eyeColor", label: () => t("shop.cat.eyeColor") },
   { type: "accessory", label: () => t("shop.cat.accessory") },
   { type: "pet", label: () => t("shop.cat.pet") },
   { type: "title", label: () => t("shop.cat.title") },
-  { type: "tone", label: () => t("shop.cat.skin") },
-  { type: "bespoke", label: () => t("shop.cat.custom") }
+  { type: "tone", label: () => t("shop.cat.skin") }
 ];
 
 export function renderShop(pupil, activeType, previewId = null) {

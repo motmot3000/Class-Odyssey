@@ -88,14 +88,17 @@ export const WEAPONS = [
   { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." }
 ];
 
-/* Short and Long are the delivered cuts, free and shared by both characters;
- * Bald and the Braid carry the first cosmetic unlocks. The old sculpted Afro
- * is withdrawn. */
+/* Short and Long are the delivered cuts, free and shared by both characters:
+ * a boy starts on Short, a girl on Long. The old sculpted Afro is withdrawn;
+ * the previous delivered Short became the Spiky unlock. */
 export const HAIRS = [
-  { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
+  { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "A classic short cut with a swept side fringe." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
+  { id: "medium-cut", name: "Medium Cut", minLevel: 3, price: 30, description: "A wavy medium-length cut with a side-swept fringe." },
   { id: "bald", name: "Bald", minLevel: 2, price: 20, description: "A clean fully shaved head." },
-  { id: "curly", name: "Braid", minLevel: 3, price: 30, description: "A neat long braid with bangs." }
+  { id: "curly", name: "Braid", minLevel: 3, price: 30, description: "A neat long braid with bangs." },
+  { id: "spiky", name: "Spiky Hair", minLevel: 6, price: 50, description: "Bold short hair with visible spikes." },
+  { id: "bun", name: "Bun", minLevel: 6, price: 50, description: "A twisted bun held by a gold pin, with a swept fringe." }
 ];
 
 export const HAIR_COLORS = [
@@ -108,16 +111,14 @@ export const HAIR_COLORS = [
   { id: "blue-hair", name: "Blue", minLevel: 5, price: 50, description: "Vivid blue hair." }
 ];
 
-export const BESPOKE_ITEMS = [
-  {
-    id: "custom-bespoke",
-    name: "Custom Item",
-    minLevel: 10,
-    price: 100,
-    type: "bespoke",
-    reward: "Custom Item",
-    description: "At level 10, create your own special item for 100 coins."
-  }
+/* Eye colours tint the delivered iris at runtime, so no extra mesh ships for
+ * them. Brown is the default every hero starts with. */
+export const EYE_COLORS = [
+  { id: "brown-eyes", name: "Brown", minLevel: 1, price: 0, color: "#6E4A2E", description: "Classic brown eyes." },
+  { id: "green-eyes", name: "Green", minLevel: 3, price: 30, color: "#2F4C36", description: "Fresh green eyes." },
+  { id: "blue-eyes", name: "Blue", minLevel: 4, price: 30, color: "#3B5E86", description: "Bright blue eyes." },
+  { id: "red-eyes", name: "Red", minLevel: 6, price: 50, color: "#7E3A34", description: "Striking red eyes." },
+  { id: "violet-eyes", name: "Violet", minLevel: 8, price: 50, color: "#63497F", description: "Mysterious violet eyes." }
 ];
 
 export const SKIN_TONES = [
@@ -134,9 +135,9 @@ export const SHOP_ITEMS = [
   ...WEAPONS.map((item) => ({ ...item, type: "weapon" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
+  ...EYE_COLORS.map((item) => ({ ...item, type: "eyeColor" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
-  ...SKIN_TONES.map((item) => ({ ...item, type: "tone" })),
-  ...BESPOKE_ITEMS
+  ...SKIN_TONES.map((item) => ({ ...item, type: "tone" }))
 ];
 
 const CLASS_NAMES = ["7P", "8P"];
@@ -616,7 +617,7 @@ export function getUnlockedTitles(level) {
 
 export function getRewardsForLevel(level) {
   const rewards = SHOP_ITEMS.filter((item) => item.minLevel === level).map((item) =>
-    item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.name
+    item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.type === "eyeColor" ? `${item.name} eye color` : item.name
   );
   if (level > 1) rewards.push("HP restored");
   return rewards;
@@ -673,6 +674,7 @@ function normalizePupil(pupil) {
   const defaultHair = gender === "girl" ? "long" : "short";
   const hair = HAIRS.some((item) => item.id === pupil.hair) ? pupil.hair : defaultHair;
   const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
+  const eyeColor = EYE_COLORS.some((item) => item.id === pupil.eyeColor) ? pupil.eyeColor : "brown-eyes";
   const starterItems = SHOP_ITEMS.filter((item) => item.price === 0).map((item) => item.id);
   const ownedItems = [...new Set([
     ...starterItems,
@@ -682,6 +684,7 @@ function normalizePupil(pupil) {
     weapon,
     hair,
     hairColor,
+    eyeColor,
     skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
@@ -714,6 +717,7 @@ function normalizePupil(pupil) {
     face: "smile",
     hair: ownedItems.includes(hair) ? hair : defaultHair,
     hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
+    eyeColor: ownedItems.includes(eyeColor) ? eyeColor : "brown-eyes",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
 }

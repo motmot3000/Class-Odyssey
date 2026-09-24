@@ -1,5 +1,5 @@
 import { getShopItem } from './domain.mjs';
-import { modeledItemIds, pupilLook, HAIR_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION } from './items-3d-model.mjs';
+import { modeledItemIds, pupilLook, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION } from './items-3d-model.mjs';
 import { escapeHtml, icon, renderTitle } from './ui.mjs';
 import { t, tItem } from './i18n.mjs';
 import { cachedHeroPortrait } from './portrait-runtime.mjs';
@@ -32,9 +32,9 @@ export function renderItemThumbnail(item, { className = 'item-thumbnail' } = {})
   // Titles have no 3D model: show the real, tier-styled title instead of a plain chip.
   if (item.type === 'title') return `<span class="shop-title-thumb">${renderTitle({ title: item.id })}</span>`;
   const canonical = getShopItem(item.id);
-  const color = item.type === 'hairColor' ? HAIR_PALETTE[item.id] : item.type === 'tone' ? canonical?.color : null;
+  const color = item.type === 'hairColor' ? HAIR_PALETTE[item.id] : item.type === 'eyeColor' ? EYE_PALETTE[item.id] : item.type === 'tone' ? canonical?.color : null;
   if (color && /^#[\da-f]{6}$/i.test(color)) return `<span class="cosmetic-swatch" style="--swatch:${color}" aria-hidden="true"></span>`;
-  const symbol = item.type === 'bespoke' ? 'palette' : item.type === 'face' ? 'spark' : 'close';
+  const symbol = item.type === 'face' ? 'spark' : 'close';
   return `<span class="empty-slot-preview" aria-hidden="true">${icon(symbol)}</span>`;
 }
 

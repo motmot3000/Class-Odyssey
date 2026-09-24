@@ -116,13 +116,19 @@ test("a new class can be created with a name and its first students", () => {
 });
 
 test("the shared haircuts ship with Bald and the Braid", () => {
-  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
+  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "medium-cut", "bald", "curly", "spiky", "bun"]);
   assert.equal(getShopItem("short").price, 0);
   assert.equal(getShopItem("long").price, 0);
+  assert.equal(getShopItem("medium-cut").minLevel, 3);
+  assert.equal(getShopItem("medium-cut").price, 30);
   assert.equal(getShopItem("bald").minLevel, 2);
   assert.equal(getShopItem("bald").price, 20);
   assert.equal(getShopItem("curly").minLevel, 3);
   assert.equal(getShopItem("curly").price, 30);
+  assert.equal(getShopItem("spiky").minLevel, 6);
+  assert.equal(getShopItem("spiky").price, 50);
+  assert.equal(getShopItem("bun").minLevel, 6);
+  assert.equal(getShopItem("bun").price, 50);
   assert.equal(getShopItem("braided"), null);
   assert.equal(getShopItem("royal-hair"), null);
   assert.equal(getShopItem("wink"), null);
@@ -141,9 +147,11 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
     "classy-hat": "Classy Hat",
     short: "Short Hair",
     long: "Long Hair",
+    "medium-cut": "Medium Cut",
     bald: "Bald",
     curly: "Braid",
-    "custom-bespoke": "Custom Item"
+    spiky: "Spiky Hair",
+    bun: "Bun"
   };
 
   for (const [id, name] of Object.entries(names)) {
@@ -152,9 +160,9 @@ test("shop item names use simple English for 7P and 8P pupils", () => {
 
   for (const removedId of [
     "shadow-hood", "winged-circlet", "star-cowl", "grand-archmage", "realm-sovereign",
-    "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair", "monk-cut", "spiky", "buzz-cut", "grin",
+    "astral-scepter", "wisdom-relic", "ponytail", "flowing", "celestial-hair", "monk-cut", "buzz-cut", "grin",
     "smile", "wink", "cool", "evil", "star-eyes", "transcendent",
-    "braided", "royal-hair",
+    "braided", "royal-hair", "straight-short",
     "star-shield", "lore-lantern", "spell-grimoire", "dual-daggers", "pencil-sword", "word-wand", "swords-and-shield",
     "golden-skin", "red-skin", "green-skin", "blue-skin"
   ]) {
@@ -265,10 +273,10 @@ test("shop covers all categories with regular level unlocks up to level 10", () 
     assert.ok(items.length > 0);
     assert.ok(items.some((item) => item.minLevel >= 6));
   }
-  // Faces are withdrawn; Items only keeps the empty-hands state; hair and
-  // skin tones stop at the first unlocks. None of them carries a level-6 item.
+  // Faces are withdrawn; Items only keeps the empty-hands state. Hair unlocks
+  // run up to the level-6 Spiky and Bun; skin tones stop at the first unlocks.
   assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
-  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "bald", "curly"]);
+  assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "medium-cut", "bald", "curly", "spiky", "bun"]);
   assert.equal(getShopItems("tone").length, 5);
 });
 
@@ -328,7 +336,7 @@ test("hair colors unlock at the requested levels and keep the haircut through pu
 
 test("old saves fall back from removed cosmetics and missing or invalid hair colors", () => {
   for (const gender of ["boy", "girl"]) {
-    for (const [hair, skinTone] of [["monk-cut", "red-skin"], ["spiky", "green-skin"], ["buzz-cut", "blue-skin"]]) {
+    for (const [hair, skinTone] of [["monk-cut", "red-skin"], ["straight-short", "green-skin"], ["buzz-cut", "blue-skin"]]) {
       const state = createInitialState();
       const pupil = getCurrentClass(state).pupils[0];
       Object.assign(pupil, { gender, hair, skinTone, face: "grin", ownedItems: [hair, skinTone, "grin"] });
@@ -348,44 +356,47 @@ test("old saves fall back from removed cosmetics and missing or invalid hair col
   }
 });
 
-test("bespoke item costs 100 money and requires level 10", () => {
-  const item = getShopItem("custom-bespoke");
-  assert.ok(item);
-  assert.equal(item.minLevel, 10);
-  assert.equal(item.price, 100);
-  assert.equal(item.type, "bespoke");
+test("the custom category is withdrawn and no bespoke item remains", () => {
+  assert.equal(getShopItem("custom-bespoke"), null);
+  assert.deepEqual(getShopItems("bespoke"), []);
+});
 
-  let state = createInitialState();
-  const pupilId = getCurrentClass(state).pupils[0].id;
-  state = awardMoney(state, [pupilId], 200, "treasure");
-
-  // At level 1, cannot buy
-  let pupil = getPupilById(state, pupilId);
-  assert.equal(canBuyItem(pupil, item), false);
-  let nextState = purchaseItem(state, pupilId, "custom-bespoke", "Épée du Tonnerre");
-  assert.equal(nextState, state);
-
-  // Level up to 10
-  for (let i = 1; i < 10; i++) {
-    state = awardXp(state, [pupilId], xpNeededForLevel(i), "levelup");
+test("eye colours unlock at the requested levels and keep the haircut through purchases and saves", () => {
+  assert.deepEqual(getShopItems("eyeColor").map((item) => item.id), ["brown-eyes", "green-eyes", "blue-eyes", "red-eyes", "violet-eyes"]);
+  for (const [itemId, minLevel, price] of [
+    ["green-eyes", 3, 30], ["blue-eyes", 4, 30], ["red-eyes", 6, 50], ["violet-eyes", 8, 50]
+  ]) {
+    let state = createInitialState();
+    const pupilId = getCurrentClass(state).pupils[1].id;
+    const item = getShopItem(itemId);
+    assert.equal(item.type, "eyeColor");
+    assert.equal(item.minLevel, minLevel);
+    assert.equal(item.price, price);
+    state = awardMoney(state, [pupilId], price, "reward");
+    for (let level = 1; level < minLevel - 1; level++) {
+      state = awardXp(state, [pupilId], xpNeededForLevel(level), "level up");
+    }
+    assert.equal(purchaseItem(state, pupilId, itemId), state);
+    state = updateCosmetics(state, pupilId, { eyeColor: itemId });
+    assert.equal(getPupilById(state, pupilId).eyeColor, "brown-eyes");
+    state = awardXp(state, [pupilId], xpNeededForLevel(minLevel - 1), "level up");
+    assert.equal(canBuyItem({ ...getPupilById(state, pupilId), money: price - 1 }, item), false);
+    state = purchaseItem(state, pupilId, itemId);
+    state = importState(JSON.stringify(state));
+    const pupil = getPupilById(state, pupilId);
+    assert.equal(pupil.eyeColor, itemId);
+    assert.equal(pupil.hair, "long");
+    assert.equal(isItemOwned(pupil, itemId), true);
   }
-  pupil = getPupilById(state, pupilId);
-  assert.equal(pupil.level, 10);
-  assert.equal(canBuyItem(pupil, item), true);
+});
 
-  // Purchase bespoke item
-  nextState = purchaseItem(state, pupilId, "custom-bespoke", "Épée du Tonnerre");
-  const updated = getPupilById(nextState, pupilId);
-  assert.equal(updated.money, 100);
-  assert.equal(isItemOwned(updated, "custom-bespoke"), true);
-  assert.equal(updated.customOrders.length, 1);
-  assert.equal(updated.customOrders[0].note, "Épée du Tonnerre");
-  assert.equal(updated.customOrders[0].cost, 100);
-  assert.ok(nextState.events.some((e) => e.type === "bespoke_order"));
-
-  nextState = purchaseItem(nextState, pupilId, "custom-bespoke", "Cape des Étoiles");
-  assert.equal(getPupilById(nextState, pupilId).money, 0);
-  assert.equal(getPupilById(nextState, pupilId).customOrders.length, 2);
+test("brown is the default eye colour and old saves fall back to it", () => {
+  const state = createInitialState();
+  const pupil = getCurrentClass(state).pupils[0];
+  assert.equal(pupil.eyeColor, "brown-eyes");
+  assert.equal(isItemOwned(pupil, "brown-eyes"), true);
+  pupil.eyeColor = "unknown-eyes";
+  assert.equal(getPupilById(normalizeState(state), pupil.id).eyeColor, "brown-eyes");
 });
 
 test("clicking a pupil replaces the previous selection and clicking again clears it", () => {

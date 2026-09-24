@@ -42,17 +42,30 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v4' if STYLIZED else 'catalogue-v8-scoped-cosmetics'
+APPEARANCE_REVISION = 'stylized-v5' if STYLIZED else 'catalogue-v9-shared-hair'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
-HAIR_ITEMS = ['short', 'long', 'curly', 'braided', 'royal-hair']
+HAIR_ITEMS = ['short', 'long', 'medium-cut', 'curly', 'spiky', 'bun', 'braided', 'royal-hair']
 if 'HAIR_ITEMS' in os.environ:
     _wanted = {name.strip() for name in os.environ['HAIR_ITEMS'].split(',') if name.strip()}
     HAIR_ITEMS = [name for name in HAIR_ITEMS if name in _wanted]
 # Delivered cuts (source file, item id), fitted to every head. Authored-in-
-# Blender families are sculpted per item id.
-SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'short'), ('curly', 'curly')]
+# Blender families are sculpted per item id. The previous delivered `short`
+# (boy source) is now the `spiky` unlock; the new delivered `short` is the
+# sculpted straight cut grown on the measured skulls by
+# tools/blender/sculpt_straight_short.py.
+SUPPLIED_HAIR = [('girl', 'long'), ('boy', 'spiky'), ('medium-cut', 'medium-cut'),
+                 ('curly', 'curly'), ('straight-short', 'short'),
+                 ('bun', 'bun')]
+# The sculpted short cut already stops on the measured ear contour, so the
+# generic ear clearance (which squeezes locks toward the skull and crumpled
+# the first supplied plates) is skipped; it is still conformed to the skin.
+CONFORMED_HAIR = {'short'}
+# Cuts that carry a per-vertex shade (darker roots, per-strand tone). Their
+# material multiplies it into the shop hair colour, and glTF exports it as
+# COLOR_0, which the viewer multiplies by the colour it sets on `Hair /`.
+SHADED_HAIR = {'short'}
 SCULPTED_HAIR = ['braided', 'royal-hair']
 REFINED = ROOT / 'assets' / 'characters-refit' / 'textures'
 HAIR_REFIT = ROOT / 'assets' / 'characters-refit' / 'hair'
@@ -982,14 +995,19 @@ def hairstyles(source):
         # The delivered cuts wear the app hair material: the shared normal and
         # roughness maps keep the strands readable, and the viewer recolours
         # every 'Hair /' material from the shop palette.
-        hair_material = HAIR
+        hair_material = HAIR_SHADED if hair_id in SHADED_HAIR else HAIR
         for obj in imported:
             if obj.type != 'MESH': continue
             matrix = obj.matrix_world.copy()
             obj.parent = None
             obj.data.transform(matrix)
             obj.matrix_world = Matrix.Identity(4)
-            tag(obj, f'{gender} / supplied hairstyle', hair_material)
+            if hair_id in SHADED_HAIR:
+                # The importer names COLOR_0 'Color'; the shaded material reads it.
+                obj.data.color_attributes[0].name = 'HairShade'
+            # The Bun's pin is jewellery, not hair: it keeps its gold whatever
+            # hair colour the shop applies.
+            tag(obj, f'{gender} / supplied hairstyle', GOLD if 'hair pin' in obj.name else hair_material)
         for obj in imported:
             if obj.type != 'MESH': bpy.data.objects.remove(obj, do_unlink=True)
     # Close the exposed occiput behind the approved outer locks with a fitted,
@@ -1014,7 +1032,10 @@ def hairstyles(source):
             # The ported cuts keep their locks: only the crown volume tucks in
             # under the band. Squeezing the whole head used to pull the fringe
             # through the forehead, which is exactly the clipping we measure.
-            entry = max(0, min(1, (co.z-(1.712 if item == 'curly' else 1.650))/(.020 if item == 'curly' else .029)))
+            # The ported cuts (Braid, Bun) only tuck from the band up, so the
+            # Bun's chignon, entirely below 1.69 m, stays whole under a crown.
+            ported = item in ('curly', 'bun')
+            entry = max(0, min(1, (co.z-(1.712 if ported else 1.650))/(.020 if ported else .029)))
             exit = max(0, min(1, (1.831-co.z)/.031))
             weight = (entry*entry*(3-2*entry)) * (exit*exit*(3-2*exit))
             radial = math.hypot(co.x/.108, (co.y-HEAD_FIT['center_y'])/.132)
@@ -1332,7 +1353,8 @@ def export():
             if obj.get('shop_slot') == 'hair':
                 if 'filled posterior hair' in obj.name and skins.get(persona_id):
                     fit_posterior_hair(obj, skins[persona_id])
-                clear_ear_space(obj)
+                if obj.get('shop_id') not in CONFORMED_HAIR:
+                    clear_ear_space(obj)
                 # The occiput filler lives inside the skull on purpose; every
                 # other variant is measured against this character's skin and
                 # lifted out of it, so Noa and Mila each get an exact hairline.
@@ -1357,6 +1379,21 @@ def export():
             if not gender: continue
             apply_body_shape(obj, gender, 'v1')
             apply_body_shape(obj, gender, 'v2')
+        # The two sculpted short cuts get the same per-character skin
+        # conformance as the live stylized base, so the production reference
+        # and its thumbnails agree. They are authored clear of the ear.
+        skins = {obj.get('fit_persona'): obj for obj in bpy.context.selected_objects
+                 if obj.get('part') == 'skin' and obj.get('fit_persona')}
+        for obj in bpy.context.selected_objects:
+            persona_id = obj.get('fit_persona')
+            if obj.get('shop_slot') != 'hair' or obj.get('shop_id') not in CONFORMED_HAIR:
+                continue
+            # `covered` is bisected flush with the hat plane below; conforming it
+            # would push the clipped crown back through that plane.
+            if obj.get('hat_fit') == 'covered':
+                continue
+            if skins.get(persona_id):
+                obj['conformed_vertices'] = conform_hair_to_head(obj, skins[persona_id])
     bpy.ops.export_scene.gltf(filepath=str(OUT / 'catalogue.glb'), export_format='GLB', use_selection=True,
                               export_apply=True, export_yup=True, export_animations=False, export_extras=True)
     manifest = {}
@@ -1416,6 +1453,26 @@ HAIR_DARK = material('Hair / shadow strands', '#493829', .57)
 HAIR_LIGHT = material('Hair / highlight strands', '#645039', .50)
 surface_maps(HAIR, OUT/'textures/hair-normal.png', OUT/'textures/hair-roughness.png', .32)
 HAIR.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value=.32
+
+
+def shaded_hair_material():
+    """Shop hair material whose colour is multiplied by the lock shade."""
+    mat = HAIR.copy()
+    mat.name = 'Hair / sculpted fibres'
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    shader = nodes.get('Principled BSDF')
+    shade = nodes.new('ShaderNodeVertexColor')
+    shade.layer_name = 'HairShade'
+    mix = nodes.new('ShaderNodeMix')
+    mix.data_type, mix.blend_type = 'RGBA', 'MULTIPLY'
+    mix.inputs['Factor'].default_value = 1.0
+    mix.inputs[6].default_value = shader.inputs['Base Color'].default_value[:]
+    links.new(shade.outputs['Color'], mix.inputs[7])
+    links.new(mix.outputs[2], shader.inputs['Base Color'])
+    return mat
+
+
+HAIR_SHADED = shaded_hair_material()
 for persona in CHARACTERS:
     garments(bases[persona]['shirt'])
 persona = None

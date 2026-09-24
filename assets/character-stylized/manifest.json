@@ -1,5 +1,5 @@
 {
-  "appearanceRevision": "stylized-v4",
+  "appearanceRevision": "stylized-v5",
   "sourceRevision": "base-v2-2026-09",
   "sourcePose": {
     "armsFromT": 82,
@@ -23,8 +23,11 @@
     "outfit:story-keeper": 114,
     "outfit:honor-knight": 114,
     "hair:long": 36,
-    "hair:short": 6,
+    "hair:spiky": 6,
+    "hair:medium-cut": 6,
     "hair:curly": 12,
+    "hair:short": 12,
+    "hair:bun": 30,
     "hat:explorer-cap": 12,
     "hat:sunglasses": 14,
     "hat:feather-beret": 10,

@@ -20,21 +20,44 @@ Le **catalogue de cosmétiques est réduit** :
 - **Objets** : catégorie retirée (armes, boucliers, livre, lanterne). L'état
   interne `no-weapon` subsiste pour les sauvegardes, sans onglet.
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
-  personnages — un garçon en Long reçoit la coupe longue livrée adaptée à sa
-  tête, une fille en Short la coupe courte livrée adaptée à la sienne. **Bald**
-  (niveau 2, 20) et **Tresse** (niveau 3, 30, coupe portée avec frange et
-  longue natte, `characters-refit/hair/curly.glb`) sont les premiers
-  déblocages. L'ancien Afro sculpté, Braids et Royal Hair sont retirés.
+  personnages — un garçon démarre en Short (coupe courte sculptée), une fille en
+  Long. **Chauve** (niveau 2, 20), **Tresse** (niveau 3, 30, coupe portée avec
+  frange et longue natte, `characters-refit/hair/curly.glb`) et **Medium Cut**
+  (niveau 3, 30, `characters-refit/hair/medium-cut.glb`) suivent, puis
+  **Spiky Hair** (niveau 6, 50, l'ancienne coupe courte livrée) et **Chignon**
+  (niveau 6, 50, `characters-refit/hair/bun.glb`, épingle dorée). L'ancien Afro
+  sculpté, Braids et Royal Hair sont retirés.
 - **Visages** : catégorie supprimée ; l'expression vient de la base 3D.
+- **Yeux** : cinq couleurs — **brun** par défaut, **vert** (niveau 3, 30),
+  **bleu** (niveau 4, 30), **rouge** (niveau 6, 50) et **violet** (niveau 8,
+  50). La couleur est appliquée à l'iris livré en temps réel (teinte et
+  saturation), sans modèle supplémentaire. La catégorie **Personnalisé** est
+  retirée.
 - **Teints** : tatouages et Peau dorée retirés ; les cinq teints naturels
   restent.
 - **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
   une identité visuelle propre (accent et badge distincts, `data-title-id`).
 
-Les coupes partagées utilisent les deux coiffures livrées
+Les coupes partagées utilisent les coiffures livrées et portées
 (`SUPPLIED_HAIR`), ajustées à chaque tête par la transformation du siège de
 chapeau ; `SCULPTED_HAIR` reste réservé aux familles sculptées dans Blender.
-`HAIR_ITEMS=short,long,curly` limite le build à ces trois familles.
+La coupe courte `short` est sculptée par
+`tools/blender/sculpt_straight_short.py` : raie sur le côté, frange balayée en
+diagonale avec du volume à la racine, dessus plus fourni, côtés près du crâne et
+nuque dégradée. Les mèches poussent sur le crâne mesuré de Noa et Mila, en
+faisceaux qui se séparent en pointes fines. Le contour suit la silhouette
+latérale mesurée de l'oreille (patte devant, arc net au-dessus, dégradé
+derrière) et les mèches se plaquent en l'approchant. Une nuance par sommet
+(racines plus sombres, ton propre à chaque mèche) multiplie la couleur de
+cheveux choisie en boutique (`Hair / sculpted fibres`, exporté en `COLOR_0`).
+Elle ne passe donc pas par le dégagement d'oreille générique ; seule la
+conformation à la peau s'applique.
+
+```sh
+blender -b --factory-startup --python-exit-code 1 --python tools/blender/sculpt_straight_short.py
+```
+
+`HAIR_ITEMS=short,long,medium-cut,curly,spiky,bun` limite le build à ces familles.
 
 La **couleur de peau** est fonctionnelle : une seule peau est cuite (médium) et
 le viewer multiplie son albédo par le teint cible (`SKIN_TONE_COLORS` dans
@@ -45,7 +68,7 @@ Peaux de la boutique.
 Pour reconstruire la base stylisée :
 
 ```sh
-STYLIZED=1 HAIR_ITEMS=short,long,curly blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
+STYLIZED=1 HAIR_ITEMS=short,long,medium-cut,curly,spiky,bun blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
 ```
 
 L'atelier autonome peut inspecter n'importe quelle base : `items-3d.html?model=/assets/character-stylized/catalogue.glb`.
@@ -140,8 +163,12 @@ Les sélections utilisent directement les identifiants et les prix de
   Crown, Helmet, Classy Hat, Royal Crown.
 - **Objets** : catégorie retirée ; Empty Hands reste l’état interne
   (`no-weapon`) sans onglet.
-- **4 coiffures** : Short Hair et Long Hair (livrées, gratuites et partagées),
-  Bald (niveau 2, 20) et Braid (niveau 3, 30, frange et longue natte).
+- **6 coiffures** : Short Hair (livrée, gratuite, par défaut des garçons) et
+  Long Hair (livrée, gratuite, par défaut des filles), Bald (niveau 2, 20),
+  Braid (niveau 3, 30), Medium Cut (niveau 3, 30), Spiky Hair (niveau 6, 50) et
+  Bun (niveau 6, 50).
+- **5 couleurs d'yeux** : Brown (défaut), Green (niveau 3, 30), Blue (niveau 4,
+  30), Red (niveau 6, 50) et Violet (niveau 8, 50).
 - **7 couleurs de cheveux** : Brown, Blond, Black, White, Red, Green, Blue.
 - **5 teints naturels** et **9 titres**.
 - No Hat et Empty Hands retirent les objets de leur emplacement.

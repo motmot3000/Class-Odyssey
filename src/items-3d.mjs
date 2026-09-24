@@ -1,6 +1,6 @@
 import { getShopItems, getShopItem } from './domain.mjs';
 import { renderHero } from './avatar.mjs';
-import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds, BASE_CATALOGUE_URL } from './items-3d-model.mjs';
+import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, EYE_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds, BASE_CATALOGUE_URL } from './items-3d-model.mjs';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -29,7 +29,7 @@ function renderChoices() {
   const field = CATEGORIES.find(entry => entry.type === category).field;
   $('#choices').innerHTML = getShopItems(category).map(item => `
     <button class="choice" data-item="${item.id}" type="button" aria-pressed="${look[field] === item.id}" ${controlsReady ? '' : 'disabled'}>
-      ${category === 'hairColor' ? `<span class="swatch" style="--hair-color:${HAIR_PALETTE[item.id]}" aria-hidden="true"></span>` : '<span class="selection-dot" aria-hidden="true"></span>'}
+      ${category === 'hairColor' ? `<span class="swatch" style="--hair-color:${HAIR_PALETTE[item.id]}" aria-hidden="true"></span>` : category === 'eyeColor' ? `<span class="swatch" style="--hair-color:${EYE_PALETTE[item.id]}" aria-hidden="true"></span>` : '<span class="selection-dot" aria-hidden="true"></span>'}
       <span><strong>${item.name}</strong><small>Niveau ${item.minLevel}${look[field] === item.id ? ' · Équipé' : ''}</small></span>
       <span class="price">${item.price ? `${item.price} pièces` : 'Gratuit'}</span>
     </button>`).join('');

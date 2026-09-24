@@ -1,8 +1,55 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
+import { visiblePart, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
 import { renderPortraitImage } from './portrait-image.mjs';
+
+// Eye colours re-tint the delivered iris map in plain sRGB: every coloured
+// pixel keeps its natural shading (its luminance) but takes the target hue, so
+// the pupil, limbal ring and catchlight survive and the iris still reads as a
+// real eye rather than a flat wash. One texture is baked per colour.
+const irisTextures = new Map();
+// Mid-luminance of the delivered iris; pixels around it land exactly on the
+// target colour, brighter fibres lighten and the shaded rim darkens.
+const IRIS_REFERENCE_LUMA = 0.30;
+function srgbFromHex(hex) {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return { r: ((value >> 16) & 255) / 255, g: ((value >> 8) & 255) / 255, b: (value & 255) / 255 };
+}
+function recolorIris(source, hex) {
+  if (!source?.image || typeof document === 'undefined') return null;
+  const key = `${source.uuid}|${hex}`;
+  if (irisTextures.has(key)) return irisTextures.get(key);
+  const size = source.image.width || 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(source.image, 0, 0, size, size);
+  const image = context.getImageData(0, 0, size, size);
+  const data = image.data;
+  const target = srgbFromHex(hex);
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const lightness = (max + min) / 2;
+    const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * lightness - 1));
+    // Leave the pupil (dark), the catchlight (white) and the sclera alone.
+    if (saturation <= 0.18 || lightness <= 0.12 || lightness >= 0.90) continue;
+    const ratio = Math.min(1.25, Math.max(0.4, (0.299 * r + 0.587 * g + 0.114 * b) / IRIS_REFERENCE_LUMA));
+    data[i] = Math.min(255, Math.round(target.r * ratio * 255));
+    data[i + 1] = Math.min(255, Math.round(target.g * ratio * 255));
+    data[i + 2] = Math.min(255, Math.round(target.b * ratio * 255));
+  }
+  context.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.flipY = source.flipY;
+  texture.wrapS = source.wrapS;
+  texture.wrapT = source.wrapT;
+  irisTextures.set(key, texture);
+  return texture;
+}
 
 // The single baked body is multiplied by the target skin tone. Ratios are
 // computed in linear working space so the result matches the tone palette.
@@ -116,6 +163,12 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
             mat.color.set(HAIR_PALETTE[look.hairColor] || HAIR_PALETTE['brown-hair']);
             if (mat.name.includes('shadow')) mat.color.multiplyScalar(.78);
             if (mat.name.includes('highlight')) mat.color.multiplyScalar(1.18);
+            continue;
+          }
+          if (mat.name.toLowerCase().includes('iris')) {
+            if (!mat.userData.irisSource) mat.userData.irisSource = mat.map;
+            const tinted = recolorIris(mat.userData.irisSource, EYE_PALETTE[look.eyeColor] || EYE_PALETTE['brown-eyes']);
+            if (tinted && mat.map !== tinted) { mat.map = tinted; mat.color.set(0xffffff); mat.needsUpdate = true; }
             continue;
           }
           if (!mat.userData?.base_skin_map && !mat.userData?.skin_plain) continue;

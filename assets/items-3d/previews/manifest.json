@@ -1,12 +1,18 @@
 {
-  "revision": "catalogue-v8-scoped-cosmetics",
-  "catalogueSha256": "07a1033bebfa53b81d96e22678c998ce9b85757eecee5b0ef85eb55caa3cbbee",
+  "revision": "catalogue-v9-shared-hair",
+  "catalogueSha256": "d1eba8ffa627975a036d4cbf16165edac502791e9ef95643e479901924552cbc",
   "renderSource": "catalogue.blend",
   "items": {
+    "bun": {
+      "slot": "hair",
+      "file": "items/bun.webp",
+      "meshCount": 5,
+      "containsBody": false
+    },
     "curly": {
       "slot": "hair",
       "file": "items/curly.webp",
-      "meshCount": 1,
+      "meshCount": 2,
       "containsBody": false
     },
     "long": {
@@ -15,9 +21,21 @@
       "meshCount": 2,
       "containsBody": false
     },
+    "medium-cut": {
+      "slot": "hair",
+      "file": "items/medium-cut.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
     "short": {
       "slot": "hair",
       "file": "items/short.webp",
+      "meshCount": 2,
+      "containsBody": false
+    },
+    "spiky": {
+      "slot": "hair",
+      "file": "items/spiky.webp",
       "meshCount": 1,
       "containsBody": false
     },
@@ -108,8 +126,8 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
-      "bytes": 50418
+      "renderer": "Three.js, stylized-v5, daylight, full silhouette",
+      "bytes": 40890
     },
     "female": {
       "file": "portraits/female.webp",
@@ -118,9 +136,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
-      "bytes": 52704
+      "renderer": "Three.js, stylized-v5, daylight, full silhouette",
+      "bytes": 42328
     }
   },
-  "portraitRevision": "stylized-v4-front-hd"
+  "portraitRevision": "stylized-v5-front-hd"
 }

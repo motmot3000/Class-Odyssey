@@ -43,13 +43,13 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
   for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 16);
+  assert.equal(modeledItemIds().length, 19);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
     assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair'].includes(node.extras.shop_slot));
     assert.ok(['male','female'].includes(node.extras.fit_persona), `Missing body fit: ${node.name}`);
   }
-  for (const id of ['spiky', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
+  for (const id of ['straight-short', 'spiky-short', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
   assert.equal(gltf.skins?.length || 0, 0);
 });
 
@@ -115,15 +115,15 @@ test('hat fit, haircuts and both personas select exactly one variant from actual
 test('the shared haircuts ship while Braids and Royal Hair stay out', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
   const shipped = [...new Set(parts.filter(part => part.shop_slot === 'hair').map(part => part.shop_id))].sort();
-  assert.deepEqual(shipped, ['curly', 'long', 'short']);
-  for (const hair of ['short', 'long', 'curly']) {
+  assert.deepEqual(shipped, ['bun', 'curly', 'long', 'medium-cut', 'short', 'spiky']);
+  for (const hair of ['short', 'long', 'medium-cut', 'curly', 'spiky', 'bun']) {
     for (const persona of ['male', 'female']) {
       const visible = parts.filter(part => part.shop_slot === 'hair' && part.fit_persona === persona
         && visiblePart(part, { ...DEFAULT_LOOK, persona, hair }));
       assert.ok(visible.length > 0, `${persona} must wear ${hair}`);
     }
   }
-  for (const removed of ['braided', 'royal-hair']) {
+  for (const removed of ['braided', 'royal-hair', 'straight-short']) {
     assert.ok(!parts.some(part => part.shop_id === removed), `${removed} is withdrawn`);
   }
 });
@@ -204,7 +204,7 @@ test('both base characters have a slightly slimmer posterior hip profile', () =>
 
 test('open crowns keep complete hairstyles instead of chopping off the top of the hair', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
-  for (const hair of ['short', 'long']) {
+  for (const hair of ['short', 'long', 'medium-cut', 'spiky', 'bun']) {
     for (const hat of ['gold-crown', 'celestial-crown']) {
       const visible = parts.filter(part => part.shop_slot === 'hair' && visiblePart(part, { ...DEFAULT_LOOK, hair, hat }));
       assert.ok(visible.length > 0);
@@ -217,7 +217,7 @@ test('the shipped catalogue ships the supplied haircuts and a plain starter outf
   const gltf = readGlb();
   const nodes = gltf.nodes.filter(node => node.mesh !== undefined);
   const hairs = new Set(nodes.filter(node => node.extras?.shop_slot === 'hair').map(node => node.extras.shop_id));
-  assert.deepEqual([...hairs].sort(), ['curly', 'long', 'short']);
+  assert.deepEqual([...hairs].sort(), ['bun', 'curly', 'long', 'medium-cut', 'short', 'spiky']);
   for (const banned of ['neckerchief', 'scout scarf', 'compass fastening']) {
     assert.ok(!nodes.some(node => node.name.toLowerCase().includes(banned)), `starter outfit still contains ${banned}`);
   }

@@ -1,0 +1,60 @@
+{
+  "revision": "refit-hair-v2-front",
+  "source": "beautiful-hair-1.zip",
+  "sourceMember": "source/HairTest.zip",
+  "sourceObject": "Hair",
+  "sourceObjSha256": "6a3345c56e6c401f63fade6e69bfd2e872a8732a1d6261e8d0bb9a20889206c2",
+  "sourceTexture": "source/HairTest.zip/Hair4.png",
+  "sourceTextureSha256": "fe9ae1e22b213ea9ab25144ad4a3e188bf8875fb4ab956647aed6f3bfdeca0ba",
+  "attribution": "User-supplied model; the archive carries no author or licence notice.",
+  "sourceHeadRemoved": false,
+  "sourceHairTriangles": 9708,
+  "optimizedHairTriangles": 22857,
+  "sourceVertices": 10154,
+  "front": {
+    "rebuilt": true,
+    "generator": "tools/medium_cut_locks.py",
+    "seed": 7,
+    "sourceIslandsDroppedAheadOfY": -0.005,
+    "keptBackVertices": 6063,
+    "generatedVertices": 12042
+  },
+  "sourcePolygons": 5066,
+  "coordinates": "Authored frame: Blender Z up, front -Y; glTF Y up, front +Z; metres",
+  "fit": {
+    "scale": [
+      1.001398311,
+      0.931195749,
+      1.0
+    ],
+    "authoredScale": [
+      0.998603642,
+      1.073888063,
+      1.0
+    ],
+    "authoredShift": [
+      0.0,
+      0.005275651,
+      0.004000068
+    ],
+    "seatShift": [
+      0.0,
+      -0.004,
+      -0.015
+    ],
+    "seat": "measured on the boy head, then mapped authored -> each character"
+  },
+  "bounds": {
+    "min": [
+      -0.14551,
+      -0.16542,
+      1.49427
+    ],
+    "max": [
+      0.14282,
+      0.17349,
+      1.76427
+    ]
+  },
+  "output": "medium-cut.glb"
+}

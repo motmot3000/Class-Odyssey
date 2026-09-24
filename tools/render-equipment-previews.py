@@ -96,7 +96,8 @@ for persona, hair in [('male','short'),('female','long')]:
     selected = set_visibility(lambda obj: obj.get('fit_persona') == persona and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
     frame(selected,768,1152,front=True)
     render(f'portraits/{persona}.png')
-    report['portraits'][persona] = {'file':f'portraits/{persona}.webp','pose':'base-v2-arms-lowered','view':'front','width':768,'height':1152,'hair':hair}
+    report['portraits'][persona] = {'file':f'portraits/{persona}.webp','pose':'base-v2-arms-lowered','view':'front','width':768,'height':1152,'hair':hair,
+                                    'renderer':f"Three.js, {manifest_revision(ROOT/'assets/character-stylized/manifest.json')}, daylight, full silhouette",'bytes':0}
     if not PORTRAITS_ONLY:
         frame(selected,600,600,'head')
         render(f'review/{persona}-head.png')

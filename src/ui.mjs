@@ -172,6 +172,7 @@ export function translateReward(reward) {
     if (reward === item.name) return name;
     if (reward === `${item.name} title`) return t("reward.title", { name });
     if (reward === `${item.name} hair color`) return t("reward.hairColor", { name });
+    if (reward === `${item.name} eye color`) return t("reward.eyeColor", { name });
   }
   return translateMessage(reward);
 }

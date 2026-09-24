@@ -186,6 +186,7 @@ export const messages = {
   "reward.hp": ["PV restaurés", "HP restored"],
   "reward.title": ["Titre : {name}", "{name} title"],
   "reward.hairColor": ["Couleur des cheveux : {name}", "{name} hair color"],
+  "reward.eyeColor": ["Couleur des yeux : {name}", "{name} eye color"],
   "notice.signedOutNamed": ["Déconnexion de {name}.", "Signed out of {name}."],
   "notice.removed": ["{name} a été supprimé.", "{name} removed."],
   "notice.welcome": ["Bon retour, {name}.", "Welcome back, {name}."],

@@ -14,6 +14,10 @@ for entry in ([] if portraits_only else list(report['items'].values())) + list(r
     target.parent.mkdir(parents=True,exist_ok=True)
     image = Image.open(RAW/Path(entry['file']).with_suffix('.png')).convert('RGBA')
     image.save(target, 'WEBP',quality=93,method=6)
+    if 'bytes' in entry:
+        entry['bytes'] = target.stat().st_size
+if any('bytes' in entry for entry in report['portraits'].values()):
+    (OUT/'manifest.json').write_text(json.dumps(report, indent=2)+'\n')
 
 files = [] if portraits_only else sorted((RAW/'review').glob('*.png'))
 files += [RAW/Path(entry['file']).with_suffix('.png') for entry in (report['portraits'] if portraits_only else report['items']).values()]

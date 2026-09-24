@@ -4,10 +4,12 @@ export const CATEGORIES = [
   { type: 'outfit', field: 'skin', label: 'Outfits' },
   { type: 'hat', field: 'hat', label: 'Hats' },
   { type: 'hair', field: 'hair', label: 'Hair Cut' },
-  { type: 'hairColor', field: 'hairColor', label: 'Hair Color' }
+  { type: 'hairColor', field: 'hairColor', label: 'Hair Color' },
+  { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' }
 ];
-export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', tone: 'medium' };
+export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', tone: 'medium' };
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
+export const EYE_PALETTE = { 'brown-eyes': '#6E4A2E', 'green-eyes': '#2F4C36', 'blue-eyes': '#3B5E86', 'red-eyes': '#7E3A34', 'violet-eyes': '#63497F' };
 
 /* One baked body serves every tone. The viewer multiplies the medium albedo
  * by the target tone so the live 3D matches the vector palette in avatar.mjs.
@@ -22,14 +24,14 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
   ? new URL('../assets/', import.meta.url)
   : new URL('../assets/', document.baseURI);
-export const CATALOGUE_REVISION = 'catalogue-v8-scoped-cosmetics';
+export const CATALOGUE_REVISION = 'catalogue-v9-shared-hair';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
  * delivered, stylized reference models (isolated stylized build): natural faces,
  * delivered silhouettes and their own painted materials. The older baked
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
-export const BASE_CATALOGUE_REVISION = 'stylized-v4';
+export const BASE_CATALOGUE_REVISION = 'stylized-v5';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Baked fallback portraits must match the live base, otherwise the old base
@@ -42,7 +44,8 @@ export function pupilLook(pupil, draft = null) {
     persona: pupil.gender === 'girl' ? 'female' : 'male',
     skin: value('skin', 'starter'), hat: value('hat', 'no-hat'),
     weapon: value('weapon', 'no-weapon'), hair: value('hair', pupil.gender === 'girl' ? 'long' : 'short'),
-    hairColor: value('hairColor', 'brown-hair'), tone: value('skinTone', SKIN_TONE_NEUTRAL)
+    hairColor: value('hairColor', 'brown-hair'), eyeColor: value('eyeColor', 'brown-eyes'),
+    tone: value('skinTone', SKIN_TONE_NEUTRAL)
   };
 }
 export const PRESETS = {
@@ -89,5 +92,5 @@ export function lookSummary(look) {
 }
 
 export function modeledItemIds() {
-  return CATEGORIES.filter(({ type }) => type !== 'hairColor').flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'bald'].includes(id)).map(({ id }) => id));
+  return CATEGORIES.filter(({ type }) => !['hairColor', 'eyeColor'].includes(type)).flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'bald'].includes(id)).map(({ id }) => id));
 }

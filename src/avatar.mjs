@@ -97,9 +97,12 @@ const HANDGEAR = {
 };
 const HAIRCUTS = {
   short: "court",
+  spiky: "court",
   long: "longue",
   bald: "chauve",
   curly: "boucle",
+  bun: "chignon",
+  "medium-cut": "court",
   braided: "tresse",
   "royal-hair": "royal"
 };
@@ -698,6 +701,17 @@ function backHair(cut, girl, HAIR) {
     ];
   }
 
+  /* Chignon : la torsade dépasse derrière le sommet du crâne, tenue par
+     une épingle dorée ; la frange balayée se dessine devant. */
+  if (cut === "chignon") {
+    return [
+      c(115, 18, 12, HAIR.dark),
+      fold("M107,19 C107,11 119,8 123,15 C126,22 118,27 113,23 C110,20 113,16 117,17", HAIR.lite, 1.7, 0.55),
+      fold("M103,28 L130,8", GOLD.base, 1.9, 1),
+      c(130.5, 7.5, 2.2, GOLD.base)
+    ];
+  }
+
   /* L'afro est volontairement identique pour tout le monde : c'est la coupe
      commune, elle n'a pas besoin d'être genrée. */
   return [];
@@ -761,6 +775,15 @@ function hairShapes(cut, head, girl, HAIR) {
     S.push(fold("M84,50 C86,38 92,29 100,25", HAIR.lite, 1.8, 0.5));
     S.push(fold("M92,52 C94,40 99,31 106,26", HAIR.lite, 1.5, 0.35));
     S.push(fold("M114,50 C112,38 107,30 100,26", HAIR.line, 1.6, 0.4));
+    return S;
+  }
+
+  if (cut === "chignon") {
+    /* Tiré en arrière vers le chignon, frange en pointes balayée sur le front. */
+    S.push(p("M78,56 C74,38 80,18 100,18 C120,18 126,38 122,56 C120,47 117,40 111,36 C104,32 96,32 89,36 C83,40 80,47 78,56 Z", HAIR.base));
+    S.push(p("M83,40 C88,30 100,26 114,31 L112,38 L106,34 L103,42 L98,35 L93,43 L90,37 L85,46 Z", HAIR.base));
+    S.push(fold("M88,30 C94,24 104,22 112,26", HAIR.lite, 1.7, 0.45));
+    S.push(fold("M116,24 C119,30 121,38 121,48", HAIR.line, 1.5, 0.4));
     return S;
   }
 
@@ -1097,9 +1120,12 @@ const ITEM_CROPS = {
   "swords-and-shield": "6 16 174 260",
   "custom-bespoke": "40 40 120 120",
   short: "64 -4 72 96",
+  spiky: "64 -4 72 96",
+  "medium-cut": "60 -8 80 100",
   long: "56 -6 88 156",
   bald: "64 -4 72 96",
   curly: "56 -8 88 100",
+  bun: "60 -8 80 100",
   braided: "56 -4 88 108",
   "royal-hair": "54 -6 92 160"
 };

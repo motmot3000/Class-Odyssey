@@ -34,6 +34,7 @@ const TYPE_LABEL = {
   weapon: () => t("modal.type.weapon"),
   hair: () => t("modal.type.hair"),
   hairColor: () => t("modal.type.hairColor"),
+  eyeColor: () => t("modal.type.eyeColor"),
   title: () => t("modal.type.title"),
   tone: () => t("modal.type.tone"),
   bespoke: () => t("modal.type.bespoke")
