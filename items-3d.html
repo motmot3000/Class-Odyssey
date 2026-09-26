@@ -27,7 +27,10 @@
   <main>
     <div class="intro">
       <div><h1>Les équipements prennent vie.</h1><p>Le catalogue du jeu, ajusté à Noa et Mila. Première version à essayer.</p></div>
-      <button id="reset" class="quiet" type="button">Réinitialiser</button>
+      <div class="intro-actions">
+        <a id="open-app" class="live-app" href="http://127.0.0.1:5180/?autologin=admin:1234" target="_blank" rel="noopener">Lancer l’application en temps réel</a>
+        <button id="reset" class="quiet" type="button">Réinitialiser</button>
+      </div>
     </div>
     <section class="presets" aria-label="Combinaisons à essayer">
       <span>Essayer un ensemble</span>
@@ -37,8 +40,8 @@
     </section>
     <div class="workbench">
       <section class="stage" aria-label="Personnage équipé et angles de vue">
-        <header class="stage-heading"><div><h2 id="character-name">Noa</h2><p id="loadout">Ranger · Goggles · Lantern</p></div><span id="render-mode">Chargement 3D</span></header>
-        <div id="viewer" role="img" aria-label="Noa équipé, vue de trois quarts"><img id="poster" src="/assets/items-3d/preview.png" width="900" height="1000" alt="Aperçu Blender de Noa en tenue Ranger, lunettes d’explorateur et lanterne."></div>
+        <header class="stage-heading"><div><h2 id="character-name">Noa</h2><p id="loadout">Ranger · Goggles · Short Hair</p></div><span id="render-mode">Chargement 3D</span></header>
+        <div id="viewer" role="img" aria-label="Noa équipé, vue de trois quarts"><img id="poster" width="900" height="1000" alt="Aperçu du personnage livré Noa en tenue Ranger et lunettes d’explorateur."></div>
         <div id="svg-reference" hidden></div>
         <div class="loading"><p id="loading-status" role="status">Préparation du personnage et des équipements…</p><button id="retry" type="button" hidden>Réessayer</button></div>
         <div class="view-controls">

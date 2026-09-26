@@ -1644,6 +1644,38 @@ async function completeGoogleSignIn(code) {
   toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
 }
 
+/* The 3D workshop links here with `?autologin=user:password` so the developer
+ * can watch the running game signed in as the local admin. Credentials are only
+ * honoured on a loopback host, and the parameter is stripped from the address
+ * bar before the session is opened. */
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+function localAutoLoginCredentials(value) {
+  if (!LOOPBACK_HOSTS.has(location.hostname)) return null;
+  const separator = value.indexOf(":");
+  if (separator < 1) return null;
+  const username = value.slice(0, separator);
+  const password = value.slice(separator + 1);
+  return username && password ? { username, password } : null;
+}
+
+async function completeLocalSignIn(value) {
+  const credentials = localAutoLoginCredentials(value);
+  if (!credentials) return;
+  ui.gateError = "";
+  ui.gatePending = true;
+  render();
+  const result = await signIn(credentials.username, credentials.password);
+  if (result.stale) return;
+  ui.gatePending = false;
+  if (!result.ok) {
+    ui.gateError = result.error;
+    render();
+    return;
+  }
+  openAccount(result.account);
+  toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+}
+
 /* The gate only offers Google when the server has credentials configured. */
 async function loadPublicConfig() {
   try {
@@ -1968,8 +2000,10 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
 const googleParams = new URLSearchParams(location.search);
 const googleCode = googleParams.get("google_code") || "";
 const googleError = googleParams.get("google_error") || "";
-if (googleCode || googleError) {
-  // Never keep the one-time code or the error in the address bar or history.
+const autoLogin = googleParams.get("autologin") || "";
+if (googleCode || googleError || autoLogin) {
+  // Never keep the one-time code, the error or the credentials in the address
+  // bar or history.
   try { window.history.replaceState(null, "", location.pathname + location.hash); } catch { /* keep the query */ }
 }
 if (googleError) ui.gateError = googleErrorMessage(googleError);
@@ -1981,5 +2015,6 @@ bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
 if (googleCode) completeGoogleSignIn(googleCode);
+else if (autoLogin) completeLocalSignIn(autoLogin);
 else loadPublicConfig();
 setInterval(updateClock, 1000);

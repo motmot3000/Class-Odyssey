@@ -33,6 +33,10 @@ export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVIS
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
 export const BASE_CATALOGUE_REVISION = 'stylized-v5';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
+/* The workshop's loading poster must show the delivered base, not the older
+ * baked Blender preview, and must carry the revision so a refresh never shows
+ * a character cached from an earlier build. */
+export const BASE_PREVIEW_URL = new URL(`character-stylized/preview.png?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Baked fallback portraits must match the live base, otherwise the old base
  * flashes on the cards before the live portrait replaces it. */

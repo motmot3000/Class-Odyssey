@@ -21,17 +21,19 @@ chiffres, points, tirets ou underscores) et renseigner `FOUNDER_PASSWORD`
 npm run dev
 ```
 
-Puis ouvrir l'URL annoncée par le serveur, par défaut :
+`npm run dev` démarre deux serveurs : l'**atelier 3D** sur le port `5201` et
+l'**application** sur le port `5180`. L'atelier est annoncé en premier, donc Go
+Live ouvre :
 
 ```text
-http://localhost:5180
+http://127.0.0.1:5201/items-3d.html
 ```
 
-Go Live utilise automatiquement `npm run dev`. Ce mode essaie le port défini
-par `PORT` dans `.env` (sinon `5180`) ; s'il est déjà occupé, le système lui
-attribue un port libre. Go Live ouvre l'URL effective annoncée par le serveur.
-`npm start` permet de démarrer sur un port strictement fixé et signale un conflit
-si celui-ci est occupé.
+L'atelier embarque un bouton **Lancer l'application en temps réel** qui ouvre
+l'application sur `http://127.0.0.1:5180` et connecte automatiquement le compte
+administrateur local (les identifiants ne sont acceptés que depuis `localhost` /
+`127.0.0.1`). `npm run dev:app` démarre l'application seule, et `npm start`
+démarre sur un port strictement fixé en signalant un conflit s'il est occupé.
 
 `npm run dev` et `npm start` chargent automatiquement le fichier `.env`, ignoré
 par Git. Les variables déjà exportées dans le terminal sont prioritaires.
