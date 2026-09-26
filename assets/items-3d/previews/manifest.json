@@ -1,8 +1,20 @@
 {
-  "revision": "catalogue-v9-shared-hair",
-  "catalogueSha256": "d1eba8ffa627975a036d4cbf16165edac502791e9ef95643e479901924552cbc",
+  "revision": "catalogue-v12-ear-drape",
+  "catalogueSha256": "26afad9659f44d054a8389cc1c171e61785fb06d3fe340a8bc9c73c3541a7543",
   "renderSource": "catalogue.blend",
   "items": {
+    "elf-ears": {
+      "slot": "accessory",
+      "file": "items/elf-ears.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "pierced-ears": {
+      "slot": "accessory",
+      "file": "items/pierced-ears.webp",
+      "meshCount": 6,
+      "containsBody": false
+    },
     "bun": {
       "slot": "hair",
       "file": "items/bun.webp",
@@ -30,7 +42,7 @@
     "short": {
       "slot": "hair",
       "file": "items/short.webp",
-      "meshCount": 2,
+      "meshCount": 4,
       "containsBody": false
     },
     "spiky": {
@@ -126,8 +138,8 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v5, daylight, full silhouette",
-      "bytes": 40890
+      "renderer": "Three.js, stylized-v8, daylight, full silhouette",
+      "bytes": 40232
     },
     "female": {
       "file": "portraits/female.webp",
@@ -136,9 +148,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v5, daylight, full silhouette",
-      "bytes": 42328
+      "renderer": "Three.js, stylized-v8, daylight, full silhouette",
+      "bytes": 41658
     }
   },
-  "portraitRevision": "stylized-v5-front-hd"
+  "portraitRevision": "stylized-v8-front-hd"
 }

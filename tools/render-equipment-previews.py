@@ -62,6 +62,14 @@ def frame(selected, width, height, focus=None, front=False):
     lower = Vector(tuple(min(p[i] for p in points) for i in range(3)))
     upper = Vector(tuple(max(p[i] for p in points) for i in range(3)))
     center = (lower + upper)*.5
+    if focus == 'ear':
+        # Ears read from the side: the near (left) ear hides its mirror and
+        # the root that normally sits in the skull faces away from the camera.
+        camera.location = Vector((5.2, center.y, center.z))
+        camera.rotation_euler = (center-camera.location).to_track_quat('-Z','Y').to_euler()
+        camera.data.ortho_scale = max(upper.y-lower.y, upper.z-lower.z)*1.25
+        bpy.context.view_layer.update()
+        return
     if focus == 'head': center = Vector((0,-.015,1.645))
     if focus == 'waist': center = Vector((0,-.015,.99))
     camera.location = center + Vector((0,-5.2,.12) if front else (1.8,-5.2,1.05))
@@ -82,12 +90,12 @@ def render(path):
     print('PREVIEW_READY', path, flush=True)
 
 
-ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','hair']})
+ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','hair','accessory']})
 for slot, item in ([] if PORTRAITS_ONLY else ids):
     selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open')
     if not selected: raise ValueError(f'No meshes for {item}')
     assert all(obj.get('shop_slot') not in ['core','persona'] for obj in selected)
-    frame(selected, 320, 320)
+    frame(selected, 320, 320, 'ear' if slot == 'accessory' else None)
     render(f'items/{item}.png')
     report['items'][item] = {'slot':slot,'file':f'items/{item}.webp','meshCount':len(selected),'containsBody':False}
 

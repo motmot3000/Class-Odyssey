@@ -20,7 +20,12 @@ the hat-seat transform and conforms it to that character's skin.
 
     blender -b --factory-startup --python-exit-code 1 \
       --python tools/blender/sculpt_straight_short.py
+
+With EAR_SHAPE=human the same cut is grown around the sculpted human ear
+worn by default (measured on the catalogue's `human ears`), and written to
+`straight-short-human-ear.glb`; the viewer shows it unless elf ears are worn.
 """
+import os
 import bmesh
 import bpy
 import json
@@ -34,9 +39,10 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'assets/characters-refit/hair'
 CATALOGUE = ROOT / 'assets/character-stylized/catalogue.glb'
 MANIFEST = ROOT / 'assets/character-stylized/manifest.json'
-HEAD_CACHE = Path('/tmp/opencode/sculpt-short-cuts-head.json')
-HAIR_ID = 'straight-short'
-REVISION = 'sculpted-straight-short-v2'
+HEAD_CACHE = Path('/tmp/opencode/sculpt-short-cuts-head-v2.json')
+EAR_SHAPE = os.environ.get('EAR_SHAPE', 'elf')
+HAIR_ID = 'straight-short' + ('-human-ear' if EAR_SHAPE == 'human' else '')
+REVISION = 'sculpted-straight-short-v2' + ('-human-ear' if EAR_SHAPE == 'human' else '')
 SEED = 9031
 TAU = math.tau
 O = Vector((0.0, -0.005, 1.625))      # skull centre in the construction frame
@@ -48,10 +54,14 @@ SHADE = 'HairShade'
 # Measured head: both personas' skins, mapped back into the construction frame
 # --------------------------------------------------------------------------
 
+HUMAN_EAR_POINTS = []
+
+
 def load_heads():
     if HEAD_CACHE.exists():
         data = json.loads(HEAD_CACHE.read_text())
         if data.get('source_size') == CATALOGUE.stat().st_size:
+            HUMAN_EAR_POINTS[:] = [p for h in data['heads'] for p in h.get('human_ear', [])]
             return [BVHTree.FromPolygons([Vector(v) for v in h['verts']], h['faces']) for h in data['heads']]
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(CATALOGUE))
@@ -67,8 +77,14 @@ def load_heads():
         index = {old: new for new, old in enumerate(sorted(keep))}
         faces = [[index[i] for i in p.vertices] for p in skin.data.polygons if all(i in keep for i in p.vertices)]
         heads.append({'verts': [tuple(round(c, 6) for c in verts[i]) for i in sorted(keep)], 'faces': faces})
+        ears = next((o for o in bpy.data.objects if o.type == 'MESH' and o.get('part') == 'ears'
+                     and o.get('shop_slot') == 'persona' and o.get('fit_persona') == persona), None)
+        if ears:
+            heads[-1]['human_ear'] = [tuple(round(c, 6) for c in inverse @ (ears.matrix_world @ v.co))
+                                      for v in ears.data.vertices]
     HEAD_CACHE.parent.mkdir(parents=True, exist_ok=True)
     HEAD_CACHE.write_text(json.dumps({'source_size': CATALOGUE.stat().st_size, 'heads': heads}))
+    HUMAN_EAR_POINTS[:] = [p for h in heads for p in h.get('human_ear', [])]
     return [BVHTree.FromPolygons([Vector(v) for v in h['verts']], h['faces']) for h in heads]
 
 
@@ -146,6 +162,34 @@ FRONT = 60          # below this |azimuth| the fringe may fall over the forehead
 
 # Fringe stop above the brows by |x| (the face), same as the delivered cuts.
 BROW = [(0.0, 1.648), (.035, 1.652), (.070, 1.657), (.088, 1.632), (.098, 1.600), (.106, 1.550), (.2, 1.550)]
+
+
+def _side_hull(points):
+    """Convex outline (y, z) of the side view of both ears (x > 0 and mirrored)."""
+    pts = sorted({(round(p[1], 4), round(p[2], 4)) for p in points})
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower, upper = [], []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    return lower[:-1] + upper[:-1]
+
+
+if EAR_SHAPE == 'human':
+    if not HUMAN_EAR_POINTS:
+        raise SystemExit('EAR_SHAPE=human needs the catalogue human ears (build the stylized catalogue first)')
+    # The human ear is smaller than the elf flap: its outline replaces EAR, so
+    # the sideburn, the arc over the ear and the taper behind it follow it.
+    EAR = _side_hull(HUMAN_EAR_POINTS)
+    print('HUMAN_EAR_OUTLINE', [(round(y, 4), round(z, 4)) for y, z in EAR], flush=True)
 
 
 def ear_distance(y, z):

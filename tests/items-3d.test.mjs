@@ -43,14 +43,29 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
   for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 19);
+  assert.equal(modeledItemIds().length, 21);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
-    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair'].includes(node.extras.shop_slot));
+    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair', 'accessory'].includes(node.extras.shop_slot));
     assert.ok(['male','female'].includes(node.extras.fit_persona), `Missing body fit: ${node.name}`);
   }
   for (const id of ['straight-short', 'spiky-short', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
   assert.equal(gltf.skins?.length || 0, 0);
+});
+
+test('every hero wears exactly one pair of ears: human by default, or the ear accessory', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      for (const [accessory, style, jewellery] of [['no-accessory', 'human', false], ['elf-ears', 'elf', false], ['pierced-ears', 'human', true]]) {
+        const visible = parts.filter(data => visiblePart(data, { ...DEFAULT_LOOK, persona, accessory }));
+        const ears = visible.filter(data => data.part === 'ears');
+        assert.equal(ears.length, 1, `${persona} ${accessory}`);
+        assert.equal(ears[0].ear_style, style);
+        assert.equal(visible.some(data => data.part === 'jewellery'), jewellery);
+      }
+    }
+  }
 });
 
 test('all equipment retains human-scale world bounds, including the transformed back sword', () => {
@@ -159,12 +174,15 @@ test('the shipped bodies match the validated athletic silhouettes exactly', () =
   // the athletic silhouettes are the validated body pass over them. The live
   // catalogue must reproduce those approved meshes vertex for vertex, which
   // also proves the protected face and hair regions were carried over.
+  // The delivered ears now ship apart from the skin: the elf-ears accessory
+  // carries them untouched, so skin + elf ears must still match exactly.
   for (const [persona, gender] of [['male','boy'],['female','girl']]) {
     const reference = readGlb(`../assets/character-detail-study/${gender}-athletic.glb`);
     const collect = (gltf, fitted) => {
       const points = new Set();
       worldMeshes(gltf, (node, primitive, world, data) => {
-        if (data.part !== 'skin') return;
+        const deliveredEars = fitted && data.part === 'ears' && data.ear_style === 'elf';
+        if (data.part !== 'skin' && !deliveredEars) return;
         if (fitted && data.fit_persona !== persona) return;
         for (const p of positions(gltf, gltf.accessors[primitive.attributes.POSITION], world)) {
           points.add(p.toArray().map(v => Math.round(v*10000)).join(','));

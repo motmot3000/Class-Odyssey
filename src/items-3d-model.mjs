@@ -5,9 +5,12 @@ export const CATEGORIES = [
   { type: 'hat', field: 'hat', label: 'Hats' },
   { type: 'hair', field: 'hair', label: 'Hair Cut' },
   { type: 'hairColor', field: 'hairColor', label: 'Hair Color' },
-  { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' }
+  { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' },
+  { type: 'accessory', field: 'accessory', label: 'Accessories' }
 ];
-export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', tone: 'medium' };
+export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'no-accessory', tone: 'medium' };
+/* These accessories bring their own ears, which replace the default human ears. */
+export const EAR_ACCESSORIES = new Set(['elf-ears', 'pierced-ears']);
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
 export const EYE_PALETTE = { 'brown-eyes': '#6E4A2E', 'green-eyes': '#2F4C36', 'blue-eyes': '#3B5E86', 'red-eyes': '#7E3A34', 'violet-eyes': '#63497F' };
 
@@ -24,14 +27,14 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
   ? new URL('../assets/', import.meta.url)
   : new URL('../assets/', document.baseURI);
-export const CATALOGUE_REVISION = 'catalogue-v9-shared-hair';
+export const CATALOGUE_REVISION = 'catalogue-v12-ear-drape';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
  * delivered, stylized reference models (isolated stylized build): natural faces,
  * delivered silhouettes and their own painted materials. The older baked
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
-export const BASE_CATALOGUE_REVISION = 'stylized-v5';
+export const BASE_CATALOGUE_REVISION = 'stylized-v8';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Baked fallback portraits must match the live base, otherwise the old base
@@ -45,6 +48,7 @@ export function pupilLook(pupil, draft = null) {
     skin: value('skin', 'starter'), hat: value('hat', 'no-hat'),
     weapon: value('weapon', 'no-weapon'), hair: value('hair', pupil.gender === 'girl' ? 'long' : 'short'),
     hairColor: value('hairColor', 'brown-hair'), eyeColor: value('eyeColor', 'brown-eyes'),
+    accessory: value('accessory', 'no-accessory'),
     tone: value('skinTone', SKIN_TONE_NEUTRAL)
   };
 }
@@ -62,16 +66,23 @@ export function visiblePart(data, look, itemsOnly = false) {
   if (!slot) return true;
   if (look.preview) {
     if (slot !== look.preview.slot || data.shop_id !== look.preview.id) return false;
+    if (slot === 'hair' && data.ear_fit && data.ear_fit !== 'human') return false;
     return slot !== 'hair' || !data.hat_fit || data.hat_fit === 'open';
   }
   if (slot === 'core') return !itemsOnly;
-  if (slot === 'persona') return !itemsOnly && data.shop_id === look.persona;
+  if (slot === 'persona') {
+    if (data.part === 'ears' && EAR_ACCESSORIES.has(look.accessory)) return false;
+    return !itemsOnly && data.shop_id === look.persona;
+  }
   const category = CATEGORIES.find((entry) => entry.type === slot);
   if (!category || look[category.field] !== data.shop_id) return false;
   if (slot === 'hair') {
     if (look.hat === 'steel-helm') return false;
     const fit = COVERED_HATS.has(look.hat) ? 'covered' : OPEN_CROWNS.has(look.hat) ? 'crowned' : 'open';
     if (data.hat_fit && data.hat_fit !== fit) return false;
+    // Locks near the ear exist once per ear shape: cleared around the elf
+    // ears, or around the human ears (default and pierced-ears).
+    if (data.ear_fit && data.ear_fit !== (look.accessory === 'elf-ears' ? 'elf' : 'human')) return false;
   }
   return true;
 }
@@ -92,5 +103,5 @@ export function lookSummary(look) {
 }
 
 export function modeledItemIds() {
-  return CATEGORIES.filter(({ type }) => !['hairColor', 'eyeColor'].includes(type)).flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'bald'].includes(id)).map(({ id }) => id));
+  return CATEGORIES.filter(({ type }) => !['hairColor', 'eyeColor'].includes(type)).flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'bald', 'no-accessory'].includes(id)).map(({ id }) => id));
 }

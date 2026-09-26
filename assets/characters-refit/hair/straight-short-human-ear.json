@@ -1,0 +1,26 @@
+{
+  "revision": "sculpted-straight-short-v2-human-ear",
+  "hairId": "straight-short-human-ear",
+  "source": "tools/blender/sculpt_straight_short.py",
+  "seed": 9031,
+  "attribution": "Authored for Class Odyssey; locks grown on the measured Noa and Mila skulls.",
+  "strands": 1356,
+  "outerTriangles": 83728,
+  "underlayerTriangles": 16200,
+  "vertexShade": "HairShade: multiplies the shop hair colour (roots darker, tips lighter)",
+  "earOutline": "side projection measured on both skins, construction frame (y, z)",
+  "coordinates": "Construction frame: Blender Z up, front -Y; glTF Y up, front +Z; metres",
+  "bounds": {
+    "min": [
+      -0.115,
+      -0.1559,
+      1.5138
+    ],
+    "max": [
+      0.119,
+      0.1267,
+      1.7541
+    ]
+  },
+  "output": "straight-short-human-ear.glb"
+}

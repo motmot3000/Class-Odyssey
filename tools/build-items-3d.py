@@ -42,7 +42,7 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v5' if STYLIZED else 'catalogue-v9-shared-hair'
+APPEARANCE_REVISION = 'stylized-v8' if STYLIZED else 'catalogue-v12-ear-drape'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
@@ -79,8 +79,10 @@ WARM_EYES = STUDY / 'warm-eyes'
 # Single source of truth for the validated body silhouettes.
 sys.path.insert(0, str(ROOT / 'tools' / 'blender'))
 from refit_body_shapes import apply_body_shape
-from refit_female_base import rebuild_torso, clear_ear_space, swept_temple_locks, fit_posterior_hair
-from human_ears import ear_islands, skull_tree, humanize_points, jewellery_layout
+from refit_female_base import rebuild_torso, clear_ear_space, ear_weight, swept_temple_locks, fit_posterior_hair
+from human_ears import ear_islands, skull_tree, cap_openings, human_ear_matrix, jewellery_layout, side_outline, skull_x
+from human_ear_model import ear_mesh as human_ear_mesh
+from hair_fill import hair_tree, ear_attachment, ear_zone_shell, append_geometry
 
 
 def texture_node(mat, filename):
@@ -988,11 +990,21 @@ def hairstyles(source):
     # gets the girl's default cut adapted to his head, and vice versa.
     use_supplied_hair = os.environ.get('HAIR_SUPPLIED', '1') != '0'
     supplied = [entry for entry in SUPPLIED_HAIR if entry[1] in HAIR_ITEMS] if use_supplied_hair else []
+    # A cut sculpted around the ear comes in one version per ear shape: the
+    # `-human-ear` file is grown around the default human ear (`ear_fit`).
+    variants = []
     for gender, hair_id in supplied:
+        variants.append((gender, hair_id, 'elf' if (HAIR_REFIT / f'{gender}-human-ear.glb').exists() else None))
+        if variants[-1][2]:
+            variants.append((f'{gender}-human-ear', hair_id, 'human'))
+    for gender, hair_id, ear_fit in variants:
         item = hair_id
         before = set(bpy.context.scene.objects)
         bpy.ops.import_scene.gltf(filepath=str(HAIR_REFIT / f'{gender}.glb'))
         imported = list(set(bpy.context.scene.objects) - before)
+        if ear_fit:
+            for obj in imported:
+                obj['ear_fit'] = ear_fit
         # The delivered cuts wear the app hair material: the shared normal and
         # roughness maps keep the strands readable, and the viewer recolours
         # every 'Hair /' material from the shop palette.
@@ -1301,10 +1313,19 @@ def conform_hair_to_head(hair, skin, clearance=.002, floor_z=1.50, max_distance=
         bm.free()
     hair_matrix = hair.matrix_world
     inverse = hair_matrix.inverted()
+    # Cuts tucked behind the ear by clear_ear_space keep those locks inside
+    # the skull: lifting them would press them flat on the skull, where the
+    # smaller human ear no longer hides them. Only the contour's shoulder is
+    # lifted; the skull under the ear is capped, so the tucked locks vanish.
+    tucked = hair.get('ear_clearance_vertices') is not None
+    weight = HUMAN_EAR_WEIGHT.get(skin.name) if hair.get('ear_fit') == 'human' else ear_weight
     lifted = 0
     for vertex in hair.data.vertices:
         world = hair_matrix @ vertex.co
         if world.z < floor_z: continue
+        if (tucked and abs(world.x) > .06 and -.05 < world.y < .075 and 1.50 < world.z < 1.635
+                and weight(world.y, world.z) > .5):
+            continue
         location, normal, _index, _distance = tree.find_nearest(world, max_distance)
         if location is None: continue
         if (world - location).dot(normal) < clearance:
@@ -1391,56 +1412,354 @@ def ear_copy(skin, name, ear_ids, positions=None):
     return tag(obj, name)
 
 
+HUMAN_EAR = {}
+PRE_HAIR = {}
+
+
+def human_ear_base():
+    """Sculpted ear mesh in its local frame, built once per run."""
+    if 'mesh' not in HUMAN_EAR:
+        obj = human_ear_mesh('sculpted human ear')
+        HUMAN_EAR['mesh'] = obj.data
+        bpy.data.objects.remove(obj, do_unlink=True)
+    return HUMAN_EAR['mesh']
+
+
+def plain_skin_texel(skin, ear_ids):
+    """(material index, UV) of a representative skin texel of the painted ear.
+
+    The sculpted ear carries its own relief, so it takes one plain texel of the
+    head map the elf ear was painted with (the median ear colour): the viewer
+    then tints it with the chosen skin tone like the rest of the head.
+    """
+    import numpy as np
+    uv = skin.data.uv_layers.active
+    loops = [(poly.material_index, loop) for poly in skin.data.polygons
+             if all(v in ear_ids for v in poly.vertices) for loop in poly.loop_indices]
+    index = max({m for m, _l in loops}, key=lambda m: sum(1 for k, _l in loops if k == m))
+    material = skin.data.materials[index]
+    node = base_color_image_node(material)
+    samples = [uv.data[loop].uv.copy() for m, loop in loops if m == index]
+    if not node:
+        return index, samples[0]
+    image = node.image
+    w, h = image.size
+    pixels = np.empty(w * h * 4, np.float32); image.pixels.foreach_get(pixels)
+    pixels = pixels.reshape(h, w, 4)[..., :3]
+    colours = np.array([pixels[min(h - 1, int((s.y % 1) * h)), min(w - 1, int((s.x % 1) * w))] for s in samples])
+    median = np.median(colours, axis=0)
+    best = int(np.argmin(((colours - median) ** 2).sum(1)))
+    return index, samples[best]
+
+
+def human_ear_object(skin, name, tree, texel):
+    """Both sculpted human ears of one character, in world space, skin material."""
+    base = human_ear_base()
+    vertices, faces = [], []
+    for side in (1, -1):
+        matrix = human_ear_matrix(tree, side)
+        offset = len(vertices)
+        vertices += [tuple(matrix @ v.co) for v in base.vertices]
+        for poly in base.polygons:
+            indices = [offset + i for i in poly.vertices]
+            faces.append(tuple(indices if side > 0 else reversed(indices)))
+    data = bpy.data.meshes.new(name)
+    data.from_pydata(vertices, [], faces)
+    material_index, uv = texel
+    data.materials.append(skin.data.materials[material_index])
+    layer = data.uv_layers.new(name=skin.data.uv_layers.active.name)
+    for entry in layer.data:
+        entry.uv = uv
+    for poly in data.polygons:
+        poly.use_smooth = True
+    data.update()
+    obj = bpy.data.objects.new(name, data)
+    bpy.context.scene.collection.objects.link(obj)
+    obj['part'] = 'ears'
+    obj['ear_model'] = 'sculpted human ear (SDF, human_ear_model.py)'
+    return tag(obj, name)
+
+
+HUMAN_EAR_PAD = .0008     # locks clear the human ear by this much
+HUMAN_EAR_BAND = .0045    # ...and turn inward over this band around it
+HUMAN_EAR_WEIGHT = {}
+# Cuts whose locks pass over the top of the human ear before tucking behind
+# it, instead of stopping on its contour.
+DRAPED_HAIR = {'long', 'curly'}
+DRAPE_DEPTH = {'long': .042, 'curly': .030}   # the top of the ear the locks lie over
+DRAPE_CLEARANCE = .0022   # above the ear surface
+DRAPE_SLOPE = .85         # how fast the lift fades away from the ear
+# Cuts that leave the skull bare where the elf ear stood: the human variant
+# gets a hair underlayer there (hair_fill, elf window only).
+UNDERLAYER_HAIR = {'spiky', 'curly'}
+# ...and the spiky locks just above that window are copied down over it.
+CLONED_HAIR = {'spiky'}
+# Underlayer shade: under cloned locks it must read as depth, not as a plane.
+UNDERLAYER_SHADE = {'spiky': .5}
+# Braid: its side sweeps back high above the ear. With the human ear, one
+# combed lock runs from the temple over the top of the ear into the braid
+# (world frame after fitting, +X side; mirrored).
+EAR_LOCK_PATHS = {'curly': [
+    ([(.086, -.046, 1.636), (.101, -.026, 1.604), (.108, -.008, 1.589), (.108, .014, 1.581),
+      (.098, .042, 1.568), (.082, .068, 1.554)],
+     [.002, .010, .013, .013, .011, .002], [.002, .0035, .0042, .0042, .0035, .0008]),
+]}
+
+
+def human_ear_weight(skin):
+    """ear_weight stencil of the sculpted human ear seated on this head."""
+    if skin.name not in HUMAN_EAR_WEIGHT:
+        bm = bmesh.new(); bm.from_mesh(skin.data); bm.transform(skin.matrix_world)
+        ids = {v.index for shells in ear_islands(bm).values() for shell in shells for v in shell}
+        cap_openings(bm, ids)
+        tree = skull_tree(bm, ids)
+        bm.free()
+        base = human_ear_base()
+        points = [human_ear_matrix(tree, side) @ v.co for side in (1, -1) for v in base.vertices]
+        outline = side_outline(points, HUMAN_EAR_PAD)
+        HUMAN_EAR_WEIGHT[skin.name] = lambda y, z: ear_weight(y, z, outline, HUMAN_EAR_BAND)
+        HUMAN_EAR_WEIGHT[skin.name + ' outline'] = outline
+        # Outer surface of each ear seen from the side: highest |x| per 2 mm cell.
+        surface = {}
+        for side in (1, -1):
+            cells = {}
+            for p in points:
+                if p.x * side <= 0:
+                    continue
+                key = (round(p.y / .002), round(p.z / .002))
+                if abs(p.x) > cells.get(key, (0,))[0]:
+                    cells[key] = (abs(p.x), p.y, p.z)
+            surface[side] = np.array(list(cells.values()))
+        HUMAN_EAR_WEIGHT[skin.name + ' surface'] = surface
+    return HUMAN_EAR_WEIGHT[skin.name]
+
+
+def drape_human_ear(obj, skin, depth=.030):
+    """Lay the locks over the top of the human ear, tucked behind it below.
+
+    Over the top DRAPE_DEPTH of the ear, lock vertices are lifted onto a tent
+    over the ear surface (DRAPE_CLEARANCE above it, fading at DRAPE_SLOPE), so
+    the locks run over the ear. Below, they are tucked like `clear_ear_space`,
+    which reads as hair slipped behind the ear.
+    """
+    weight = human_ear_weight(skin)
+    surface = HUMAN_EAR_WEIGHT[skin.name + ' surface']
+    matrix = obj.matrix_world.copy(); inverse = matrix.inverted()
+    moved = 0
+    for side in (1, -1):
+        ear = surface[side]
+        top = ear[:, 2].max()
+        cut = top - depth
+        for vertex in obj.data.vertices:
+            p = matrix @ vertex.co
+            if p.x * side < .06 or not -.06 < p.y < .09 or not 1.49 < p.z < 1.66:
+                continue
+            high = max(0.0, min(1.0, (p.z - cut) / .008))
+            high = high * high * (3 - 2 * high)
+            x = abs(p.x)
+            w = weight(p.y, p.z) * (1 - high)
+            if w > 0:
+                inner = .077 + .001 * math.tanh((x - .077) / .025)
+                x = x * (1 - w) + inner * w
+            if high > 0:
+                d = np.hypot(ear[:, 1] - p.y, ear[:, 2] - p.z)
+                tent = float((ear[:, 0] + DRAPE_CLEARANCE - DRAPE_SLOPE * d).max())
+                if tent > x:
+                    x += (tent - x) * high
+            if x != abs(p.x):
+                p.x = side * x
+                vertex.co = inverse @ p
+                moved += 1
+    obj.data.update()
+    obj['ear_fit'] = 'human'
+    obj['ear_clearance_revision'] = 'human-ear-drape-v1'
+    obj['ear_clearance_vertices'] = moved
+    return moved
+
+
+def human_ear_twin(obj, skin):
+    """Copy of an unclear haircut piece, to be cleared around the human ear."""
+    twin = obj.copy(); twin.data = obj.data.copy()
+    for collection in obj.users_collection:
+        collection.objects.link(twin)
+    twin['ear_fit'] = 'human'
+    obj['ear_fit'] = 'elf'
+    return twin
+
+
+def clear_human_ear(obj, skin):
+    obj['ear_fit'] = 'human'
+    return clear_ear_space(obj, human_ear_weight(skin), 'human-ear-outline-v1')
+
+
+def keep_faces(obj, mask):
+    """Delete the faces of obj where mask is False, and the loose vertices."""
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if not mask[f.index]], context='FACES')
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+    bm.to_mesh(obj.data); bm.free(); obj.data.update()
+
+
+def split_ear_variants(elf, human):
+    """Share what the two clearances leave identical; keep one piece per ear.
+
+    `elf` and `human` are the same haircut piece, cleared around the elf ear
+    and around the human ear. Only faces touching a vertex that differs go to
+    the per-ear pieces (`ear_fit`); the rest stays in the shared piece, so the
+    catalogue carries the locks near the ear twice, not the whole cut. The
+    pieces meet on unmoved vertices, without a seam.
+    Returns the new elf piece (or None when nothing differs).
+    """
+    count = len(elf.data.vertices)
+    a = np.empty(count * 3); b = np.empty(count * 3)
+    elf.data.vertices.foreach_get('co', a); human.data.vertices.foreach_get('co', b)
+    moved = np.abs((a - b).reshape(-1, 3)).max(1) > 1e-7
+    loops = np.empty(len(elf.data.loops), np.int64); elf.data.loops.foreach_get('vertex_index', loops)
+    starts = np.empty(len(elf.data.polygons), np.int64); elf.data.polygons.foreach_get('loop_start', starts)
+    ear = np.logical_or.reduceat(moved[loops], starts) if len(starts) else np.zeros(0, bool)
+    for key in ('ear_fit',):
+        if key in elf: del elf[key]
+    if not ear.any():
+        return None
+    piece = elf.copy(); piece.data = elf.data.copy()
+    for collection in elf.users_collection:
+        collection.objects.link(piece)
+    piece.name = elf.name + ' / elf ear locks'
+    human.name = elf.name + ' / human ear locks'
+    piece['ear_fit'] = 'elf'; human['ear_fit'] = 'human'
+    keep_faces(piece, ear); keep_faces(human, ear); keep_faces(elf, ~ear)
+    elf['ear_fit_shared'] = int((~ear).sum())
+    return piece
+
+
+def clone_locks_down(sources, shell, skull, avoid):
+    """bmesh of the cut's own locks, copied down over the hole `shell` covers.
+
+    Per side, the locks just above the hole (as tall as the hole) are copied
+    and lowered by its height, keeping their height above the skull, their
+    UVs and their shade, so the hole is filled with the same hair. Faces over
+    the human ear (`avoid`(y, z) > .3) are dropped.
+    """
+    out = bmesh.new()
+    uv_out = out.loops.layers.uv.new('UVMap')
+    shade_out = out.verts.layers.float.new('shade')
+    for side in (1, -1):
+        points = [v.co for v in shell.verts if v.co.x * side > 0]
+        if len(points) < 3:
+            continue
+        y0, y1 = min(p.y for p in points), max(p.y for p in points)
+        z0, z1 = min(p.z for p in points), max(p.z for p in points)
+        height = z1 - z0
+        for obj in sources:
+            mesh, matrix = obj.data, obj.matrix_world
+            uv = mesh.uv_layers.active.data if mesh.uv_layers else None
+            colour = mesh.color_attributes[0] if mesh.color_attributes else None
+            loop_colour = colour and colour.domain == 'CORNER'
+            coords = [matrix @ v.co for v in mesh.vertices]
+            moved, made = {}, {}
+            for poly in mesh.polygons:
+                c = matrix @ poly.center
+                if c.x * side < .065 or not (y0 - .006 < c.y < y1 + .006) or not (z1 - .002 < c.z < z1 + height):
+                    continue
+                target = []
+                for index in poly.vertices:
+                    if index not in moved:
+                        # Rigid drop, plus the skull's own change of width
+                        # between the two heights: the lock keeps its volume.
+                        p = coords[index]
+                        q = p - Vector((0, 0, height * .9))
+                        shift = skull_x(skull, side, q.y, q.z) - skull_x(skull, side, p.y, p.z)
+                        moved[index] = q + Vector((side * shift, 0, 0))
+                    target.append(moved[index])
+                centre = sum(target, Vector()) / len(target)
+                if centre.z < z0 - .004 or abs(centre.x) < .06:
+                    continue
+                verts = []
+                for index, q in zip(poly.vertices, target):
+                    # Shared vertices keep the locks welded (smooth shading).
+                    v = made.get(index)
+                    if v is None:
+                        v = made[index] = out.verts.new(q)
+                        value = 1.0
+                        if colour and not loop_colour:
+                            value = colour.data[index].color[0]
+                        v[shade_out] = value
+                    verts.append(v)
+                try:
+                    face = out.faces.new(verts)
+                except ValueError:
+                    continue
+                for loop, index in zip(face.loops, poly.loop_indices):
+                    if uv:
+                        loop[uv_out].uv = uv[index].uv
+                    if loop_colour:
+                        loop.vert[shade_out] = colour.data[index].color[0]
+    # Whole locks only, behind the ear: a lock touching the ear or reaching
+    # in front of it is dropped entirely rather than cut into a ragged edge.
+    seen = set()
+    for start in list(out.verts):
+        if start in seen:
+            continue
+        island, stack = [], [start]
+        seen.add(start)
+        while stack:
+            v = stack.pop(); island.append(v)
+            for e in v.link_edges:
+                o = e.other_vert(v)
+                if o not in seen:
+                    seen.add(o); stack.append(o)
+        if any(v.co.y < -.004 or avoid(v.co.y, v.co.z) > .05 for v in island):
+            bmesh.ops.delete(out, geom=island, context='VERTS')
+    return out
+
+
 def split_ears(selected):
     """Human ears by default; the delivered elf ears become an accessory.
 
-    The delivered ears are loose shells sunk into the skull, so moving them out
-    of the welded skin opens no seam. Per character this makes:
-      * `persona / human ears` — the default, reshaped by human_ears.py;
+    The delivered ears are loose shells plugging an opening in the skin; the
+    opening is capped, so any ear sits on a closed skull. Per character this makes:
+      * `persona / human ears` — a sculpted anatomical ear (human_ear_model.py);
       * `elf-ears / pointed elf ears` — the delivered ears, untouched;
-      * `pierced-ears / ...` — the human ears again, with a few piercings.
-    Hair was fitted around the elf ears (the larger ones) before this step,
-    so every haircut keeps one contour whichever ears are worn.
+      * `pierced-ears / ...` — the sculpted ears again, with a few piercings.
+    Hair was fitted around the elf ears (the larger ones); the bare skull that
+    leaves around the human ear is then covered by a hair shell (hair_fill.py).
     """
     global slot, item, persona
     created = []
+    depsgraph = bpy.context.evaluated_depsgraph_get()
     for skin in [obj for obj in selected if obj.get('part') == 'skin' and obj.get('fit_persona')]:
         persona = skin['fit_persona']; gender = CHARACTERS[persona]
         bm = bmesh.new(); bm.from_mesh(skin.data); bm.transform(skin.matrix_world)
         sides = ear_islands(bm)
         ear_ids = {v.index for shells in sides.values() for shell in shells for v in shell}
-        tree = skull_tree(bm, ear_ids)
-        human, outer_ids = {}, {}
-        for side, shells in sides.items():
-            verts = [v for shell in shells for v in shell]
-            local = {v.index: k for k, v in enumerate(verts)}
-            edges = [(local[e.verts[0].index], local[e.verts[1].index]) for e in bm.edges
-                     if e.verts[0].index in local and e.verts[1].index in local]
-            positions = humanize_points([v.co.copy() for v in verts], side, tree, edges)
-            for vertex, position in zip(verts, positions): human[vertex.index] = position
-            outer_ids[side] = [v.index for v in max(shells, key=len)]
-        bm.free()
-        slot, item = 'persona', persona
-        default = ear_copy(skin, f'{gender} • human ears', ear_ids, human)
-        default['ear_style'] = 'human'
+        texel = plain_skin_texel(skin, ear_ids)
         slot, item = 'accessory', 'elf-ears'
         elf = ear_copy(skin, f'{gender} / pointed elf ears', ear_ids)
         elf['ear_style'] = 'elf'
+        original_ids = set(ear_ids)
+        # Cap the skin openings first: the skull is then measured, and the
+        # sculpted ear seated, on the closed surface.
+        cap_openings(bm, ear_ids)
+        tree = skull_tree(bm, ear_ids)
+        slot, item = 'persona', persona
+        default = human_ear_object(skin, f'{gender} • human ears', tree, texel)
+        default['ear_style'] = 'human'
         slot, item = 'accessory', 'pierced-ears'
-        pierced = ear_copy(skin, f'{gender} / human ears', ear_ids, human)
+        pierced = human_ear_object(skin, f'{gender} / human ears', tree, texel)
         pierced['ear_style'] = 'human'
         created += [default, elf, pierced]
-        # Jewellery sits on the reshaped outer shell, with its own normals.
-        probe = bmesh.new(); probe.from_mesh(skin.data); probe.transform(skin.matrix_world)
-        probe.verts.ensure_lookup_table()
-        for index, position in human.items(): probe.verts[index].co = position
-        probe.normal_update()
-        for side, ids in outer_ids.items():
+        # Jewellery sits on the sculpted ear's outer face.
+        ear_points = [default.matrix_world @ v.co for v in default.data.vertices]
+        for side in (1, -1):
+            matrix = human_ear_matrix(tree, side)
+            out = (matrix.to_3x3() @ Vector((0, 0, 1))).normalized()
             outer = []
-            for index in ids:
-                normal = probe.verts[index].normal.copy()
-                if normal.x * side < 0: normal.negate()
-                outer.append((probe.verts[index].co.copy(), normal))
+            for v in default.data.vertices:
+                p = default.matrix_world @ v.co
+                n = (default.matrix_world.to_3x3() @ v.normal).normalized()
+                if p.x * side > 0 and n.dot(out) > .35:
+                    outer.append((p, n))
             name = 'left' if side > 0 else 'right'
             for number, piece in enumerate(jewellery_layout(outer, side), 1):
                 finish = {'gold': GOLD, 'gem': GEM, 'steel': STEEL}[piece['finish']]
@@ -1451,9 +1770,60 @@ def split_ears(selected):
                     obj = bead(label, piece['center'], piece['radius'], finish)
                 obj['part'] = 'jewellery'
                 created.append(obj)
-        probe.free()
+        # Hair: cover the skull the elf-ear clearance left bare around the ear.
+        attachments = {side: ear_attachment(ear_points, tree, side) for side in (1, -1)}
+        elf_tree = hair_tree(elf, bpy.context.evaluated_depsgraph_get())
+        # One shell per cut (and hat fit), on its largest hair-material piece,
+        # under the cover of all its pieces.
+        cuts = {}
+        for obj in selected:
+            if obj.get('shop_slot') == 'hair' and obj.get('fit_persona') == persona and obj.name in PRE_HAIR:
+                cuts.setdefault((obj.get('shop_id'), obj.get('hat_fit', 'open')), []).append(obj)
+        for pieces in cuts.values():
+            fitted = [obj for obj in selected if obj.get('ear_fit') and obj.get('fit_persona') == persona
+                      and obj.get('shop_slot') == 'hair' and (obj.get('shop_id'), obj.get('hat_fit', 'open'))
+                      == (pieces[0].get('shop_id'), pieces[0].get('hat_fit', 'open'))]
+            if fitted:
+                # Cuts cleared per ear shape need no filler, except where the
+                # cut itself stops at the elf ear: the human variant gets an
+                # underlayer on that window only.
+                human = [obj for obj in fitted if obj['ear_fit'] == 'human' and obj.data.materials
+                         and 'hair' in obj.data.materials[0].name.lower()]
+                if pieces[0].get('shop_id') in UNDERLAYER_HAIR and human:
+                    cut_id = pieces[0].get('shop_id')
+                    host = max(human, key=lambda obj: len(obj.data.polygons))
+                    shell = ear_zone_shell(bm, ear_ids, tree, [], attachments, elf_tree)
+                    top = max((obj.matrix_world @ v.co).z for obj in pieces for v in obj.data.vertices)
+                    bmesh.ops.delete(shell, geom=[f for f in shell.faces if any(v.co.z > top - .0005 for v in f.verts)], context='FACES')
+                    cut_pieces = [obj for obj in selected if obj.get('fit_persona') == persona
+                                  and obj.get('shop_slot') == 'hair' and obj.get('ear_fit') != 'elf'
+                                  and (obj.get('shop_id'), obj.get('hat_fit', 'open'))
+                                  == (pieces[0].get('shop_id'), pieces[0].get('hat_fit', 'open'))
+                                  and obj.data.materials and 'hair' in obj.data.materials[0].name.lower()]
+                    clones = (clone_locks_down(cut_pieces, shell, tree, human_ear_weight(skin))
+                              if cut_id in CLONED_HAIR else bmesh.new())
+                    bmesh.ops.delete(clones, geom=[f for f in clones.faces if any(v.co.z > top - .0005 for v in f.verts)], context='FACES')
+                    host['ear_zone_fill_faces'] = append_geometry(host, shell, UNDERLAYER_SHADE.get(cut_id, 1.0)) + append_geometry(host, clones)
+                    host['ear_zone_cloned_faces'] = len(clones.faces)
+                    shell.free(); clones.free()
+                continue
+            carriers = [obj for obj in pieces if obj.data.materials and 'hair' in obj.data.materials[0].name.lower()]
+            if not carriers:
+                continue
+            host = max(carriers, key=lambda obj: len(obj.data.polygons))
+            shell = ear_zone_shell(bm, ear_ids, tree, [PRE_HAIR[obj.name] for obj in pieces], attachments, elf_tree)
+            # A cut trimmed under a hat keeps its trim: no shell above its top.
+            top = max((obj.matrix_world @ v.co).z for obj in pieces for v in obj.data.vertices)
+            bmesh.ops.delete(shell, geom=[f for f in shell.faces if any(v.co.z > top - .0005 for v in f.verts)], context='FACES')
+            bmesh.ops.delete(shell, geom=[v for v in shell.verts if not v.link_faces], context='VERTS')
+            host['ear_zone_fill_faces'] = append_geometry(host, shell)
+            shell.free()
+        bm.free()
         bm = bmesh.new(); bm.from_mesh(skin.data)
-        bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index in ear_ids], context='VERTS')
+        # Close the openings the delivered ears plugged: every ear sits on the skull.
+        ids = set(original_ids)
+        cap_openings(bm, ids)
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.index in ids], context='VERTS')
         bm.to_mesh(skin.data); bm.free(); skin.data.update()
         skin['ears'] = 'separate: persona human ears, accessory elf-ears / pierced-ears'
     slot, item, persona = 'core', 'base', None
@@ -1462,6 +1832,12 @@ def split_ears(selected):
 
 
 def export():
+    # The haircuts as fitted, before the elf-ear clearance tucks locks away:
+    # their cover decides where hair_fill grows hair back around the human ear.
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    for obj in objects:
+        if obj.type == 'MESH' and obj.get('shop_slot') == 'hair' and obj.data.polygons:
+            PRE_HAIR[obj.name] = hair_tree(obj, depsgraph)
     bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
         if obj.type == 'MESH' and not obj.data.polygons:
@@ -1478,28 +1854,69 @@ def export():
         skins = {obj.get('fit_persona'): obj for obj in bpy.context.selected_objects
                  if obj.get('part') == 'skin' and obj.get('fit_persona')}
         hair_variants = {}
-        for obj in bpy.context.selected_objects:
+        # Each supplied cut is cleared twice: around the elf ear and around
+        # the human ear, from the same fitted locks. `split_ear_variants`
+        # then keeps the locks near the ear once per ear shape (`ear_fit`).
+        twins = []
+        for obj in list(bpy.context.selected_objects):
             persona_id = obj.get('fit_persona')
             gender = CHARACTERS.get(persona_id)
             if not gender: continue
             if obj.get('shop_slot') == 'hair':
-                if 'filled posterior hair' in obj.name and skins.get(persona_id):
-                    fit_posterior_hair(obj, skins[persona_id])
+                skin = skins.get(persona_id)
+                if 'filled posterior hair' in obj.name and skin:
+                    fit_posterior_hair(obj, skin)
+                pieces = [obj]
                 if obj.get('shop_id') not in CONFORMED_HAIR:
+                    # The occiput filler was ray-fitted over the elf ear and
+                    # wraps its shape: it stays tucked for both ears.
+                    if skin and 'filled posterior hair' not in obj.name:
+                        twin = human_ear_twin(obj, skin)
+                        objects.append(twin); twin.select_set(True)
+                        if obj.get('shop_id') in DRAPED_HAIR:
+                            drape_human_ear(twin, skin, DRAPE_DEPTH[obj.get('shop_id')])
+                        else:
+                            clear_human_ear(twin, skin)
+                        twins.append((obj, twin)); pieces.append(twin)
                     clear_ear_space(obj)
                 # The occiput filler lives inside the skull on purpose; every
                 # other variant is measured against this character's skin and
                 # lifted out of it, so Noa and Mila each get an exact hairline.
-                if skins.get(persona_id) and 'filled posterior hair' not in obj.name:
-                    obj['conformed_vertices'] = conform_hair_to_head(obj, skins[persona_id])
+                for piece in pieces:
+                    if skin and 'filled posterior hair' not in piece.name:
+                        piece['conformed_vertices'] = conform_hair_to_head(piece, skin)
                 if obj.get('shop_id') == 'long' and 'supplied hairstyle' in obj.name:
                     hair_variants[(persona_id, obj.get('hat_fit', 'open'))] = obj
             elif gender == 'boy':
                 apply_body_shape(obj, gender, 'stylized')
+        # Human-ear locks over the ear: only with the human ear variant.
+        for obj in list(bpy.context.selected_objects):
+            paths = EAR_LOCK_PATHS.get(obj.get('shop_id'))
+            if (paths and obj.get('shop_slot') == 'hair' and obj.get('ear_fit') == 'human'
+                    and skins.get(obj.get('fit_persona')) and obj.data.materials
+                    and 'hair' in obj.data.materials[0].name.lower()
+                    and obj == max((o for o in bpy.context.selected_objects if o.get('ear_fit') == 'human'
+                                    and o.get('shop_id') == obj.get('shop_id') and o.get('fit_persona') == obj.get('fit_persona')
+                                    and o.get('hat_fit', 'open') == obj.get('hat_fit', 'open')),
+                                   key=lambda o: len(o.data.polygons))):
+                skin = skins[obj['fit_persona']]
+                for lock in swept_temple_locks(obj, clear=lambda o: drape_human_ear(o, skin, 1.0),
+                                               paths=paths, label='lock over the ear'):
+                    lock['ear_fit'] = 'human'
+                    objects.append(lock); lock.select_set(True)
+        # The swept temple locks were drawn around the elf ear; left uncleared
+        # they stand out as a fin, so both ear shapes wear them tucked.
         for reference in hair_variants.values():
             for obj in swept_temple_locks(reference):
-                objects.append(obj)
-                obj.select_set(True)
+                objects.append(obj); obj.select_set(True)
+        for elf, human in twins:
+            piece = split_ear_variants(elf, human)
+            if piece:
+                objects.append(piece); piece.select_set(True)
+            else:
+                objects.remove(human); bpy.data.objects.remove(human, do_unlink=True)
+            if not elf.data.polygons:
+                objects.remove(elf); bpy.data.objects.remove(elf, do_unlink=True)
     else:
         refine_seat_silhouette(bpy.context.selected_objects)
         # Validated athletic silhouettes: the first pass softens the rear, the

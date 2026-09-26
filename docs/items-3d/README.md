@@ -5,11 +5,11 @@
 ### Base de personnage live
 
 Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
-`assets/character-stylized/catalogue.glb` (`stylized-v4`) via
+`assets/character-stylized/catalogue.glb` (`stylized-v8`) via
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v8-scoped-cosmetics`) reste la référence de la chaîne d'outils et des
+(`catalogue-v12-ear-drape`) reste la référence de la chaîne d'outils et des
 tests.
 
 Le **catalogue de cosmétiques est réduit** :
@@ -37,6 +37,41 @@ Le **catalogue de cosmétiques est réduit** :
   restent.
 - **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
   une identité visuelle propre (accent et badge distincts, `data-title-id`).
+- **Oreilles et accessoires** : tous les personnages ont des **oreilles
+  humaines sculptées** par défaut (`persona / human ears`). L'onglet
+  Accessoires propose **Oreilles d'elfe** (niveau 4, 30 ; les oreilles pointues
+  livrées, intactes) et **Oreilles percées** (niveau 5, 50 ; oreilles humaines,
+  anneaux et clous dorés, disposition asymétrique). `no-accessory` est l'état
+  gratuit par défaut. Un accessoire d'oreilles masque l'oreille humaine
+  (`EAR_ACCESSORIES` dans `items-3d-model.mjs`).
+
+Les oreilles livrées sont des coques libres posées sur une **ouverture de la
+peau**. `split_ears` (`tools/build-items-3d.py`) les sépare de la peau, garde
+les oreilles elfiques intactes (accessoire) et **referme l'ouverture**
+(`cap_openings`, une seule UV de peau unie) : toute oreille se pose sur un
+crâne fermé. L'oreille humaine est une **oreille anatomique sculptée**
+(`tools/blender/human_ear_model.py` : champ de distance signée — hélix, anthélix
+en Y, fossette, conque, tragus, antitragus, lobe — maillé par OpenVDB, ~5 200
+faces), posée sur le crâne par `human_ear_matrix` (`human_ears.py`) et teintée
+par une texel unie de la peau. Les bijoux des oreilles percées sont placés sur
+sa face externe (`jewellery_layout`).
+
+Les cheveux sont ajustés au crâne seul, mais les **mèches proches de l'oreille
+existent en deux versions** (propriété `ear_fit`) : rentrées autour de
+l'oreille elfique (`clear_ear_space`, contour `EAR_OUTLINE`) ou autour de
+l'oreille humaine (même dégagement, contour = enveloppe de l'oreille sculptée,
+`side_outline` + `human_ear_weight`). Ce sont les vraies mèches de la coupe,
+avec sa texture et son sens de coiffage, pas une coque de remplissage.
+`split_ear_variants` ne duplique que les faces qui diffèrent ; le reste de la
+coupe est partagé. Le viewer (`visiblePart`) affiche `ear_fit: 'elf'` avec
+l'accessoire `elf-ears`, sinon `human` (oreilles par défaut et percées).
+
+Cas particuliers : Short (sculptée) est regénérée autour de l'oreille humaine
+(`EAR_SHAPE=human tools/blender/sculpt_straight_short.py` →
+`straight-short-human-ear.glb`) ; pour Long, la couche occipitale et les mèches
+de tempe (dessinées sur l'oreille elfique) restent rentrées pour les deux.
+`tools/blender/hair_fill.py` (coque sur le crâne) ne sert plus qu'aux coupes
+sans variante (catalogue de production).
 
 Les coupes partagées utilisent les coiffures livrées et portées
 (`SUPPLIED_HAIR`), ajustées à chaque tête par la transformation du siège de

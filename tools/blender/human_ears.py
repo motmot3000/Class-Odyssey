@@ -3,50 +3,20 @@
 The delivered Noa and Mila heads carry pointed elf ears. Each ear is a set of
 loose shells (outer face, back face, lower rim and a small tragus flap) that
 sink into the skull, so they can be split out of the welded skin without
-opening a seam.
+opening a seam. The skin is open under them: `cap_openings` closes it.
 
-`humanize_points` reshapes those shells into rounded human ears with a warp
-along the ear's own axis, in the side view:
-
-* the root that enters the skull and the concha are kept as delivered;
-* the ear body is shortened;
-* the narrowing elf tip (a triangle) is mapped onto a half ellipse, so its
-  two edges become the rounded helix instead of converging into a point;
-* the shortened ear turns a little towards the vertical and sits closer to
-  the head, curling in at the top so it is rounded from the front as well.
-
-The painted ear detail follows the vertices, so the helix and concha shading
-are kept. Haircuts are fitted around the elf ear, the larger of the two, so
-the hair contour is identical whichever ear is worn.
+The human ear is not derived from the elf ear: it is the sculpted anatomical
+ear of `human_ear_model.py`, seated on the capped skull by `human_ear_matrix`.
+Haircuts are cleared around the worn ear: the build keeps two versions of the
+locks near the ear, tucked around the elf ear or around the human ear
+(`side_outline`), and the viewer shows the one matching the ears worn.
 
 Coordinates are Blender world space: metres, Z up, front at -Y.
 """
 import math
 
-from mathutils import Vector
+from mathutils import Matrix, Vector
 from mathutils.bvhtree import BVHTree
-
-# Side view (y, z) of the right ear; the left ear is its mirror in x. The axis
-# runs from the middle of the root (ROOT) to the far tip, measured on the mesh.
-ROOT = (-.024, 1.546)
-# Share of the elf axis kept exactly as delivered (the root and the concha).
-KEEP = .30
-# Share of the elf axis where its tip starts to narrow: the rest becomes the helix.
-TIP = .56
-# Human ear length along the axis, as a share of the elf ear length.
-LENGTH = .62
-# Where the human helix (half ellipse) starts, as a share of the human length.
-CAP_START = .58
-# The shortened ear also turns towards the vertical, like a human ear.
-TURN = math.radians(22)
-# How far the back rim of the human ear stands off the skull (metres)...
-FLARE = .020
-# ...and the share of it kept at the very top, where the helix curls in.
-CURL = .45
-BINS = 24
-# Radius of the Gaussian that finds the mid-surface of the ear shells.
-MID_SIGMA = .006
-
 
 def ear_islands(bm, min_abs_x=.07, z_range=(1.49, 1.63), max_vertices=80):
     """Loose ear shells of one skin mesh, grouped per side: {+1: [...], -1: [...]}.
@@ -89,173 +59,143 @@ def skull_tree(bm, exclude):
                                 [[remap[v.index] for v in f.verts] for f in faces])
 
 
+def cap_openings(bm, ear_ids, tolerance=1e-5):
+    """Close the skin openings the delivered ears plug, and return the caps.
+
+    The skin is open under each ear: the elf ear's root ring sits exactly on
+    the rim, unwelded. The human ear is smaller and cannot follow that rim
+    (it runs up towards the elf tip), so the socket would show around it.
+    The rim loops touching an ear are filled instead, with one plain skin
+    texel, so any ear simply sits on a closed skull.
+    """
+    import bmesh
+    from mathutils.kdtree import KDTree
+    bm.verts.ensure_lookup_table()
+    ears = KDTree(len(ear_ids))
+    for index in ear_ids:
+        ears.insert(bm.verts[index].co, index)
+    ears.balance()
+    # The skin is made of unwelded pieces: a seam is a pair of coincident
+    # boundary edges. Only unpaired boundary edges are real openings; an
+    # opening may run across several pieces, so its corners are welded first.
+    key = lambda e: tuple(sorted(tuple(round(c, 5) for c in v.co) for v in e.verts))
+
+    def openings():
+        edges = [e for e in bm.edges if e.is_boundary and not any(v.index in ear_ids for v in e.verts)]
+        count = {}
+        for edge in edges:
+            count[key(edge)] = count.get(key(edge), 0) + 1
+        return [e for e in edges if count[key(e)] == 1]
+
+    ear_verts = {bm.verts[i] for i in ear_ids}
+    rim_verts = list({v for e in openings() for v in e.verts})
+    bmesh.ops.remove_doubles(bm, verts=rim_verts, dist=tolerance)
+    bm.verts.index_update(); bm.verts.ensure_lookup_table()
+    # Welding renumbers vertices: refresh the ear indices the caller relies on.
+    ear_ids.clear(); ear_ids.update(v.index for v in ear_verts if v.is_valid)
+    boundary = openings()
+    # Opening loops (connected components), kept if they meet an ear.
+    links = {}
+    for edge in boundary:
+        for vertex in edge.verts:
+            links.setdefault(vertex, []).append(edge)
+    seen, rims = set(), []
+    for start in boundary:
+        if start in seen:
+            continue
+        loop, stack = [], [start]
+        seen.add(start)
+        while stack:
+            edge = stack.pop(); loop.append(edge)
+            for vertex in edge.verts:
+                for other in links[vertex]:
+                    if other not in seen:
+                        seen.add(other); stack.append(other)
+        if any(ears.find(v.co)[2] <= tolerance for edge in loop for v in edge.verts):
+            rims.append(loop)
+    if len(rims) != 2:
+        raise ValueError(f'Expected one skin opening per ear, found {len(rims)}')
+    uv = bm.loops.layers.uv.active
+    caps = []
+    for loop in rims:
+        # The rim crosses several UV islands, so interpolating its UVs would
+        # smear unrelated texels over the cap: it takes one plain skin texel,
+        # the rim's lowest point (behind the lobe, far from painted detail).
+        low = min((v for edge in loop for v in edge.verts), key=lambda v: v.co.z)
+        skin_uv = low.link_loops[0][uv].uv.copy() if uv else None
+        faces = [f for f in bmesh.ops.triangle_fill(bm, use_beauty=True, use_dissolve=False, edges=loop)['geom']
+                 if isinstance(f, bmesh.types.BMFace)]
+        side = 1 if sum(v.co.x for edge in loop for v in edge.verts) > 0 else -1
+        for face in faces:
+            face.normal_update()
+            if face.normal.x * side < 0:
+                face.normal_flip()
+            face.smooth = True
+            for corner in face.loops:
+                if uv: corner[uv].uv = skin_uv
+        caps += faces
+    return caps
+
+
+# Placement of the sculpted human ear (human_ear_model.py) on the head: the
+# front of its root (the tragus side) sits at EAR_ORIGIN in the side view, it
+# stands off the skull by EAR_FLARE (back edge out) and leans back by EAR_TILT.
+EAR_ORIGIN = (-.031, 1.556)
+EAR_SCALE = 1.05
+EAR_FLARE = math.radians(20)
+EAR_TILT = math.radians(12)
+
+
+def human_ear_matrix(tree, side):
+    """World matrix of the sculpted ear's local frame (a back, b up, w out).
+
+    The skin must already be capped (`cap_openings`), so the skull is measured
+    where the elf ear used to plug it. The left ear (side -1) is a mirror: its
+    faces must be reversed.
+    """
+    y, z = EAR_ORIGIN
+    x = skull_x(tree, side, y, z) - .001
+    basis = Matrix(((0, 0, 1), (1, 0, 0), (0, 1, 0)))
+    rotation = Matrix.Rotation(-EAR_FLARE, 3, 'Z') @ Matrix.Rotation(-EAR_TILT, 3, 'X') @ basis
+    linear = Matrix.Diagonal((side, 1, 1)) @ rotation * EAR_SCALE
+    matrix = linear.to_4x4()
+    matrix.translation = Vector((side * x, y, z))
+    return matrix
+
+
+def side_outline(points, pad=.0):
+    """Convex outline (y, z) of world points seen from the side, grown by `pad`.
+
+    Used to clear a haircut around the worn ear: the ear seen from the side
+    is close to convex, and the hull is what the locks have to go around.
+    """
+    pts = sorted({(round(p.y, 5), round(p.z, 5)) for p in points})
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    lower, upper = [], []
+    for p in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+    for p in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+    hull = lower[:-1] + upper[:-1]
+    cy = sum(p[0] for p in hull) / len(hull)
+    cz = sum(p[1] for p in hull) / len(hull)
+    grown = []
+    for y, z in hull:
+        d = math.hypot(y - cy, z - cz) or 1.0
+        grown.append((y + (y - cy) / d * pad, z + (z - cz) / d * pad))
+    return tuple(grown)
+
+
 def skull_x(tree, side, y, z, fallback=.086):
     hit = tree.ray_cast(Vector((side * .30, y, z)), Vector((-side, 0, 0)), .4)
     return abs(hit[0].x) if hit[0] is not None else fallback
-
-
-def _smooth(t):
-    t = max(0.0, min(1.0, t))
-    return t * t * (3 - 2 * t)
-
-
-def _frame(points):
-    """Axis unit vector, its normal and the elf length, from ROOT to the far tip."""
-    tip = max(points, key=lambda p: (p[0] - ROOT[0]) ** 2 + (p[1] - ROOT[1]) ** 2)
-    ay, az = tip[0] - ROOT[0], tip[1] - ROOT[1]
-    length = math.hypot(ay, az)
-    return (ay / length, az / length), (-az / length, ay / length), length
-
-
-def _local(p, axis, normal):
-    dy, dz = p[0] - ROOT[0], p[1] - ROOT[1]
-    return dy * axis[0] + dz * axis[1], dy * normal[0] + dz * normal[1]
-
-
-def _profile(points, axis, normal, length):
-    """Half widths of the elf ear on both sides of the axis, per axis bin.
-
-    The envelope narrows monotonically towards the tip yet encloses every
-    vertex, so no point is ever mapped past the rim.
-    """
-    upper, lower = [0.0] * BINS, [0.0] * BINS
-    for p in points:
-        u, v = _local(p, axis, normal)
-        i = min(BINS - 1, max(0, int(u / length * BINS)))
-        if v >= 0: upper[i] = max(upper[i], v)
-        else: lower[i] = max(lower[i], -v)
-    for side in (upper, lower):
-        for i in range(BINS - 2, -1, -1):
-            side[i] = max(side[i], side[i + 1], .002)
-    return upper, lower
-
-
-def _sample(table, u, length):
-    position = min(BINS - 1.0, max(0.0, u / length * BINS - .5))
-    i = int(position); t = position - i
-    return table[i] * (1 - t) + table[min(BINS - 1, i + 1)] * t
-
-
-def _human_side_view(u, v, length, upper, lower):
-    """Map elf axis coordinates (u, v) to human ones; also return the helix progress."""
-    keep, tip = KEEP * length, TIP * length
-    human = LENGTH * length
-    cap = CAP_START * human
-    width = lambda sign: _sample(upper if sign >= 0 else lower, tip, length)
-    if u <= tip:
-        # Root and concha as delivered, then the body shortened linearly so
-        # that the start of the elf tip lands on the start of the helix.
-        t = _smooth((u - keep * .5) / keep)
-        nu = u + ((keep + (u - keep) * (cap - keep) / (tip - keep)) - u) * t if u > keep * .5 else u
-        elf = _sample(upper if v >= 0 else lower, u, length)
-        # Never wider than delivered; only as wide as the helix it leads to.
-        nv = v * min(1.0, 1 + (width(v) / max(elf, 1e-6) - 1) * t) if elf > width(v) else v
-        return nu, nv, 0.0
-    # Narrowing elf tip -> half ellipse: its two edges become the helix arc.
-    # A point at relative height t of the tip and relative offset s across it
-    # lands at angle phi on the arc (s = +-1) or inside the half ellipse.
-    # The exponent spreads the vertices crowded at the elf tip along the arc.
-    t = min(1.0, (u - tip) / (length - tip))
-    elf = max(_sample(upper if v >= 0 else lower, u, length), 1e-6)
-    s = max(-1.0, min(1.0, v / elf))
-    phi = (1 - t) ** .65 * math.pi / 2
-    radius = human - cap
-    nu = cap + radius * math.cos(phi)
-    nv = s * width(v) * math.sin(phi)
-    return nu, nv, (nu - cap) / radius
-
-
-def humanize_points(points, side, tree, edges=None):
-    """Warp world-space ear points of one side into the human ear.
-
-    `points` is a list of Vectors (all shells of that ear together, so the
-    shells keep fitting each other); `edges` are the index pairs linking them.
-    Returns the new positions.
-    """
-    flat = [(p.y, p.z) for p in points]
-    axis, normal, length = _frame(flat)
-    upper, lower = _profile(flat, axis, normal, length)
-    human = LENGTH * length
-    keep = KEEP * length
-    # Height of each point above the skull, split into the flare of the ear
-    # plane (mean per axis bin) and the local thickness of the shells.
-    samples = []
-    for p, (y0, z0) in zip(points, flat):
-        u, v = _local((y0, z0), axis, normal)
-        samples.append((u, v, abs(p.x) - skull_x(tree, side, y0, z0)))
-    # Mid-surface of the elf ear: a Gaussian average of the neighbouring
-    # heights in the side view. It is smooth, so the remaining thickness term
-    # is continuous and no face turns over when the plane is redrawn.
-    mid = []
-    for u, v, _lift in samples:
-        total = weight = 0.0
-        for u2, v2, lift2 in samples:
-            w = math.exp(-((u - u2) ** 2 + (v - v2) ** 2) / (2 * MID_SIGMA ** 2))
-            total += w * lift2; weight += w
-        mid.append(total / weight)
-    side_view = []
-    for (u, v, lift), elf_plane in zip(samples, mid):
-        nu, nv, _helix = _human_side_view(u, v, length, upper, lower)
-        # Turn the shortened ear towards the vertical, pivoting on the root,
-        # which stays exactly as delivered so it keeps plugging the skull.
-        turn = TURN * _smooth((nu - keep) / (human - keep))
-        c_t, s_t = math.cos(turn), math.sin(turn)
-        ly, lz = nu * axis[0] + nv * normal[0], nu * axis[1] + nv * normal[1]
-        side_view.append((ROOT[0] + ly * c_t - lz * s_t, ROOT[1] + ly * s_t + lz * c_t, nu, u, lift, elf_plane))
-    top = max(z for _y, z, *_ in side_view)
-    bottom = min(z for _y, z, *_ in side_view)
-    result = []
-    for y, z, nu, u, lift, elf_plane in side_view:
-        thickness = lift - elf_plane
-        # Human flare: grows away from the root, largest along the middle of
-        # the back rim, smaller at the top (the helix curls in, so the ear is
-        # rounded from the front) and at the lobe.
-        height = (z - bottom) / max(top - bottom, 1e-6)
-        shape = 1 - (1 - CURL) * _smooth((height - .62) / .38) - .35 * _smooth((.30 - height) / .30)
-        human_plane = elf_plane + (FLARE * _smooth(nu / human) * shape - elf_plane) * _smooth((u - keep * .5) / keep)
-        new_lift = human_plane + thickness * (1 if u < keep else .85)
-        if lift <= 0 and u < keep:
-            new_lift = lift          # the root stays buried exactly as delivered
-        result.append(Vector((side * (skull_x(tree, side, y, z) + new_lift), y, z)))
-    if edges:
-        # The root ring is frozen: it seals the opening left in the skull.
-        relax(result, edges, weights=[_smooth((u - keep) / (.35 * length))
-                                      for _nu, _nv, _h, u, _lift, _plane in side_view])
-    return result
-
-
-def relax(points, edges, weights, iterations=3, strength=.35):
-    """Light Laplacian smoothing of the humanized ear.
-
-    The shells are loose but share their rim positions, so vertices that end
-    up coincident are relaxed as one and the shells stay welded with each
-    other. This removes the last few faces that would otherwise turn over on
-    the tight inner fold of the concha.
-    """
-    key = lambda p: (round(p.x, 5), round(p.y, 5), round(p.z, 5))
-    groups = {}
-    for i, p in enumerate(points):
-        groups.setdefault(key(p), []).append(i)
-    node, order = {}, sorted(groups)
-    for n, k in enumerate(order):
-        for i in groups[k]: node[i] = n
-    neighbour = [set() for _ in order]
-    for a, b in edges:
-        if node[a] != node[b]:
-            neighbour[node[a]].add(node[b]); neighbour[node[b]].add(node[a])
-    position = [None] * len(order)
-    weight = [0.0] * len(order)
-    for i, p in enumerate(points):
-        position[node[i]] = p.copy()
-        weight[node[i]] = max(weight[node[i]], weights[i])
-    for _ in range(iterations):
-        moved = position[:]
-        for n in range(len(order)):
-            if not neighbour[n] or weight[n] <= 0: continue
-            mean = sum((position[m] for m in neighbour[n]), Vector()) / len(neighbour[n])
-            moved[n] = position[n].lerp(mean, strength * weight[n])
-        position = moved
-    for i in range(len(points)): points[i] = position[node[i]].copy()
 
 
 def _side_view_unit(dy, dz):
