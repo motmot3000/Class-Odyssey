@@ -121,6 +121,14 @@ export const EYE_COLORS = [
   { id: "violet-eyes", name: "Violet", minLevel: 8, price: 50, color: "#63497F", description: "Mysterious violet eyes." }
 ];
 
+/* Every hero has rounded human ears. The ear accessories replace them: the
+ * delivered pointed elf ears, or human ears with a few gold piercings. */
+export const ACCESSORIES = [
+  { id: "no-accessory", name: "No Accessory", minLevel: 1, price: 0, description: "Natural human ears." },
+  { id: "elf-ears", name: "Elf Ears", minLevel: 4, price: 30, description: "Long pointed elf ears." },
+  { id: "pierced-ears", name: "Pierced Ears", minLevel: 5, price: 50, description: "Human ears with gold hoops and studs." }
+];
+
 export const SKIN_TONES = [
   { id: "light", name: "Light Skin", color: "#ffd7b0", minLevel: 1, price: 0, description: "A natural light skin tone." },
   { id: "medium", name: "Medium Skin", color: "#f2c193", minLevel: 1, price: 0, description: "A natural medium skin tone." },
@@ -136,6 +144,7 @@ export const SHOP_ITEMS = [
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
   ...EYE_COLORS.map((item) => ({ ...item, type: "eyeColor" })),
+  ...ACCESSORIES.map((item) => ({ ...item, type: "accessory" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
   ...SKIN_TONES.map((item) => ({ ...item, type: "tone" }))
 ];
@@ -675,6 +684,7 @@ function normalizePupil(pupil) {
   const hair = HAIRS.some((item) => item.id === pupil.hair) ? pupil.hair : defaultHair;
   const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
   const eyeColor = EYE_COLORS.some((item) => item.id === pupil.eyeColor) ? pupil.eyeColor : "brown-eyes";
+  const accessory = ACCESSORIES.some((item) => item.id === pupil.accessory) ? pupil.accessory : "no-accessory";
   const starterItems = SHOP_ITEMS.filter((item) => item.price === 0).map((item) => item.id);
   const ownedItems = [...new Set([
     ...starterItems,
@@ -685,6 +695,7 @@ function normalizePupil(pupil) {
     hair,
     hairColor,
     eyeColor,
+    accessory,
     skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
@@ -718,6 +729,7 @@ function normalizePupil(pupil) {
     hair: ownedItems.includes(hair) ? hair : defaultHair,
     hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
     eyeColor: ownedItems.includes(eyeColor) ? eyeColor : "brown-eyes",
+    accessory: ownedItems.includes(accessory) ? accessory : "no-accessory",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
 }

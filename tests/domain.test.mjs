@@ -399,6 +399,35 @@ test("brown is the default eye colour and old saves fall back to it", () => {
   assert.equal(getPupilById(normalizeState(state), pupil.id).eyeColor, "brown-eyes");
 });
 
+test("ear accessories unlock at their levels, persist, and old saves keep human ears", () => {
+  assert.deepEqual(getShopItems("accessory").map((item) => item.id), ["no-accessory", "elf-ears", "pierced-ears"]);
+  for (const [itemId, minLevel, price] of [["elf-ears", 4, 30], ["pierced-ears", 5, 50]]) {
+    let state = createInitialState();
+    const pupilId = getCurrentClass(state).pupils[0].id;
+    const item = getShopItem(itemId);
+    assert.equal(item.minLevel, minLevel);
+    assert.equal(item.price, price);
+    state = awardMoney(state, [pupilId], price, "reward");
+    for (let level = 1; level < minLevel - 1; level++) {
+      state = awardXp(state, [pupilId], xpNeededForLevel(level), "level up");
+    }
+    assert.equal(purchaseItem(state, pupilId, itemId), state);
+    state = awardXp(state, [pupilId], xpNeededForLevel(minLevel - 1), "level up");
+    state = importState(JSON.stringify(purchaseItem(state, pupilId, itemId)));
+    assert.equal(getPupilById(state, pupilId).accessory, itemId);
+    state = updateCosmetics(state, pupilId, { accessory: "no-accessory" });
+    assert.equal(getPupilById(state, pupilId).accessory, "no-accessory");
+  }
+  const state = createInitialState();
+  const pupil = getCurrentClass(state).pupils[0];
+  assert.equal(pupil.accessory, "no-accessory");
+  pupil.accessory = "elf-ears";
+  assert.equal(getPupilById(normalizeState(state), pupil.id).accessory, "elf-ears");
+  pupil.ownedItems = pupil.ownedItems.filter((id) => id !== "elf-ears");
+  delete pupil.accessory;
+  assert.equal(getPupilById(normalizeState(state), pupil.id).accessory, "no-accessory");
+});
+
 test("clicking a pupil replaces the previous selection and clicking again clears it", () => {
   let state = createInitialState();
   const pupilId = getCurrentClass(state).pupils[0].id;

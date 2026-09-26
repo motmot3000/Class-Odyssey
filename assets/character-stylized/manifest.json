@@ -1,5 +1,5 @@
 {
-  "appearanceRevision": "stylized-v5",
+  "appearanceRevision": "stylized-v8",
   "sourceRevision": "base-v2-2026-09",
   "sourcePose": {
     "armsFromT": 82,
@@ -14,20 +14,20 @@
   "anchorManifestSha256": "d43cf97305fe12a72a5b4342b9bd304bf019e60d0b31bbd264878a1386de0e5a",
   "coordinates": "metres; Blender Z up, front -Y; glTF Y up, front +Z",
   "parts": {
-    "persona:male": 4,
+    "persona:male": 5,
     "core:base": 2,
-    "persona:female": 4,
+    "persona:female": 5,
     "outfit:starter": 14,
     "outfit:vocab-ranger": 24,
     "outfit:grammar-mage": 30,
     "outfit:story-keeper": 114,
     "outfit:honor-knight": 114,
-    "hair:long": 36,
-    "hair:spiky": 6,
-    "hair:medium-cut": 6,
-    "hair:curly": 12,
-    "hair:short": 12,
-    "hair:bun": 30,
+    "hair:long": 48,
+    "hair:spiky": 18,
+    "hair:medium-cut": 18,
+    "hair:curly": 48,
+    "hair:short": 24,
+    "hair:bun": 66,
     "hat:explorer-cap": 12,
     "hat:sunglasses": 14,
     "hat:feather-beret": 10,
@@ -35,7 +35,9 @@
     "hat:classy-hat": 8,
     "hat:gold-crown": 20,
     "hat:celestial-crown": 26,
-    "hat:steel-helm": 14
+    "hat:steel-helm": 14,
+    "accessory:elf-ears": 2,
+    "accessory:pierced-ears": 12
   },
   "staticPose": true,
   "headFit": {
