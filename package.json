@@ -9,6 +9,7 @@
     "dev": "node tools/dev-all.mjs",
     "dev:app": "node --env-file-if-exists=.env server/server.mjs --auto-port",
     "start": "node --env-file-if-exists=.env server/server.mjs",
+    "console": "node --env-file-if-exists=.env.console admin-console/server.mjs",
     "build:items-3d": "node tools/build-items-viewer.mjs",
     "dev:items-3d": "node tools/serve-items-3d.mjs",
     "build:characters": "esbuild src/base-character-viewer.mjs --bundle --format=esm --minify --outfile=assets/characters-base/runtime/viewer.js",
@@ -20,6 +21,7 @@
     "lab": "node tools/serve-character-lab.mjs"
   },
   "dependencies": {
+    "maxmind": "^5.0.7",
     "three": "0.180.0"
   },
   "devDependencies": {

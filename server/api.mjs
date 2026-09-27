@@ -171,6 +171,8 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
+      recentAccesses: [],
+      status: "active",
       terms: null,
       settings: settingsWithDefaults(null)
     };
@@ -298,6 +300,19 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     }
   }
 
+  function deleteAccount(index, accountId) {
+    const next = { accounts: { ...index.accounts } };
+    delete next.accounts[accountId];
+    // Commit the deletion before removing files: an interrupted cleanup cannot
+    // make a removed account usable again through a live session.
+    writeAccounts(next, { backup: false });
+    revokeAccountTokens(accountId);
+    // Old account-index snapshots include the removed account's personal data.
+    for (const file of backupFiles(accountBackupsDir, "accounts-")) fs.rmSync(file);
+    fs.rmSync(accountDirectory(accountId), { recursive: true, force: true });
+    writeAccounts(next);
+  }
+
   function bootstrapAccounts() {
     if (fs.existsSync(accountsFile) || backupFiles(accountBackupsDir, "accounts-").length) {
       const needsRestore = !validAccountsIndex(readJsonFile(accountsFile));
@@ -398,7 +413,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     const session = liveSessions()[tokenKey(token)];
     if (!session) return null;
     const account = readAccounts().accounts[session.accountId];
-    return account ? { account, token, authMethod: session.authMethod || "password", createdAt: session.createdAt } : null;
+    return account && account.status !== "suspended" ? { account, token, authMethod: session.authMethod || "password", createdAt: session.createdAt } : null;
   }
 
   function activeSessionCounts() {
@@ -429,6 +444,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     readAccounts,
     writeAccounts,
     createAccountWithState,
+    deleteAccount,
     writeState,
     readState,
     findByUsername,

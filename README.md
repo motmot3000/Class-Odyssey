@@ -106,6 +106,14 @@ ouvre l'URL retrouve les données de son compte.
 
 Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 
+## Console d'administration locale
+
+La console séparée est dans `admin-console/` et s'ouvre sur
+`http://127.0.0.1:5191` avec `npm run console`. Elle lit les comptes en direct
+depuis le backend du site, sans mot de passe à saisir dans le navigateur.
+L'installation et la connexion au VPS sont décrites dans
+[`admin-console/README.md`](admin-console/README.md).
+
 ## Structure du code
 
 ```text

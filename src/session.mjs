@@ -162,6 +162,9 @@ async function openSession(path, credentials) {
     offline: offlineVerifier
   });
   lockAdult();
+  // The account was just created with this password: let its teacher set up
+  // the first class without asking them to type it again immediately.
+  if (path === "accounts") unlockAdult();
   return { ok: true, account: payload.account };
 }
 
@@ -191,6 +194,7 @@ export async function signInWithGoogleCode(code) {
   }
   writeStored(SESSION_KEY, { token: payload.token, account: payload.account });
   lockAdult();
+  if (payload.created === true) unlockAdult();
   return { ok: true, account: payload.account };
 }
 

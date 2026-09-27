@@ -104,9 +104,18 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 | PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |
 | GET     | `/api/admin/accounts`                      | Liste les comptes (`admin`) |
 | PUT     | `/api/admin/accounts/:id/password`         | Réinitialise le mot de passe d'un autre compte (`admin`) |
+| GET     | `/api/console/overview`                    | Métadonnées et dernières IP des comptes (clé serveur) |
+| GET     | `/api/console/audit`                       | Journal de modération (clé serveur) |
+| GET     | `/api/console/support`                     | Messages d'aide et nombre de messages ouverts (clé serveur) |
+| PATCH   | `/api/console/support/:id`                 | Statut et note interne d'un message d'aide (clé serveur) |
+| PATCH   | `/api/console/accounts/:id`                | Nom affiché, note interne, suspension/réactivation (clé serveur) |
+| DELETE  | `/api/console/accounts/:id/sessions`       | Révoque les sessions du compte (clé serveur) |
+| DELETE  | `/api/console/accounts/:id`                | Supprime le compte après confirmation (clé serveur) |
 
-Les routes autres que `health`, inscription et connexion exigent
-`X-Session-Token`. Les jetons ne sont stockés que sous forme de condensat
+Les routes autres que `health`, inscription, connexion et `/api/console/*` exigent
+`X-Session-Token`. Les routes `/api/console/*` exigent `X-Console-Key`, configurée
+uniquement côté serveur avec `ADMIN_CONSOLE_KEY` (au moins 32 caractères) ; sans
+clé elles sont désactivées. Les jetons ne sont stockés que sous forme de condensat
 SHA-256, les mots de passe avec `scrypt` (asynchrone, sel de 16 octets, dérivé
 de 32 octets, comparaison en temps constant), et aucune réponse d'administration
 n'expose ces valeurs. Le mot de passe fait au minimum 6 caractères. Une session

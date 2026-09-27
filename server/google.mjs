@@ -182,7 +182,7 @@ export function createGoogleAuth({
       return null;
     }
     pending.delete(String(code || ""));
-    return { token: entry.token, account: entry.account };
+    return { token: entry.token, account: entry.account, created: entry.created === true };
   }
 
   return { enabled, start, callback, consumeExchangeCode };

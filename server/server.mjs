@@ -1,9 +1,13 @@
 import http from "node:http";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import maxmind from "maxmind";
 import { createApi } from "./api.mjs";
 import { createGoogleAuth } from "./google.mjs";
+import { createSupportInbox } from "./support-inbox.mjs";
 import { createStaticHandler } from "./static.mjs";
 import { createMailer, passwordResetEmail } from "./mail.mjs";
 import { cleanSupportText, createSupportStore, supportLimits } from "./support.mjs";
@@ -89,6 +93,18 @@ function safeEqualHex(expected, actual) {
 // fronts the server (TRUST_PROXY=1); otherwise a client could spoof the header.
 // The container port is published on the loopback, so only Caddy can reach it.
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+const ACCESS_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+function recordAccess(account, req) {
+  const raw = clientAddress(req).replace(/^::ffff:/, "");
+  const ip = net.isIP(raw) ? raw : null;
+  const at = new Date().toISOString();
+  const recent = Array.isArray(account.recentAccesses) ? account.recentAccesses : [];
+  return {
+    ...account,
+    lastLoginAt: at,
+    recentAccesses: ip ? [{ ip, at }, ...recent.filter((entry) => entry.ip !== ip && Date.parse(entry.at) > Date.now() - ACCESS_RETENTION_MS)].slice(0, 5) : recent
+  };
+}
 function clientAddress(req) {
   if (TRUST_PROXY) {
     const forwarded = req.headers["x-forwarded-for"];
@@ -137,6 +153,8 @@ export function createGameServer({
   googleRedirectUri = process.env.GOOGLE_REDIRECT_URI,
   mailer: mailerOption,
   support: supportOption,
+  consoleKey = process.env.ADMIN_CONSOLE_KEY,
+  geoIpDbPath = process.env.GEOIP_DB,
   fetchImpl,
   rateLimit
 } = {}) {
@@ -157,6 +175,43 @@ export function createGameServer({
   api.ensureDir(dataDir);
   api.bootstrapAccounts();
   const serveStatic = createStaticHandler({ publicDir, dataDir });
+  const supportStore = fs.existsSync(path.join(__dirname, "support.mjs"))
+    ? import("./support.mjs").then(({ createSupportStore }) => createSupportStore({ dataDir }))
+    : Promise.resolve(createSupportInbox({ dataDir }));
+  const geoReader = geoIpDbPath ? maxmind.open(geoIpDbPath).catch((error) => {
+    console.warn(`GeoIP database unavailable: ${error.message}`);
+    return null;
+  }) : Promise.resolve(null);
+  const auditFile = path.join(dataDir, "admin-audit.jsonl");
+
+  function consoleAuthorized(req, res) {
+    if (typeof consoleKey !== "string" || consoleKey.length < 32) {
+      sendJson(res, 404, { error: "not found" });
+      return false;
+    }
+    const received = req.headers["x-console-key"];
+    const expectedHash = crypto.createHash("sha256").update(consoleKey).digest();
+    const actualHash = crypto.createHash("sha256").update(typeof received === "string" ? received : "").digest();
+    if (!crypto.timingSafeEqual(expectedHash, actualHash)) {
+      sendJson(res, 401, { error: "unauthorized" });
+      return false;
+    }
+    return true;
+  }
+
+  function audit(action, accountId) {
+    const entry = { at: new Date().toISOString(), action, accountId };
+    fs.appendFileSync(auditFile, `${JSON.stringify(entry)}\n`, { mode: 0o600 });
+    if (fs.statSync(auditFile).size > 1024 * 1024) {
+      const lines = fs.readFileSync(auditFile, "utf8").trim().split("\n").slice(-500);
+      fs.writeFileSync(auditFile, `${lines.join("\n")}\n`, { mode: 0o600 });
+    }
+  }
+
+  function recentAudit() {
+    if (!fs.existsSync(auditFile)) return [];
+    return fs.readFileSync(auditFile, "utf8").trim().split("\n").filter(Boolean).slice(-100).reverse().map((line) => JSON.parse(line));
+  }
 
   function requireSession(req, res) {
     const session = api.sessionFor(req.headers["x-session-token"]);
@@ -229,7 +284,7 @@ export function createGameServer({
       sendJson(res, 400, { error: "account could not be created" });
       return;
     }
-    const account = await api.newAccount(username, displayName, password, "teacher", email);
+    const account = recordAccess(await api.newAccount(username, displayName, password, "teacher", email), req);
     account.terms = { acceptedAt: new Date().toISOString(), version: TERMS_VERSION };
     api.createAccountWithState(index, account);
     sendJson(res, 201, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(account) });
@@ -248,13 +303,13 @@ export function createGameServer({
     let matches = false;
     if (account && !account.googleOnly) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
     else await api.hashPassword(stringField(payload, "password"));
-    if (!matches) {
+    if (!matches || account?.status === "suspended") {
       limiter.record(rateKey);
       await equalizedRefusal(res);
       return;
     }
     limiter.clear(rateKey);
-    const updated = { ...account, lastLoginAt: new Date().toISOString() };
+    const updated = recordAccess(account, req);
     index.accounts[account.id] = updated;
     api.writeAccounts(index);
     sendJson(res, 200, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(updated) });
@@ -262,10 +317,11 @@ export function createGameServer({
 
   /* A verified Google email either opens the matching account or creates one.
    * The random hash is replaced with a teacher-console password after consent. */
-  async function handleGoogleLogin(claims) {
+  async function handleGoogleLogin(claims, req) {
     const email = String(claims.email || "").trim().toLowerCase();
     const index = api.readAccounts();
     let account = api.findByEmail(index, email);
+    const created = !account;
     if (!account) {
       // The verified email is the identity; the display name defaults to its
       // local part unless the provider supplies a real name.
@@ -276,10 +332,11 @@ export function createGameServer({
       account.teacherPasswordSetupRequired = true;
       api.createAccountWithState(index, account);
     }
-    const updated = { ...account, lastLoginAt: new Date().toISOString() };
+    if (account.status === "suspended") return null;
+    const updated = recordAccess(account, req);
     index.accounts[account.id] = updated;
     api.writeAccounts(index);
-    return { token: api.issueToken(account.id, "google"), account: api.publicAccount(updated) };
+    return { token: api.issueToken(account.id, "google"), account: api.publicAccount(updated), created };
   }
 
   async function handleVerify(req, res) {
@@ -652,19 +709,123 @@ export function createGameServer({
     sendJson(res, 200, { ok: true });
   }
 
+  async function consoleAccount(account, counts, reader) {
+    const state = api.readState(api.accountDirectory(account.id));
+    const classes = Array.isArray(state?.classes) ? state.classes : [];
+    const accesses = (Array.isArray(account.recentAccesses) ? account.recentAccesses : [])
+      .filter((entry) => net.isIP(entry.ip) && Date.parse(entry.at) > Date.now() - ACCESS_RETENTION_MS)
+      .slice(0, 5).map(({ ip, at }) => {
+        const location = reader?.get(ip);
+        const city = location?.city?.names?.fr || location?.city?.names?.en;
+        const country = location?.country?.names?.fr || location?.country?.names?.en;
+        return { ip, at, location: [city, country].filter(Boolean).join(", ") || null };
+      });
+    return {
+      id: account.id, username: account.username, displayName: account.displayName,
+      email: account.email || "", role: account.role || "teacher", status: account.status || "active",
+      createdAt: account.createdAt, updatedAt: account.updatedAt, lastLoginAt: account.lastLoginAt || null,
+      terms: account.terms || null, activeSessionCount: counts[account.id] || 0,
+      classCount: classes.length,
+      pupilCount: classes.reduce((sum, classroom) => sum + (Array.isArray(classroom.pupils) ? classroom.pupils.length : 0), 0),
+      classes: classes.map((classroom) => ({ name: classroom.name || "Classe sans nom", pupilCount: Array.isArray(classroom.pupils) ? classroom.pupils.length : 0 })),
+      moderationNote: account.moderationNote || "", recentAccesses: accesses
+    };
+  }
+
+  async function handleConsole(req, res, pathname) {
+    if (!consoleAuthorized(req, res)) return;
+    if (req.method === "GET" && pathname === "/api/console/overview") {
+      const index = api.readAccounts();
+      const counts = api.activeSessionCounts();
+      const reader = await geoReader;
+      const accounts = await Promise.all(Object.values(index.accounts).map((account) => consoleAccount(account, counts, reader)));
+      accounts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      const support = await supportStore;
+      return sendJson(res, 200, { accounts, supportUnread: await support.unreadCount(), geoipAvailable: Boolean(reader), subscriptionsAvailable: false, updatedAt: new Date().toISOString() });
+    }
+    if (req.method === "GET" && pathname === "/api/console/audit") return sendJson(res, 200, { entries: recentAudit() });
+    if (pathname === "/api/console/support" && req.method === "GET") {
+      const support = await supportStore;
+      return sendJson(res, 200, { messages: await support.list(), unread: await support.unreadCount() });
+    }
+    const supportMatch = pathname.match(/^\/api\/console\/support\/([0-9a-f]{16})$/);
+    if (supportMatch && req.method === "PATCH") {
+      const payload = await readJsonObject(req, res);
+      if (!payload || !consoleAuthorized(req, res)) return;
+      if (!Object.keys(payload).length || Object.keys(payload).some((key) => !["status", "note"].includes(key))) return sendJson(res, 400, { error: "unsupported fields" });
+      if (Object.hasOwn(payload, "status") && !["open", "read", "done"].includes(payload.status)) return sendJson(res, 400, { error: "invalid status" });
+      if (Object.hasOwn(payload, "note") && (typeof payload.note !== "string" || payload.note.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(payload.note))) return sendJson(res, 400, { error: "invalid note" });
+      const support = await supportStore;
+      const updated = await support.update(supportMatch[1], payload);
+      if (!updated) return sendJson(res, 404, { error: "message not found" });
+      audit("support.updated", updated.accountId);
+      return sendJson(res, 200, { message: updated });
+    }
+    const match = pathname.match(/^\/api\/console\/accounts\/([0-9a-f]{24})(?:\/(sessions))?$/);
+    if (!match) return sendJson(res, 404, { error: "not found" });
+    const [, id, section] = match;
+    const index = api.readAccounts();
+    const account = index.accounts[id];
+    if (!account) return sendJson(res, 404, { error: "account not found" });
+    if (account.role === "admin") return sendJson(res, 403, { error: "founder account is protected" });
+
+    if (section === "sessions" && req.method === "DELETE") {
+      api.revokeAccountTokens(id);
+      audit("sessions.revoked", id);
+      return sendJson(res, 200, { ok: true });
+    }
+    if (!section && req.method === "PATCH") {
+      const payload = await readJsonObject(req, res);
+      if (!payload || !consoleAuthorized(req, res)) return;
+      if (!Object.keys(payload).length || Object.keys(payload).some((key) => !["displayName", "status", "moderationNote"].includes(key))) {
+        return sendJson(res, 400, { error: "unsupported fields" });
+      }
+      const next = { ...account };
+      if (Object.hasOwn(payload, "displayName")) {
+        const name = cleanDisplayName(payload.displayName);
+        if (typeof payload.displayName !== "string" || !name || name.length > api.limits.MAX_DISPLAY_NAME_LENGTH) return sendJson(res, 400, { error: "invalid display name" });
+        next.displayName = name;
+      }
+      if (Object.hasOwn(payload, "status")) {
+        if (!["active", "suspended"].includes(payload.status)) return sendJson(res, 400, { error: "invalid status" });
+        next.status = payload.status;
+      }
+      if (Object.hasOwn(payload, "moderationNote")) {
+        const note = cleanDisplayName(payload.moderationNote);
+        if (typeof payload.moderationNote !== "string" || note.length > 500) return sendJson(res, 400, { error: "invalid note" });
+        next.moderationNote = note;
+      }
+      next.updatedAt = new Date().toISOString();
+      index.accounts[id] = next;
+      api.writeAccounts(index);
+      if (next.status === "suspended") api.revokeAccountTokens(id);
+      audit(next.status !== (account.status || "active") ? `account.${next.status}` : "account.updated", id);
+      return sendJson(res, 200, { ok: true });
+    }
+    if (!section && req.method === "DELETE") {
+      const payload = await readJsonObject(req, res);
+      if (!payload || !consoleAuthorized(req, res)) return;
+      if (payload.confirmUsername !== account.username) return sendJson(res, 400, { error: "username confirmation does not match" });
+      api.deleteAccount(index, id);
+      audit("account.deleted", id);
+      return sendJson(res, 200, { ok: true });
+    }
+    return sendJson(res, 405, { error: "method not allowed" });
+  }
+
   return http.createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url, "http://localhost").pathname;
       if (pathname === "/api/health" && req.method === "GET") return sendJson(res, 200, { ok: true });
       if (pathname === "/api/config" && req.method === "GET") return sendJson(res, 200, { google: google.enabled });
       if (pathname === "/api/auth/google" && req.method === "GET") return google.start(req, res);
-      if (pathname === "/api/auth/google/callback" && req.method === "GET") return await google.callback(req, res, handleGoogleLogin);
+       if (pathname === "/api/auth/google/callback" && req.method === "GET") return await google.callback(req, res, (claims) => handleGoogleLogin(claims, req));
       if (pathname === "/api/auth/google/exchange" && req.method === "POST") {
         const payload = await readJsonObject(req, res);
         if (!payload) return;
         const login = google.consumeExchangeCode(stringField(payload, "code"));
         if (!login) return sendJson(res, 400, { error: "google sign-in expired" });
-        return sendJson(res, 200, { ok: true, token: login.token, account: login.account });
+         return sendJson(res, 200, { ok: true, token: login.token, account: login.account, created: login.created === true });
       }
       if (pathname === "/api/accounts" && req.method === "POST") return await handleSignUp(req, res);
       if (pathname === "/api/session") {
@@ -690,6 +851,7 @@ export function createGameServer({
       if (pathname === "/api/session/password/reset/confirm" && req.method === "POST") return await handlePasswordResetConfirm(req, res);
       if (pathname === "/api/support/messages" && req.method === "POST") return await handleSupportMessage(req, res);
       if (pathname === "/api/state" && ["GET", "HEAD", "PUT"].includes(req.method)) return await handleState(req, res);
+      if (pathname.startsWith("/api/console/")) return await handleConsole(req, res, pathname);
       if (pathname === "/api/admin/accounts" && req.method === "GET") return handleAdminList(req, res);
       const resetMatch = pathname.match(/^\/api\/admin\/accounts\/([0-9a-f]{24})\/password$/);
       if (resetMatch && req.method === "PUT") return await handleAdminReset(req, res, resetMatch[1]);

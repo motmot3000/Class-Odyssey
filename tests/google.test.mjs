@@ -106,6 +106,7 @@ test("Google sign-in creates an account from the verified email, then reuses it"
     });
     assert.equal(exchanged.status, 200);
     const login = await exchanged.json();
+    assert.equal(login.created, true);
     assert.equal(login.account.email, "marie.dupont@example.test");
     assert.equal(login.account.username, "marie.dupont@example.test");
     assert.equal(login.account.displayName, "Marie Dupont");
@@ -191,6 +192,7 @@ test("Google sign-in creates an account from the verified email, then reuses it"
       body: JSON.stringify({ password: "recovered-console-secret" })
     });
     assert.equal(afterRecovery.status, 200);
+    assert.equal(secondLogin.created, false);
   } finally {
     await app.close();
   }
@@ -236,6 +238,7 @@ test("Google sign-in links an existing password account with the same email", as
       body: JSON.stringify({ password: "replacement-secret" })
     });
     assert.equal(deniedRecovery.status, 403);
+    assert.equal(login.created, false);
   } finally {
     await app.close();
   }
