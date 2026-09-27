@@ -9,14 +9,21 @@ Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v12-ear-drape`) reste la référence de la chaîne d'outils et des
+(`catalogue-v13-ear-outfits`) reste la référence de la chaîne d'outils et des
 tests.
 
 Le **catalogue de cosmétiques est réduit** :
 
-- **Tenues** : Scout, Ranger, Mage, Guerrier (niveau 4, 55) et Chevalier
-  (niveau 6, 75). Archimage et Roi sont retirés ; le **titre** Roi reste.
-  Guerrier et Chevalier n'ont plus de jambières.
+- **Tenues** : une nouvelle tenue par niveau jusqu'au niveau 10, de plus en
+  plus travaillée. Éclaireur est la tenue de départ gratuite ; puis Barde (1),
+  Ranger (2), Mage (3), Guerrier (4), Mage noir (5), Chevalier (6),
+  Cartographe / Map Maker (7), Guérisseur (8), Alchimiste (9) et Gardien des
+  chevaux / Horse Keeper (10), l'armure du Chevalier la plus ornée (argent,
+  bordeaux, fers à cheval dorés, cape blanche). Archimage et Roi restent
+  retirés ; le **titre** Roi reste. Éclaireur, Barde et Ranger gardent le
+  pantalon livré ; toutes les autres sont des tenues complètes (`coversLegs`)
+  qui apportent leurs propres jambes et masquent le pantalon. Les bottes
+  livrées restent identiques pour toutes les tenues.
 - **Objets** : catégorie retirée (armes, boucliers, livre, lanterne). L'état
   interne `no-weapon` subsiste pour les sauvegardes, sans onglet.
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
@@ -121,9 +128,37 @@ sportives (fesses moins projetées, épaules/torse/bras plus dessinés chez Noa,
 hanches et cuisses plus pleines chez Mila) en protégeant tout ce qui dépasse
 1,455 m. Les géométries source du corps et le contrat d'ancrage restent
 inchangés.
-La taille des cinq tenues suit désormais le contour réel de la ceinture,
-sans bord elliptique rapporté. Guerrier et Chevalier portent des plaques
-ajustées et des lames d'épaule articulées, sans jambières.
+La taille de toutes les tenues suit le contour réel de la ceinture, sans bord
+elliptique rapporté.
+
+La passe `catalogue-v10-full-outfits` / `stylized-v6` restructure les tenues :
+
+- Le vêtement bas livré est découpé à la construction (`split_footwear`) en
+  deux pièces `core` : `core_part: 'boots'` (toujours visible) et
+  `core_part: 'trousers'`, masqué par `visiblePart` quand la tenue porte
+  `coversLegs`. Le corps livré n'a pas de peau sous le pantalon : les tenues
+  complètes ajoutent donc des chausses mesurées (`LegFit`) sur le pantalon et
+  le tibia, rentrées dans les bottes.
+- Capes, pèlerine et capuche sont drapées depuis le col (`drape`) : chaque
+  colonne ne fait que s'élargir en rencontrant épaules, bras ou dos, et passe
+  derrière les bras. Elles sont exclues de l'affinement du bassin.
+- Bandes, fermoirs, sangles, runes et plaques sont posés par lancer de rayons
+  sur le vêtement porteur (`on_surface`, `limb_rings`), sans coordonnées
+  fixes.
+- Passe `catalogue-v11-ten-levels` / `stylized-v7` : Barde (couleur, écharpe
+  et broche), Cartographe (manteau aux genoux, étui à cartes, boussole,
+  longue-vue, pèlerine), Guérisseur (robe ivoire, tabard turquoise, emblème
+  coupe et feuilles, capuche, pèlerine, sacoche et fioles), Alchimiste
+  (tablier de cuir, bandoulière de fioles lumineuses, gantelets, lunettes,
+  pèlerine à signes lumineux, cape) et Horse Keeper (troisième palier de
+  `articulated_armour`).
+- Ranger : pèlerine brune à capuche, fermoir à cabillot, baudrier, bourses et
+  brassards lacés. Mage : robe longue évasée, manches cloche, cape indigo.
+  Mage noir : robe pourpre à ourlet dentelé, pèlerine noire à pointes,
+  plastron noir et runes lumineuses, écharpe. Guerrier : gorgerin, épaulières
+  en dôme, canons d'avant-bras, cubitières, tassettes, cuissards, genouillères
+  et grèves. Chevalier : même construction, bords dorés, filigranes, rondelles,
+  quatre tassettes, chaîne de cape et écu à l'étoile.
 
 Les cartes de classe et la sélection d’élève sont rendues depuis le même
 catalogue que le workshop. Deux portraits actuels servent de secours, puis

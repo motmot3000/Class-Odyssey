@@ -20,12 +20,21 @@ export const SKINS = [
     price: 0
   },
   {
+    id: "bard",
+    name: "Bard",
+    minLevel: 1,
+    colors: ["#a4566b", "#e7cf9a", "#2a1a22"],
+    reward: "Bard outfit",
+    description: "A rose tunic with a cream sash and a music pin.",
+    price: 10
+  },
+  {
     id: "vocab-ranger",
     name: "Ranger",
     minLevel: 2,
     colors: ["#1fbf92", "#f4c64e", "#1b2f3f"],
     reward: "Ranger outfit",
-    description: "Green ranger cloak.",
+    description: "Green tunic with a brown adventurer's capelet and hood.",
     price: 20
   },
   {
@@ -34,8 +43,9 @@ export const SKINS = [
     minLevel: 3,
     colors: ["#8f6cff", "#ff7b92", "#241a3a"],
     reward: "Mage outfit",
-    description: "Purple mage robe.",
-    price: 35
+    description: "Long purple mage robe with a cape.",
+    price: 35,
+    coversLegs: true
   },
   {
     id: "story-keeper",
@@ -43,8 +53,19 @@ export const SKINS = [
     minLevel: 4,
     colors: ["#ffb545", "#3f8cff", "#2d2638"],
     reward: "Warrior outfit",
-    description: "Red armor with a cape.",
-    price: 55
+    description: "Red armor with a cape and leg guards.",
+    price: 55,
+    coversLegs: true
+  },
+  {
+    id: "black-mage",
+    name: "Black Mage",
+    minLevel: 5,
+    colors: ["#8e2a2f", "#e2bc70", "#1d191d"],
+    reward: "Black Mage outfit",
+    description: "Crimson robe with a pointed black mantle and glowing runes.",
+    price: 65,
+    coversLegs: true
   },
   {
     id: "honor-knight",
@@ -52,8 +73,49 @@ export const SKINS = [
     minLevel: 6,
     colors: ["#33507e", "#e2bc70", "#152036"],
     reward: "Knight armor",
-    description: "Blue knight armor.",
-    price: 75
+    description: "Blue knight armor with gold trim and full leg plates.",
+    price: 75,
+    coversLegs: true
+  },
+  {
+    id: "cartographer",
+    name: "Map Maker",
+    minLevel: 7,
+    colors: ["#2d6468", "#b49962", "#1d4144"],
+    reward: "Map Maker outfit",
+    description: "Explorer coat with a map case, a compass and a spyglass.",
+    price: 85,
+    coversLegs: true
+  },
+  {
+    id: "healer",
+    name: "Healer",
+    minLevel: 8,
+    colors: ["#e2dbca", "#2c7470", "#b49962"],
+    reward: "Healer outfit",
+    description: "White robe with a teal tabard, a hood and healing potions.",
+    price: 90,
+    coversLegs: true
+  },
+  {
+    id: "alchemist",
+    name: "Alchemist",
+    minLevel: 9,
+    colors: ["#7a4b27", "#62f08c", "#27221f"],
+    reward: "Alchemist outfit",
+    description: "Leather apron, glowing potions and a mantle with magic signs.",
+    price: 95,
+    coversLegs: true
+  },
+  {
+    id: "horse-keeper",
+    name: "Horse Keeper",
+    minLevel: 10,
+    colors: ["#c2cbd1", "#6b2336", "#e8e0cb"],
+    reward: "Horse Keeper armor",
+    description: "Shining silver armor with gold horseshoes and a white cape.",
+    price: 110,
+    coversLegs: true
   }
 ];
 

@@ -284,7 +284,7 @@ test("items and titles follow their intended progression", () => {
   assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
   assert.deepEqual(
     getShopItems("outfit").map((item) => item.id),
-    ["starter", "vocab-ranger", "grammar-mage", "story-keeper", "honor-knight"]
+    ["starter", "bard", "vocab-ranger", "grammar-mage", "story-keeper", "black-mage", "honor-knight", "cartographer", "healer", "alchemist", "horse-keeper"]
   );
   assert.deepEqual(
     getShopItems("title").map((item) => item.name),

@@ -112,10 +112,14 @@ for persona, hair in [('male','short'),('female','long')]:
         frame(selected,600,600,'waist')
         render(f'review/{persona}-waist.png')
 
+# Full outfits bring their own legs: the delivered trousers are hidden, the
+# boots stay (same rule as visiblePart in src/items-3d-model.mjs).
+FULL_BODY = {'grammar-mage','black-mage','story-keeper','honor-knight','cartographer','healer','alchemist','horse-keeper'}
 for persona in ([] if PORTRAITS_ONLY else ['male','female']):
-    for outfit in ['story-keeper','honor-knight','realm-sovereign']:
+    for outfit in sorted(FULL_BODY):
         defaults={'core':'base','persona':persona,'outfit':outfit,'hair':'short' if persona=='male' else 'long'}
-        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open')
+        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open'
+                                and not (obj.get('core_part')=='trousers' and outfit in FULL_BODY))
         frame(selected,600,900)
         render(f'review/{persona}-{outfit}.png')
 

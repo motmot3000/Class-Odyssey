@@ -42,7 +42,7 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v8' if STYLIZED else 'catalogue-v12-ear-drape'
+APPEARANCE_REVISION = 'stylized-v8' if STYLIZED else 'catalogue-v13-ear-outfits'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
@@ -560,24 +560,30 @@ def fitted_ring(shirt, z, offset=.012):
     return points
 
 
-def fitted_skirt(shirt, hem, rx, ry, cloth):
+def fitted_skirt(shirt, hem, rx, ry, cloth, flare=0, hem_wave=None):
     """The upper edge follows the actual waist and sits INSIDE the belt.
 
     The previous independent ellipse projected beyond it as a second rim.
     Preserve the lower silhouette while blending from the real waist contour.
+    Long robes (`flare`) open into an A-line towards the ankle; `hem_wave`
+    shapes the bottom edge per angle, for dagged or pointed hems.
     """
     waist = [Vector(p) for p in fitted_ring(shirt, 1.035, -.001)]
     n = len(waist)
     heights = [hem, .92, .96, 1.00, 1.025, 1.04]
+    if flare:
+        heights = [hem + (.92-hem)*k/8 for k in range(8)] + heights[1:]
     rows = []
-    for z in heights:
+    for j, z in enumerate(heights):
         contour = [Vector(p) for p in fitted_ring(shirt,z,-.001 if z>=1.03 else .004)] if z>=.96 else waist
         t = max(0,min(1,(1.025-z)/.105)); t = t*t*(3-2*t)
         lower_t = max(0,min(1,(.92-z)/max(.001,.92-hem)))
+        grow = 1 + flare*lower_t**1.6
         row=[]
         for i, p in enumerate(contour):
             a=i*TAU/n
-            lower = Vector((rx*(.94+.06*lower_t)*math.cos(a), -.020+.005*lower_t+ry*(.98+.02*lower_t)*math.sin(a), z))
+            lower = Vector((rx*grow*(.94+.06*lower_t)*math.cos(a), -.020+.005*lower_t+ry*grow*(.98+.02*lower_t)*math.sin(a), z))
+            if hem_wave and j == 0: lower.z += hem_wave(a)
             fitted=Vector((p.x,p.y,z))
             row.append(tuple(fitted.lerp(lower,t)))
         rows.append(row)
@@ -587,7 +593,7 @@ def fitted_skirt(shirt, hem, rx, ry, cloth):
     obj['waist_top_inset_metres']=.007
     obj['waist_profile']='same anatomical contour as the belt'
     cloth_uv(obj)
-    return obj
+    return obj, [Vector(p) for p in rows[0]]
 
 
 CONTOUR_CACHE = {}
@@ -601,6 +607,771 @@ def contour_point(shirt,z,a,offset=.009):
     return Vector(ring_points[base]).lerp(Vector(ring_points[(base+1)%len(ring_points)]),index-base)
 
 
+# ---------------------------------------------------------------------------
+# Tailoring. Every trim, clasp and plate is measured on the garment it sits
+# on (ray casts against the evaluated cloth), never placed at fixed
+# coordinates, so nothing floats or sinks on either character.
+# ---------------------------------------------------------------------------
+# Full outfits replace the delivered trousers from the waist to inside the
+# boots; the boots themselves are never touched. Keep in sync with
+# `coversLegs` in src/domain.mjs.
+# One outfit per level, from a simple colour (Bard) to the Horse Keeper's
+# ornate plate. Scout and Bard/Ranger keep the delivered trousers.
+FULL_BODY = {'grammar-mage', 'black-mage', 'story-keeper', 'honor-knight',
+             'cartographer', 'healer', 'alchemist', 'horse-keeper'}
+MAGES = {'grammar-mage', 'black-mage'}
+ARMOURED = {'story-keeper', 'honor-knight', 'horse-keeper'}
+# Robes and coats open into an A-line towards the hem.
+FLARE = {'grammar-mage': .20, 'black-mage': .20, 'healer': .22, 'alchemist': .17, 'cartographer': .10}
+FRONT = 1.5*math.pi
+CY = -.015
+
+
+def smooth01(t):
+    t = max(0., min(1., t))
+    return t*t*(3-2*t)
+
+
+def radial(a):
+    return Vector((math.cos(a), math.sin(a), 0))
+
+
+def surface_tree(objs, keep=None):
+    """World-space BVH of the evaluated meshes (modifiers included)."""
+    bpy.context.view_layer.update()
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    verts, polys = [], []
+    for obj in objs:
+        evaluated = obj.evaluated_get(depsgraph)
+        data = evaluated.to_mesh()
+        base = len(verts)
+        verts += [obj.matrix_world @ v.co for v in data.vertices]
+        for polygon in data.polygons:
+            indices = [base+i for i in polygon.vertices]
+            if keep is None or keep(sum((verts[i] for i in indices), Vector())/len(indices)):
+                polys.append(indices)
+        evaluated.to_mesh_clear()
+    return BVHTree.FromPolygons(verts, polys)
+
+
+def outer_hit(tree, z, a, cy=CY, reach=.6):
+    """First surface met by a horizontal ray coming from outside the body."""
+    d = radial(a)
+    hit, normal, _index, _distance = tree.ray_cast(Vector((0, cy, z)) + d*reach, -d, reach)
+    if hit is None: return None, None
+    return hit, (normal if normal.dot(d) >= 0 else -normal)
+
+
+def on_surface(tree, z, a, offset, cy=CY):
+    hit, normal = outer_hit(tree, z, a, cy)
+    if hit is None: raise ValueError(f'{item}/{persona}: nothing to fit at z={z:.3f}, a={a:.2f}')
+    return hit + radial(a)*offset, normal
+
+
+def flat(normal):
+    n = Vector((normal.x, normal.y, 0))
+    return n.normalized() if n.length > 1e-6 else Vector((0, -1, 0))
+
+
+def smooth_ring(values, passes=1, closed=True):
+    for _ in range(passes):
+        n = len(values)
+        values = [(values[(i-1) % n if closed else max(i-1, 0)] + 2*values[i] + values[(i+1) % n if closed else min(i+1, n-1)])/4 for i in range(n)]
+    return values
+
+
+def loft(name, rows, mat, closed=False, thickness=None):
+    n = len(rows[0])
+    span = n if closed else n-1
+    faces = [(j*n+i, j*n+(i+1) % n, (j+1)*n+(i+1) % n, (j+1)*n+i) for j in range(len(rows)-1) for i in range(span)]
+    obj = mesh(name, [tuple(p) for row in rows for p in row], faces, mat)
+    if thickness: obj.modifiers.new('Material thickness', 'SOLIDIFY').thickness = thickness
+    return obj
+
+
+def outline(rows):
+    """Closed border of an open loft, for rolled edges and piping."""
+    return rows[0] + [r[-1] for r in rows[1:]] + list(reversed(rows[-1][:-1])) + [r[0] for r in reversed(rows[1:-1])]
+
+
+def rim(name, points, radius, mat, closed=False):
+    return line(name, [tuple(p) for p in points], radius, mat, closed)
+
+
+def ribbon(name, points, normals, width, mat, thickness=.0025):
+    """Flat strap lying on a surface: belts, baldrics, embroidered bands."""
+    vertices = []
+    for i, (p, n) in enumerate(zip(points, normals)):
+        tangent = (points[min(i+1, len(points)-1)] - points[max(i-1, 0)]).normalized()
+        side = tangent.cross(n).normalized()
+        vertices += [tuple(p - side*width/2), tuple(p + side*width/2)]
+    obj = mesh(name, vertices, [(2*i, 2*i+1, 2*i+3, 2*i+2) for i in range(len(points)-1)], mat)
+    obj.modifiers.new('Strap thickness', 'SOLIDIFY').thickness = thickness
+    return obj
+
+
+def dome(name, centre, axis, radius, mat, spread=1.2, thickness=.0025, n=24, rows=7):
+    """Spherical cap around `axis`: knee cops, couters, clasps, bosses."""
+    axis = axis.normalized()
+    u = axis.cross(Vector((0, 0, 1)))
+    if u.length < .1: u = axis.cross(Vector((1, 0, 0)))
+    u.normalize(); v = axis.cross(u).normalized()
+    ring_rows = [[centre + (axis*math.cos(t) + (u*math.cos(p) + v*math.sin(p))*math.sin(t))*radius
+                  for p in [k*TAU/n for k in range(n)]] for t in [spread*j/rows for j in range(1, rows+1)]]
+    vertices = [tuple(centre + axis*radius)] + [tuple(p) for row in ring_rows for p in row]
+    faces = [(0, 1+k, 1+(k+1) % n) for k in range(n)]
+    faces += [(1+j*n+k, 1+(j+1)*n+k, 1+(j+1)*n+(k+1) % n, 1+j*n+(k+1) % n) for j in range(rows-1) for k in range(n)]
+    obj = mesh(name, vertices, faces, mat)
+    if thickness: obj.modifiers.new('Plate thickness', 'SOLIDIFY').thickness = thickness
+    return obj, ring_rows[-1]
+
+
+def stud(name, point, normal, radius, mat):
+    """Small domed rivet or button seated on the surface along its normal."""
+    return dome(name, point - normal*radius*.45, normal, radius, mat, 1.35, None, 12, 4)[0]
+
+
+def facing_box(name, centre, normal, size, mat, bevel):
+    obj = box(name, centre, size, mat, bevel)
+    n = flat(normal)
+    obj.rotation_euler.z = math.atan2(n.x, -n.y)
+    return obj
+
+
+class LegFit:
+    """Measured leg volume for hose that replace the delivered trousers.
+
+    The delivered body has no skin under the trousers, so full outfits need
+    their own legs. Above the knee the hose follow the trousers slightly
+    slimmer; on the bare shin they follow the skin, down inside the boots.
+    """
+    ZS = [.140, .165, .19, .22, .25, .28, .31, .34, .37, .40, .43, .46, .49, .52,
+          .55, .58, .61, .64, .67, .70, .73, .76]
+    N = 36
+
+    def __init__(self, trousers, skin):
+        self.trousers = surface_tree([trousers], lambda c: c.z > .29)
+        self.skin = surface_tree([skin], lambda c: c.z < .47 and abs(c.x) < .21)
+        self.rows = {side: self.measure(side) for side in (-1, 1)}
+
+    def cast(self, tree, centre, n, reach=.16):
+        out = []
+        for i in range(n):
+            hit, _n, _i, distance = tree.ray_cast(centre, radial(i*TAU/n), reach)
+            out.append(distance if hit is not None else None)
+        return out
+
+    def measure(self, side):
+        rows, centre = [], Vector((side*.11, -.01, 0))
+        for z in self.ZS:
+            weight = smooth01((z-.40)/.06)
+            c = Vector((centre.x, centre.y, z))
+            for _ in range(3):
+                for tree in ([self.trousers, self.skin] if weight >= .5 else [self.skin, self.trousers]):
+                    hits = [c + radial(i*TAU/16)*r for i, r in enumerate(self.cast(tree, c, 16)) if r]
+                    if len(hits) >= 10: break
+                if len(hits) >= 10:
+                    c = sum(hits, Vector())/len(hits); c.z = z
+            cloth, bare = self.cast(self.trousers, c, self.N), self.cast(self.skin, c, self.N)
+            radii = []
+            for i in range(self.N):
+                rt = cloth[i]-.004 if cloth[i] else None
+                rs = bare[i]+.0045 if bare[i] else None
+                r = rs if rt is None else rt if rs is None else rs*(1-weight)+rt*weight
+                d = radial(i*TAU/self.N)
+                # Above the crotch an inward ray crosses to the other leg.
+                if r is not None and d.x*side < 0:
+                    r = min(r, (abs(c.x)-.004)/max(.05, -d.x*side))
+                radii.append(r)
+            known = [r for r in radii if r]
+            radii = [r if r else sum(known)/len(known) for r in radii]
+            rows.append([c, radii]); centre = c
+        for _ in range(3):
+            for j in range(1, len(rows)-1):
+                rows[j][1] = [(a+2*b+c)/4 for a, b, c in zip(rows[j-1][1], rows[j][1], rows[j+1][1])]
+                rows[j][0] = (rows[j-1][0]+rows[j][0]*2+rows[j+1][0])/4
+        for row in rows: row[1] = smooth_ring(row[1], 2)
+        return rows
+
+    def sample(self, side, z):
+        rows = self.rows[side]
+        zs = self.ZS
+        j = max(0, min(len(zs)-2, next((k for k in range(len(zs)-1) if zs[k+1] >= z), len(zs)-2)))
+        t = max(0, min(1, (z-zs[j])/(zs[j+1]-zs[j])))
+        c = rows[j][0].lerp(rows[j+1][0], t); c.z = z
+        return c, [a*(1-t)+b*t for a, b in zip(rows[j][1], rows[j+1][1])]
+
+    def centre(self, side, z):
+        return self.sample(side, z)[0]
+
+    def point(self, side, z, a, offset=0):
+        c, radii = self.sample(side, z)
+        f = (a % TAU)/TAU*self.N
+        k = int(f) % self.N
+        r = radii[k]*(1-(f-int(f))) + radii[(k+1) % self.N]*(f-int(f))
+        return c + radial(a)*(r+offset)
+
+
+def fitted_hose(legs, trousers, mat):
+    """Hose from inside the boots up to the waist, under every full outfit."""
+    for side in (-1, 1):
+        rows = [[legs.point(side, z, i*TAU/48) for i in range(48)] for z in legs.ZS]
+        obj = loft('fitted hose leg', rows, mat, True, .002)
+        cloth_uv(obj)
+    seat = duplicate(trousers, 'fitted hose seat', mat)
+    for key in ['core_part', 'reference_file', 'part']:
+        if key in seat: del seat[key]
+    bm = bmesh.new(); bm.from_mesh(seat.data)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z < .70], context='FACES')
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+    bm.normal_update()
+    for v in bm.verts: v.co -= v.normal*.004
+    bm.to_mesh(seat.data); bm.free(); seat.data.update()
+    for uv in list(seat.data.uv_layers): seat.data.uv_layers.remove(uv)
+    cloth_uv(seat)
+
+
+def drape(name, tree, mat, span_top, span_bottom, hem, z_top=1.425, clearance=.009, flare=.03,
+          n=48, m=24, thickness=.005, wave=None):
+    """Cloth hung from the collar: each column falls from the neck and can
+    only widen as it meets the shoulders, arms or back, like real cloth.
+    The angular span can narrow from the shoulders to the hem, so a cape
+    wraps the shoulders but hangs behind the arms."""
+    columns = []
+    for i in range(n+1):
+        f = i/n
+        a_bottom = span_bottom[0] + (span_bottom[1]-span_bottom[0])*f
+        z_hem = hem(a_bottom)
+        column, reach = [], 0
+        for j in range(m+1):
+            u = (j/m)**1.35
+            s = smooth01(u*2.2)
+            a0 = span_top[0] + (span_bottom[0]-span_top[0])*s
+            a1 = span_top[1] + (span_bottom[1]-span_top[1])*s
+            a = a0 + (a1-a0)*f
+            z = z_top + (z_hem - z_top)*u
+            hit, _normal = outer_hit(tree, z, a)
+            if hit is not None:
+                reach = max(reach, (hit - Vector((0, CY, z))).dot(radial(a)) + clearance)
+            column.append([a, z, reach + flare*u*u])
+        columns.append(column)
+    # Soften the folds so the cloth never hugs every bump: down each column
+    # below the shoulders, then sideways.
+    for column in columns:
+        radii = [r for _a, _z, r in column]
+        for _ in range(4):
+            # Only ever widen: the cloth bridges hollows, never sinks into them.
+            radii = [radii[0]] + [max(radii[j], (radii[j-1]+2*radii[j]+radii[j+1])/4)
+                                  for j in range(1, len(radii)-1)] + [radii[-1]]
+        for j, r in enumerate(radii): column[j][2] = r
+    for j in range(m+1):
+        before = [columns[i][j][2] for i in range(n+1)]
+        radii = smooth_ring(before, 3, closed=False)
+        for i in range(n+1): columns[i][j][2] = max(radii[i], before[i] - .004)
+    rows = [[Vector((0, CY, z)) + radial(a)*r for a, z, r in (columns[i][j] for i in range(n+1))] for j in range(m+1)]
+    obj = loft(name, rows, mat, thickness=thickness)
+    obj['drape'] = 'hung from the collar, clear of the seat'
+    cloth_uv(obj)
+    return rows
+
+
+def limb_rings(tree, side, ts, offset, n=28, start='elbow', end='wrist'):
+    """Rings fitted around an arm segment, measured from inside the sleeve."""
+    a, b = anchor_position(f'{start}_{side}'), anchor_position(f'{end}_{side}')
+    axis = (b-a).normalized()
+    forward = Vector((0, -1, 0)); forward = (forward - axis*forward.dot(axis)).normalized()
+    outward = axis.cross(forward).normalized()
+    if outward.x*(1 if side == 'left' else -1) < 0: outward = -outward
+    rows = []
+    for t in ts:
+        c = a.lerp(b, t)
+        dirs = [forward*math.cos(k*TAU/n) + outward*math.sin(k*TAU/n) for k in range(n)]
+        dist = []
+        for d in dirs:
+            hit, _n, _i, distance = tree.ray_cast(c, d, .12)
+            dist.append(distance if hit is not None else None)
+        known = [r for r in dist if r]
+        dist = smooth_ring([r if r else sum(known)/len(known) for r in dist], 2)
+        rows.append((c, [c + d*(r+offset) for d, r in zip(dirs, dist)]))
+    return rows, axis, forward, outward
+
+
+def cape_clasps(rows, mat, gem=None, chain=None, tree=None):
+    ends = []
+    for point in [rows[2][0], rows[2][-1]]:
+        n = flat(point - Vector((0, CY, point.z)))
+        dome('cape clasp', point - n*.008, n, .016, mat, 1.25)
+        if gem: stud('clasp jewel', point + n*.006, n, .006, gem)
+        ends.append(point)
+    if chain and tree:
+        a, b = ends
+        path = []
+        for k in range(9):
+            t = k/8
+            p = a.lerp(b, t)
+            angle = math.atan2(p.y-CY, p.x)
+            q, _n = on_surface(tree, p.z - .028*math.sin(math.pi*t), angle, .014)
+            path.append(q)
+        rim('clasp chain', path, .0024, chain)
+
+
+def dagged(depth, points):
+    def wave(a):
+        t = (points*a/TAU) % 1
+        return -depth*(1-abs(2*t-1))**1.4
+    return wave
+
+
+# ---------------------------------------------------------------------------
+# Ranger: green tunic over the delivered trousers, brown traveller's capelet.
+# ---------------------------------------------------------------------------
+def ranger_gear(torso, drape_tree, arms, skin_neck):
+    capelet = drape('brown adventurer capelet', drape_tree, CAPE_BROWN,
+                    (-math.pi/2+.34, 1.5*math.pi-.34), (-math.pi/2+.30, 1.5*math.pi-.30),
+                    lambda a: 1.14 - .075*math.sin(a) + .010*math.sin(7*a), clearance=.010, flare=.022, n=64)
+    rim('capelet leather hem', [p + flat(p-Vector((0, CY, p.z)))*.002 for p in capelet[-1]], .0028, LEATHER)
+    for column in (0, -1):
+        rim('capelet front edge', [row[column] for row in capelet], .0026, LEATHER)
+    hood_tree = surface_tree([o for o in objects if o.get('fit_persona') == persona and o.get('shop_id') == item
+                              and o.type == 'MESH' and ('tunic' in o.name or 'capelet' in o.name)] + [skin_neck],
+                             lambda c: c.z > 1.0)
+    hood = drape('folded travelling hood', hood_tree, CAPE_BROWN, (math.pi/2-1.05, math.pi/2+1.05),
+                 (math.pi/2-.85, math.pi/2+.85), lambda a: 1.20 + .10*(abs(a-math.pi/2)/.85)**1.6,
+                 z_top=1.44, clearance=.007, flare=.012, n=36, m=12)
+    rim('hood rolled opening', hood[0], .010, CAPE_BROWN)
+    rim('hood centre seam', [row[len(row)//2] for row in hood], .0018, LEATHER_DARK)
+    # Toggle clasp: two leather buttons and a cord, seated on the capelet.
+    left, right = capelet[3][0], capelet[3][-1]
+    for p in (left, right):
+        stud('capelet toggle button', p, flat(p-Vector((0, CY, p.z))), .009, LEATHER_DARK)
+    mid = (left+right)/2 + Vector((0, -.006, -.004))
+    rim('capelet toggle cord', [left + Vector((0, -.004, 0)), mid, right + Vector((0, -.004, 0))], .0018, CORD)
+    ell('carved toggle', mid + Vector((0, -.004, 0)), (.014, .005, .005), IVORY, 12)
+    # Baldric across the chest and back, with a brass badge.
+    for name, z0, z1, a0, a1 in [('leather baldric', 1.33, 1.05, FRONT-.62, FRONT+.70),
+                                 ('leather baldric back', 1.30, 1.05, math.pi/2+.62, math.pi/2-.70)]:
+        pts, nrms = [], []
+        for k in range(26):
+            s = k/25
+            p, n = on_surface(torso, z0+(z1-z0)*s, a0+(a1-a0)*s, .004)
+            pts.append(p); nrms.append(n)
+        ribbon(name, pts, nrms, .022, LEATHER_DARK, .003)
+        if 'back' not in name:
+            stud('baldric brass badge', pts[9] + nrms[9]*.003, nrms[9], .013, GOLD)
+            for k in (4, 15, 21):
+                stud('baldric rivet', pts[k] + nrms[k]*.002, nrms[k], .0035, GOLD)
+    # Two belt pouches hanging just under the belt.
+    for a, size in [(FRONT+.95, (.052, .030, .060)), (FRONT-1.02, (.042, .026, .050))]:
+        p, n = on_surface(torso, .985, a, 0)
+        n = flat(n)
+        centre = p + n*(size[1]/2+.004)
+        facing_box('leather belt pouch', centre, n, size, LEATHER, .006)
+        facing_box('pouch flap', centre + n*(size[1]/2+.001) + Vector((0, 0, size[2]*.22)), n,
+                   (size[0]*1.06, .005, size[2]*.52), LEATHER_DARK, .002)
+        stud('pouch brass stud', centre + n*(size[1]/2+.004), n, .005, GOLD)
+    # Laced leather bracers on the forearms.
+    for side in ('left', 'right'):
+        rings, axis, forward, outward = limb_rings(arms, side, [.40, .50, .60, .70, .80, .90, .95], .006)
+        loft('leather bracer', [row for _c, row in rings], LEATHER, True, .002)
+        for k in (0, -1): rim('bracer rim', rings[k][1], .0022, LEATHER_DARK, True)
+        out = 7  # outward direction index on a 28-point ring
+        lace = []
+        for j, (_c, row) in enumerate(rings[1:-1]):
+            lace.append(row[out + (2 if j % 2 else -2)] + outward*.0015)
+        rim('bracer lacing', lace, .0012, CORD)
+    # A small laced opening at the tunic collar front.
+    for k in range(3):
+        z = 1.395 - k*.022
+        a, _ = on_surface(torso, z, FRONT-.10, .003)
+        b, _ = on_surface(torso, z-.011, FRONT+.10, .003)
+        rim('collar lacing', [a, b], .0011, CORD)
+
+
+# ---------------------------------------------------------------------------
+# Mages: ankle-length robe, bell cuffs, cape. Black Mage is the stylized red
+# variant with a dagged hem, pointed mantle and glowing runes.
+# ---------------------------------------------------------------------------
+def mage_gear(black, robe, torso, drape_tree, arms, hem_row, cloth, legs_hem):
+    trim = GOLD
+    bands = {}
+    for sign in (-1, 1):
+        pts, nrms = [], []
+        for k in range(44):
+            z = 1.385 - (1.385-legs_hem-.018)*k/43
+            spread = .19 + .15*smooth01((1.0-z)/.75)
+            p, n = on_surface(robe, z, FRONT+sign*spread, .0022)
+            pts.append(p); nrms.append(n)
+        bands[sign] = (pts, nrms)
+        ribbon('robe front gold band', pts, nrms, .015 if black else .011, trim, .0015)
+    if black:
+        panel = []
+        for k in range(44):
+            z = bands[1][0][k].z
+            spread = .19 + .15*smooth01((1.0-z)/.75)
+            panel.append([on_surface(robe, z, FRONT+spread*(2*i/10-1), .0014)[0] for i in range(11)])
+        loft('black embroidered front panel', panel, BLACK_CLOTH)
+        for z in [.92, .78, .64, .50, .36]:
+            p, n = on_surface(robe, z, FRONT, .004)
+            prism('glowing ember rune', [(0, .022), (.011, 0), (0, -.022), (-.011, 0)], p, .003, EMBER)
+            for dx in (-.018, .018):
+                q, m_ = on_surface(robe, z, FRONT+dx/.2, .003)
+                stud('rune gold dot', q, m_, .003, trim)
+    else:
+        for z in [.84, .64, .44]:
+            p, _n = on_surface(robe, z, FRONT, .004)
+            star('embroidered gold star', p, .017, trim, 4)
+    # Gold hem band following the real hem, plus a second band above it.
+    rim('robe hem gold band', [p + flat(p-Vector((0, CY, p.z)))*.002 for p in hem_row], .003, trim, True)
+    upper = []
+    for i in range(64):
+        a = i*TAU/64
+        z = max(p.z for p in hem_row) + (.06 if black else .045)
+        upper.append(on_surface(robe, z, a, .0015)[0])
+    rim('robe upper hem band', upper, .0022, trim, True)
+    # Chest jewel in a gold setting, seated on the robe.
+    p, n = on_surface(torso, 1.262, FRONT, .006)
+    prism('arcane chest crystal', [(0, .036), (.022, 0), (0, -.036), (-.022, 0)], p, .014, RUBY if black else GEM)
+    rim('chest crystal gold setting', [p + Vector((.030*math.cos(t), .004, .046*math.sin(t))) for t in [k*TAU/24 for k in range(24)]], .0022, trim, True)
+    # Bell cuffs opening at the wrist, flared away from the hips.
+    cuff_mat = BLACK_CLOTH if black else cloth
+    for side in ('left', 'right'):
+        rings, axis, forward, outward = limb_rings(arms, side, [.64, .72, .80, .88, .96], .003)
+        rows = []
+        for k, (c, row) in enumerate(rings):
+            grow = [1.0, 1.07, 1.22, 1.45, 1.72][k]
+            flared = []
+            for p in row:
+                d = p - c
+                bias = .6 + .4*d.normalized().dot(outward)
+                flared.append(c + d*(1 + (grow-1)*max(.15, bias)) + axis*(.004*k*k))
+            rows.append(flared)
+        loft('flared bell cuff', rows, cuff_mat, True, .0025)
+        rim('bell cuff gold trim', rows[-1], .0026, trim, True)
+        rim('bell cuff seam', rows[0], .0016, trim, True)
+    # Cape.
+    cape = drape('draped travelling cape', drape_tree, BLACK_CLOTH if black else MAGE_CAPE,
+                 (-.48, math.pi+.48), (.32, math.pi-.32), lambda a: .34 + .05*abs(math.cos(a)),
+                 clearance=.008, flare=.05, n=44, m=28)
+    rim('cape gold edge', [row[0] for row in cape] + cape[-1] + [row[-1] for row in reversed(cape)], .0028, trim)
+    if black:
+        mantle_tree = surface_tree([o for o in objects if o.get('fit_persona') == persona and o.get('shop_id') == item
+                                    and o.type == 'MESH' and ('tunic' in o.name or 'cape' in o.name)], lambda c: c.z > 1.0)
+        wave = dagged(.05, 9)
+        mantle = drape('pointed shoulder mantle', mantle_tree, BLACK_CLOTH, (-math.pi/2+.26, 1.5*math.pi-.26),
+                       (-math.pi/2+.22, 1.5*math.pi-.22), lambda a: 1.19 - .05*math.sin(a) + wave(a),
+                       clearance=.008, flare=.03, n=90, m=12)
+        rim('mantle gold edge', mantle[-1], .0024, trim)
+        for column in (0, -1): rim('mantle front edge', [row[column] for row in mantle], .0024, trim)
+        left, right = mantle[3][0], mantle[3][-1]
+        for p in (left, right):
+            stud('mantle ruby clasp', p, flat(p-Vector((0, CY, p.z))), .011, RUBY)
+        rim('mantle clasp chain', [left, (left+right)/2 + Vector((0, -.006, -.022)), right], .0022, trim)
+        # Sash tails from the belt, with dagged ends.
+        for a, z_end in [(FRONT+.40, .70), (FRONT+.58, .74)]:
+            pts, nrms = [], []
+            for k in range(14):
+                z = 1.012 - (1.012-z_end)*k/13
+                p, n = on_surface(robe, z, a + .03*math.sin(k*.5), .006)
+                pts.append(p); nrms.append(n)
+            ribbon('black sash tail', pts, nrms, .034, BLACK_CLOTH, .002)
+            stud('sash gold weight', pts[-1] + nrms[-1]*.002, nrms[-1], .007, trim)
+    else:
+        cape_clasps(cape, GOLD, GEM, GOLD, torso)
+
+
+# ---------------------------------------------------------------------------
+# Shared tailoring pieces for the level 7-10 outfits.
+# ---------------------------------------------------------------------------
+def surface_path(tree, z0, z1, a0, a1, offset, count=26, wobble=0):
+    pts, nrms = [], []
+    for k in range(count):
+        s = k/(count-1)
+        p, n = on_surface(tree, z0+(z1-z0)*s, a0+(a1-a0)*s + wobble*math.sin(s*TAU*2), offset)
+        pts.append(p); nrms.append(n)
+    return pts, nrms
+
+
+def body_panel(name, tree, z_top, z_bottom, centre, half, mat, offset=.003, rows=34, cols=10):
+    """Cloth panel lying on the robe: tabards, aprons, embroidered fronts.
+    `half(z)` is the half-width in radians at each height."""
+    grid = []
+    for j in range(rows):
+        z = z_top + (z_bottom-z_top)*j/(rows-1)
+        w = half(z)
+        grid.append([on_surface(tree, z, centre + w*(2*i/cols-1), offset)[0] for i in range(cols+1)])
+    loft(name, grid, mat)
+    return grid
+
+
+def bell_cuffs(arms, mat, trim, growth=(1.0, 1.07, 1.22, 1.45, 1.72), seam=True):
+    for side in ('left', 'right'):
+        rings, axis, forward, outward = limb_rings(arms, side, [.64, .72, .80, .88, .96], .005)
+        rows = []
+        for k, (c, row) in enumerate(rings):
+            grow = growth[k]
+            rows.append([c + (p-c)*(1 + (grow-1)*max(.15, .6 + .4*(p-c).normalized().dot(outward))) + axis*(.004*k*k)
+                         for p in row])
+        loft('flared bell cuff', rows, mat, True, .0025)
+        rim('bell cuff gold trim', rows[-1], .0026, trim, True)
+        if seam: rim('bell cuff seam', rows[0], .0016, trim, True)
+
+
+def hem_bands(tree, hem_row, trim, gap, second=True):
+    rim('robe hem gold band', [p + flat(p-Vector((0, CY, p.z)))*.002 for p in hem_row], .003, trim, True)
+    if second:
+        z = max(p.z for p in hem_row) + gap
+        rim('robe upper hem band', [on_surface(tree, z, i*TAU/64, .0015)[0] for i in range(64)], .0022, trim, True)
+
+
+def hooded(tree_parts, mat, trim=None, depth=1.20):
+    tree = surface_tree(tree_parts, lambda c: c.z > 1.0)
+    hood = drape('folded travelling hood', tree, mat, (math.pi/2-1.05, math.pi/2+1.05),
+                 (math.pi/2-.85, math.pi/2+.85), lambda a: depth + .10*(abs(a-math.pi/2)/.85)**1.6,
+                 z_top=1.44, clearance=.007, flare=.012, n=36, m=12)
+    rim('hood rolled opening', hood[0], .010, mat)
+    if trim: rim('hood gold edge', [p + Vector((0, 0, -.004)) for p in hood[0]], .0022, trim)
+    return hood
+
+
+def mine(*words):
+    return [o for o in objects if o.get('fit_persona') == persona and o.get('shop_id') == item
+            and o.type == 'MESH' and any(w in o.name for w in words)]
+
+
+def vial(name, base, normal, glass, liquid, height=.034, radius=.008):
+    """Small corked potion bottle standing on a strap or belt."""
+    n = flat(normal)
+    centre = base + n*(radius+.002)
+    ell(name+' glass bulb', centre + Vector((0, 0, height*.30)), (radius, radius, radius*1.15), glass, 14)
+    ell(name+' glowing draught', centre + Vector((0, 0, height*.24)), (radius*.78, radius*.78, radius*.8), liquid, 12)
+    rim(name+' glass neck', [centre + Vector((0, 0, height*.55)), centre + Vector((0, 0, height*.80))], radius*.38, glass)
+    rim(name+' cork', [centre + Vector((0, 0, height*.80)), centre + Vector((0, 0, height*.95))], radius*.42, LEATHER)
+
+
+def horseshoe(name, centre, normal, radius, mat, nails=None, thickness=.0028, tree=None):
+    """Lucky horseshoe, open at the top, lying on a surface. With `tree`
+    every point is projected onto that curved surface, so it never sinks."""
+    n = flat(normal) if abs(normal.z) < .9 else normal.normalized()
+    side = Vector((0, 0, 1)).cross(n).normalized()
+    up = n.cross(side).normalized()
+    arc = [centre + n*thickness + side*math.cos(t)*radius + up*math.sin(t)*radius*1.12
+           for t in [math.pi/2 + .62 + (TAU-1.24)*k/30 for k in range(31)]]
+    if tree:
+        projected = []
+        for p in arc:
+            hit, hn, _i, _d = tree.ray_cast(p + n*.08, -n, .2)
+            projected.append(hit + (hn if hn.dot(n) > 0 else -hn)*thickness*1.3 if hit is not None else p)
+        arc = projected
+    rim(name, arc, thickness, mat)
+    for k in (4, 9, 21, 26):
+        stud(name+' nail', arc[k] + n*thickness*.8, n, thickness*.75, nails or mat)
+    for k in (0, -1):
+        stud(name+' heel', arc[k], n, thickness*1.15, mat)
+    return arc
+
+
+# ---------------------------------------------------------------------------
+# Level 1 - Bard: only a colour, a sash and a pin over the base trousers.
+# ---------------------------------------------------------------------------
+def bard_gear(torso):
+    pts, nrms = surface_path(torso, 1.34, 1.05, FRONT-.60, FRONT+.66, .004)
+    ribbon('rose silk sash', pts, nrms, .026, BARD_SASH, .002)
+    back, back_n = surface_path(torso, 1.31, 1.05, math.pi/2+.60, math.pi/2-.66, .004)
+    ribbon('rose silk sash back', back, back_n, .026, BARD_SASH, .002)
+    star('small music pin', pts[8] + nrms[8]*.004, .012, GOLD, 5)
+
+
+# ---------------------------------------------------------------------------
+# Level 7 - Cartographer: knee-length explorer coat, map case, compass,
+# spyglass and a short capelet.
+# ---------------------------------------------------------------------------
+def cartographer_gear(coat, torso, drape_tree, arms, hem_row, legs_hem):
+    trim, brass = GOLD, GOLD
+    # Leather plackets and a row of brass buttons down the coat front.
+    for sign in (-1, 1):
+        pts, nrms = surface_path(coat, 1.37, legs_hem+.02, FRONT+sign*.16, FRONT+sign*.24, .0022, 40)
+        ribbon('coat leather placket', pts, nrms, .016, LEATHER, .0018)
+    for k in range(6):
+        z = 1.32 - k*.052
+        p, n = on_surface(torso, z, FRONT, .004)
+        stud('brass coat button', p, n, .0055, brass)
+    hem_bands(coat, hem_row, LEATHER, .035)
+    # Turned-back cuffs, leather edged.
+    for side in ('left', 'right'):
+        rings, axis, _f, _o = limb_rings(arms, side, [.80, .88, .96], .006)
+        loft('turned-back coat cuff', [row for _c, row in rings], CARTO_DARK, True, .0022)
+        for k in (0, -1): rim('coat cuff leather edge', rings[k][1], .0022, LEATHER, True)
+        stud('cuff brass button', rings[1][1][7] + _o*.004, _o, .0045, brass)
+    # Short shoulder capelet with a gold edge and a compass-rose clasp.
+    capelet = drape('explorer shoulder capelet', drape_tree, CARTO_DARK,
+                    (-math.pi/2+.30, 1.5*math.pi-.30), (-math.pi/2+.27, 1.5*math.pi-.27),
+                    lambda a: 1.17 - .06*math.sin(a), clearance=.010, flare=.02, n=64)
+    rim('capelet gold hem', [p + flat(p-Vector((0, CY, p.z)))*.002 for p in capelet[-1]], .0024, trim)
+    for column in (0, -1): rim('capelet front edge', [row[column] for row in capelet], .0024, trim)
+    left, right = capelet[3][0], capelet[3][-1]
+    mid = (left+right)/2 + Vector((0, -.010, -.006))
+    rim('capelet clasp chain', [left, mid, right], .0020, brass)
+    star('compass rose clasp', mid + Vector((0, -.003, 0)), .016, brass, 4)
+    # Map-case harness across the chest, the case itself across the back.
+    pts, nrms = surface_path(torso, 1.34, 1.02, FRONT+.62, FRONT-.70, .005)
+    ribbon('map case harness', pts, nrms, .024, LEATHER_DARK, .003)
+    for k in (5, 13, 20): stud('harness rivet', pts[k] + nrms[k]*.002, nrms[k], .0035, brass)
+    back_tree = surface_tree(mine('capelet', 'tunic', 'skirt'))
+    top, top_n = on_surface(back_tree, 1.30, math.pi/2-.55, .030)
+    low, low_n = on_surface(back_tree, 1.00, math.pi/2+.60, .030)
+    rim('leather map case', [top, low], .024, LEATHER)
+    for p in (top, low, top.lerp(low, .5)):
+        axis = (low-top).normalized()
+        u = axis.cross(Vector((0, 1, 0))).normalized(); v = axis.cross(u).normalized()
+        rim('map case brass band', [p + (u*math.cos(t)+v*math.sin(t))*.0255 for t in [k*TAU/20 for k in range(20)]], .0022, brass, True)
+    axis = (top-low).normalized()
+    for k, dx in enumerate((-.008, .009)):
+        start = top + Vector((dx, 0, 0))
+        rim('rolled parchment map', [start, start + axis*.045], .008 - k*.0015, IVORY)
+    # Brass compass on the belt and a spyglass hanging at the hip.
+    p, n = on_surface(torso, .985, FRONT+.78, 0)
+    n = flat(n)
+    _c, ring_edge = dome('brass compass case', p + n*.004, n, .024, brass, .95)
+    rim('compass rim', ring_edge, .0022, brass, True)
+    dome('compass glass', p + n*.010, n, .020, GLASS, .55, None)
+    rim('compass needle', [p + n*.027 + Vector((0, 0, .013)), p + n*.027 + Vector((0, 0, -.013))], .0016, RUBY)
+    p, n = on_surface(coat, .96, FRONT-1.15, .018)
+    n = flat(n)
+    rim('spyglass leather body', [p, p + Vector((0, 0, -.13))], .012, LEATHER)
+    rim('spyglass brass tube', [p + Vector((0, 0, -.13)), p + Vector((0, 0, -.18))], .0095, brass)
+    for z in (0, -.06, -.13): rim('spyglass brass ring', [p + Vector((.013*math.cos(t), .013*math.sin(t), z)) for t in [k*TAU/16 for k in range(16)]], .0020, brass, True)
+    rim('spyglass strap', [on_surface(torso, 1.02, FRONT-1.10, .004)[0], p], .003, LEATHER_DARK)
+    # Leather bracers on the forearms, under the cuffs.
+    for side in ('left', 'right'):
+        rings, _a, _f, outward = limb_rings(arms, side, [.46, .56, .66, .76], .006)
+        loft('leather bracer', [row for _c, row in rings], LEATHER, True, .002)
+        for k in (0, -1): rim('bracer rim', rings[k][1], .0020, LEATHER_DARK, True)
+
+
+# ---------------------------------------------------------------------------
+# Level 8 - Healer: ivory robe, teal tabard with a gold leaf-and-cup sigil,
+# hood, bell cuffs, remedy satchel and belt vials.
+# ---------------------------------------------------------------------------
+def healer_gear(robe, torso, drape_tree, arms, hem_row, legs_hem, skin):
+    half = lambda z: .30 + .06*smooth01((1.0-z)/.6)
+    front = body_panel('teal healer tabard', robe, 1.36, legs_hem+.07, FRONT, half, HEALER_TEAL)
+    back = body_panel('teal healer tabard back', robe, 1.33, legs_hem+.07, math.pi/2, half, HEALER_TEAL)
+    for grid in (front, back):
+        rim('tabard gold edge', outline(grid), .0022, GOLD, True)
+        # A gold band where the tunic meets the robe skirt, just under the belt.
+        row = min(grid, key=lambda r: abs(r[0].z - .995))
+        rim('tabard waist gold band', [p + flat(p-Vector((0, CY, p.z)))*.002 for p in row], .0040, GOLD)
+        rim('tabard inner gold line', [row[1] for row in grid[1:-1]] + [row[-2] for row in reversed(grid[1:-1])], .0012, GOLD)
+    # Leaf-and-cup sigil: secular emblem of care.
+    p, n = on_surface(robe, 1.23, FRONT, .007)
+    prism('healer cup', [(-.020, .014), (.020, .014), (.013, -.006), (.004, -.012), (.004, -.022),
+                         (.012, -.027), (-.012, -.027), (-.004, -.022), (-.004, -.012), (-.013, -.006)], p, .004, GOLD)
+    for s in (-1, 1):
+        prism('healer leaf', [(0, 0), (s*.010, .010), (s*.006, .026), (0, .034), (-s*.002, .016)],
+              p + Vector((s*.006, -.002, .012)), .003, GOLD)
+    for z in (.84, .66):
+        q, _n = on_surface(robe, z, FRONT, .004)
+        star('embroidered healer star', q, .012, GOLD, 4)
+    hem_bands(robe, hem_row, GOLD, .05)
+    bell_cuffs(arms, HEALER_TEAL, GOLD)
+    # Short ivory mantle over the shoulders.
+    mantle_tree = surface_tree(mine('tunic', 'tabard'), lambda c: c.z > 1.0)
+    mantle = drape('ivory shoulder mantle', mantle_tree, HEALER_IVORY,
+                   (-math.pi/2+.30, 1.5*math.pi-.30), (-math.pi/2+.27, 1.5*math.pi-.27),
+                   lambda a: 1.215 - .045*math.sin(a) + .012*math.cos(6*a), clearance=.008, flare=.018, n=72, m=10)
+    rim('mantle gold edge', mantle[-1], .0022, GOLD)
+    for column in (0, -1): rim('mantle front edge', [row[column] for row in mantle], .0022, GOLD)
+    left, right = mantle[2][0], mantle[2][-1]
+    for q in (left, right): stud('mantle pearl clasp', q, flat(q-Vector((0, CY, q.z))), .009, IVORY)
+    rim('mantle clasp chain', [left, (left+right)/2 + Vector((0, -.006, -.018)), right], .0020, GOLD)
+    hooded(mine('tunic', 'mantle') + [skin], HEALER_TEAL, GOLD, 1.25)
+    # Remedy satchel on a strap, and vials on the belt.
+    pts, nrms = surface_path(torso, 1.33, 1.00, FRONT-.62, FRONT+.92, .006)
+    ribbon('satchel strap', pts, nrms, .018, LEATHER, .0025)
+    q, n = on_surface(robe, .93, FRONT+1.02, 0)
+    n = flat(n)
+    centre = q + n*.022
+    facing_box('remedy satchel', centre, n, (.075, .036, .070), LEATHER, .008)
+    facing_box('satchel flap', centre + n*.019 + Vector((0, 0, .016)), n, (.078, .005, .040), LEATHER_DARK, .003)
+    stud('satchel gold leaf clasp', centre + n*.022, n, .006, GOLD)
+    for k, a in enumerate((FRONT-.55, FRONT-.78, FRONT-1.00)):
+        q, n = on_surface(torso, 1.00, a, .006)
+        vial('belt remedy vial', q + Vector((0, 0, -.045)), n, GLASS_CLEAR, [HEAL_GLOW, GEM, HEAL_GLOW][k])
+
+
+# ---------------------------------------------------------------------------
+# Level 9 - Alchemist: amber coat-robe, charcoal leather apron, bandolier of
+# glowing vials, gauntlets, belt goggles and a mantle with glowing sigils.
+# ---------------------------------------------------------------------------
+def alchemist_gear(robe, torso, drape_tree, arms, hem_row, legs_hem):
+    half = lambda z: .40 + .10*smooth01((1.0-z)/.55)
+    apron = body_panel('charcoal leather apron', robe, 1.30, legs_hem+.10, FRONT, half, ALCH_APRON, .0022)
+    rim('apron stitched edge', outline(apron), .0020, GOLD, True)
+    for s in (0, -1):
+        top = apron[0][s]
+        neck = on_surface(torso, 1.40, FRONT+(.55 if s else -.55), .006)[0]
+        rim('apron neck strap', [top, neck], .0030, LEATHER_DARK)
+    for k, (dz, a) in enumerate([(.86, FRONT-.20), (.86, FRONT+.20)]):
+        q, n = on_surface(robe, dz, a, .006)
+        facing_box('apron tool pocket', q + flat(n)*.003, n, (.060, .006, .062), LEATHER_DARK, .004)
+        stud('pocket brass rivet', q + flat(n)*.007 + Vector((0, 0, .026)), n, .0035, GOLD)
+    hem_bands(robe, hem_row, GOLD, .045)
+    # Scorched, darker band at the hem of the robe.
+    rim('scorched hem', [on_surface(robe, max(p.z for p in hem_row)+.018, i*TAU/64, .001)[0] for i in range(64)], .004, ALCH_SCORCH, True)
+    # Bandolier of glowing vials.
+    pts, nrms = surface_path(torso, 1.34, 1.02, FRONT-.64, FRONT+.74, .012)
+    ribbon('vial bandolier', pts, nrms, .026, LEATHER_DARK, .004)
+    for k, idx in enumerate((6, 10, 14, 18)):
+        vial('bandolier potion', pts[idx] + nrms[idx]*.004 - Vector((0, 0, .016)), nrms[idx], GLASS_CLEAR,
+             [ALCH_GREEN, ALCH_VIOLET, AMBER, ALCH_GREEN][k], .038, .0085)
+        rim('vial loop', [pts[idx] + nrms[idx]*.004 + Vector((s*.010, 0, .006)) for s in (-1, 1)], .0022, LEATHER)
+    # Leather gauntlets with brass cuffs.
+    for side in ('left', 'right'):
+        rings, _a, _f, outward = limb_rings(arms, side, [.62, .72, .82, .92, .98], .007)
+        rows = [[c + (p-c)*(1 + .10*k) for p in row] for k, (c, row) in enumerate(rings)]
+        loft('leather alchemist gauntlet', rows, ALCH_APRON, True, .0025)
+        rim('gauntlet brass cuff', rows[0], .0030, GOLD, True)
+        rim('gauntlet brass trim', rows[-1], .0022, GOLD, True)
+        for k in (1, 3): stud('gauntlet rivet', rows[k][7] + outward*.003, outward, .0035, GOLD)
+    # Brass goggles hanging from the belt.
+    p, n = on_surface(robe, .955, FRONT+.95, .012)
+    n = flat(n); side = Vector((0, 0, 1)).cross(n).normalized()
+    for s in (-1, 1):
+        c = p + side*s*.022
+        _o, edge = dome('goggle brass frame', c, n, .016, GOLD, .9)
+        rim('goggle frame rim', edge, .0020, GOLD, True)
+        dome('goggle green lens', c + n*.004, n, .013, ALCH_GREEN, .5, None)
+    rim('goggle strap', [p + side*.038, on_surface(torso, 1.00, FRONT+1.20, .004)[0]], .0030, LEATHER_DARK)
+    # A long charcoal cape completes the silhouette.
+    cape = drape('draped travelling cape', drape_tree, ALCH_MANTLE, (-.48, math.pi+.48), (.32, math.pi-.32),
+                 lambda a: .30 + .05*abs(math.cos(a)), clearance=.010, flare=.05, n=44, m=28)
+    rim('cape gold edge', [row[0] for row in cape] + cape[-1] + [row[-1] for row in reversed(cape)], .0028, GOLD)
+    # Mantle with glowing alchemical sigils, over the cape.
+    mantle_tree = surface_tree(mine('tunic', 'apron', 'bandolier', 'cape'), lambda c: c.z > 1.0)
+    mantle = drape('alchemist mantle', mantle_tree, ALCH_MANTLE,
+                   (-math.pi/2+.28, 1.5*math.pi-.28), (-math.pi/2+.24, 1.5*math.pi-.24),
+                   lambda a: 1.20 - .05*math.sin(a) + dagged(.022, 14)(a), clearance=.012, flare=.022, n=96, m=11)
+    rim('mantle gold edge', mantle[-1], .0024, GOLD)
+    for column in (0, -1): rim('mantle front edge', [row[column] for row in mantle], .0024, GOLD)
+    for column in (len(mantle[0])//2, len(mantle[0])//2 - 18, len(mantle[0])//2 + 18):
+        q = mantle[6][column]
+        n = flat(q - Vector((0, CY, q.z)))
+        q = q + n*.006
+        prism('glowing alchemical sigil', [(0, .018), (.016, -.010), (-.016, -.010)], q, .002, ALCH_GREEN)
+    left, right = mantle[3][0], mantle[3][-1]
+    for q in (left, right): stud('mantle brass clasp', q, flat(q-Vector((0, CY, q.z))), .010, GOLD)
+    mid = (left+right)/2 + Vector((0, -.012, -.010))
+    rim('mantle clasp chain', [left, mid, right], .0020, GOLD)
+    q = mid + Vector((0, -.006, -.012))
+    prism('philosopher stone', [(0, .020), (.014, 0), (0, -.020), (-.014, 0)], q, .010, ALCH_GREEN)
+    rim('stone gold setting', [q + Vector((.019*math.cos(t), .004, .026*math.sin(t))) for t in [k*TAU/20 for k in range(20)]], .0020, GOLD, True)
+
+
+# ---------------------------------------------------------------------------
+# Warrior and Knight: fitted plate over a full tunic, hose and leg armour.
+# The Knight shares the Warrior's construction with gilded edges, more plates
+# and heraldry.
+# ---------------------------------------------------------------------------
 def armour_panel(shirt,name,heights,start,end,mat,edge,offset=.016):
     n=44
     heights=[heights[0]+(heights[-1]-heights[0])*i/24 for i in range(25)]
@@ -608,55 +1379,259 @@ def armour_panel(shirt,name,heights,start,end,mat,edge,offset=.016):
     obj=mesh(name,[tuple(p) for row in rows for p in row],
              [(j*(n+1)+i,j*(n+1)+i+1,(j+1)*(n+1)+i+1,(j+1)*(n+1)+i) for j in range(len(rows)-1) for i in range(n)],mat)
     obj.modifiers.new('Forged plate thickness','SOLIDIFY').thickness=.003
-    outline=rows[0]+[r[-1] for r in rows[1:]]+list(reversed(rows[-1][:-1]))+[r[0] for r in reversed(rows[1:-1])]
-    line(name+' rolled edge',[tuple(p) for p in outline],.0015,edge,True)
+    rim(name+' rolled edge',outline(rows),.0015,edge,True)
     obj['armour_construction']='anatomical fitted plate'
     return rows
 
 
-def articulated_armour(shirt):
-    """Separate breast panels, overlapping lames and fitted limb plates."""
-    royal=item=='realm-sovereign'
-    warrior=item=='story-keeper'
-    plate=material(item+' / tempered plate', '#96866D' if warrior else '#8296A5' if not royal else '#83908E', .32, .78)
-    edge=GOLD if royal else STEEL
+def plate(name, rows, mat, edge, kind, edge_radius=.0018, thickness=.003):
+    obj = loft(name, rows, mat, thickness=thickness)
+    obj['armour_construction'] = kind
+    rim(name+' rolled edge', outline(rows), edge_radius, edge, True)
+    return obj
+
+
+def articulated_armour(shirt, torso, skirt_tree, arms, legs, drape_parts):
+    """Breast and back plates, gorget, pauldrons, vambraces, tassets and legs."""
+    # Three tiers share one construction: Warrior (plain steel), Knight
+    # (gilded) and Horse Keeper (polished silver, burgundy and horseshoes).
+    royal = item == 'horse-keeper'
+    knight = item in ('honor-knight', 'horse-keeper')
+    steel = material(item+' / tempered plate', '#C2CBD1' if royal else '#8A9AA8' if knight else '#9A8A70', .26 if royal else .30, .85 if royal else .80)
+    edge = GOLD if knight else STEEL
+    rivet = GOLD if knight else STEEL
     # Chest panels follow the existing shirt instead of enclosing it in a barrel.
     for side,start,end in [('left',math.pi+.15,1.5*math.pi-.014),('right',1.5*math.pi+.014,TAU-.15)]:
-        armour_panel(shirt,side+' sculpted breast panel',[1.15,1.21,1.27,1.32,1.355],start,end,plate,edge)
+        armour_panel(shirt,side+' sculpted breast panel',[1.15,1.21,1.27,1.32,1.355],start,end,steel,edge)
         for z in [1.18,1.30]:
             p=contour_point(shirt,z,start+.08 if side=='left' else end-.08,.013)
-            ell('flush cuirass rivet',p,(.0028,.0028,.0028),GOLD,12)
+            ell('flush cuirass rivet',p,(.0028,.0028,.0028),rivet,12)
         a=1.5*math.pi+(-.37 if side=='left' else .37)
-        path=[tuple(contour_point(shirt,z,a,.013)) for z in [1.19,1.24,1.29,1.33]]
-        line('fine engraved breast flute',path,.0009,GOLD)
-    armour_panel(shirt,'fitted back plate',[1.15,1.23,1.31,1.35],.20,math.pi-.20,plate,edge)
+        rim('fine engraved breast flute',[contour_point(shirt,z,a,.0135) for z in [1.19,1.24,1.29,1.33]],.0009,GOLD)
+        if knight:
+            b=1.5*math.pi+(-.62 if side=='left' else .62)
+            rim('gilded breast filigree',[contour_point(shirt,z,b+(.10 if side=='left' else -.10)*math.sin((z-1.16)*18),.0135) for z in [1.17+k*.015 for k in range(12)]],.0011,GOLD)
+    armour_panel(shirt,'fitted back plate',[1.15,1.23,1.31,1.35],.20,math.pi-.20,steel,edge)
     for i in range(3):
         z=1.068+i*.034
-        armour_panel(shirt,f'articulated abdominal lame {i+1}',[z,z+.027,z+.044],math.pi+.20,TAU-.20,plate,edge,.009+i*.0008)
-    # Small heraldic escutcheon with inset enamel, never a floating block.
+        armour_panel(shirt,f'articulated abdominal lame {i+1}',[z,z+.027,z+.044],math.pi+.20,TAU-.20,steel,edge,.009+i*.0008)
+        for s in (-1, 1):
+            ell('lame rivet', contour_point(shirt, z+.022, FRONT+s*1.05, .0125), (.0026,.0026,.0026), rivet, 10)
+    # Leather side straps and buckles joining breast and back.
+    for s in (-1, 1):
+        a = FRONT + s*1.62
+        for z in (1.19, 1.29):
+            pts = [contour_point(shirt, z+dz, a, .019) for dz in (-.008, .008)]
+            rim('side armour strap', pts, .0045, LEATHER_DARK)
+            ell('strap buckle', contour_point(shirt, z, a, .023), (.006, .006, .008), rivet, 10)
+    # Heraldic escutcheon, seated on the breast.
     front=contour_point(shirt,1.27,1.5*math.pi,.017)
-    outline=[(-.026,.034),(.026,.034),(.024,-.011),(0,-.037),(-.024,-.011)]
-    prism('heraldic shield surround',outline,front,.004,GOLD)
-    prism('inlaid heraldic enamel',[(x*.76,z*.76) for x,z in outline],front+Vector((0,-.003,0)),.002,RED if royal else ENAMEL)
-    line('engraved heraldic chevron',[(front.x-.013,front.y-.005,front.z+.008),(front.x,front.y-.005,front.z-.009),(front.x+.013,front.y-.005,front.z+.008)],.0012,IVORY)
+    shield_outline=[(-.026,.034),(.026,.034),(.024,-.011),(0,-.037),(-.024,-.011)]
+    if knight: shield_outline=[(x*1.25,z*1.25) for x,z in shield_outline]
+    prism('heraldic shield surround',shield_outline,front,.004,GOLD)
+    prism('inlaid heraldic enamel',[(x*.76,z*.76) for x,z in shield_outline],front+Vector((0,-.003,0)),.002,HK_ENAMEL if royal else ENAMEL if knight else RED)
+    if royal:
+        horseshoe('heraldic gold horseshoe',front+Vector((0,-.0045,.003)),Vector((0,-1,0)),.014,GOLD,GOLD,.0024)
+        for side in (-1, 1):
+            b=FRONT+side*.60
+            horseshoe('breast gold horseshoe',contour_point(shirt,1.21,b,.0135),radial(b),.011,GOLD,GOLD,.0018)
+    elif knight:
+        star('heraldic gold star',front+Vector((0,-.0045,.002)),.022,GOLD)
+    else:
+        rim('engraved heraldic chevron',[(front.x-.013,front.y-.005,front.z+.008),(front.x,front.y-.005,front.z-.009),(front.x+.013,front.y-.005,front.z+.008)],.0012,IVORY)
+    # Gorget: a collar of two plates over the cape's neckline.
+    gorget = [[contour_point(shirt, z, i*TAU/48, off) for i in range(48)] for z, off in [(1.392, .020), (1.405, .017), (1.418, .014), (1.432, .012)]]
+    loft('articulated gorget', gorget, steel, True, .003)['armour_construction'] = 'gorget'
+    rim('gorget top roll', gorget[-1], .0024, edge, True)
+    rim('gorget lower rim', gorget[0], .002, edge, True)
+    rim('gorget lame line', [contour_point(shirt, 1.411, i*TAU/48, .0165) for i in range(48)], .0012, edge, True)
+    for s in (-1, 1):
+        p = contour_point(shirt, 1.392, FRONT+s*.62, .024)
+        n = flat(p - Vector((0, CY, p.z)))
+        dome('cape clasp', p - n*.009, n, .017, GOLD, 1.2)
+        if knight: stud('clasp jewel', p + n*.007, n, .007, RUBY if royal else ENAMEL)
+    if knight:
+        chain = []
+        for k in range(11):
+            t = k/10
+            chain.append(contour_point(shirt, 1.392 - .045*math.sin(math.pi*t), FRONT-.62+1.24*t, .027))
+        rim('clasp chain', chain, .0024, GOLD)
+    # The cape drapes over the back plate and gorget, under the pauldrons.
+    drape_tree = surface_tree(drape_parts + [o for o in objects if o.get('fit_persona') == persona and o.get('shop_id') == item
+                              and o.type == 'MESH' and ('back plate' in o.name or 'gorget' in o.name)], lambda c: c.z > .25 and (c.z > 1.33 or abs(c.x) < .30))
+    cape = drape('draped travelling cape', drape_tree, HK_CAPE if royal else KNIGHT_CAPE if knight else WARRIOR_CAPE,
+                 (-.50, math.pi+.50), (.34, math.pi-.34), lambda a: .36 + .04*abs(math.cos(a)),
+                 clearance=.007, flare=.05, n=44, m=28)
+    rim('cape edge', [row[0] for row in cape] + cape[-1] + [row[-1] for row in reversed(cape)],
+        .0035 if knight else .003, GOLD if knight else LEATHER)
+    if knight:
+        rim('cape inner gold trim', [p + Vector((0, 0, .03)) for p in cape[-1]], .0018, GOLD)
+    if royal:
+        rim('cape second gold trim', [p + Vector((0, 0, .05)) for p in cape[-1]], .0014, GOLD)
+        for column in (2, -3):
+            rim('cape side gold trim', [row[column] for row in cape[3:]], .0014, GOLD)
+        cape_tree = surface_tree(mine('draped travelling cape'))
+        mid = cape[len(cape)*2//5][len(cape[0])//2]
+        horseshoe('cape embroidered horseshoe', mid, flat(mid - Vector((0, CY, mid.z))), .060, GOLD, GOLD, .0048, cape_tree)
+        for k in (-9, 9):
+            q = cape[len(cape)*7//10][len(cape[0])//2 + k]
+            hit, hn, _i, _d = cape_tree.ray_cast(q + flat(q - Vector((0, CY, q.z)))*.08, -flat(q - Vector((0, CY, q.z))), .2)
+            if hit is not None:
+                star('cape embroidered star', hit + flat(q - Vector((0, CY, q.z)))*.004, .018, GOLD, 4)
+    # Pauldrons: a dome fitted over the shoulder and two lames below.
     for side in ['left','right']:
         shoulder=anchor_position('shoulder_'+side); elbow=anchor_position('elbow_'+side)
         axis=(elbow-shoulder).normalized()
         forward=Vector((0,-1,0));forward=(forward-axis*forward.dot(axis)).normalized()
         outward=axis.cross(forward).normalized()
         if outward.x*(1 if side=='left' else -1)<0: outward=-outward
-        # Three thin, overlapping shells follow the shoulder and upper arm.
-        for layer in range(3):
-            rows=[]
-            for along,radius in [(0,.072-layer*.005),(.026,.076-layer*.005),(.052,.071-layer*.005)]:
-                center=shoulder+axis*(.004+layer*.038+along)
-                rows.append([center+forward*math.cos(a)*radius+outward*math.sin(a)*radius for a in [i*math.pi/20 for i in range(21)]])
-            obj=mesh(f'{side} articulated shoulder lame {layer+1}',[tuple(p) for r in rows for p in r],
-                     [(j*21+i,j*21+i+1,(j+1)*21+i+1,(j+1)*21+i) for j in range(2) for i in range(20)],plate)
-            obj.modifiers.new('Shoulder plate thickness','SOLIDIFY').thickness=.0025
+        centre=shoulder+axis*.012
+        up=-axis
+        lams=[-.55+(2.05+.55)*j/9 for j in range(10)]
+        psis=[-1.15+2.30*i/20 for i in range(21)]
+        grid=[]
+        for lam in lams:
+            row=[]
+            for psi in psis:
+                d=(forward*math.sin(psi)+math.cos(psi)*(up*math.cos(lam)+outward*math.sin(lam))).normalized()
+                hit,_n,_i,distance=arms.ray_cast(centre,d,.16)
+                row.append([d,(distance if hit is not None else .075)+.013])
+            grid.append(row)
+        for _ in range(3):
+            for j in range(len(lams)):
+                radii=smooth_ring([r for _d,r in grid[j]],1,False)
+                for i in range(len(psis)): grid[j][i][1]=radii[i]
+            for i in range(len(psis)):
+                radii=smooth_ring([grid[j][i][1] for j in range(len(lams))],1,False)
+                for j in range(len(lams)): grid[j][i][1]=radii[j]
+        rows=[[centre+d*r for d,r in row] for row in grid]
+        cap=loft(f'{side} articulated shoulder lame 1',rows,steel,thickness=.003)
+        cap['armour_construction']='articulated shoulder'
+        rim(side+' shoulder rolled rim',rows[-1],.0022,edge)
+        rim(side+' pauldron neck ridge',rows[0],.0034 if knight else .0026,edge)
+        rim(side+' pauldron front edge',[row[0] for row in rows],.0016,edge)
+        rim(side+' pauldron back edge',[row[-1] for row in rows],.0016,edge)
+        if royal:
+            top_row=rows[len(rows)//2]
+            q=top_row[len(top_row)//2]
+            horseshoe(side+' pauldron gold horseshoe',q+(q-centre).normalized()*.001,(q-centre).normalized(),.014,GOLD,GOLD,.0020)
+            for column in (4, -5):
+                rim(side+' gilded pauldron side flute',[row[column]+(row[column]-centre).normalized()*.002 for row in rows[1:-1]],.0011,GOLD)
+        if knight:
+            rim(side+' gilded pauldron flute',[row[len(row)//2]+(row[len(row)//2]-centre).normalized()*.002 for row in rows[1:-1]],.0014,GOLD)
+        bottom=max(-(p-shoulder).dot(-axis) for p in rows[-1])
+        for layer in range(2):
+            along=bottom-.018+layer*.028
+            lame=[]
+            for k,extra in enumerate([0,.003,.006]):
+                c=shoulder+axis*(along+.015*k)
+                ring_row=[]
+                for i in range(21):
+                    phi=-.25+(math.pi+.5)*i/20
+                    d=forward*math.cos(phi)+outward*math.sin(phi)
+                    hit,_n,_i,distance=arms.ray_cast(c,d,.14)
+                    ring_row.append(c+d*((distance if hit is not None else .06)+.011+layer*.004+extra))
+                lame.append(ring_row)
+            obj=loft(f'{side} articulated shoulder lame {layer+2}',lame,steel,thickness=.0025)
             obj['armour_construction']='articulated shoulder'
-            line(side+' shoulder rolled rim',[tuple(p) for p in rows[-1]],.0017,edge)
-            for p in [rows[1][2],rows[1][-3]]: ell('shoulder hinge rivet',p,(.003,.003,.003),GOLD,12)
+            rim(side+' shoulder lame rim',lame[-1],.0017,edge)
+            for p in [lame[1][1],lame[1][-2]]: ell('shoulder hinge rivet',p,(.003,.003,.003),rivet,12)
+        if knight:
+            # Round besagew guarding the front of the armpit.
+            p=contour_point(shirt,1.285,FRONT+(1.02 if side=='left' else -1.02),.020)
+            n=flat(p-Vector((0,CY,p.z)))
+            _d,edge_ring=dome('besagew disc',p-n*.03,n,.034,steel,.62)
+            rim('besagew gold rim',edge_ring,.0018,GOLD,True)
+            stud('besagew boss',p+n*.004,n,.008,GOLD)
+        # Vambrace and elbow couter.
+        rings,axis_f,fwd_f,out_f=limb_rings(arms,side,[.28,.40,.52,.64,.76,.86,.93],.007)
+        vam=loft('fitted vambrace',[row for _c,row in rings],steel,True,.0025)
+        vam['armour_construction']='vambrace'
+        for k in (0,-1): rim('vambrace rolled rim',rings[k][1],.0019,edge,True)
+        if knight:
+            rim('gilded vambrace filigree',[row[7]+out_f*.002 for _c,row in rings[1:-1]],.0012,GOLD)
+        else:
+            for k in (2,4): rim('vambrace leather strap',[p+(p-c).normalized()*.003 for p in rings[k][1] for c in [rings[k][0]]],.0024,LEATHER_DARK,True)
+        elbow_dir=(Vector((0,1,0))*.75+out_f*.65).normalized()
+        hit,_n,_i,distance=arms.ray_cast(elbow,elbow_dir,.12)
+        r=(distance if hit is not None else .045)+.012
+        _o,edge_ring=dome('elbow couter',elbow,elbow_dir,r,steel,.78)
+        rim('couter rim',edge_ring,.0017,edge,True)
+        stud('couter rivet',elbow+elbow_dir*(r+.002),elbow_dir,.004,rivet)
+    # Tassets hanging from the belt over the skirt.
+    specs=[(FRONT-.40,.42),(FRONT+.40,.42),(FRONT-.98,.40),(FRONT+.98,.40)] if knight else [(FRONT-.44,.50),(FRONT+.44,.50)]
+    if royal: specs+=[(FRONT-1.52,.36),(FRONT+1.52,.36)]
+    for ac,w in specs:
+        for k,(z0,z1) in enumerate([(1.014,.925),(.94,.848)]):
+            rows=[[on_surface(skirt_tree,z0+(z1-z0)*j/5,ac-w/2+w*i/10,.007+.004*k)[0] for i in range(11)] for j in range(6)]
+            plate('articulated tasset lame',rows,steel,edge,'tasset')
+            if royal and k==0:
+                mid_row=rows[3]
+                rim('gilded tasset filigree',[p+flat(p-Vector((0,CY,p.z)))*.0035 for p in mid_row[1:-1]],.0011,GOLD)
+            for p in (rows[1][1],rows[1][-2]): stud('tasset rivet',p,flat(p-Vector((0,CY,p.z))),.0032,rivet)
+    # Legs: thigh cuisses, knee poleyns and greaves over fitted hose.
+    for s in (-1,1):
+        turn=s*.12
+        rows=[[legs.point(s,z,FRONT+turn+1.20*(2*i/12-1),.009) for i in range(13)] for z in [.525+(.705-.525)*j/7 for j in range(8)]]
+        plate('thigh cuisse',rows,steel,edge,'cuisse')
+        knee=legs.centre(s,.475)
+        front=legs.point(s,.475,FRONT+turn)
+        n=(front-knee).normalized()
+        r=(front-knee).length+.012
+        _o,edge_ring=dome('knee poleyn',knee,n,r,steel,1.0)
+        rim('poleyn rim',edge_ring,.0018,edge,True)
+        wing_axis=(n+radial(0 if s>0 else math.pi)*1.1).normalized()
+        _o,wing=dome('poleyn side wing',knee,wing_axis,r+.006,steel,.55)
+        rim('poleyn wing rim',wing,.0017,edge,True)
+        stud('poleyn rivet',front+n*.013,n,.0045,rivet)
+        if royal:
+            star('poleyn gold rosette',front+n*.014,.012,GOLD,6)
+            for da in (-.35, .35):
+                rim('gilded cuisse filigree',[legs.point(s,z,FRONT+turn+da,.0125) for z in [.54+(.69-.54)*j/6 for j in range(7)]],.0012,GOLD)
+        rows=[[legs.point(s,z,FRONT+turn+1.40*(2*i/14-1),.0075) for i in range(15)] for z in [.188+(.425-.188)*j/10 for j in range(11)]]
+        plate('contoured greave',rows,steel,edge,'contoured greave')
+        rim('greave shin ridge',[row[7]+(row[7]-legs.centre(s,row[7].z)).normalized()*.002 for row in rows],.0018,edge)
+        if knight:
+            for off in (-3,3):
+                rim('gilded greave filigree',[row[7+off]+(row[7+off]-legs.centre(s,row[7+off].z)).normalized()*.002 for row in rows[2:-2]],.001,GOLD)
+        for z in (.245,.365):
+            rim('greave calf strap',[legs.point(s,z,FRONT+turn+1.35+(TAU-2.70)*i/16,.0085) for i in range(17)],.0028,LEATHER_DARK)
+    if knight:
+        # Gold plaques on the belt.
+        for a in [FRONT+k*.33 for k in (-3,-2,-1,1,2,3)]:
+            p=contour_point(shirt,1.035,a,.010)
+            stud('gold belt plaque',p,flat(p-Vector((0,CY,p.z))),.0075,GOLD)
+
+
+def split_footwear(trousers, name):
+    """The delivered lower garment welds boots and trousers into one mesh.
+
+    The boot islands all sit below the ankle, the trouser islands above it.
+    Splitting them lets full outfits hide the trousers while every outfit
+    keeps exactly the same delivered boots.
+    """
+    bm = bmesh.new(); bm.from_mesh(trousers.data); bm.faces.ensure_lookup_table()
+    seen, boots = set(), set()
+    for face in bm.faces:
+        if face in seen: continue
+        group, pending = [face], [face]; seen.add(face)
+        while pending:
+            for edge in pending.pop().edges:
+                for other in edge.link_faces:
+                    if other not in seen: seen.add(other); group.append(other); pending.append(other)
+        if max((trousers.matrix_world @ v.co).z for f in group for v in f.verts) < .20:
+            boots.update(f.index for f in group)
+    bm.free()
+    if not boots: raise ValueError(f'{trousers.name}: no boot islands found')
+    shoes = duplicate(trousers, name)
+    for obj, keep_boots in [(shoes, True), (trousers, False)]:
+        bm = bmesh.new(); bm.from_mesh(obj.data); bm.faces.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if (f.index in boots) != keep_boots], context='FACES')
+        bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+        bm.to_mesh(obj.data); bm.free(); obj.data.update()
+    shoes['core_part'] = 'boots'
+    trousers['core_part'] = 'trousers'
+    return shoes
 
 
 def prepare():
@@ -667,7 +1642,7 @@ def prepare():
         before = set(bpy.context.scene.objects)
         import_character(SOURCES / f'{gender}-medium.glb')
         imported = list(set(bpy.context.scene.objects)-before)
-        shirts = []
+        shirts, trousers, skins = [], [], []
         for obj in imported:
             if obj.type != 'MESH': continue
             matrix = obj.matrix_world.copy()
@@ -711,36 +1686,58 @@ def prepare():
                 obj['head_bounds_max'] = [max(p[i] for p in pts) for i in range(3)]
                 obj['reference_skin_triangles'] = sum(len(p.vertices)-2 for p in obj.data.polygons)
             tag(obj, obj.name)
+            if part == 'clothes':
+                split_footwear(obj, f'{gender} • delivered boots')
+                trousers.append(obj)
+            elif part == 'skin':
+                skins.append(obj)
         if len(shirts) != 1: raise ValueError(f'{gender}: expected one fitted shirt, got {len(shirts)}')
-        bases[persona] = {'shirt': shirts[0], 'surfaces':[obj for obj in objects if obj.get('fit_persona')==persona and obj.get('part') in ['skin','clothes']]}
+        if len(trousers) != 1 or len(skins) != 1: raise ValueError(f'{gender}: expected one trousers and one skin mesh')
+        bases[persona] = {'shirt': shirts[0], 'trousers': trousers[0], 'skin': skins[0],
+                          'surfaces':[obj for obj in objects if obj.get('fit_persona')==persona and obj.get('part') in ['skin','clothes']]}
     persona = None
     bpy.context.scene['character_revision'] = CONTRACT['revision']
     bpy.context.scene['character_source_credit'] = CONTRACT['sourceCredit']
     return bases
 
 
-def garments(shirt):
+OUTFITS = [('starter', '#536776'), ('bard', '#A4566B'), ('vocab-ranger', '#38634D'), ('grammar-mage', '#604571'),
+           ('story-keeper', '#913E37'), ('black-mage', '#8E2A2F'), ('honor-knight', '#375B80'),
+           ('cartographer', '#2D6468'), ('healer', '#E2DBCA'), ('alchemist', '#7A4B27'), ('horse-keeper', '#6B2336')]
+HEMS = {'starter': .83, 'bard': .83, 'vocab-ranger': .83, 'grammar-mage': .205, 'black-mage': .235,
+        'story-keeper': .67, 'honor-knight': .67, 'cartographer': .47, 'healer': .205,
+        'alchemist': .26, 'horse-keeper': .67}
+
+
+def garments(base):
     global slot, item
+    shirt, trousers, skin = base['shirt'], base['trousers'], base['skin']
     slot = 'outfit'
-    for item, color in [('starter', '#536776'), ('vocab-ranger', '#38634D'), ('grammar-mage', '#604571'),
-                        ('story-keeper', '#913E37'), ('honor-knight', '#375B80')]:
+    legs = None
+    neck = lambda c: c.z > 1.33 and abs(c.x) < .12
+    for item, color in OUTFITS:
         cloth = material(f'{item} / woven cloth', color, .92)
         surface_maps(cloth, OUT/'textures/cloth-normal.png', OUT/'textures/cloth-roughness.png', .28)
         top = duplicate(shirt, 'fitted long-sleeve tunic', cloth)
         trim_under_belt(top)
         cloth_uv(top)
-        hem = .83 if item in ['starter', 'vocab-ranger'] else .42 if item == 'grammar-mage' else .67
+        hem = HEMS[item]
         # A close-cut tunic below the waist, not the previous rigid flared skirt.
         rx = .204 if persona == 'male' else .194
         ry = .169 if persona == 'male' else .160
-        fitted_skirt(shirt,hem,rx,ry,cloth)
-        ring('bound hem', 0, -.015, hem, rx, ry, .002, GOLD if item != 'starter' else LEATHER)
+        robe = item in FLARE
+        skirt, hem_row = fitted_skirt(shirt, hem, rx, ry, cloth, FLARE.get(item, 0),
+                                      dagged(.045, 11) if item == 'black-mage' else None)
+        if item in ['starter', 'bard', 'vocab-ranger']:
+            ring('bound hem', 0, -.015, hem, rx, ry, .002, LEATHER if item == 'starter' else GOLD)
+        elif not robe:
+            rim('bound hem', hem_row, .0022, GOLD, True)
         belt_points = fitted_ring(shirt, 1.035, .006)
         lower = fitted_ring(shirt, 1.018, .006)
         upper = fitted_ring(shirt, 1.052, .006)
         n = len(lower)
         belt = mesh('flat fitted leather waist belt', lower+upper,
-                    [(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)], LEATHER)
+                    [(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)], BELTS.get(item, LEATHER))
         belt.modifiers.new('Leather band thickness','SOLIDIFY').thickness=.003
         line('belt upper stitching', upper, .00065, GOLD, True)
         if STYLIZED and persona == 'female':
@@ -759,21 +1756,28 @@ def garments(shirt):
             box('buckle inset', (0, front - .013, 1.035), (.030, .003, .023), LEATHER, .001)
         if item == 'starter':
             # The base outfit stays plain: no neckerchief, scarf or pendant.
-            pass
+            continue
+        torso = surface_tree([top, skirt])
+        arms = surface_tree([top])
+        drape_tree = surface_tree([top, skirt, skin], lambda c: c.z > .25 and (c.z > 1.33 or abs(c.x) < .30))
+        if item == 'bard':
+            bard_gear(torso)
+            continue
+        if item == 'vocab-ranger':
+            ranger_gear(torso, drape_tree, arms, skin)
+            continue
+        if legs is None: legs = LegFit(trousers, skin)
+        fitted_hose(legs, trousers, HOSE[item])
+        if item in MAGES:
+            mage_gear(item == 'black-mage', torso, torso, drape_tree, arms, hem_row, cloth, hem)
+        elif item == 'cartographer':
+            cartographer_gear(torso, torso, drape_tree, arms, hem_row, hem)
+        elif item == 'healer':
+            healer_gear(torso, torso, drape_tree, arms, hem_row, hem, skin)
+        elif item == 'alchemist':
+            alchemist_gear(torso, torso, drape_tree, arms, hem_row, hem)
         else:
-            cape_mat = cloth if item == 'vocab-ranger' else CHARCOAL
-            cape_hem = .73 if item == 'vocab-ranger' else .42
-            rows = [(cape_hem, .30, .17, .105), (.80, .295, .185, .083), (1.12, .257, .166, .075), (1.37, .20, .13, .045), (1.438, .077, .078, .008)]
-            cape = shell('draped travelling cape', rows, cape_mat, -.07, math.pi + .14, .008)
-            for sign in [-1, 1]:
-                line('cape edge', [(sign * rx, cy - .01, z) for z, rx, ry, cy in rows], .004, LEATHER)
-                ell('cape clasp', (sign * .075, -.093, 1.408), (.015, .008, .015), GOLD)
-            if item == 'grammar-mage':
-                for sign in [-1, 1]:
-                    line('robe front embroidery', [(sign * .048, -.143, 1.375), (sign * .073, -.186, 1.21), (sign * .070, -.197, 1.045), (sign * .095, -.196, .78), (sign * .12, -.184, hem + .018)], .005, GOLD)
-                prism('arcane chest crystal', [(0, .04), (.025, 0), (0, -.04), (-.025, 0)], (0, -.192, 1.257), .018, GEM)
-            if item in ['story-keeper', 'honor-knight']:
-                articulated_armour(shirt)
+            articulated_armour(shirt, torso, surface_tree([skirt]), arms, legs, [top, skirt, skin])
     bpy.data.objects.remove(shirt, do_unlink=True)
 
 
@@ -1343,6 +2347,10 @@ def refine_seat_silhouette(selected):
     """
     for obj in selected:
         if obj.type != 'MESH' or obj.get('shop_slot') not in ['core','persona','outfit']:
+            continue
+        # Capes hang free behind the seat: pulling them in would push the
+        # belt and skirt through the cloth.
+        if obj.get('drape'):
             continue
         matrix=obj.matrix_world.copy();inverse=matrix.inverted()
         for vertex in obj.data.vertices:
@@ -1998,6 +3006,37 @@ IVORY = material('Warm ivory', '#DDD6BE', .84)
 ENAMEL = material('Blue enamel', '#365B80', .38, .18)
 GLASS = material('Dark blue lenses', '#172C35', .14, .3)
 GEM = material('Turquoise crystal', '#6FBDC4', .21, .18, .18)
+CAPE_BROWN = material('Ranger brown wool', '#6E4B30', .93)
+LEATHER_DARK = material('Dark bridle leather', '#3F2F23', .80)
+CORD = material('Waxed linen cord', '#C9B58C', .85)
+MAGE_CAPE = material('Mage indigo wool', '#2F2742', .90)
+BLACK_CLOTH = material('Black mage cloth', '#1D191D', .88)
+RUBY = material('Ember ruby', '#C23A2E', .20, .10, .55)
+EMBER = material('Ember rune glow', '#FF7A3D', .40, 0, 2.2)
+WARRIOR_CAPE = material('Warrior oxblood wool', '#55261F', .90)
+KNIGHT_CAPE = material('Knight royal blue wool', '#213C66', .88)
+BARD_SASH = material('Bard cream silk sash', '#E7CF9A', .60)
+CARTO_DARK = material('Cartographer deep teal wool', '#1D4144', .90)
+HEALER_TEAL = material('Healer teal wool', '#2C7470', .88)
+HEALER_IVORY = material('Healer ivory linen', '#EFE9DA', .90)
+HEAL_GLOW = material('Healing draught glow', '#7FE6C8', .30, 0, 1.4)
+GLASS_CLEAR = material('Clear potion glass', '#CFE3E6', .08, 0)
+ALCH_APRON = material('Alchemist charcoal leather', '#2B2522', .72)
+ALCH_SCORCH = material('Alchemist scorched cloth', '#3A2414', .95)
+ALCH_MANTLE = material('Alchemist soot wool', '#27221F', .90)
+ALCH_GREEN = material('Alchemical green glow', '#62F08C', .30, 0, 2.0)
+ALCH_VIOLET = material('Alchemical violet glow', '#B67BFF', .30, 0, 1.8)
+HK_CAPE = material('Horse keeper ivory wool', '#E8E0CB', .88)
+HK_ENAMEL = material('Horse keeper burgundy enamel', '#7A1F33', .36, .15)
+BELTS = {'black-mage': BLACK_CLOTH, 'alchemist': ALCH_APRON, 'horse-keeper': LEATHER_DARK}
+HOSE = {'grammar-mage': material('Mage plum hose', '#30243A', .90),
+        'cartographer': material('Cartographer riding hose', '#3B2E24', .86),
+        'healer': material('Healer linen hose', '#BDB29B', .90),
+        'alchemist': material('Alchemist soot hose', '#2A2420', .88),
+        'horse-keeper': material('Horse keeper burgundy hose', '#2E1A22', .86),
+        'black-mage': material('Black mage hose', '#1B171A', .88),
+        'story-keeper': material('Warrior leather hose', '#4A3527', .78),
+        'honor-knight': material('Knight navy hose', '#1F2A3B', .86)}
 AMBER = material('Lantern warm light', '#E6B555', .38, .05, 1.1)
 HAIR = material('Hair / selectable color', '#594432', .52)
 HAIR_DARK = material('Hair / shadow strands', '#493829', .57)
@@ -2025,7 +3064,7 @@ def shaded_hair_material():
 
 HAIR_SHADED = shaded_hair_material()
 for persona in CHARACTERS:
-    garments(bases[persona]['shirt'])
+    garments(bases[persona])
 persona = None
 # Haircuts under sign-off: HAIR_ITEMS decides which families ship. The hair
 # category stays in the game either way, with the shaved head always available.

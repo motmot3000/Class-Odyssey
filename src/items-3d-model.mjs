@@ -27,7 +27,7 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
   ? new URL('../assets/', import.meta.url)
   : new URL('../assets/', document.baseURI);
-export const CATALOGUE_REVISION = 'catalogue-v12-ear-drape';
+export const CATALOGUE_REVISION = 'catalogue-v13-ear-outfits';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
@@ -64,6 +64,10 @@ export const PRESETS = {
 const COVERED_HATS = new Set(['feather-beret', 'wizard-hat', 'classy-hat']);
 const OPEN_CROWNS = new Set(['gold-crown', 'celestial-crown']);
 
+export function coversLegs(outfitId) {
+  return Boolean(getShopItem(outfitId)?.coversLegs);
+}
+
 export function visiblePart(data, look, itemsOnly = false) {
   if (data.fit_persona && data.fit_persona !== look.persona) return false;
   const slot = data.shop_slot;
@@ -73,7 +77,9 @@ export function visiblePart(data, look, itemsOnly = false) {
     if (slot === 'hair' && data.ear_fit && data.ear_fit !== 'human') return false;
     return slot !== 'hair' || !data.hat_fit || data.hat_fit === 'open';
   }
-  if (slot === 'core') return !itemsOnly;
+  /* The delivered boots always show. Full outfits (Mage, Warrior, Black Mage,
+   * Knight) bring their own legs, so the delivered trousers are hidden. */
+  if (slot === 'core') return !itemsOnly && !(data.core_part === 'trousers' && coversLegs(look.skin));
   if (slot === 'persona') {
     if (data.part === 'ears' && EAR_ACCESSORIES.has(look.accessory)) return false;
     return !itemsOnly && data.shop_id === look.persona;

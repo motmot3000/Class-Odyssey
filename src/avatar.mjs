@@ -38,7 +38,12 @@ const CLOTHS = {
   azur:     { base: "#33507E", dark: "#223757", lite: "#4A6A99", line: "#152036" },
   sinople:  { base: "#2F5C43", dark: "#20422F", lite: "#427659", line: "#132B1E" },
   pourpre:  { base: "#573566", dark: "#3C2449", lite: "#714C81", line: "#25142B" },
-  ecarlate: { base: "#8E3230", dark: "#65211F", lite: "#AC4D48", line: "#3D1211" }
+  ecarlate: { base: "#8E3230", dark: "#65211F", lite: "#AC4D48", line: "#3D1211" },
+  rose:     { base: "#A4566B", dark: "#7A3C4E", lite: "#BE7286", line: "#3A1C25" },
+  sarcelle: { base: "#2D6468", dark: "#1D4144", lite: "#437F83", line: "#10262A" },
+  ivoire:   { base: "#D8D0BC", dark: "#B3AA95", lite: "#ECE6D6", line: "#5B5446" },
+  ambre:    { base: "#7A4B27", dark: "#57341A", lite: "#96633A", line: "#2A190C" },
+  bordeaux: { base: "#6B2336", dark: "#4B1725", lite: "#873449", line: "#240A12" }
 };
 
 /* La laine du manteau est fixe et neutre : elle unifie la palette quelle que
@@ -69,6 +74,12 @@ const OUTFITS = {
   "vocab-ranger":   { cloth: "sinople",  role: "ranger",    mantle: true, mail: false, emblem: false, greaves: false },
   "grammar-mage":   { cloth: "pourpre",  role: "mage",      cape: true,   mail: false, emblem: true,  greaves: false },
   "story-keeper":   { cloth: "ecarlate", role: "keeper",    cape: true,   mail: true,  emblem: true,  greaves: true  },
+  "black-mage":     { cloth: "ecarlate", role: "mage",      cape: true,   mail: false, emblem: true,  greaves: false },
+  bard:             { cloth: "rose",     role: "scout",     cape: false,  mail: false, emblem: false, greaves: false },
+  cartographer:     { cloth: "sarcelle", role: "ranger",    mantle: true, mail: false, emblem: false, greaves: false },
+  healer:           { cloth: "ivoire",   role: "mage",      mantle: true, cape: false, mail: false, emblem: true,  greaves: false },
+  alchemist:        { cloth: "ambre",    role: "mage",      mantle: true, cape: true,  mail: false, emblem: true,  greaves: false },
+  "horse-keeper":   { cloth: "bordeaux", role: "knight",    cape: true,   mail: true,  emblem: true,  greaves: true },
   "honor-knight":   { cloth: "azur",     role: "knight",    cape: true,   mail: true,  emblem: true,  greaves: true },
   "grand-archmage": { cloth: "pourpre",  role: "archmage",  mantle: true, cape: true,  emblem: true,  greaves: false },
   "realm-sovereign":{ cloth: "ecarlate", role: "sovereign", cape: true,   mail: true,  emblem: true,  greaves: true }
@@ -1093,7 +1104,7 @@ export function renderHero(pupil) {
     girl: pupil.gender === "girl",
     mirror: mirrorFor(pupil.id),
     alt: `${pupil.name || "hero"} the hero`,
-    cls: `avatar hero-${outfit.role} ${pupil.skin === "grammar-mage" ? "magic" : ""}`
+    cls: `avatar hero-${outfit.role} ${["grammar-mage", "black-mage", "alchemist"].includes(pupil.skin) ? "magic" : ""}`
   });
 }
 
