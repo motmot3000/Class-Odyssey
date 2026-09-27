@@ -57,6 +57,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
             <label class="field"><span>${t("welcome.field.email")}</span><input id="gate-username" name="username" autocomplete="email" autocapitalize="none" spellcheck="false" required value="${escapeHtml(values.username || "")}" ${off} /></label>
             <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="current-password" required ${off} /></label>
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.signing" : "welcome.enter")}</span>${icon("back", "welcome-arrow")}</button>
+            <button class="welcome-forgot" type="button" data-action="forgot-password" ${off}>${t("settings.reset")}</button>
           </form>`}
         ${google ? `
           <p class="gate-or" aria-hidden="true"><span>${t("welcome.or")}</span></p>

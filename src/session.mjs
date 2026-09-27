@@ -210,6 +210,65 @@ export async function updateSettings(patch) {
   return { ok: true, account: payload.account };
 }
 
+/* Profile changes move the display name and the email identity (username)
+ * together, so the session account is refreshed from the server answer. */
+export async function updateProfile(patch) {
+  const context = captureSessionContext();
+  const { offline, response, payload } = await callApi("account/profile", { method: "PUT", body: patch, context });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
+  const session = readStored(SESSION_KEY);
+  if (session && session.account?.id === payload.account.id) {
+    writeStored(SESSION_KEY, { ...session, account: payload.account });
+  }
+  return { ok: true, account: payload.account };
+}
+
+/* Recovery is a two-step, email-delivered flow: ask for a code, then confirm
+ * it with a new password. Both steps work signed out. */
+export async function requestPasswordReset(email, lang = "fr") {
+  const { offline, response, payload } = await callApi("session/password/reset", {
+    body: { email: String(email ?? "").trim(), lang: lang === "en" ? "en" : "fr" },
+    context: null
+  });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (response.status === 429) return { ok: false, error: retryMessage(payload) };
+  if (!response.ok) return { ok: false, error: payload?.error || "The server refused the request." };
+  return { ok: true, delivered: Boolean(payload?.delivered) };
+}
+
+export async function confirmPasswordReset(email, code, next) {
+  const { offline, response, payload } = await callApi("session/password/reset/confirm", {
+    body: { email: String(email ?? "").trim(), code: String(code ?? "").trim(), next: String(next ?? "") },
+    context: null
+  });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (response.status === 429) return { ok: false, error: retryMessage(payload) };
+  if (response.status === 400) return { ok: false, error: payload?.error || "The code is invalid or has expired." };
+  if (!response.ok) return { ok: false, error: payload?.error || "The server refused the request." };
+  const session = getSession();
+  if (session) writeStored(SESSION_KEY, { ...session, offline: await makeVerifier(next) });
+  return { ok: true };
+}
+
+/* Help requests are delivered to the admin console inbox. */
+export async function sendSupportMessage({ category, subject, message }) {
+  const context = captureSessionContext();
+  const { offline, response, payload } = await callApi("support/messages", {
+    method: "POST",
+    body: { category, subject, message },
+    context
+  });
+  if (offline) return { ok: false, offline: true, error: OFFLINE };
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  if (response.status === 429) return { ok: false, error: retryMessage(payload) };
+  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (!response.ok) return { ok: false, error: payload?.error || "The server refused the request." };
+  return { ok: true, id: payload?.id };
+}
+
 /* Records the legal-text acceptance for accounts created through a provider
  * (Google), whose redirect flow cannot display the sign-up checkbox. */
 export async function acceptTerms() {

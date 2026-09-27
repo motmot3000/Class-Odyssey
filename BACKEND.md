@@ -40,6 +40,12 @@ console Google) pour activer le bouton. L'URI de redirection autorisée est
 hôte. Sans ces variables, `/api/config` annonce `google: false` et aucune
 connexion Google n'est proposée.
 
+La réinitialisation du mot de passe envoie un code à six chiffres par e-mail.
+Le transport s'active avec `RESEND_API_KEY` et `MAIL_FROM` (expéditeur vérifié
+chez Resend). Sans ces variables, la demande est enregistrée et le code est
+écrit dans les journaux du serveur hors production ; les autres paramètres du
+flux restent identiques.
+
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
 écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
@@ -79,6 +85,10 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 | DELETE  | `/api/session`                             | Révoque la session courante |
 | POST    | `/api/session/verify`                      | Vérifie le mot de passe pour la console enseignant |
 | PUT     | `/api/session/password`                    | Change le mot de passe et révoque les autres sessions |
+| PUT     | `/api/account/profile`                     | Modifie le nom affiché et l'e-mail (identifiant) |
+| POST    | `/api/session/password/reset`              | Envoie un code de réinitialisation à l'adresse e-mail |
+| POST    | `/api/session/password/reset/confirm`      | Vérifie le code et définit le nouveau mot de passe |
+| POST    | `/api/support/messages`                    | Dépose une demande d'aide (lue par la console admin) |
 | PUT     | `/api/account/terms`                       | Enregistre l'acceptation des textes légaux (comptes créés via Google) |
 | GET     | `/api/state`                               | Lit l'état du compte connecté |
 | PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |

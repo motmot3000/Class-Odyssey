@@ -167,6 +167,7 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
             <span class="account-tag" title="${t("app.aria.signedIn", { username: escapeHtml(account?.username || "") })}">${escapeHtml(account?.displayName || "")}</span>
             ${account?.role === "admin" ? `<button type="button" class="ghost" data-action="show-admin" aria-current="${view === "admin" ? "page" : "false"}" aria-label="${t("app.aria.accounts")}" title="${t("app.aria.accounts")}">${ico("rune")}<span>${t("app.aria.accounts")}</span></button>` : ""}
             ${unlocked ? `<button type="button" class="ghost" data-action="lock-adult" aria-label="${t("console.account.lock")}" title="${t("console.account.lock")}">${ico("lock")}<span>${t("console.account.lock")}</span></button>` : ""}
+            <button type="button" class="ghost" data-action="account-settings" aria-label="${t("settings.title")}" title="${t("settings.title")}">${ico("settings")}<span>${t("settings.title")}</span></button>
             <button type="button" class="ghost" data-action="sign-out" aria-label="${t("console.account.signout")}" title="${t("console.account.signout")}">${ico("logout")}<span>${t("console.account.signout")}</span></button>
           </div>
         </details>

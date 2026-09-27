@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { createApi } from "./api.mjs";
 import { createGoogleAuth } from "./google.mjs";
 import { createStaticHandler } from "./static.mjs";
+import { createMailer, passwordResetEmail } from "./mail.mjs";
+import { cleanSupportText, createSupportStore, supportLimits } from "./support.mjs";
 import { isStateDocument } from "../src/state-schema.mjs";
 import { TERMS_VERSION } from "../src/terms.mjs";
 
@@ -72,6 +74,16 @@ function cleanDisplayName(value) {
   return String(value || "").replace(UNSAFE_NAME_CHARS, "").replace(/\s+/g, " ").trim();
 }
 
+// Recovery codes are compared without leaking timing information.
+function safeEqualHex(expected, actual) {
+  if (typeof expected !== "string" || typeof actual !== "string" || expected.length !== actual.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(actual, "hex"));
+  } catch {
+    return false;
+  }
+}
+
 // Behind the VPS reverse proxy every socket comes from 127.0.0.1, so the client
 // address must come from the proxy headers. Opt in only when a trusted proxy
 // fronts the server (TRUST_PROXY=1); otherwise a client could spoof the header.
@@ -123,11 +135,18 @@ export function createGameServer({
   googleClientId = process.env.GOOGLE_CLIENT_ID,
   googleClientSecret = process.env.GOOGLE_CLIENT_SECRET,
   googleRedirectUri = process.env.GOOGLE_REDIRECT_URI,
+  mailer: mailerOption,
+  support: supportOption,
   fetchImpl,
   rateLimit
 } = {}) {
   const api = createApi({ dataDir, founderUsername, founderPassword, maxBackups });
   const limiter = createRateLimiter(rateLimit);
+  const mailer = mailerOption ?? createMailer({ fetchImpl });
+  const support = supportOption ?? createSupportStore({ dataDir });
+  const RESET_TTL_MS = 15 * 60 * 1000;
+  const RESET_MAX_ATTEMPTS = 5;
+  const SUPPORT_CATEGORIES = new Set(["bug", "billing", "class", "account", "other"]);
   const google = createGoogleAuth({
     clientId: googleClientId,
     clientSecret: googleClientSecret,
@@ -177,14 +196,15 @@ export function createGameServer({
     limiter.record(rateKey);
     const payload = await readJsonObject(req, res);
     if (!payload) return;
-    // The client only sends the email and password; the username is derived
-    // from the address (still honoring an explicitly provided one for tests).
-    let username = api.normalizeUsername(stringField(payload, "username"));
-    const password = stringField(payload, "password");
+    // The client only sends the email and password. The email is the account
+    // identity (username), and the display name defaults to its local part.
+    // A username is still honored when explicitly provided (founder tooling).
     const email = stringField(payload, "email").trim();
-    if (!username) username = api.usernameFromEmail(email);
-    const displayName = cleanDisplayName(stringField(payload, "displayName")) || username;
-    const problem = api.usernameProblem(username) || api.passwordProblem(password) || api.emailProblem(email);
+    const explicitUsername = api.normalizeUsername(stringField(payload, "username"));
+    const username = explicitUsername || api.normalizeUsername(email);
+    const password = stringField(payload, "password");
+    const displayName = cleanDisplayName(stringField(payload, "displayName")) || api.usernameFromEmail(email) || username;
+    const problem = (explicitUsername ? api.usernameProblem(explicitUsername) : null) || api.passwordProblem(password) || api.emailProblem(email);
     if (problem) {
       sendJson(res, 400, { error: problem });
       return;
@@ -247,8 +267,10 @@ export function createGameServer({
     const index = api.readAccounts();
     let account = api.findByEmail(index, email);
     if (!account) {
-      const username = api.availableUsername(index, api.usernameFromEmail(email));
-      const displayName = cleanDisplayName(String(claims.name || "")).slice(0, api.limits.MAX_DISPLAY_NAME_LENGTH) || username;
+      // The verified email is the identity; the display name defaults to its
+      // local part unless the provider supplies a real name.
+      const username = api.normalizeUsername(email);
+      const displayName = cleanDisplayName(String(claims.name || "")).slice(0, api.limits.MAX_DISPLAY_NAME_LENGTH) || api.usernameFromEmail(email) || username;
       account = await api.newAccount(username, displayName, crypto.randomBytes(32).toString("base64url"), "teacher", email);
       api.createAccountWithState(index, account);
     }
@@ -304,6 +326,143 @@ export function createGameServer({
     api.revokeAccountTokens(session.account.id, session.token);
     limiter.clear(rateKey);
     sendJson(res, 200, { ok: true, updatedAt });
+  }
+
+  /* Display name and email (which is also the login identity) are editable.
+   * Moving the email moves the username with it, so sign-in stays one field. */
+  async function handleProfile(req, res) {
+    let session = requireSession(req, res);
+    if (!session) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    session = requireSession(req, res);
+    if (!session) return;
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account) return sendJson(res, 404, { error: "account not found" });
+    const next = { ...account };
+    let changed = false;
+    if (Object.hasOwn(payload, "displayName")) {
+      const name = cleanDisplayName(payload.displayName);
+      if (typeof payload.displayName !== "string" || !name || name.length > api.limits.MAX_DISPLAY_NAME_LENGTH) {
+        return sendJson(res, 400, { error: "the display name is not valid" });
+      }
+      next.displayName = name;
+      changed = true;
+    }
+    if (Object.hasOwn(payload, "email")) {
+      const email = String(payload.email || "").trim();
+      const problem = api.emailProblem(email);
+      if (problem) return sendJson(res, 400, { error: problem });
+      const normalized = api.normalizeUsername(email);
+      const holder = api.findByEmail(index, email) || api.findByUsername(index, normalized);
+      if (holder && holder.id !== account.id) return sendJson(res, 409, { error: "this email address is already used" });
+      next.email = email;
+      next.username = normalized;
+      changed = true;
+    }
+    if (!changed) return sendJson(res, 200, { ok: true, account: api.publicAccount(account) });
+    next.updatedAt = new Date().toISOString();
+    index.accounts[account.id] = next;
+    api.writeAccounts(index);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(next) });
+  }
+
+  /* Recovery request. The reply is generic so it never confirms whether an
+   * address is registered; the code is emailed once a mailer is configured. */
+  async function handlePasswordResetRequest(req, res) {
+    const rateKey = throttle(req, res, "password-reset");
+    if (!rateKey) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    limiter.record(rateKey);
+    const email = stringField(payload, "email").trim();
+    const lang = stringField(payload, "lang") === "en" ? "en" : "fr";
+    const index = api.readAccounts();
+    const account = api.findByEmail(index, email);
+    if (account) {
+      const code = api.generateResetCode();
+      index.accounts[account.id] = {
+        ...account,
+        passwordReset: {
+          key: api.resetCodeKey(code, account.id),
+          expiresAt: Date.now() + RESET_TTL_MS,
+          attempts: 0,
+          requestedAt: new Date().toISOString()
+        },
+        updatedAt: new Date().toISOString()
+      };
+      api.writeAccounts(index);
+      const message = passwordResetEmail({ code, minutes: Math.round(RESET_TTL_MS / 60000), lang });
+      const delivery = await mailer.send({ to: account.email, ...message });
+      // With no mail provider configured the beta stays usable locally: the
+      // code is written to the server log instead of being returned in the API.
+      if (!delivery.delivered && process.env.NODE_ENV !== "production") {
+        console.warn(`[mail] reset code for ${account.email}: ${code}`);
+      }
+    }
+    sendJson(res, 200, { ok: true, delivered: mailer.enabled });
+  }
+
+  async function handlePasswordResetConfirm(req, res) {
+    const rateKey = throttle(req, res, "password-reset-confirm");
+    if (!rateKey) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    const email = stringField(payload, "email").trim();
+    const code = stringField(payload, "code").trim();
+    const next = stringField(payload, "next");
+    const problem = api.passwordProblem(next);
+    if (problem) return sendJson(res, 400, { error: problem });
+    const index = api.readAccounts();
+    const account = api.findByEmail(index, email);
+    const reset = account?.passwordReset;
+    const valid = Boolean(account && reset
+      && Number.isFinite(reset.expiresAt) && reset.expiresAt > Date.now()
+      && (reset.attempts || 0) < RESET_MAX_ATTEMPTS
+      && /^[0-9]{6}$/.test(code)
+      && safeEqualHex(reset.key, api.resetCodeKey(code, account.id)));
+    if (!valid) {
+      limiter.record(rateKey);
+      if (account) {
+        index.accounts[account.id] = { ...account, passwordReset: { ...reset, attempts: (reset?.attempts || 0) + 1 } };
+        api.writeAccounts(index);
+      }
+      return sendJson(res, 400, { error: "the code is invalid or has expired" });
+    }
+    limiter.clear(rateKey);
+    index.accounts[account.id] = {
+      ...account,
+      hash: await api.hashPassword(next),
+      passwordReset: null,
+      updatedAt: new Date().toISOString()
+    };
+    api.writeAccounts(index);
+    api.revokeAccountTokens(account.id);
+    sendJson(res, 200, { ok: true });
+  }
+
+  /* Help requests land in the shared inbox the admin console reads. */
+  async function handleSupportMessage(req, res) {
+    const session = requireSession(req, res);
+    if (!session) return;
+    const rateKey = throttle(req, res, "support-message");
+    if (!rateKey) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    const message = cleanSupportText(payload.message, supportLimits.MAX_MESSAGE_LENGTH);
+    if (!message) return sendJson(res, 400, { error: "write a message first" });
+    limiter.record(rateKey);
+    const entry = support.add({
+      accountId: session.account.id,
+      username: session.account.username,
+      displayName: session.account.displayName,
+      email: session.account.email || "",
+      category: SUPPORT_CATEGORIES.has(payload.category) ? payload.category : "other",
+      subject: cleanSupportText(payload.subject, supportLimits.MAX_SUBJECT_LENGTH),
+      message
+    });
+    sendJson(res, 201, { ok: true, id: entry.id });
   }
 
   async function handleState(req, res) {
@@ -468,7 +627,11 @@ export function createGameServer({
       if (pathname === "/api/session/verify" && req.method === "POST") return await handleVerify(req, res);
       if (pathname === "/api/session/password" && req.method === "PUT") return await handlePasswordChange(req, res);
       if (pathname === "/api/account/settings" && req.method === "PUT") return await handleSettings(req, res);
+      if (pathname === "/api/account/profile" && req.method === "PUT") return await handleProfile(req, res);
       if (pathname === "/api/account/terms" && req.method === "PUT") return handleTerms(req, res);
+      if (pathname === "/api/session/password/reset" && req.method === "POST") return await handlePasswordResetRequest(req, res);
+      if (pathname === "/api/session/password/reset/confirm" && req.method === "POST") return await handlePasswordResetConfirm(req, res);
+      if (pathname === "/api/support/messages" && req.method === "POST") return await handleSupportMessage(req, res);
       if (pathname === "/api/state" && ["GET", "HEAD", "PUT"].includes(req.method)) return await handleState(req, res);
       if (pathname === "/api/admin/accounts" && req.method === "GET") return handleAdminList(req, res);
       const resetMatch = pathname.match(/^\/api\/admin\/accounts\/([0-9a-f]{24})\/password$/);

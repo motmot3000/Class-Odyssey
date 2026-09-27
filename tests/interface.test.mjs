@@ -5,7 +5,7 @@ import { setLang } from "../src/i18n.mjs";
 import { renderWelcome } from "../src/views/welcome.mjs";
 import { renderConsent } from "../src/views/consent.mjs";
 import { renderConsole } from "../src/views/console.mjs";
-import { renderAddPupilDialog } from "../src/views/modals.mjs";
+import { renderAddPupilDialog, renderHelpDialog, renderPasswordResetDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderMentions, renderPrivacy, renderTerms } from "../src/views/legal.mjs";
 import { renderAppFooter } from "../src/views/footer.mjs";
@@ -239,6 +239,33 @@ test("account management connects own-account settings and labels other-account 
   assert.doesNotMatch(html, /data-action="admin-reset" data-account-id="self"/);
   assert.match(html, /data-action="admin-reset" data-account-id="other"/);
   assert.match(html, /type="password"[^>]*required[^>]*aria-label=/);
+});
+
+test("account settings expose profile, password recovery and help in both languages", () => {
+  const account = { username: "__VG_EMAIL_58bef97775b0__", email: "__VG_EMAIL_58bef97775b0__", displayName: "thomas.vunch" };
+  try {
+    for (const lang of ["fr", "en"]) {
+      setLang(lang);
+      const settings = renderConsole({ classroom: null, ui: { openPanels: new Set(["account"]) }, targets: [], focused: null, canUndo: false, events: [], unlockedUntil: null, account });
+      assert.match(settings, /data-action="update-profile"/);
+      assert.match(settings, /data-action="change-password"/);
+      assert.match(settings, /data-action="request-password-reset"/);
+      assert.match(settings, /data-action="confirm-password-reset"/);
+      assert.match(settings, /data-action="open-help"/);
+      assert.doesNotMatch(settings, /settings\.(title|profile|password|help|reset)/);
+
+      const help = renderHelpDialog({ email: account.email });
+      assert.match(help, /data-action="send-support"/);
+      assert.match(help, /name="message"/);
+      assert.match(help, /name="category"/);
+      assert.doesNotMatch(help, /settings\.help\./);
+
+      const reset = renderPasswordResetDialog();
+      assert.match(reset, /data-action="request-password-reset"/);
+      assert.match(reset, /data-action="confirm-password-reset"/);
+      assert.match(renderWelcome(), /data-action="forgot-password"/);
+    }
+  } finally { setLang("en"); }
 });
 
 test("new public, pupil and recovery copy renders in both application languages", () => {

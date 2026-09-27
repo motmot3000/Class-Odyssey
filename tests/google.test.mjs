@@ -107,7 +107,7 @@ test("Google sign-in creates an account from the verified email, then reuses it"
     assert.equal(exchanged.status, 200);
     const login = await exchanged.json();
     assert.equal(login.account.email, "marie.dupont@example.test");
-    assert.equal(login.account.username, "marie.dupont");
+    assert.equal(login.account.username, "marie.dupont@example.test");
     assert.equal(login.account.displayName, "Marie Dupont");
     // Provider accounts accept the legal texts once, from the in-app panel.
     assert.equal(login.account.terms, null);

@@ -345,6 +345,11 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     }
   }
 
+  /* Password recovery uses a short numeric code, single use and time limited.
+   * Only its hash is stored, salted with the account id. */
+  const generateResetCode = () => String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+  const resetCodeKey = (code, accountId) => crypto.createHash("sha256").update(`${accountId}:${code}`).digest("hex");
+
   const tokenKey = (token) => crypto.createHash("sha256").update(String(token)).digest("hex");
   const readSessions = () => {
     const sessions = readJsonFile(sessionsFile);
@@ -432,6 +437,8 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     passwordProblem,
     passwordMatches,
     hashPassword,
+    generateResetCode,
+    resetCodeKey,
     newAccount,
     issueToken,
     revokeToken,

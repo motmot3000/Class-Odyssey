@@ -40,18 +40,22 @@ import {
   acceptTerms,
   captureSessionContext,
   changePassword,
+  confirmPasswordReset,
   forgetSession,
   getAccount,
   isAdultUnlocked,
   isCurrentSession,
   isSignedIn,
   lockAdult,
+  requestPasswordReset,
+  sendSupportMessage,
   signIn,
   signInWithGoogleCode,
   signOut,
   signUp,
   unlockAdult,
   unlockUntil,
+  updateProfile,
   updateSettings,
   validateNewPassword,
   verifyPassword
@@ -66,7 +70,7 @@ import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
-import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderHelpDialog, renderItemDialog, renderNewClassDialog, renderPasswordResetDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { createGuidedTour } from "./tour.mjs";
 import { enableDragScroll } from "./touch-scroll.mjs";
@@ -147,6 +151,7 @@ const ui = {
   adminError: "",
   consentPending: false,
   consentError: "",
+  helpPending: false,
   /* Interface Odyssey */
   odysseyView: "board",
   angle: "quarter",
@@ -726,6 +731,15 @@ const ACTIONS = {
     ui.openPanels.add("account");
     openTeacherConsole();
   },
+  "open-help": () => {
+    ui.helpPending = false;
+    showDialog(renderHelpDialog({ email: account?.email || "" }));
+  },
+  "forgot-password": () => showDialog(renderPasswordResetDialog()),
+  "request-password-reset": (el) => {
+    const form = el.closest("form");
+    return requestResetCode(form ? new FormData(form).get("email") : account?.email || "");
+  },
   "teacher-console": () => {
     if (ui.teacherDialog === 'console') { closeDialog(); render(); }
     else openTeacherConsole();
@@ -1046,6 +1060,68 @@ const FORMS = {
     toast("Password updated. Other devices were signed out.", "success");
   },
 
+  "update-profile": async (form) => {
+    const data = new FormData(form);
+    const displayName = String(data.get("displayName") || "").trim();
+    const email = String(data.get("email") || "").trim();
+    if (!displayName) return toast(t("settings.displayNameRequired"), "error");
+    if (!email) return toast(t("settings.emailRequired"), "error");
+    const result = await updateProfile({ displayName, email });
+    if (!result.ok) return toast(result.error, "error");
+    account = result.account;
+    activeSession = captureSessionContext();
+    toast(t("settings.saved"), "success");
+    render();
+  },
+
+  "request-password-reset": (form) => requestResetCode(new FormData(form).get("email") || account?.email || ""),
+
+  "confirm-password-reset": async (form) => {
+    const data = new FormData(form);
+    const email = String(data.get("email") || account?.email || "").trim();
+    const code = String(data.get("code") || "").trim();
+    const next = String(data.get("next") || "");
+    const problem = validateNewPassword(next, data.get("confirm"));
+    if (problem) return toast(problem, "error");
+    if (!email) return toast(t("settings.emailRequired"), "error");
+    const result = await confirmPasswordReset(email, code, next);
+    if (!result.ok) return toast(result.error, "error");
+    form.reset();
+    const context = captureSessionContext();
+    if (context && isCurrentSession(context)) {
+      // The reset revoked every session, including this one.
+      endSession("", context);
+      toast(t("settings.reset.done"), "success");
+      return;
+    }
+    closeDialog();
+    render();
+    toast(t("settings.reset.done"), "success");
+  },
+
+  "send-support": async (form) => {
+    if (ui.helpPending) return;
+    const data = new FormData(form);
+    const message = String(data.get("message") || "").trim();
+    if (!message) {
+      toast(t("settings.help.empty"), "info");
+      form.querySelector('textarea[name="message"]')?.focus();
+      return;
+    }
+    ui.helpPending = true;
+    const result = await sendSupportMessage({
+      category: String(data.get("category") || "other"),
+      subject: String(data.get("subject") || ""),
+      message
+    });
+    ui.helpPending = false;
+    if (!result.ok) return toast(result.error, "error");
+    closeDialog({ resumeConsole: false });
+    ui.openPanels.add("account");
+    openTeacherConsole();
+    toast(t("settings.help.sent"), "success");
+  },
+
   "admin-reset": async (form) => {
     const password = String(new FormData(form).get("password") || "");
     const problem = validateNewPassword(password, password);
@@ -1175,6 +1251,17 @@ const FORMS = {
 };
 
 /* ---------- Classroom rewards ---------- */
+
+async function requestResetCode(email) {
+  const value = String(email || "").trim();
+  if (!value) return toast(t("settings.emailRequired"), "error");
+  const result = await requestPasswordReset(value, getLang());
+  if (!result.ok) return toast(result.error, "error");
+  toast(
+    t(result.delivered ? "settings.reset.sent" : "settings.reset.sentPending", { email: value }),
+    result.delivered ? "success" : "info"
+  );
+}
 
 function giveXp(amount, reason) {
   const targets = getTargets();
