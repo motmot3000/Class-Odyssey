@@ -9,14 +9,9 @@ import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel
 import { renderShop } from "./shop.mjs";
 import { getLang, t, tItem, translateMessage } from "../i18n.mjs";
 
-const XP_PRESETS = [
-  { amount: 100, reason: "console.preset.homework" },
-  { amount: 150, reason: "console.preset.vocabulary" },
-  { amount: 50, reason: "console.preset.nice" },
-  { amount: 500, reason: "console.preset.bonus" }
-];
+const XP_PRESETS = [50, 100, 200, 500, 1000];
 
-const COIN_PRESETS = [10, 20, 30, 50];
+const COIN_PRESETS = [10, 20, 50, 100];
 
 export function renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset = false, unlockedUntil = null, account = null }) {
   const open = (name) => (ui.openPanels.has(name) ? "open" : "");
@@ -24,7 +19,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
   return `
     <div class="console-head">
       <h2>${t("console.title")}</h2>
-      ${classroom ? `<button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>` : ""}
+      <button class="btn btn-primary btn-sm" type="button" data-action="focus-add" ${classroom ? "" : "disabled"} title="${classroom ? "" : t("console.target.noClass")}">${icon('plus')}<span>${t('console.roster.add')}</span></button>
     </div>
     ${unlockedUntil ? `<div class="teacher-session-lock">
       <button class="btn btn-sm" type="button" data-action="lock-adult">${icon('lock')}<span>${t('console.account.lock')}</span></button>
@@ -75,7 +70,6 @@ function renderTarget(classroom, ui, targets) {
       <section class="target is-empty">
         <h3 class="section-label">${t("console.target.giveTo")}</h3>
         <p class="panel-note">${t("console.target.noClass")}</p>
-        <button class="btn btn-primary btn-sm" type="button" data-action="add-class">${icon("plus")}<span>${t("class.add.title")}</span></button>
       </section>`;
   }
   const allIds = classroom.pupils.map((pupil) => pupil.id);
@@ -113,10 +107,9 @@ function renderAward(ui, targets) {
     <section class="award">
       <h3 class="section-label">${t("console.award.experience")}</h3>
       <div class="award-grid">
-        ${XP_PRESETS.map((preset) => `
-          <button class="award-btn" type="button" data-action="award-xp" data-amount="${preset.amount}" data-reason="${escapeHtml(t(preset.reason))}" ${off}>
-            <strong>+${preset.amount}</strong>
-            <span>${t(preset.reason)}</span>
+        ${XP_PRESETS.map((amount) => `
+          <button class="award-btn" type="button" data-action="award-xp" data-amount="${amount}" ${off}>
+            <strong>+${amount}</strong>
           </button>
         `).join("")}
       </div>
