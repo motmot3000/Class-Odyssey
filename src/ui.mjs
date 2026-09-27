@@ -140,6 +140,7 @@ export function gearOf(pupil) {
     [t("app.gear.hat"), getItemName("hat", pupil.hat)],
     [t("app.gear.hair"), getItemName("hair", pupil.hair)],
     [t("app.gear.hairColor"), getItemName("hairColor", pupil.hairColor || "brown-hair")],
+    [t("app.gear.pet"), getItemName("pet", pupil.pet || "no-pet")],
     [t("app.gear.skin"), getItemName("tone", pupil.skinTone)]
   ];
 }
