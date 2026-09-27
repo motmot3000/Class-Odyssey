@@ -71,15 +71,18 @@ export const TITLES = [
 
 export const HATS = [
   { id: "no-hat", name: "No Hat", minLevel: 1, price: 0, description: "No hat on your head." },
-  { id: "explorer-cap", name: "Goggles", minLevel: 1, price: 15, description: "Cool explorer goggles." },
-  { id: "sunglasses", name: "Sunglasses", minLevel: 2, price: 25, description: "Black sunglasses." },
   { id: "feather-beret", name: "Beret", minLevel: 2, price: 20, description: "A smart green beret with a gold pin." },
   { id: "wizard-hat", name: "Wizard Hat", minLevel: 3, price: 30, description: "A tall pointed wizard hat." },
-  { id: "gold-crown", name: "King's Crown", minLevel: 5, price: 55, description: "Shiny gold crown." },
-  { id: "steel-helm", name: "Helmet", minLevel: 6, price: 65, description: "Horned steel knight helmet." },
-  { id: "classy-hat", name: "Classy Hat", minLevel: 7, price: 75, description: "A refined black top hat." },
-  { id: "celestial-crown", name: "Royal Crown", minLevel: 10, price: 100, description: "The greatest golden crown." }
+  { id: "classy-hat", name: "Classy Hat", minLevel: 5, price: 55, description: "A refined black top hat." },
+  { id: "steel-helm", name: "Helmet", minLevel: 7, price: 75, description: "Horned steel knight helmet." },
+  { id: "gold-crown", name: "King's Crown", minLevel: 10, price: 100, description: "A jewelled gold crown for the greatest heroes." }
 ];
+
+/* Older saves wore eyewear in the hat slot and could own the withdrawn Royal
+ * Crown. Eyewear moves to the accessory slot; the Royal Crown becomes the
+ * King's Crown, which now holds its level-10 place. */
+const MOVED_TO_ACCESSORIES = new Set(["explorer-cap", "sunglasses"]);
+const RENAMED_ITEMS = { "celestial-crown": "gold-crown" };
 
 /* The Items category (weapons, shields, books) is withdrawn. `no-weapon`
  * remains as the internal empty-hands state for saved pupils and exports; it is
@@ -121,10 +124,13 @@ export const EYE_COLORS = [
   { id: "violet-eyes", name: "Violet", minLevel: 8, price: 50, color: "#63497F", description: "Mysterious violet eyes." }
 ];
 
-/* Every hero has rounded human ears. The ear accessories replace them: the
- * delivered pointed elf ears, or human ears with a few gold piercings. */
+/* One accessory at a time. Eyewear sits on the face; the ear accessories
+ * replace the rounded human ears every hero has: the delivered pointed elf
+ * ears, or human ears with a few gold piercings. */
 export const ACCESSORIES = [
   { id: "no-accessory", name: "No Accessory", minLevel: 1, price: 0, description: "Natural human ears." },
+  { id: "explorer-cap", name: "Goggles", minLevel: 1, price: 15, description: "Brass explorer goggles worn on the forehead." },
+  { id: "sunglasses", name: "Sunglasses", minLevel: 2, price: 25, description: "Stylish black sunglasses." },
   { id: "elf-ears", name: "Elf Ears", minLevel: 4, price: 30, description: "Long pointed elf ears." },
   { id: "pierced-ears", name: "Pierced Ears", minLevel: 5, price: 50, description: "Human ears with gold hoops and studs." }
 ];
@@ -671,7 +677,8 @@ function samplePupils(prefix, entries) {
   );
 }
 
-function normalizePupil(pupil) {
+function normalizePupil(source) {
+  const pupil = migrateLegacyItems(source);
   const level = Math.max(1, nonNegativeInteger(pupil.level, 1));
   const maxHp = Math.min(MAX_HEARTS, Math.max(1, nonNegativeInteger(pupil.maxHp, 5)));
   const skin = SKINS.some((item) => item.id === pupil.skin) ? pupil.skin : "starter";
@@ -732,6 +739,20 @@ function normalizePupil(pupil) {
     accessory: ownedItems.includes(accessory) ? accessory : "no-accessory",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
+}
+
+function migrateLegacyItems(pupil) {
+  const rename = (id) => RENAMED_ITEMS[id] || id;
+  const next = { ...pupil };
+  if (Array.isArray(pupil.ownedItems)) next.ownedItems = pupil.ownedItems.map(rename);
+  next.hat = rename(pupil.hat);
+  if (MOVED_TO_ACCESSORIES.has(pupil.hat)) {
+    // Eyewear leaves the hat slot; it is worn as the accessory unless the
+    // pupil already chose one.
+    if (!pupil.accessory || pupil.accessory === "no-accessory") next.accessory = pupil.hat;
+    next.hat = "no-hat";
+  }
+  return next;
 }
 
 function applyXp(pupil, amount) {

@@ -14,8 +14,8 @@ function catalogue() {
 }
 
 test('the live base characters are the delivered stylized catalogue', () => {
-  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v8');
-  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v8$/);
+  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v9');
+  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v9$/);
   assert.notEqual(BASE_CATALOGUE_URL, CATALOGUE_REVISION);
   const data = readFileSync(new URL('../assets/character-stylized/catalogue.glb', import.meta.url));
   assert.equal(data.toString('ascii', 0, 4), 'glTF');
@@ -36,7 +36,7 @@ test('baked fallback portraits match the live base so the old base never flashes
   const report = JSON.parse(readFileSync(new URL('previews/manifest.json', root)));
   assert.equal(report.portraitRevision, PORTRAIT_REVISION);
   for (const persona of ['male', 'female']) {
-    assert.match(report.portraits[persona].renderer, /stylized-v8/);
+    assert.match(report.portraits[persona].renderer, /stylized-v9/);
     const file = readFileSync(new URL(`previews/${report.portraits[persona].file}`, root));
     assert.equal(file.toString('ascii', 0, 4), 'RIFF');
   }

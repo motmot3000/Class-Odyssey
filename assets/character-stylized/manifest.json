@@ -1,5 +1,5 @@
 {
-  "appearanceRevision": "stylized-v8",
+  "appearanceRevision": "stylized-v9",
   "sourceRevision": "base-v2-2026-09",
   "sourcePose": {
     "armsFromT": 82,
@@ -28,14 +28,13 @@
     "hair:curly": 48,
     "hair:short": 24,
     "hair:bun": 66,
-    "hat:explorer-cap": 12,
-    "hat:sunglasses": 14,
-    "hat:feather-beret": 10,
-    "hat:wizard-hat": 10,
-    "hat:classy-hat": 8,
-    "hat:gold-crown": 20,
-    "hat:celestial-crown": 26,
-    "hat:steel-helm": 14,
+    "accessory:explorer-cap": 8,
+    "accessory:sunglasses": 6,
+    "hat:feather-beret": 14,
+    "hat:wizard-hat": 6,
+    "hat:classy-hat": 4,
+    "hat:gold-crown": 12,
+    "hat:steel-helm": 10,
     "accessory:elf-ears": 2,
     "accessory:pierced-ears": 12
   },

@@ -1,6 +1,6 @@
 {
-  "revision": "catalogue-v12-ear-drape",
-  "catalogueSha256": "26afad9659f44d054a8389cc1c171e61785fb06d3fe340a8bc9c73c3541a7543",
+  "revision": "catalogue-v13-headwear",
+  "catalogueSha256": "a6f32908b9f61ef0847cf0f33ddc17815c1a35e97b629274933e69d21a69bc51",
   "renderSource": "catalogue.blend",
   "items": {
     "elf-ears": {
@@ -9,10 +9,22 @@
       "meshCount": 1,
       "containsBody": false
     },
+    "explorer-cap": {
+      "slot": "accessory",
+      "file": "items/explorer-cap.webp",
+      "meshCount": 4,
+      "containsBody": false
+    },
     "pierced-ears": {
       "slot": "accessory",
       "file": "items/pierced-ears.webp",
       "meshCount": 6,
+      "containsBody": false
+    },
+    "sunglasses": {
+      "slot": "accessory",
+      "file": "items/sunglasses.webp",
+      "meshCount": 3,
       "containsBody": false
     },
     "bun": {
@@ -51,52 +63,34 @@
       "meshCount": 1,
       "containsBody": false
     },
-    "celestial-crown": {
-      "slot": "hat",
-      "file": "items/celestial-crown.webp",
-      "meshCount": 13,
-      "containsBody": false
-    },
     "classy-hat": {
       "slot": "hat",
       "file": "items/classy-hat.webp",
-      "meshCount": 4,
-      "containsBody": false
-    },
-    "explorer-cap": {
-      "slot": "hat",
-      "file": "items/explorer-cap.webp",
-      "meshCount": 6,
+      "meshCount": 2,
       "containsBody": false
     },
     "feather-beret": {
       "slot": "hat",
       "file": "items/feather-beret.webp",
-      "meshCount": 5,
+      "meshCount": 7,
       "containsBody": false
     },
     "gold-crown": {
       "slot": "hat",
       "file": "items/gold-crown.webp",
-      "meshCount": 10,
+      "meshCount": 6,
       "containsBody": false
     },
     "steel-helm": {
       "slot": "hat",
       "file": "items/steel-helm.webp",
-      "meshCount": 7,
-      "containsBody": false
-    },
-    "sunglasses": {
-      "slot": "hat",
-      "file": "items/sunglasses.webp",
-      "meshCount": 7,
+      "meshCount": 5,
       "containsBody": false
     },
     "wizard-hat": {
       "slot": "hat",
       "file": "items/wizard-hat.webp",
-      "meshCount": 5,
+      "meshCount": 3,
       "containsBody": false
     },
     "grammar-mage": {
@@ -138,7 +132,7 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v8, daylight, full silhouette",
+      "renderer": "Three.js, stylized-v9, daylight, full silhouette",
       "bytes": 40232
     },
     "female": {
@@ -148,9 +142,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v8, daylight, full silhouette",
-      "bytes": 41658
+      "renderer": "Three.js, stylized-v9, daylight, full silhouette",
+      "bytes": 41632
     }
   },
-  "portraitRevision": "stylized-v8-front-hd"
+  "portraitRevision": "stylized-v9-front-hd"
 }

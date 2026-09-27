@@ -43,7 +43,7 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
   for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 21);
+  assert.equal(modeledItemIds().length, 20);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
     assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair', 'accessory'].includes(node.extras.shop_slot));
@@ -150,7 +150,7 @@ test('items-only export excludes the welded body but keeps the equipped models',
     const exported = parts.filter(part => visiblePart(part, look, true));
     assert.ok(exported.length > 0);
     assert.ok(exported.every(part => !['core', 'persona', 'hand'].includes(part.shop_slot)));
-    for (const id of Object.values(preset)) assert.ok(exported.some(part => part.shop_id === id));
+    for (const id of Object.values(preset).filter(id => id !== 'no-hat')) assert.ok(exported.some(part => part.shop_id === id));
   }
 });
 
@@ -223,7 +223,7 @@ test('both base characters have a slightly slimmer posterior hip profile', () =>
 test('open crowns keep complete hairstyles instead of chopping off the top of the hair', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
   for (const hair of ['short', 'long', 'medium-cut', 'spiky', 'bun']) {
-    for (const hat of ['gold-crown', 'celestial-crown']) {
+    for (const hat of ['gold-crown']) {
       const visible = parts.filter(part => part.shop_slot === 'hair' && visiblePart(part, { ...DEFAULT_LOOK, hair, hat }));
       assert.ok(visible.length > 0);
       assert.ok(visible.every(part => part.hat_fit === 'crowned'));

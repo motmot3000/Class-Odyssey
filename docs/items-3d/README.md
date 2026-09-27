@@ -5,11 +5,11 @@
 ### Base de personnage live
 
 Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
-`assets/character-stylized/catalogue.glb` (`stylized-v8`) via
+`assets/character-stylized/catalogue.glb` (`stylized-v9`) via
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v12-ear-drape`) reste la référence de la chaîne d'outils et des
+(`catalogue-v13-headwear`) reste la référence de la chaîne d'outils et des
 tests.
 
 Le **catalogue de cosmétiques est réduit** :
@@ -194,8 +194,12 @@ Les sélections utilisent directement les identifiants et les prix de
 
 - **5 tenues** : Scout, Ranger, Mage, Warrior, Knight. Archmage et King sont
   retirés ; le **titre** King reste.
-- **9 couvre-chefs** : No Hat, Goggles, Sunglasses, Beret, Wizard Hat, King’s
-  Crown, Helmet, Classy Hat, Royal Crown.
+- **6 couvre-chefs** : No Hat, Beret (niveau 2), Wizard Hat (3), Classy Hat
+  (5), Helmet (7) et King’s Crown (10, 100 pièces). La Royal Crown est retirée :
+  une sauvegarde qui la possédait reçoit la King’s Crown.
+- **Accessoires** (un à la fois) : Goggles (niveau 1) et Sunglasses (2), qui
+  quittent les couvre-chefs, puis Elf Ears (4) et Pierced Ears (5). Une
+  sauvegarde qui portait des lunettes en chapeau les porte en accessoire.
 - **Objets** : catégorie retirée ; Empty Hands reste l’état interne
   (`no-weapon`) sans onglet.
 - **6 coiffures** : Short Hair (livrée, gratuite, par défaut des garçons) et
@@ -247,9 +251,18 @@ entre les mèches restent visibles en très gros plan.
 `measure-hair-fit.py` **cumule désormais tous les maillages d’une coupe** pour
 qu’aucune pièce ne masque le clipping d’une autre.
 
-Wizard Hat et Classy Hat ont des bords annulaires
-avec une véritable ouverture ; le béret est ajusté et
-incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`**
+Couvre-chefs et lunettes sont modélisés dans `tools/blender/headwear.py`
+(surfaces paramétriques et profils balayés, pièces fusionnées par matière).
+Wizard Hat (pointe pliée, plis, étoiles brodées, boucle sertie) et Classy Hat
+(bord relevé sur les côtés, calotte cintrée, gros-grain et nœud) gardent
+l’ouverture annulaire d’origine ; le béret a un liseré de cuir, une broche et
+deux plumes. La King’s Crown porte fleurs de lys, pointes à perles, bandeau
+perlé et joyaux sertis. Le Helmet est un casque à nasal : calotte à crête,
+bandes et bandeau rivetés, garde-joues, couvre-nuque à deux lames et cornes
+dans des douilles en laiton. Les lunettes sont dessinées sur le visage mesuré
+de Noa puis portées par l’assise du chapeau : elles tiennent sous chaque
+chapeau ; seules les Goggles, posées sur le front, sont masquées par le
+bandeau du Helmet. **La couronne utilise `crowned`**
 pour chaque coupe : ajustement radial progressif au niveau du bandeau
 métallique, en n’écrasant que le volume du crâne et jamais la frange, ce qui
 évite de la faire traverser le visage.

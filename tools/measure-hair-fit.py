@@ -66,7 +66,7 @@ hat_trees = {o.name: tree_for(o) for o in hats}
 
 # Mirror of src/items-3d-model.mjs: each hat picks the hair variant it needs.
 COVERED_HATS = {'feather-beret', 'wizard-hat', 'classy-hat'}
-OPEN_CROWNS = {'gold-crown', 'celestial-crown'}
+OPEN_CROWNS = {'gold-crown'}
 
 
 def fit_for(hat):

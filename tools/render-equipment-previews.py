@@ -95,7 +95,7 @@ for slot, item in ([] if PORTRAITS_ONLY else ids):
     selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open')
     if not selected: raise ValueError(f'No meshes for {item}')
     assert all(obj.get('shop_slot') not in ['core','persona'] for obj in selected)
-    frame(selected, 320, 320, 'ear' if slot == 'accessory' else None)
+    frame(selected, 320, 320, 'ear' if item in ('elf-ears', 'pierced-ears') else None)
     render(f'items/{item}.png')
     report['items'][item] = {'slot':slot,'file':f'items/{item}.webp','meshCount':len(selected),'containsBody':False}
 
@@ -121,7 +121,7 @@ for persona in ([] if PORTRAITS_ONLY else ['male','female']):
 
 # Refresh the catalogue's fallback render with the current fitted equipment.
 if not PORTRAITS_ONLY:
-    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','hat':'explorer-cap','weapon':'lore-lantern'}
+    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','accessory':'explorer-cap','weapon':'lore-lantern'}
     selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
     frame(selected,600,900)
     scene.render.filepath = str(ROOT/'assets/items-3d/preview.png')

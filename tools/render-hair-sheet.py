@@ -17,7 +17,7 @@ PERSONAS = [args[1]] if len(args) > 1 else ['male', 'female']
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=CATALOGUE)
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
-HATS = ['no-hat', 'explorer-cap', 'sunglasses', 'feather-beret', 'wizard-hat', 'gold-crown', 'classy-hat', 'celestial-crown', 'steel-helm']
+HATS = ['no-hat', 'feather-beret', 'wizard-hat', 'classy-hat', 'steel-helm', 'gold-crown']
 
 sc = bpy.context.scene
 cam_data = bpy.data.cameras.new('cam'); cam = bpy.data.objects.new('cam', cam_data)
@@ -35,7 +35,7 @@ sc.render.resolution_x = 300; sc.render.resolution_y = 380
 def show(persona, hat):
     # Mirror of src/items-3d-model.mjs: the hat decides which hair variant shows.
     covered = hat in ('feather-beret', 'wizard-hat', 'classy-hat')
-    crowned = hat in ('gold-crown', 'celestial-crown')
+    crowned = hat == 'gold-crown'
     hair_fit = 'covered' if covered else 'crowned' if crowned else 'open'
     hair_visible = hat != 'steel-helm'
     for o in meshes:

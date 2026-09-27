@@ -42,7 +42,10 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v8' if STYLIZED else 'catalogue-v12-ear-drape'
+# Eyewear accessories are fitted on the hat seat like hats; the ear
+# accessories are split from each character's own skin (split_ears).
+EYEWEAR = {'explorer-cap', 'sunglasses'}
+APPEARANCE_REVISION = 'stylized-v9' if STYLIZED else 'catalogue-v13-headwear'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
@@ -83,6 +86,7 @@ from refit_female_base import rebuild_torso, clear_ear_space, ear_weight, swept_
 from human_ears import ear_islands, skull_tree, cap_openings, human_ear_matrix, jewellery_layout, side_outline, skull_x
 from human_ear_model import ear_mesh as human_ear_mesh
 from hair_fill import hair_tree, ear_attachment, ear_zone_shell, append_geometry
+import headwear
 
 
 def texture_node(mat, filename):
@@ -435,7 +439,7 @@ def tag(obj, name, mat=None):
     obj['shop_slot'] = slot
     obj['shop_id'] = item
     if persona: obj['fit_persona'] = persona
-    if slot in ['hair', 'hat']:
+    if slot in ['hair', 'hat'] or (slot == 'accessory' and item in EYEWEAR):
         obj['attachment'] = 'hat-seat'
         obj['attachment_origin'] = [0, HEAD_FIT['hat_seat_z'], -HEAD_FIT['center_y']]
         obj['attachment_axes'] = 'glTF: +Y up, +Z front, metres'
@@ -1066,82 +1070,29 @@ def hairstyles(source):
         bm.transform(clipped.matrix_world.inverted()); bm.to_mesh(clipped.data); bm.free()
 
 
-def hat_brim(name, outer_x, outer_y, mat, wave=.007):
-    """Real annular brim with a head-sized opening, not a flattened solid ball."""
-    vertices = []
-    n, rows = 64, 5
-    for j in range(rows):
-        t = j/(rows-1)
-        rx = HEAD_FIT['hat_inner_x']*(1-t) + outer_x*t
-        ry = HEAD_FIT['hat_inner_y']*(1-t) + outer_y*t
-        for i in range(n):
-            a = i*TAU/n
-            vertices.append((rx*math.cos(a), HEAD_FIT['center_y']+ry*math.sin(a),
-                             HEAD_FIT['hat_seat_z'] + t*t*(wave*math.sin(2*a+.5)-.003)))
-    obj = mesh(name, vertices, [(j*n+i, j*n+(i+1)%n, (j+1)*n+(i+1)%n, (j+1)*n+i) for j in range(rows-1) for i in range(n)], mat)
-    solid = obj.modifiers.new('Bound fabric brim thickness', 'SOLIDIFY'); solid.thickness = .005
-    line('fine bound brim edge', vertices[-n:], .0025, mat, True)
-    return obj
+def hat_seat_matrix(who):
+    """Authored hat space -> the character's measured head (hat seat)."""
+    seat = CONTRACT['characters'][CHARACTERS[who]]['anchors']['hat_seat']
+    scale = Vector(((seat['ellipse']['rx']+.008)/HEAD_FIT['hat_inner_x'],
+                    (seat['ellipse']['rz']+.018)/HEAD_FIT['hat_inner_y'], 1))
+    return anchor_matrix('hat_seat', who) @ Matrix.Translation((0,0,.012)) @ Matrix.Diagonal((*scale,1)) @ Matrix.Translation((0,-HEAD_FIT['center_y'],-HEAD_FIT['hat_seat_z']))
 
 
 def hats():
+    """Hats and eyewear, modelled in tools/blender/headwear.py.
+
+    Eyewear belongs to the accessory slot but rides the same hat-seat fit:
+    it is drawn on Noa's measured face, moved into hat space with the inverse
+    of his fit, and the shared fit then places it on each character.
+    """
     global slot, item
-    slot = 'hat'
-    item = 'explorer-cap'
-    ring('leather goggle strap', 0, -.019, 1.709, .106, .13, .008, LEATHER)
-    for sign in [-1, 1]:
-        ell('brass goggle frame', (sign * .057, -.157, 1.709), (.048, .025, .038), GOLD)
-        ell('blue glass lens', (sign * .057, -.179, 1.709), (.035, .008, .027), GEM)
-    line('goggle bridge', [(-.016, -.177, 1.709), (0, -.185, 1.711), (.016, -.177, 1.709)], .006, LEATHER)
-    item = 'sunglasses'
-    for sign in [-1, 1]:
-        box('black glasses frame', (sign * .050, -.149, 1.593), (.085, .014, .047), CHARCOAL, .014)
-        box('dark tinted lens', (sign * .050, -.159, 1.595), (.068, .007, .032), GLASS, .009)
-        line('glasses temple arm', [(sign * .092, -.144, 1.60), (sign * .111, -.08, 1.603), (sign * .116, .015, 1.585)], .005, CHARCOAL)
-    line('glasses bridge', [(-.011, -.156, 1.60), (0, -.163, 1.603), (.011, -.156, 1.60)], .005, CHARCOAL)
-    item = 'feather-beret'
-    shell('fitted beret opening', [(1.690,.118,.143,-.012),(1.717,.119,.145,-.012)], LEATHER)
-    beret = ell('soft angled beret crown', (-.030, -.003, 1.742), (.158, .155, .060), SAGE)
-    beret.rotation_euler.y = -.10
-    line('beret radial seam', [(-.151,-.012,1.744),(-.101,-.013,1.790),(-.032,-.013,1.805),(.065,-.013,1.767)], .0018, SAGE)
-    tress('tapered ivory feather', [(-.118,-.097,1.736),(-.155,-.083,1.79),(-.169,-.064,1.847)], [.002,.014,.001],[.002,.004,.001], IVORY)
-    ell('small beret pin', (-.119,-.110,1.726), (.011,.005,.011), GOLD)
-    item = 'wizard-hat'
-    hat_brim('shaped wizard brim', .217, .188, PURPLE)
-    shell('curved cloth wizard crown', [(1.688,.118,.143,-.012),(1.735,.120,.144,-.01),(1.83,.099,.112,.003),
-          (1.94,.061,.073,.013),(2.02,.030,.039,-.005),(2.046,.013,.018,-.039),(2.034,.002,.003,-.078)], PURPLE)
-    shell('flat golden hat ribbon', [(1.705,.121,.146,-.012),(1.730,.123,.147,-.010)], GOLD, thickness=.002)
-    prism('small hat crystal', [(0,.015),(.011,0),(0,-.015),(-.011,0)], (0,-.163,1.718), .009, GEM)
-    item = 'classy-hat'
-    hat_brim('tailored top hat brim', .181, .171, CHARCOAL, .004)
-    shell('tailored top hat crown', [(1.690,.119,.144,-.012),(1.735,.121,.145,-.012),
-          (1.928,.128,.142,-.009),(1.937,.122,.137,-.009),(1.937,.002,.002,-.009)], CHARCOAL)
-    shell('burgundy silk ribbon', [(1.705,.124,.148,-.012),(1.742,.124,.148,-.012)], RED, thickness=.002)
-    for item, high in [('gold-crown', False), ('celestial-crown', True)]:
-        ring('fitted gold crown base', 0, -.012, 1.699, .119, .146, .005, GOLD)
-        n = 48
-        vertices = []
-        for j in range(2):
-            for i in range(n):
-                a = i * TAU / n
-                z = 1.699 if j == 0 else 1.737 + (.050 if high else .030) * (1 if i % 8 == 0 else 0)
-                vertices.append((.121 * math.cos(a), -.012 + .148 * math.sin(a), z))
-        crown = mesh('eight-point crown', vertices, [(i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n)], GOLD, False)
-        solid = crown.modifiers.new('Solid gold wall', 'SOLIDIFY'); solid.thickness = .009
-        for i in range(8):
-            a = i * TAU / 8
-            ell('crown gemstone', (.125 * math.cos(a), -.012 + .152 * math.sin(a), 1.721), (.010, .010, .014), GEM if high else RED, 12)
-        if high:
-            for sign in [-1, 1]:
-                line('arched royal band', [(sign*.119,-.012,1.754),(sign*.076,-.012,1.850),(0,-.012,1.892)], .006, GOLD)
-            ell('royal top crystal', (0,-.012,1.912), (.017,.017,.025), GEM, 12)
-    item = 'steel-helm'
-    shell('rounded helmet dome', [(1.646, .134, .154, .005), (1.745, .137, .15, .005), (1.811, .098, .109, .005), (1.839, .002, .002, .005)], STEEL, thickness=.01)
-    ring('helmet brow rim', 0, .005, 1.653, .137, .157, .009, GOLD)
-    for sign in [-1, 1]:
-        ell('temple plate', (sign * .131, .017, 1.60), (.023, .099, .075), STEEL)
-        line('ivory helmet horn', [(sign * .119, .01, 1.777), (sign * .208, .01, 1.834), (sign * .245, .03, 1.934)], .023, IVORY)
-    box('narrow nose guard', (0, -.168, 1.627), (.016, .014, .078), STEEL, .005)
+
+    def emit(obj, item_id, name, key):
+        global slot, item
+        slot, item = ('accessory' if item_id in EYEWEAR else 'hat'), item_id
+        tag(obj, name, HEADWEAR_MATERIALS[key])
+    headwear.build(emit, hat_seat_matrix('male').inverted(), HEADWEAR_MATERIALS)
+    slot, item = 'core', 'base'
 
 
 def sword(x, y, z, length=.61, name='sword'):
@@ -1254,20 +1205,18 @@ def hand_mount(name, kind):
 def fit_equipment():
     global slot, item, persona
     bpy.context.view_layer.update()
-    templates = [obj for obj in objects if obj.get('shop_slot') in ['hair','hat','weapon']]
+    templates = [obj for obj in objects if obj.get('shop_slot') in ['hair','hat','weapon']
+                 or (obj.get('shop_slot') == 'accessory' and obj.get('shop_id') in EYEWEAR)]
     for persona, gender in CHARACTERS.items():
-        seat = CONTRACT['characters'][gender]['anchors']['hat_seat']
-        scale = Vector(((seat['ellipse']['rx']+.008)/HEAD_FIT['hat_inner_x'],
-                        (seat['ellipse']['rz']+.018)/HEAD_FIT['hat_inner_y'], 1))
-        head_matrix = anchor_matrix('hat_seat') @ Matrix.Translation((0,0,.012)) @ Matrix.Diagonal((*scale,1)) @ Matrix.Translation((0,-HEAD_FIT['center_y'],-HEAD_FIT['hat_seat_z']))
-        HEAD_FITS[persona] = {'anchor': seat['world'], 'clearance': [0,.012,0],
+        head_matrix = hat_seat_matrix(persona)
+        HEAD_FITS[persona] = {'anchor': CONTRACT['characters'][gender]['anchors']['hat_seat']['world'], 'clearance': [0,.012,0],
                              'templateToCharacter': column_major(C @ head_matrix @ C.inverted())}
         for original in templates:
             if original.get('template_persona', persona) != persona:
                 continue
             slot, item = original['shop_slot'], original['shop_id']
             fitted = duplicate(original, gender+' / '+original.name)
-            if slot in ['hair','hat']:
+            if slot in ['hair','hat','accessory']:
                 transform, name = head_matrix, 'hat_seat'
             else:
                 name = original['mount_anchor']
@@ -1958,7 +1907,7 @@ def export():
               'parts': manifest, 'staticPose': True, 'headFit': HEAD_FIT, 'headFits': HEAD_FITS}
     (OUT / 'manifest.json').write_text(json.dumps(report, indent=2) + '\n')
     # Saved workspace opens on one coherent loadout, all alternatives in Outliner.
-    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'hat': 'explorer-cap', 'weapon': 'no-weapon'}
+    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'accessory': 'explorer-cap', 'weapon': 'no-weapon'}
     for obj in bpy.context.scene.objects:
         visible = defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit', 'open') == 'open' and obj.get('fit_persona','male') == 'male'
         obj.hide_render = not visible
@@ -2002,6 +1951,7 @@ AMBER = material('Lantern warm light', '#E6B555', .38, .05, 1.1)
 HAIR = material('Hair / selectable color', '#594432', .52)
 HAIR_DARK = material('Hair / shadow strands', '#493829', .57)
 HAIR_LIGHT = material('Hair / highlight strands', '#645039', .50)
+HEADWEAR_MATERIALS = headwear.make_materials(material)
 surface_maps(HAIR, OUT/'textures/hair-normal.png', OUT/'textures/hair-roughness.png', .32)
 HAIR.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value=.32
 

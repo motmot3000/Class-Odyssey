@@ -8,7 +8,7 @@ export const CATEGORIES = [
   { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' },
   { type: 'accessory', field: 'accessory', label: 'Accessories' }
 ];
-export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'no-accessory', tone: 'medium' };
+export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'no-hat', weapon: 'no-weapon', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'explorer-cap', tone: 'medium' };
 /* These accessories bring their own ears, which replace the default human ears. */
 export const EAR_ACCESSORIES = new Set(['elf-ears', 'pierced-ears']);
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
@@ -27,14 +27,14 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
   ? new URL('../assets/', import.meta.url)
   : new URL('../assets/', document.baseURI);
-export const CATALOGUE_REVISION = 'catalogue-v12-ear-drape';
+export const CATALOGUE_REVISION = 'catalogue-v13-headwear';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
  * delivered, stylized reference models (isolated stylized build): natural faces,
  * delivered silhouettes and their own painted materials. The older baked
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
-export const BASE_CATALOGUE_REVISION = 'stylized-v8';
+export const BASE_CATALOGUE_REVISION = 'stylized-v9';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 /* The workshop's loading poster must show the delivered base, not the older
  * baked Blender preview, and must carry the revision so a refresh never shows
@@ -57,12 +57,12 @@ export function pupilLook(pupil, draft = null) {
   };
 }
 export const PRESETS = {
-  ranger: { skin: 'vocab-ranger', hat: 'explorer-cap' },
+  ranger: { skin: 'vocab-ranger', hat: 'no-hat', accessory: 'explorer-cap' },
   mage: { skin: 'grammar-mage', hat: 'wizard-hat' },
   knight: { skin: 'honor-knight', hat: 'steel-helm' }
 };
 const COVERED_HATS = new Set(['feather-beret', 'wizard-hat', 'classy-hat']);
-const OPEN_CROWNS = new Set(['gold-crown', 'celestial-crown']);
+const OPEN_CROWNS = new Set(['gold-crown']);
 
 export function visiblePart(data, look, itemsOnly = false) {
   if (data.fit_persona && data.fit_persona !== look.persona) return false;
@@ -80,6 +80,9 @@ export function visiblePart(data, look, itemsOnly = false) {
   }
   const category = CATEGORIES.find((entry) => entry.type === slot);
   if (!category || look[category.field] !== data.shop_id) return false;
+  // Eyewear fits under every hat, except the goggles: the helmet's brow band
+  // takes their forehead seat.
+  if (slot === 'accessory' && data.shop_id === 'explorer-cap' && look.hat === 'steel-helm') return false;
   if (slot === 'hair') {
     if (look.hat === 'steel-helm') return false;
     const fit = COVERED_HATS.has(look.hat) ? 'covered' : OPEN_CROWNS.has(look.hat) ? 'crowned' : 'open';
