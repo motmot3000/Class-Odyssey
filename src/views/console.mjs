@@ -51,6 +51,11 @@ function renderAccountPanel(open, unlockedUntil, account) {
       <summary>${icon("lock")}<span>${t("console.account")}</span></summary>
       <p class="account-line"><strong>${escapeHtml(account?.displayName || "")}</strong><span>@${escapeHtml(account?.username || "")}</span></p>
       <p class="panel-note">${t("console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
+      <p class="section-label">${t("console.account.language")}</p>
+      <div class="onboarding-choices">
+        <button class="btn btn-sm${getLang() === "fr" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="fr" aria-pressed="${getLang() === "fr"}">Français</button>
+        <button class="btn btn-sm${getLang() === "en" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="en" aria-pressed="${getLang() === "en"}">English</button>
+      </div>
       <form class="access-form" data-action="change-password">
         <label class="field"><span>${t("console.account.current")}</span><input name="current" type="password" autocomplete="current-password" /></label>
         <label class="field"><span>${t("console.account.new")}</span><input name="next" type="password" autocomplete="new-password" /></label>

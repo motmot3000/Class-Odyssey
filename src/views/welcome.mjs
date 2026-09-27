@@ -19,6 +19,11 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         <span class="welcome-rule" aria-hidden="true"></span>
         <p class="welcome-kicker">${t("welcome.kicker")}</p>
         <h1 id="adventure-title">${t("welcome.headlineStart")}<br /><span>${t("welcome.headlineEnd")}</span></h1>
+        <div class="welcome-beta-banner">
+          <span class="welcome-beta">${t("welcome.beta")}</span>
+          <span class="welcome-beta-text">${t("welcome.disclaimer")}</span>
+          <a class="welcome-support-btn" href="https://www.buymeacoffee.com/classodyssey" target="_blank" rel="noopener noreferrer">${t("welcome.supportBtn")}☕</a>
+        </div>
         <p>${t("welcome.adventureHint")}</p>
         <aside class="welcome-gamification" aria-labelledby="gamification-title">
           <h2 id="gamification-title">${t("welcome.gamificationQuestion")}</h2>
@@ -49,7 +54,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.creating" : "welcome.submit.create")}</span>${icon("back", "welcome-arrow")}</button>
           </form>` : `
           <form class="gate-form" data-action="sign-in" aria-busy="${pending}" ${error ? 'aria-describedby="gate-error"' : ""}>
-            <label class="field"><span>${t("welcome.field.emailOrUsername")}</span><input id="gate-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required value="${escapeHtml(values.username || "")}" ${off} /></label>
+            <label class="field"><span>${t("welcome.field.email")}</span><input id="gate-username" name="username" autocomplete="email" autocapitalize="none" spellcheck="false" required value="${escapeHtml(values.username || "")}" ${off} /></label>
             <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="current-password" required ${off} /></label>
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.signing" : "welcome.enter")}</span>${icon("back", "welcome-arrow")}</button>
           </form>`}
@@ -58,7 +63,6 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
           <a class="btn btn-google" href="api/auth/google" data-action="google-signin">${GOOGLE_MARK}<span>${t("welcome.google")}</span></a>` : ""}
         ${error ? `<p id="gate-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
         <p class="welcome-account-note">${icon("user")}<span>${t("welcome.classAccount")}</span></p>
-        <p class="welcome-disclaimer"><span class="welcome-beta">${t("welcome.beta")}</span>${t("welcome.disclaimer")}</p>
       </div></section>
     </div>`;
 }

@@ -12,6 +12,7 @@ export const messages = {
   "class.empty.body": ["Créez votre première classe pour ajouter des élèves et lancer l'aventure.", "Create your first class to add pupils and start the adventure."],
   "notice.classCreated": ["Classe {name} créée.", "Class {name} created."],
   "console.accessExpired": ["Accès expiré — saisis le mot de passe pour continuer.", "Access expired — enter the password to continue."],
+  "console.account.language": ["Langue de l'application", "Application language"],
   "nav.class": ["Classe", "Class"],
   "nav.classes": ["Classe :", "Class:"],
   "class.back": ["Retour à la classe", "Back to class"],
@@ -47,6 +48,7 @@ export const messages = {
   "welcome.classAccount": ["Un compte, toutes vos classes. Une aventure à partager.", "One account, every class. One adventure to share."],
   "welcome.disclaimer": ["Class Odyssey est en cours de développement : merci de votre compréhension si des bugs apparaissent. Accès bêta gratuit pour le moment.", "Class Odyssey is still in development: thanks for your patience with any bugs. Free beta access for now."],
   "welcome.beta": ["Bêta", "Beta"],
+  "welcome.supportBtn": ["Soutenir les développeurs", "Support developers"],
   "welcome.footer": ["Apprendre l’anglais. Gagner en confiance. Avancer ensemble.", "Learn English. Build confidence. Go further together."],
   "welcome.motionPause": ["Mettre les animations en pause", "Pause animations"],
   "welcome.motionPlay": ["Activer les animations", "Enable animations"],
@@ -363,5 +365,5 @@ export const frenchMessages = {
   "Homework": "Devoirs",
   "Vocabulary": "Vocabulaire",
   "Nice": "Gentillesse",
-  "Bonus": "Bonus",
+  "Bonus": ["Bonus", "Bonus"],
 };

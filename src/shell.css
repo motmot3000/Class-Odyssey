@@ -386,6 +386,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   z-index: 90;
 }
 
+/* The flag is a welcome-page affordance. Once signed in, the language is the
+ * one chosen at setup and can only be changed from the account settings, so
+ * the floating control is hidden everywhere in the account. */
+html[data-signed-in="true"] #language-switcher { display: none; }
+
 body:has(.layout) #language-switcher {
   bottom: max(76px, calc(64px + env(safe-area-inset-bottom)));
 }

@@ -233,6 +233,9 @@ function render() {
   const view = currentView();
   applyTheme();
   app.dataset.view = view;
+  // The floating language flag belongs to the welcome page; once signed in,
+  // language is fixed at setup and only changed from the account settings.
+  document.documentElement.dataset.signedIn = isSignedIn() ? "true" : "false";
   const memory = captureUiMemory();
   app.innerHTML = `
     ${renderOdysseyTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
@@ -628,6 +631,14 @@ const ACTIONS = {
     setLang(lang);
     rememberAccountLanguage(lang);
     advanceOnboarding();
+  },
+  // Language is an account preference: the choice made at setup stays until it
+  // is changed here, in the account settings panel.
+  "set-language": (el) => {
+    const lang = el.dataset.lang === "en" ? "en" : "fr";
+    setLang(lang);
+    rememberAccountLanguage(lang);
+    renderPreservingForms();
   },
 
   /* ---------- Odyssey navigation and customization ---------- */
