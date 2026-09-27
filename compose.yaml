@@ -29,6 +29,8 @@ services:
       TRUST_PROXY: "1"
       FOUNDER_USERNAME: ${FOUNDER_USERNAME:?FOUNDER_USERNAME is required}
       FOUNDER_PASSWORD: ${FOUNDER_PASSWORD:?FOUNDER_PASSWORD is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       NODE_ENV: production
     volumes:
       - ./data:/data

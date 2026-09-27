@@ -51,7 +51,7 @@ function renderAccountPanel(open, unlockedUntil, account) {
     <details class="panel" data-panel="account" ${open("account")}>
       <summary>${icon("lock")}<span>${t("settings.title")}</span></summary>
       <p class="account-line"><strong>${escapeHtml(account?.displayName || "")}</strong><span>@${escapeHtml(account?.username || "")}</span></p>
-      <p class="panel-note">${t("console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
+<p class="panel-note">${t(account?.googleOnly ? "google.teacher.accountNote" : "console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
       <p class="section-label">${t("console.account.language")}</p>
       <div class="onboarding-choices">
         <button class="btn btn-sm${getLang() === "fr" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="fr" aria-pressed="${getLang() === "fr"}">Français</button>

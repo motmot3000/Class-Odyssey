@@ -76,11 +76,19 @@ export function createGoogleAuth({
     return `${proto}://${host}`;
   }
 
-  const callbackUrl = (req) => redirectUri || `${origin(req)}/api/auth/google/callback`;
+  // Caddy strips /classodyssey before proxying. Trust its explicit prefix only
+  // when the reverse proxy itself is trusted, never from a public request.
+  function publicPrefix(req) {
+    const value = trustProxy ? String(req.headers["x-forwarded-prefix"] || "") : "";
+    return /^\/(?:[a-z0-9_-]+(?:\/[a-z0-9_-]+)*)?$/i.test(value) && value !== "/" ? value : "";
+  }
+
+  const callbackUrl = (req) => redirectUri || `${origin(req)}${publicPrefix(req)}/api/auth/google/callback`;
+  const returnPath = (req) => `${publicPrefix(req)}/`;
 
   function oauthCookie(req, value, maxAge) {
     const secure = origin(req).startsWith("https://") ? "; Secure" : "";
-    return `${OAUTH_COOKIE}=${encodeURIComponent(value)}; Path=/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+    return `${OAUTH_COOKIE}=${encodeURIComponent(value)}; Path=${publicPrefix(req)}/api/auth/google; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
   }
 
   function redirect(res, location, extraHeaders = {}) {
@@ -94,7 +102,7 @@ export function createGoogleAuth({
   }
 
   function failure(req, res, reason) {
-    redirect(res, `/?google_error=${encodeURIComponent(reason)}`, {
+    redirect(res, `${returnPath(req)}?google_error=${encodeURIComponent(reason)}`, {
       "Set-Cookie": oauthCookie(req, "", 0)
     });
   }
@@ -162,7 +170,7 @@ export function createGoogleAuth({
     if (pending.size > 100) {
       for (const [key, entry] of pending) if (entry.expiresAt <= now()) pending.delete(key);
     }
-    return redirect(res, `/?google_code=${encodeURIComponent(exchangeCode)}`, {
+    return redirect(res, `${returnPath(req)}?google_code=${encodeURIComponent(exchangeCode)}`, {
       "Set-Cookie": oauthCookie(req, "", 0)
     });
   }

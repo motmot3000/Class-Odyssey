@@ -61,7 +61,7 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
           </form>`}
         ${google ? `
           <p class="gate-or" aria-hidden="true"><span>${t("welcome.or")}</span></p>
-          <a class="btn btn-google" href="api/auth/google" data-action="google-signin">${GOOGLE_MARK}<span>${t("welcome.google")}</span></a>` : ""}
+          <a class="btn btn-google" href="api/auth/google" data-action="google-signin">${GOOGLE_MARK}<span>${t(signup ? "welcome.google.signup" : "welcome.google.signin")}</span></a>` : ""}
         ${error ? `<p id="gate-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
         <p class="welcome-account-note">${icon("user")}<span>${t("welcome.classAccount")}</span></p>
       </div></section>

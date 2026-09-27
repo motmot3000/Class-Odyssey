@@ -3,7 +3,8 @@ import test from "node:test";
 import { createInitialState, getCurrentClass } from "../src/domain.mjs";
 import { setLang } from "../src/i18n.mjs";
 import { renderWelcome } from "../src/views/welcome.mjs";
-import { renderConsent } from "../src/views/consent.mjs";
+import { renderConsent, renderTeacherSetup } from "../src/views/consent.mjs";
+import { renderLockScreen } from "../src/views/lock.mjs";
 import { renderConsole } from "../src/views/console.mjs";
 import { renderAddPupilDialog, renderHelpDialog, renderPasswordResetDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
@@ -212,6 +213,26 @@ test("the gate offers Google sign-in only when the server advertises it", () => 
       assert.match(html, /href="api\/auth\/google"/);
       assert.match(html, /class="google-mark"/);
       assert.doesNotMatch(html, /welcome\.google|welcome\.or/);
+      const signup = renderWelcome({ google: true, tab: "signup" });
+      assert.match(signup, /data-action="google-signin"/);
+      assert.notEqual(html.match(/class="btn btn-google"[^>]*>.*?<span>(.*?)<\/span>/)?.[1], signup.match(/class="btn btn-google"[^>]*>.*?<span>(.*?)<\/span>/)?.[1]);
+    } finally { setLang("en"); }
+  }
+});
+
+test("Google account setup asks for a separate teacher password in both languages", () => {
+  for (const lang of ["fr", "en"]) {
+    try {
+      setLang(lang);
+      const html = renderTeacherSetup();
+      assert.match(html, /data-action="setup-teacher-password"/);
+      assert.match(html, /name="password"[^>]*minlength="6"/);
+      assert.match(html, /name="confirm"/);
+      assert.doesNotMatch(html, /google\.teacher\./);
+      const reset = renderTeacherSetup({ recovery: true });
+      assert.match(reset, /data-action="setup-teacher-password"/);
+      assert.doesNotMatch(reset, /google\.teacher\./);
+      assert.match(renderLockScreen({ account: { googleOnly: true } }), /data-action="recover-teacher-password"/);
     } finally { setLang("en"); }
   }
 });

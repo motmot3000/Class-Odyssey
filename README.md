@@ -43,15 +43,21 @@ de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
 
 ### Connexion Google (facultatif)
 
-Le bouton **Continuer avec Google** apparaît dès que `GOOGLE_CLIENT_ID` et
+Le bouton **Se connecter avec son compte Google** apparaît dès que `GOOGLE_CLIENT_ID` et
 `GOOGLE_CLIENT_SECRET` sont renseignés. Dans la console Google Cloud, créer un
 identifiant OAuth 2.0 de type « application Web » et autoriser l'URI de
-redirection `https://<domaine>/api/auth/google/callback` (en local,
+redirection `https://www.thomaswunsche.com/classodyssey/api/auth/google/callback`
+(ou `https://classodyssey.thomaswunsche.com/api/auth/google/callback`, puis
+`https://classodyssey.com/api/auth/google/callback` après l'ouverture du domaine ; en local,
 `http://127.0.0.1:5180/api/auth/google/callback`, ou le port choisi). À la
 première connexion, Class Odyssey crée le compte à partir de l'adresse Google
 vérifiée ; si un compte existe déjà avec cet e-mail, Google ouvre ce compte.
-Aucun mot de passe n'est nécessaire : un administrateur peut en définir un plus
-tard depuis **Accounts**.
+Un nouveau compte Google accepte les textes légaux puis choisit un **mot de
+passe de console du professeur** (6 caractères minimum). Il est déverrouillé
+pour cinq minutes après sa création, puis demandé pour accéder aux commandes
+enseignant après reconnexion. Ce mot de passe ne sert jamais à se connecter au
+compte Google : il peut être modifié depuis la console et réinitialisé après
+une nouvelle authentification Google avec l'adresse e-mail vérifiée.
 
 Les données locales sont conservées dans `server/data/`, propre à chaque
 worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier

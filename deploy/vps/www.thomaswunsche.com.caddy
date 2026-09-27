@@ -25,7 +25,9 @@ thomaswunsche.com, www.thomaswunsche.com {
 	redir @classodyssey_noslash /classodyssey/ 308
 	handle /classodyssey/* {
 		uri strip_prefix /classodyssey
-		reverse_proxy 127.0.0.1:5180
+		reverse_proxy 127.0.0.1:5180 {
+			header_up X-Forwarded-Prefix /classodyssey
+		}
 	}
 
 	# Contact form gateway.

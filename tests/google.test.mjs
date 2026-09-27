@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { createGameServer } from "../server/server.mjs";
-import { decodeIdToken, claimsProblem } from "../server/google.mjs";
+import { createGoogleAuth, decodeIdToken, claimsProblem } from "../server/google.mjs";
 
 const FOUNDER = { username: "founder.test", password: "founder-secret" };
 const CLIENT_ID = "class-odyssey.apps.googleusercontent.com";
@@ -109,6 +109,7 @@ test("Google sign-in creates an account from the verified email, then reuses it"
     assert.equal(login.account.email, "marie.dupont@example.test");
     assert.equal(login.account.username, "marie.dupont@example.test");
     assert.equal(login.account.displayName, "Marie Dupont");
+    assert.equal(login.account.teacherPasswordSetupRequired, true);
     // Provider accounts accept the legal texts once, from the in-app panel.
     assert.equal(login.account.terms, null);
     const accepted = await fetch(`${app.base}/api/account/terms`, {
@@ -127,6 +128,31 @@ test("Google sign-in creates an account from the verified email, then reuses it"
       body: "{}"
     })).json();
     assert.equal(again.account.terms.acceptedAt, acceptedPayload.account.terms.acceptedAt);
+
+    const teacherPassword = "short-but-private";
+    const headers = { "Content-Type": "application/json", "X-Session-Token": login.token };
+    const verifyBeforeSetup = await fetch(`${app.base}/api/session/verify`, {
+      method: "POST", headers, body: JSON.stringify({ password: teacherPassword })
+    });
+    assert.equal(verifyBeforeSetup.status, 403);
+    const setup = await fetch(`${app.base}/api/account/teacher-password`, {
+      method: "PUT", headers, body: JSON.stringify({ password: teacherPassword })
+    });
+    assert.equal(setup.status, 200);
+    assert.equal((await setup.json()).account.teacherPasswordSetupRequired, false);
+    const repeatedSetup = await fetch(`${app.base}/api/account/teacher-password`, {
+      method: "PUT", headers, body: JSON.stringify({ password: "replacement-secret" })
+    });
+    assert.equal(repeatedSetup.status, 409);
+    const verify = await fetch(`${app.base}/api/session/verify`, {
+      method: "POST", headers, body: JSON.stringify({ password: teacherPassword })
+    });
+    assert.equal(verify.status, 200);
+    const passwordSignIn = await fetch(`${app.base}/api/session`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: login.account.email, password: teacherPassword })
+    });
+    assert.equal(passwordSignIn.status, 401);
 
     // A code is single use.
     const replay = await fetch(`${app.base}/api/auth/google/exchange`, {
@@ -148,9 +174,41 @@ test("Google sign-in creates an account from the verified email, then reuses it"
       body: JSON.stringify({ code: secondCode })
     })).json();
     assert.equal(secondLogin.account.id, login.account.id);
+    assert.equal(secondLogin.account.teacherPasswordSetupRequired, false);
+    const changePassword = await fetch(`${app.base}/api/session/password`, {
+      method: "PUT", headers: { ...headers, "X-Session-Token": secondLogin.token },
+      body: JSON.stringify({ current: teacherPassword, next: "new-console-secret" })
+    });
+    assert.equal(changePassword.status, 200);
+    const recovered = await fetch(`${app.base}/api/account/teacher-password/recover`, {
+      method: "PUT", headers: { ...headers, "X-Session-Token": secondLogin.token },
+      body: JSON.stringify({ password: "recovered-console-secret" })
+    });
+    assert.equal(recovered.status, 200);
+    assert.equal((await recovered.json()).account.googleOnly, true);
+    const afterRecovery = await fetch(`${app.base}/api/session/verify`, {
+      method: "POST", headers: { ...headers, "X-Session-Token": secondLogin.token },
+      body: JSON.stringify({ password: "recovered-console-secret" })
+    });
+    assert.equal(afterRecovery.status, 200);
   } finally {
     await app.close();
   }
+});
+
+test("trusted proxy prefix keeps OAuth cookie, callback URI and return path on the public subpath", () => {
+  const auth = createGoogleAuth({ clientId: CLIENT_ID, clientSecret: "test", trustProxy: true });
+  const req = {
+    headers: { host: "www.thomaswunsche.com", "x-forwarded-proto": "https", "x-forwarded-prefix": "/classodyssey" },
+    socket: { encrypted: false }
+  };
+  let headers;
+  const res = { writeHead: (_status, value) => { headers = value; }, end: () => {} };
+  auth.start(req, res);
+  assert.equal(new URL(headers.Location).searchParams.get("redirect_uri"), "https://www.thomaswunsche.com/classodyssey/api/auth/google/callback");
+  assert.match(headers["Set-Cookie"], /Path=\/classodyssey\/api\/auth\/google;.*Secure/);
+  auth.callback({ ...req, url: "/api/auth/google/callback?error=access_denied" }, res, () => {});
+  assert.equal(headers.Location, "/classodyssey/?google_error=denied");
 });
 
 test("Google sign-in links an existing password account with the same email", async () => {
@@ -172,6 +230,12 @@ test("Google sign-in links an existing password account with the same email", as
       body: JSON.stringify({ code })
     })).json();
     assert.equal(login.account.id, created.account.id);
+    assert.equal(login.account.googleOnly, false);
+    const deniedRecovery = await fetch(`${app.base}/api/account/teacher-password/recover`, {
+      method: "PUT", headers: { "X-Session-Token": login.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ password: "replacement-secret" })
+    });
+    assert.equal(deniedRecovery.status, 403);
   } finally {
     await app.close();
   }

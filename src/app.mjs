@@ -34,7 +34,7 @@ import {
   updateCosmetics
 } from "./domain.mjs";
 import { BRAND } from "./brand.mjs";
-import { requestApi } from "./api.mjs";
+import { apiUrl, requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
   acceptTerms,
@@ -53,6 +53,7 @@ import {
   signInWithGoogleCode,
   signOut,
   signUp,
+  setupTeacherPassword,
   unlockAdult,
   unlockUntil,
   updateProfile,
@@ -62,7 +63,7 @@ import {
 } from "./session.mjs";
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
-import { renderConsent } from "./views/consent.mjs";
+import { renderConsent, renderTeacherSetup } from "./views/consent.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
@@ -152,6 +153,9 @@ const ui = {
   consentPending: false,
   consentError: "",
   helpPending: false,
+  teacherSetupPending: false,
+  teacherSetupError: "",
+  teacherRecovery: false,
   /* Interface Odyssey */
   odysseyView: "board",
   angle: "quarter",
@@ -205,6 +209,8 @@ function currentView() {
   // The current legal revision must be accepted. Accounts created through
   // Google accept it after login; a new TEXT revision asks it again.
   if (!hasAcceptedTerms()) return "consent";
+  if (account?.teacherPasswordSetupRequired) return "teacher-setup";
+  if (ui.teacherRecovery && account?.googleOnly) return "teacher-recovery";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
   // Older #board/#student bookmarks now enter the same public class space.
@@ -252,6 +258,8 @@ function render() {
     : view === "rules" ? "app.aria.rules"
     : view === "admin" ? "app.aria.accounts"
     : view === "consent" ? "consent.title"
+    : view === "teacher-setup" ? "google.teacher.title"
+    : view === "teacher-recovery" ? "google.teacher.recoveryTitle"
     : view === "mentions" ? "footer.mentions"
     : view === "privacy" ? "footer.privacy"
     : view === "terms" ? "footer.terms"
@@ -317,6 +325,8 @@ function renderViewBody(view) {
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   if (view === "consent") return renderConsent({ pending: ui.consentPending, error: ui.consentError });
+  if (view === "teacher-setup") return renderTeacherSetup({ pending: ui.teacherSetupPending, error: ui.teacherSetupError });
+  if (view === "teacher-recovery") return renderTeacherSetup({ pending: ui.teacherSetupPending, error: ui.teacherSetupError, recovery: true });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked(), rules: getRules(state), editing: ui.rulesEditing })}</main>`;
   }
@@ -598,6 +608,11 @@ const ACTIONS = {
   // is never disturbed by a #tarteaucitron link.
   "manage-cookies": () => {
     window.tarteaucitron?.userInterface?.openPanel?.();
+  },
+  "recover-teacher-password": () => {
+    if (!account?.googleOnly) return;
+    try { sessionStorage.setItem("classquest:teacher-recovery", account.id); } catch { /* Retry sign-in manually if storage is unavailable. */ }
+    window.location.assign(apiUrl("auth/google"));
   },
 
   /* ---------- Editable classroom rules ---------- */
@@ -1006,6 +1021,35 @@ const FORMS = {
     }
     account = result.account;
     activeSession = captureSessionContext();
+    render();
+    window.scrollTo({ top: 0 });
+    maybeStartOnboarding();
+  },
+
+  "setup-teacher-password": async (form) => {
+    if (ui.teacherSetupPending) return;
+    const data = new FormData(form);
+    const password = String(data.get("password") || "");
+    const problem = validateNewPassword(password, data.get("confirm"));
+    if (problem) {
+      ui.teacherSetupError = problem;
+      render();
+      return;
+    }
+    ui.teacherSetupPending = true;
+    ui.teacherSetupError = "";
+    render();
+    const result = await setupTeacherPassword(password, ui.teacherRecovery);
+    if (result.stale) return;
+    ui.teacherSetupPending = false;
+    if (!result.ok) {
+      ui.teacherSetupError = result.error;
+      render();
+      return;
+    }
+    account = result.account;
+    ui.teacherRecovery = false;
+    unlockAdult();
     render();
     window.scrollTo({ top: 0 });
     maybeStartOnboarding();
@@ -1712,6 +1756,7 @@ function openAccount(next) {
   ui.adminPending = false;
   ui.lockPending = false;
   ui.lockError = "";
+  ui.teacherSetupError = "";
   studentPupilId = loadStudentId();
   ui.odysseyView = "board";
   ui.draft = null;
@@ -1750,6 +1795,11 @@ async function completeGoogleSignIn(code) {
     render();
     return;
   }
+  try {
+    ui.teacherRecovery = sessionStorage.getItem("classquest:teacher-recovery") === result.account.id
+      && result.account.googleOnly && !result.account.teacherPasswordSetupRequired;
+    sessionStorage.removeItem("classquest:teacher-recovery");
+  } catch { ui.teacherRecovery = false; }
   openAccount(result.account);
   toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
 }
@@ -1818,6 +1868,8 @@ function endSession(message = "", context = null) {
   ui.gateTab = "signin";
   ui.gatePending = false;
   ui.lockPending = false;
+  ui.teacherSetupPending = false;
+  ui.teacherRecovery = false;
   ui.adminPending = false;
   ui.adminAccounts = [];
   ui.consoleOpen = false;
@@ -2126,5 +2178,5 @@ if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
 if (googleCode) completeGoogleSignIn(googleCode);
 else if (autoLogin) completeLocalSignIn(autoLogin);
-else loadPublicConfig();
+loadPublicConfig();
 setInterval(updateClock, 1000);

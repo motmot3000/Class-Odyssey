@@ -246,7 +246,7 @@ export function createGameServer({
     let account = api.findByUsername(index, username);
     if (!account && username.includes("@")) account = api.findByEmail(index, username);
     let matches = false;
-    if (account) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
+    if (account && !account.googleOnly) matches = await api.passwordMatches(stringField(payload, "password"), account.hash);
     else await api.hashPassword(stringField(payload, "password"));
     if (!matches) {
       limiter.record(rateKey);
@@ -260,8 +260,8 @@ export function createGameServer({
     sendJson(res, 200, { ok: true, token: api.issueToken(account.id), account: api.publicAccount(updated) });
   }
 
-  /* A verified Google email either opens the matching account or creates one;
-   * the random password keeps password sign-in impossible until an admin reset. */
+  /* A verified Google email either opens the matching account or creates one.
+   * The random hash is replaced with a teacher-console password after consent. */
   async function handleGoogleLogin(claims) {
     const email = String(claims.email || "").trim().toLowerCase();
     const index = api.readAccounts();
@@ -272,12 +272,14 @@ export function createGameServer({
       const username = api.normalizeUsername(email);
       const displayName = cleanDisplayName(String(claims.name || "")).slice(0, api.limits.MAX_DISPLAY_NAME_LENGTH) || api.usernameFromEmail(email) || username;
       account = await api.newAccount(username, displayName, crypto.randomBytes(32).toString("base64url"), "teacher", email);
+      account.googleOnly = true;
+      account.teacherPasswordSetupRequired = true;
       api.createAccountWithState(index, account);
     }
     const updated = { ...account, lastLoginAt: new Date().toISOString() };
     index.accounts[account.id] = updated;
     api.writeAccounts(index);
-    return { token: api.issueToken(account.id), account: api.publicAccount(updated) };
+    return { token: api.issueToken(account.id, "google"), account: api.publicAccount(updated) };
   }
 
   async function handleVerify(req, res) {
@@ -290,6 +292,7 @@ export function createGameServer({
     // The request body may arrive after another request revoked this token.
     session = requireSession(req, res);
     if (!session) return;
+    if (session.account.teacherPasswordSetupRequired) return sendJson(res, 403, { error: "teacher password not set" });
     if (!await api.passwordMatches(stringField(payload, "password"), session.account.hash)) {
       limiter.record(rateKey);
       await equalizedRefusal(res);
@@ -297,6 +300,58 @@ export function createGameServer({
     }
     limiter.clear(rateKey);
     sendJson(res, 200, { ok: true });
+  }
+
+  async function handleTeacherPasswordSetup(req, res) {
+    let session = requireSession(req, res);
+    if (!session) return;
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    session = requireSession(req, res);
+    if (!session) return;
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account?.googleOnly || account.teacherPasswordSetupRequired !== true) {
+      return sendJson(res, 409, { error: "teacher password already configured" });
+    }
+    const password = stringField(payload, "password");
+    const problem = api.passwordProblem(password);
+    if (problem) return sendJson(res, 400, { error: problem });
+    const updated = { ...account, hash: await api.hashPassword(password), teacherPasswordSetupRequired: false, updatedAt: new Date().toISOString() };
+    index.accounts[account.id] = updated;
+    api.writeAccounts(index);
+    api.revokeAccountTokens(account.id, session.token);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(updated) });
+  }
+
+  /* A fresh Google sign-in proves control of the verified email and permits
+   * recovering the console password without knowing the previous password. */
+  async function handleTeacherPasswordRecovery(req, res) {
+    let session = requireSession(req, res);
+    if (!session) return;
+    const age = Date.now() - Date.parse(session.createdAt);
+    if (!session.account.googleOnly || session.authMethod !== "google" ||
+        !Number.isFinite(age) || age < 0 || age > 5 * 60 * 1000) {
+      return sendJson(res, 403, { error: "sign in with Google again to reset the console password" });
+    }
+    const payload = await readJsonObject(req, res);
+    if (!payload) return;
+    session = requireSession(req, res);
+    if (!session) return;
+    if (session.authMethod !== "google" || Date.now() - Date.parse(session.createdAt) > 5 * 60 * 1000) {
+      return sendJson(res, 403, { error: "sign in with Google again to reset the console password" });
+    }
+    const password = stringField(payload, "password");
+    const problem = api.passwordProblem(password);
+    if (problem) return sendJson(res, 400, { error: problem });
+    const index = api.readAccounts();
+    const account = index.accounts[session.account.id];
+    if (!account?.googleOnly) return sendJson(res, 403, { error: "Google account required" });
+    const updated = { ...account, hash: await api.hashPassword(password), teacherPasswordSetupRequired: false, updatedAt: new Date().toISOString() };
+    index.accounts[account.id] = updated;
+    api.writeAccounts(index);
+    api.revokeAccountTokens(account.id, session.token);
+    sendJson(res, 200, { ok: true, account: api.publicAccount(updated) });
   }
 
   async function handlePasswordChange(req, res) {
@@ -591,7 +646,7 @@ export function createGameServer({
       sendJson(res, 404, { error: "account not found" });
       return;
     }
-    index.accounts[accountId] = { ...target, hash: await api.hashPassword(password), updatedAt: new Date().toISOString() };
+    index.accounts[accountId] = { ...target, hash: await api.hashPassword(password), teacherPasswordSetupRequired: false, updatedAt: new Date().toISOString() };
     api.writeAccounts(index);
     api.revokeAccountTokens(accountId);
     sendJson(res, 200, { ok: true });
@@ -625,6 +680,8 @@ export function createGameServer({
         }
       }
       if (pathname === "/api/session/verify" && req.method === "POST") return await handleVerify(req, res);
+      if (pathname === "/api/account/teacher-password" && req.method === "PUT") return await handleTeacherPasswordSetup(req, res);
+      if (pathname === "/api/account/teacher-password/recover" && req.method === "PUT") return await handleTeacherPasswordRecovery(req, res);
       if (pathname === "/api/session/password" && req.method === "PUT") return await handlePasswordChange(req, res);
       if (pathname === "/api/account/settings" && req.method === "PUT") return await handleSettings(req, res);
       if (pathname === "/api/account/profile" && req.method === "PUT") return await handleProfile(req, res);

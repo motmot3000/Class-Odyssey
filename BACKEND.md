@@ -46,6 +46,14 @@ chez Resend). Sans ces variables, la demande est enregistrée et le code est
 écrit dans les journaux du serveur hors production ; les autres paramètres du
 flux restent identiques.
 
+Le site public est provisoirement servi sous
+`https://www.thomaswunsche.com/classodyssey/`. Le vhost Caddy transmet
+`X-Forwarded-Prefix: /classodyssey` et le serveur l'utilise pour l'URI de
+retour, le cookie OAuth et la redirection finale. Inscrire cet URI exact dans
+le client Google, en plus des URI du sous-domaine de secours, du domaine
+principal et du développement local. `compose.yaml` transmet au conteneur
+`GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` depuis le `.env` non versionné.
+
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
 écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
@@ -90,6 +98,8 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 | POST    | `/api/session/password/reset/confirm`      | Vérifie le code et définit le nouveau mot de passe |
 | POST    | `/api/support/messages`                    | Dépose une demande d'aide (lue par la console admin) |
 | PUT     | `/api/account/terms`                       | Enregistre l'acceptation des textes légaux (comptes créés via Google) |
+| PUT     | `/api/account/teacher-password`            | Définit le mot de passe console d'un nouveau compte Google |
+| PUT     | `/api/account/teacher-password/recover`    | Réinitialise ce mot de passe après une connexion Google récente |
 | GET     | `/api/state`                               | Lit l'état du compte connecté |
 | PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |
 | GET     | `/api/admin/accounts`                      | Liste les comptes (`admin`) |
@@ -105,7 +115,10 @@ La création d'un compte exige `termsAccepted: true` ; le serveur enregistre
 `terms: { acceptedAt, version }` sur le compte (version issue de
 `src/terms.mjs`). Les comptes créés via Google, dont le flux ne peut pas
 afficher la case, acceptent les textes à la première connexion via
-`PUT /api/account/terms`.
+`PUT /api/account/terms`, puis choisissent un mot de passe dédié à la console
+du professeur. Ce mot de passe ne permet pas la connexion au compte ; Google
+reste la méthode de connexion. Une nouvelle connexion Google permet de
+réinitialiser ce mot de passe si l'ancien est oublié.
 Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
 `TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
 inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est

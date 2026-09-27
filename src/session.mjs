@@ -194,6 +194,21 @@ export async function signInWithGoogleCode(code) {
   return { ok: true, account: payload.account };
 }
 
+export async function setupTeacherPassword(password, recovery = false) {
+  const context = captureSessionContext();
+  const { offline, response, payload } = await callApi(recovery ? "account/teacher-password/recover" : "account/teacher-password", {
+    method: "PUT", body: { password: String(password ?? "") }, context
+  });
+  if (offline) return { ok: false, error: OFFLINE };
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the new password." };
+  const offlineVerifier = await makeVerifier(password);
+  if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
+  const session = getSession();
+  writeStored(SESSION_KEY, { ...session, account: payload.account, offline: offlineVerifier });
+  return { ok: true, account: payload.account };
+}
+
 /* Account settings (language, theme, onboarding) live on the server account so
  * they survive across devices while remaining changeable at any time. */
 export async function updateSettings(patch) {

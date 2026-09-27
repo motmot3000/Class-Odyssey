@@ -130,6 +130,7 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
   const activeClass = state.classes.find((classroom) => classroom.id === state.activeClassId) || state.classes[0];
   const themeControl = `<button type="button" class="ghost" data-action="toggle-theme" aria-label="${t("common.changeTheme")}" title="${t("common.changeTheme")}">${ico(document.documentElement.dataset.theme === "light" ? "moon" : "sun")}<span>${t("common.theme")}</span></button>`;
   const isDoc = DOC_VIEWS.has(view);
+  const isGate = view === "welcome" || view === "consent" || view === "teacher-setup" || view === "teacher-recovery";
   const classControl = state.classes.length ? `
       <details class="class-picker">
         <summary class="class-picker-summary" aria-label="${t("nav.classes")} ${escapeHtml(activeClass?.name || "")}">
@@ -150,14 +151,14 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
       </details>` : `
       <button type="button" class="class-picker-summary class-picker-create" data-action="add-class">${ico("plus")}<span>${t("class.add.title")}</span></button>`;
   return `
-    <header class="topbar ${view === "welcome" ? "topbar-welcome" : ""}">
+    <header class="topbar ${isGate ? "topbar-welcome" : ""}">
       <div class="brand">
         <button class="brand-home" type="button" data-action="show-class" aria-label="${t('nav.class')}">
         <img class="brand-logo brand-logo-light" src="${BRAND.assets.logoLight}" alt="Class Odyssey" width="869" height="212" />
         <img class="brand-logo brand-logo-dark" src="${BRAND.assets.logoDark}" alt="" width="869" height="212" />
         </button>
       </div>
-       ${view === "welcome" ? "" : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `${classControl}
+       ${isGate ? "" : isDoc ? `<div class="top-end"><a class="ghost doc-back" href="#class" aria-label="${t("doc.back")}" title="${t("doc.back")}">${ico("back")}<span>${t("doc.back")}</span></a></div>` : `${classControl}
       <div class="top-end">
         <button type="button" class="ghost" data-action="show-rules" aria-current="${view === "rules" ? "page" : "false"}" aria-label="${t("app.aria.rules")}" title="${t("app.aria.rules")}">${ico("book")}<span>${t("app.aria.rules")}</span></button>
         ${themeControl}
@@ -173,7 +174,7 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
         </details>
       </div>`}
     </header>
-    ${view === 'welcome' || isDoc ? '' : `<button class="teacher-console-tab" type="button" data-action="teacher-console" aria-haspopup="dialog" aria-expanded="false" aria-label="${t('console.title')}">${ico('lock')}<span>${t('console.title')}</span></button>`}`;
+    ${isGate || isDoc ? '' : `<button class="teacher-console-tab" type="button" data-action="teacher-console" aria-haspopup="dialog" aria-expanded="false" aria-label="${t('console.title')}">${ico('lock')}<span>${t('console.title')}</span></button>`}`;
 }
 
 /* ---------- Teacher board ---------- */

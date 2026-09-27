@@ -364,12 +364,13 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       && Number(session.expiresAt) > now));
   }
 
-  function issueToken(accountId) {
+  function issueToken(accountId, method = "password") {
     const token = crypto.randomBytes(32).toString("base64url");
     const now = Math.floor(Date.now() / 1000);
     const sessions = liveSessions();
     sessions[tokenKey(token)] = {
       accountId,
+      authMethod: method,
       createdAt: new Date().toISOString(),
       expiresAt: now + SESSION_TTL_SECONDS
     };
@@ -397,7 +398,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     const session = liveSessions()[tokenKey(token)];
     if (!session) return null;
     const account = readAccounts().accounts[session.accountId];
-    return account ? { account, token } : null;
+    return account ? { account, token, authMethod: session.authMethod || "password", createdAt: session.createdAt } : null;
   }
 
   function activeSessionCounts() {
@@ -412,6 +413,8 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     email: account.email || "",
     displayName: account.displayName,
     role: account.role || "teacher",
+    googleOnly: account.googleOnly === true,
+    teacherPasswordSetupRequired: account.teacherPasswordSetupRequired === true,
     createdAt: account.createdAt,
     lastLoginAt: account.lastLoginAt || null,
     terms: account.terms && typeof account.terms === "object" && account.terms.acceptedAt
