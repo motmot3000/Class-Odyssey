@@ -10,7 +10,10 @@ import { renderOdysseyStudent, renderOdysseyShop } from '../src/views/odyssey.mj
 const root = new URL('../assets/items-3d/', import.meta.url);
 function catalogue() {
   const data=readFileSync(new URL('catalogue.glb',root));
-  return JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
+  const main = JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
+  const pets = readFileSync(new URL('../pets/catalogue.glb', root));
+  main.nodes.push(...JSON.parse(pets.subarray(20,20+pets.readUInt32LE(12)).toString()).nodes);
+  return main;
 }
 
 test('the live base characters are the delivered stylized catalogue', () => {
@@ -69,7 +72,7 @@ test('isolated previews hide the real body and every other slot for both persona
     const look={...DEFAULT_LOOK,persona,hat:'steel-helm',preview:{slot:item.type,id:item.id}};
     const visible=parts.filter(data=>visiblePart(data,look));
     assert.ok(visible.length, item.id);
-    assert.ok(visible.every(data=>data.shop_slot === item.type && data.shop_id === item.id && data.fit_persona === persona));
+    assert.ok(visible.every(data=>data.shop_slot === item.type && data.shop_id === item.id && (item.type === 'pet' ? !data.fit_persona : data.fit_persona === persona)));
     if(item.type==='hair') assert.ok(visible.every(data=>data.hat_fit==='open'));
   }
 });

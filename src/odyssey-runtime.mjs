@@ -4,7 +4,7 @@
  */
 
 import { t } from "./i18n.mjs";
-import { BASE_CATALOGUE_URL, BASE_CATALOGUE_REVISION } from "./items-3d-model.mjs";
+import { BASE_CATALOGUE_URL, VIEWER_REVISION } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
 const GLB_URL = BASE_CATALOGUE_URL;
@@ -17,7 +17,7 @@ let onFreeView = () => {};
 
 function loadRuntime() {
   if (!runtime) {
-    runtime = import(new URL(`../assets/odyssey/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href)
+    runtime = import(new URL(`../assets/odyssey/viewer.js?v=${VIEWER_REVISION}`, import.meta.url).href)
       .catch((error) => { runtime = undefined; throw error; });
   }
   return runtime;

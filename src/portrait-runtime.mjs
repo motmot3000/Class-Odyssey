@@ -1,4 +1,4 @@
-import { BASE_CATALOGUE_URL, BASE_CATALOGUE_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
+import { BASE_CATALOGUE_URL, VIEWER_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
 const MAX_CACHED_PORTRAITS = 64;
@@ -13,7 +13,7 @@ let hydrated = false;
 let persistTimer = 0;
 
 // Bake-proof the cache key on the live base so a base change never reuses old images.
-const KEY_PREFIX = `${BASE_CATALOGUE_REVISION}/${PORTRAIT_REVISION}`;
+const KEY_PREFIX = `${VIEWER_REVISION}/${PORTRAIT_REVISION}`;
 const portraitKey = look => KEY_PREFIX + JSON.stringify(look);
 
 /* Keep the last portraits across reloads so the equipped look is on screen
@@ -72,7 +72,7 @@ const resource = createSharedResource(async () => {
   document.body.append(host);
   try {
     let ownedResource;
-    const { createHeroViewer } = await import(new URL(`../assets/odyssey/viewer.js?v=${BASE_CATALOGUE_REVISION}`, import.meta.url).href);
+    const { createHeroViewer } = await import(new URL(`../assets/odyssey/viewer.js?v=${VIEWER_REVISION}`, import.meta.url).href);
     const renderer = await createHeroViewer(host, BASE_CATALOGUE_URL, DEFAULT_LOOK, {
       theme: "light",
       onError: () => { if (ownedResource && resource.peek() === ownedResource) resource.reset(); }

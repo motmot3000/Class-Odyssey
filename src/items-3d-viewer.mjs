@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { visiblePart, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
+import { visiblePart, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PETS_CATALOGUE_URL, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
 import { renderPortraitImage } from './portrait-image.mjs';
 
 // Eye colours re-tint the delivered iris map in plain sRGB: every coloured
@@ -64,6 +64,18 @@ function skinTint(tone) {
   return skinTints.get(key);
 }
 
+function disposeModel(model) {
+  const geometries = new Set(), materials = new Set(), textures = new Set();
+  model?.traverse(obj => {
+    if (obj.geometry) geometries.add(obj.geometry);
+    for (const mat of (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean)) materials.add(mat);
+  });
+  for (const material of materials) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+  geometries.forEach(geometry => geometry.dispose());
+  materials.forEach(material => material.dispose());
+  textures.forEach(texture => texture.dispose());
+}
+
 export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = `/assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, theme = 'light' } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
@@ -102,9 +114,15 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   };
   let model;
   try {
-    const gltf = await new GLTFLoader().loadAsync(modelURL, event => { if (event.total) onProgress?.(Math.round(event.loaded / event.total * 100)); });
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(modelURL, event => { if (event.total) onProgress?.(Math.round(event.loaded / event.total * 90)); });
     model = gltf.scene;
-  } catch (error) { environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
+    // Load once alongside the hero: all subsequent previews and snapshots are
+    // synchronous, including switching pets while a portrait is being baked.
+    const pets = await loader.loadAsync(PETS_CATALOGUE_URL);
+    model.add(pets.scene);
+    onProgress?.(100);
+  } catch (error) { disposeModel(model); environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
   scene.add(model);
   model.userData.source_credit = 'Noa/Mila — characters-base, base-v2-2026-09, test-modelisation. Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: Class Odyssey study.';
   let look = { ...initialLook };
@@ -149,6 +167,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   }
   function applyLook(next) {
     const wasPreview = Boolean(look.preview);
+    const petChanged = look.pet !== next.pet;
     look = { ...next };
     const tint = skinTint(look.tone);
     ground.visible = !look.preview;
@@ -177,7 +196,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         }
       }
     });
-    if (look.preview || wasPreview || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
+    if (look.preview || wasPreview || petChanged || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
     requestDraw();
     return counts();
   }
@@ -199,7 +218,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       }
     } else if (value === 'item' || value === 'head') {
       const bounds = new THREE.Box3();
-      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon', 'shield'];
+      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon', 'shield', 'pet'];
       model.traverseVisible(obj => {
         if (!slots.includes(obj.userData.shop_slot)) return;
         if (value === 'head' && obj.userData.head_bounds_min) {
@@ -285,11 +304,17 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         if (!bounds.isEmpty()) {
           bounds.getCenter(target);
           previewSize=bounds.getSize(new THREE.Vector3());
+          if (!look.preview && look.pet && look.pet !== 'no-pet') {
+            // A companion must not pull the hero off the portrait's centreline.
+            target.x=target.z=0;
+            previewSize.x=2*Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x));
+            previewSize.z=2*Math.max(Math.abs(bounds.min.z),Math.abs(bounds.max.z));
+          }
           elevation=previewSize.y*.025;
         }
         ground.visible=false;
         placeCamera(); renderer.render(scene,camera);
-        return renderPortraitImage(canvas);
+        return renderPortraitImage(canvas, { centered: !look.preview && look.pet && look.pet !== 'no-pet' });
       } finally {
         target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
         ground.visible=wasGroundVisible;
@@ -301,15 +326,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       active = false;
       observer.disconnect();
       cancelAnimationFrame(frame);
-      const geometries=new Set(), materials=new Set(), textures=new Set();
-      model.traverse(obj=>{
-        if (obj.geometry) geometries.add(obj.geometry);
-        for (const mat of (Array.isArray(obj.material)?obj.material:[obj.material]).filter(Boolean)) materials.add(mat);
-      });
-      for (const material of materials) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
-      geometries.forEach(geometry=>geometry.dispose());
-      materials.forEach(material=>material.dispose());
-      textures.forEach(texture=>texture.dispose());
+      disposeModel(model);
       environment.dispose(); ground.geometry.dispose(); ground.material.dispose();
       renderer.dispose();
       canvas.remove();

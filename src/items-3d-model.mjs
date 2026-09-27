@@ -7,10 +7,11 @@ export const CATEGORIES = [
   { type: 'hairColor', field: 'hairColor', label: 'Hair Color' },
   { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' },
   { type: 'accessory', field: 'accessory', label: 'Accessories' },
-  { type: 'weapon', field: 'weapon', label: 'Weapons' },
-  { type: 'shield', field: 'shield', label: 'Shields' }
+{ type: 'weapon', field: 'weapon', label: 'Weapons' },
+  { type: 'shield', field: 'shield', label: 'Shields' },
+  { type: 'pet', field: 'pet', label: 'Pets' }
 ];
-export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', shield: 'no-shield', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'no-accessory', tone: 'medium' };
+export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', shield: 'no-shield', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'no-accessory', pet: 'no-pet', tone: 'medium' };
 /* These accessories bring their own ears, which replace the default human ears. */
 export const EAR_ACCESSORIES = new Set(['elf-ears', 'pierced-ears']);
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
@@ -38,6 +39,10 @@ export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVIS
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
 export const BASE_CATALOGUE_REVISION = 'stylized-v9';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
+// Companions are a separate lightweight catalogue shared by both personas.
+export const PETS_REVISION = 'pets-v9';
+export const PETS_CATALOGUE_URL = new URL(`pets/catalogue.glb?v=${PETS_REVISION}`, ASSET_BASE).href;
+export const VIEWER_REVISION = `${BASE_CATALOGUE_REVISION}-${PETS_REVISION}`;
 /* The workshop's loading poster must show the delivered base, not the older
  * baked Blender preview, and must carry the revision so a refresh never shows
  * a character cached from an earlier build. */
@@ -55,6 +60,7 @@ export function pupilLook(pupil, draft = null) {
     weapon: value('weapon', 'no-weapon'), shield: value('shield', 'no-shield'), hair: value('hair', pupil.gender === 'girl' ? 'long' : 'short'),
     hairColor: value('hairColor', 'brown-hair'), eyeColor: value('eyeColor', 'brown-eyes'),
     accessory: value('accessory', 'no-accessory'),
+    pet: value('pet', 'no-pet'),
     tone: value('skinTone', SKIN_TONE_NEUTRAL)
   };
 }
@@ -124,5 +130,5 @@ export function lookSummary(look) {
 }
 
 export function modeledItemIds() {
-  return CATEGORIES.filter(({ type }) => !['hairColor', 'eyeColor'].includes(type)).flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'no-shield', 'bald', 'no-accessory'].includes(id)).map(({ id }) => id));
+  return CATEGORIES.filter(({ type }) => !['hairColor', 'eyeColor'].includes(type)).flatMap(({ type }) => getShopItems(type).filter(({ id }) => !['no-hat', 'no-weapon', 'no-shield', 'bald', 'no-accessory', 'no-pet'].includes(id)).map(({ id }) => id));
 }
