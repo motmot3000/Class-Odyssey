@@ -1554,12 +1554,12 @@ function endSetupTour({ complete = true, silent = false } = {}) {
 function setupTourSteps() {
   return [
     { target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), body: t("onboarding.theme.body"), preview: true },
+    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
     {
       target: () => (state.classes.length ? ".class-picker" : '[data-action="add-class"]'),
       title: t("onboarding.class.title"),
       body: () => t(state.classes.length ? "onboarding.class.body" : "onboarding.class.body.empty")
     },
-    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
     { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") }
   ];
 }
