@@ -138,6 +138,18 @@ test("the shop previews each title on its own tier backdrop", () => {
   assert.doesNotMatch(html, /angle-bar/);
 });
 
+test("item previews in the shop never sit on a title backdrop", () => {
+  const pupil = { ...getCurrentClass(createInitialState()).pupils[0], title: "class-legend" };
+  const outfit = renderOdysseyShop(pupil, { shopCategory: "outfit" });
+  assert.match(outfit, /data-viewer-host/);
+  assert.doesNotMatch(outfit, /data-viewer-host[^>]*data-title-tier/);
+  assert.doesNotMatch(outfit, /title-halo|title-emblem|title-frame/);
+  // The title category keeps its dedicated backdrop so pupils still see it.
+  const title = renderOdysseyShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
+  assert.match(title, /title-stage" data-title-tier="5" data-title-id="class-legend"/);
+  assert.match(title, /title-emblem/);
+});
+
 test("locked pupils can return from the rules without hitting the teacher gate", () => {
   assert.match(renderRules({ unlocked: false }), /data-action="show-student"/);
   assert.doesNotMatch(renderRules({ unlocked: false }), /data-action="show-board"/);

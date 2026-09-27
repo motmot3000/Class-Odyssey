@@ -128,66 +128,116 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .title-chip, .hero-title-tag { color: var(--amber); font-family: var(--font-display); font-weight: 600; overflow-wrap: anywhere; }
 .title-chip { font-size: 16px; }
 
-/* Earned titles are a prestige ladder. Tier 1 is quiet; each tier adds colour,
- * ornament, glow and (for tier 4-5) a plaque, ending in a radiant gold legend. */
+/* Earned titles are a prestige ladder. The tag takes its colours from the same
+ * per-title palette as the backdrop (--t-main / --t-accent, see odyssey.css):
+ *   tier 1  quiet, muted lettering
+ *   tier 2  coloured lettering and ornaments, a small crest on the plaque
+ *   tier 3  wider ornaments, spaced lettering, a soft glow
+ *   tier 4  gilded two-tone lettering between rules, a framed plaque
+ *   tier 5  shimmering lettering, a radiant plaque with corner brackets */
 .hero-title-tag {
-  --title-color: #5c6b5e;
-  --title-glow: transparent;
+  --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 72%, var(--ink));
+  --t-text-2: color-mix(in srgb, var(--t-accent, #c3cdbf) 62%, var(--ink));
   display: block;
-  color: var(--title-color);
+  color: var(--t-text);
   font-size: 20px;
   line-height: 1.2;
   text-align: center;
 }
+:root[data-theme="light"] .hero-title-tag {
+  --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 56%, var(--ink));
+  --t-text-2: color-mix(in srgb, var(--t-accent, #c3cdbf) 44%, var(--ink));
+}
 .hero-title-label { display: block; margin-bottom: 8px; font: 600 11px/1.3 var(--font-ui); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
-.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; position: relative; }
-.hero-title-name { min-width: 0; overflow-wrap: anywhere; }
-.title-ornament { width: 28px; height: 24px; flex: 0 0 auto; }
+.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; position: relative; isolation: isolate; }
+/* The name keeps its width; the ornaments give way first on narrow plaques. */
+.hero-title-name { flex: 0 0 auto; max-width: 100%; overflow-wrap: anywhere; }
+.title-ornament { width: 26px; height: 22px; flex: 0 1 auto; min-width: 10px; opacity: .9; }
 .title-ornament:last-child { transform: scaleX(-1); }
 .title-ornament .orn-gem { fill: currentColor; }
 .title-ornament .orn-dot { fill: currentColor; stroke: none; }
 
-.hero-title-tag[data-title-tier="1"] { --title-color: #5c6b5e; }
-.hero-title-tag[data-title-tier="2"] { --title-color: #2f6fa8; --title-glow: rgba(47,111,168,.28); }
-.hero-title-tag[data-title-tier="3"] { --title-color: #2b7d63; --title-glow: rgba(43,125,99,.34); }
-.hero-title-tag[data-title-tier="4"] { --title-color: #a23b3b; --title-glow: rgba(162,59,59,.40); }
-.hero-title-tag[data-title-tier="5"] { --title-color: #a07a1e; --title-glow: rgba(197,150,42,.55); }
+/* Crest: the title's emblem, shown on the plaque from tier 2 upward. */
+.title-glyph {
+  display: block; width: 30px; height: 30px; margin: 0 auto 8px;
+  background: linear-gradient(180deg, var(--t-text-2), var(--t-text));
+  -webkit-mask: var(--title-emblem) center / contain no-repeat;
+  mask: var(--title-emblem) center / contain no-repeat;
+}
+.hero-title-tag[data-title-tier="3"] .title-glyph { width: 34px; height: 34px; }
+.hero-title-tag[data-title-tier="4"] .title-glyph { width: 40px; height: 40px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--t-main) 45%, transparent)); }
+.hero-title-tag[data-title-tier="5"] .title-glyph { width: 46px; height: 46px; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--t-main) 60%, transparent)); }
 
-/* Four prestige titles carry their own identity instead of inheriting the tier
- * colour: Explorer teal, Champion amber, King royal violet, Legend rose. Names
- * are unchanged; only the visual treatment differs. */
-.hero-title-tag[data-title-id="pathfinder"] { --title-color: #1f7f88; --title-glow: rgba(31,127,136,.32); }
-.hero-title-tag[data-title-id="realm-champion"] { --title-color: #9c5f12; --title-glow: rgba(156,95,18,.36); }
-.hero-title-tag[data-title-id="paragon-sovereign"] { --title-color: #5c3f9c; --title-glow: rgba(92,63,156,.36); }
-.hero-title-tag[data-title-id="class-legend"] { --title-color: #a83a72; --title-glow: rgba(168,58,114,.40); }
+/* 1 · quiet */
+.hero-title-tag[data-title-tier="1"] { --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 50%, var(--ink-2)); }
+.hero-title-tag[data-title-tier="1"] .title-ornament { width: 20px; opacity: .55; }
 
+/* 3 · spaced lettering with a soft glow */
 .hero-title-tag[data-title-tier="3"] .title-ornament,
 .hero-title-tag[data-title-tier="4"] .title-ornament,
-.hero-title-tag[data-title-tier="5"] .title-ornament { width: 38px; height: 28px; }
-.hero-title-tag[data-title-tier="4"] .hero-title-name,
-.hero-title-tag[data-title-tier="5"] .hero-title-name { border-block: 1px solid color-mix(in srgb, var(--title-color) 55%, transparent); padding-block: 4px; }
-.hero-title-tag[data-title-tier="5"] .hero-title-name {
-  text-shadow: 0 0 10px var(--title-glow), 0 0 22px var(--title-glow);
-  letter-spacing: .02em;
-}
-.hero-title-tag[data-title-tier="4"] .hero-title-name { text-shadow: 0 0 8px var(--title-glow); }
+.hero-title-tag[data-title-tier="5"] .title-ornament { width: 36px; height: 28px; }
+.hero-title-tag[data-title-tier="3"] .hero-title-name { letter-spacing: .04em; text-shadow: 0 0 12px color-mix(in srgb, var(--t-main) 38%, transparent); }
 
-/* Tier 5 gets a radiant plaque; tier 4 a restrained rimmed one. */
-.hero-title-tag[data-title-tier="5"][data-title-labelled],
-.hero-title-tag[data-title-tier="5"] .hero-title-ribbon { position: relative; }
+/* 4-5 · gilded two-tone lettering between fine rules */
+.hero-title-tag[data-title-tier="4"] .title-ornament,
+.hero-title-tag[data-title-tier="5"] .title-ornament { color: var(--t-text-2); }
+.hero-title-tag[data-title-tier="4"] .hero-title-name,
+.hero-title-tag[data-title-tier="5"] .hero-title-name {
+  padding-block: 4px;
+  letter-spacing: .06em;
+  border-block: 1px solid color-mix(in srgb, var(--t-text) 45%, transparent);
+  background: linear-gradient(90deg, var(--t-text), var(--t-text-2) 50%, var(--t-text)) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--t-main) 40%, transparent));
+}
+.hero-title-tag[data-title-tier="5"] .hero-title-name { animation: title-shine 7s linear infinite; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--t-main) 55%, transparent)); }
+@keyframes title-shine { to { background-position: 200% 0; } }
+
+/* 5 · radiant glow behind the name */
 .hero-title-tag[data-title-tier="5"] .hero-title-ribbon::before {
   content: "";
   position: absolute;
+  z-index: -1;
   inset: -14px -22px;
   border-radius: 999px;
-  background: radial-gradient(closest-side, var(--title-glow), transparent 78%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--t-main) 34%, transparent), transparent 78%);
   pointer-events: none;
 }
+
+/* Plaque (hero sheet, dressing room, shop preview) */
 .hero-title-tag[data-title-labelled] { padding: 16px 10px; font-size: clamp(26px,2.6vw,36px); background: var(--slate); border-block: 1px solid var(--line-2); position: relative; }
 .hero-title-tag[data-title-labelled] .title-ornament { width: 44px; height: 32px; }
-.hero-title-tag[data-title-tier="4"][data-title-labelled],
-.hero-title-tag[data-title-tier="5"][data-title-labelled] { background: linear-gradient(180deg, color-mix(in srgb, var(--title-color) 12%, var(--slate)), var(--slate)); border-block-color: color-mix(in srgb, var(--title-color) 45%, transparent); }
-.hero-title-tag[data-title-tier="5"][data-title-labelled] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--title-color) 40%, transparent); }
+.hero-title-tag[data-title-tier="2"][data-title-labelled],
+.hero-title-tag[data-title-tier="3"][data-title-labelled] { border-block-color: color-mix(in srgb, var(--t-main) 38%, var(--line-2)); }
+.hero-title-tag[data-title-tier="4"][data-title-labelled] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--t-main) 14%, var(--slate)), var(--slate));
+  border-block-color: color-mix(in srgb, var(--t-main) 55%, transparent);
+}
+.hero-title-tag[data-title-tier="5"][data-title-labelled] {
+  background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--t-main) 22%, var(--slate)), var(--slate) 72%);
+  border-block-color: color-mix(in srgb, var(--t-accent) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t-main) 38%, transparent), 0 0 26px color-mix(in srgb, var(--t-main) 18%, transparent);
+}
+/* Corner brackets on the plaque from tier 4, gilded at tier 5. */
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::after,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after {
+  content: "";
+  position: absolute;
+  width: 16px; height: 16px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--t-text) 70%, transparent);
+  pointer-events: none;
+}
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before { top: 6px; left: 6px; border-width: 1.5px 0 0 1.5px; }
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::after,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after { bottom: 6px; right: 6px; border-width: 0 1.5px 1.5px 0; }
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after { width: 22px; height: 22px; border-color: var(--t-text-2); }
 
 .rune-card-title { padding: 0 10px 10px; position: relative; z-index: 2; }
 .workshop-identity { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; }

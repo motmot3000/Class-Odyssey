@@ -3,7 +3,7 @@
  */
 
 import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
-import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, titleBackdropAttributes } from "../ui.mjs";
+import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, renderTitleBackdrop, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
@@ -101,11 +101,9 @@ function renderAngleBar(ui, { itemOnly = false, dressing = false } = {}) {
   </div>`;
 }
 
-function renderViewerHost(pupil, look, { live = false, item = null } = {}) {
-  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}' ${titleBackdropAttributes(pupil)}>
-    <span class="title-halo" aria-hidden="true"></span>
-    <span class="title-emblem" aria-hidden="true"></span>
-    <span class="title-frame" aria-hidden="true"></span>
+function renderViewerHost(pupil, look, { live = false, item = null, title = true } = {}) {
+  return `<div class="dais dais-lg is-loading${live ? " dais-live" : ""}" data-viewer-host data-look='${escapeHtml(JSON.stringify(look))}' ${title ? titleBackdropAttributes(pupil) : ""}>
+    ${title ? renderTitleBackdrop() : ""}
     ${renderViewerFallback(pupil, item)}
   </div>`;
 }
@@ -240,9 +238,7 @@ function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = 
     <article class="rune-card ${student ? 'student-card' : ''} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
       <button class="card-hit" type="button" data-action="${student && !selecting ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student && !selecting ? '' : `aria-pressed="${selected}"`} aria-label="${t(student && !selecting ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
       <div class="dais dais-card" ${titleBackdropAttributes(pupil)}>
-        <span class="title-halo" aria-hidden="true"></span>
-        <span class="title-emblem" aria-hidden="true"></span>
-        <span class="title-frame" aria-hidden="true"></span>
+        ${renderTitleBackdrop()}
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
         ${student && !selecting ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
         ${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}
@@ -390,9 +386,7 @@ export function renderOdysseyPersonalize(pupil, ui) {
 function renderTitleStage(item) {
   const pupil = { title: item.id };
   return `<div class="dais dais-lg title-stage" ${titleBackdropAttributes(pupil)}>
-    <span class="title-halo" aria-hidden="true"></span>
-    <span class="title-emblem" aria-hidden="true"></span>
-    <span class="title-frame" aria-hidden="true"></span>
+    ${renderTitleBackdrop()}
     <div class="title-stage-tag">${renderTitle(pupil, { labelled: true })}</div>
   </div>`;
 }
@@ -413,7 +407,7 @@ export function renderOdysseyShop(pupil, ui) {
         <div class="atelier-stage">
           ${isTitle
             ? renderTitleStage(item)
-            : look ? renderViewerHost(pupil, look, { item }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
+            : look ? renderViewerHost(pupil, look, { item, title: false }) : `<div class="dais dais-lg item-only-preview">${renderItemThumbnail(item)}</div>`}
           ${!isTitle && look ? renderAngleBar(ui, { itemOnly:true }) : ''}
           <p class="item-preview-caption">${escapeHtml(tItem(item, 'name'))}</p>
         </div>

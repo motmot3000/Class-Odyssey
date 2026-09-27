@@ -109,6 +109,16 @@ export function titleBackdropAttributes(pupil) {
   return `data-title-tier="${titleTierOf(pupil)}" data-title-id="${escapeHtml(item?.id || "rookie")}"`;
 }
 
+/* Decorative layers around the hero. Each title decides in CSS which layers it
+ * lights up (aura, orbit, side flourishes, emblems, particles, floor), so early
+ * titles stay quiet and later ones accumulate ornament. None of them sits on
+ * the character: they frame it from the sides, the floor and above the head. */
+export function renderTitleBackdrop() {
+  return ["halo", "orbit", "flourish", "emblem", "sparkles", "frame"]
+    .map((layer) => `<span class="title-${layer}" aria-hidden="true"></span>`)
+    .join("");
+}
+
 export function renderTitle(pupil, { labelled = false } = {}) {
   const item = titleItemOf(pupil);
   const tier = titleTierOf(pupil);
@@ -122,6 +132,7 @@ export function renderTitle(pupil, { labelled = false } = {}) {
   </svg>`;
   return `<span class="hero-title-tag title-${escapeHtml(item.id)}" data-title-tier="${tier}" data-title-id="${escapeHtml(item.id)}" ${labelled ? 'data-title-labelled' : ''}>
     ${labelled ? `<span class="hero-title-label">${t('modal.type.title')}</span>` : ''}
+    ${labelled && tier >= 2 ? '<span class="title-glyph" aria-hidden="true"></span>' : ''}
     <span class="hero-title-ribbon">${ornament}<span class="hero-title-name">${escapeHtml(tItem(item,'name'))}</span>${ornament}</span>
   </span>`;
 }

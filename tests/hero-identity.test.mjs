@@ -58,6 +58,16 @@ test('hero cards and the hero sheet expose the title backdrop layer',()=>{
   assert.match(sheet,/title-halo/);
 });
 
+test('the title backdrop exposes every ornament layer and the plaque shows a crest from tier 2',()=>{
+  const classroom=getCurrentClass(createInitialState());
+  const pupil={...classroom.pupils[0],title:'class-legend'};
+  const sheet=renderOdysseySheet(pupil,{});
+  for(const layer of ['halo','orbit','flourish','emblem','sparkles','frame']) assert.match(sheet,new RegExp(`class="title-${layer}"`));
+  assert.match(renderTitle({title:'perfect-pupil'},{labelled:true}),/class="title-glyph"/);
+  assert.doesNotMatch(renderTitle({title:'rookie'},{labelled:true}),/title-glyph/);
+  assert.doesNotMatch(renderTitle({title:'class-legend'}),/title-glyph/);
+});
+
 test('Rules preserves the original text and reading order in both languages',()=>{
   const text=html=>html.replace(/<svg[\s\S]*?<\/svg>/g,'').replace(/<\/(li|h1|h2|p)>/g,' ').replace(/<[^>]*>/g,'').replace(/&#039;/g,"'").replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
   const keys=['rules.title.how','rules.lede',...Array.from({length:7},(_,i)=>`rules.game.${i}`),'rules.title.xp','rules.xp.0','rules.xp.1','rules.title.money','rules.money.0','rules.money.1','rules.back'];

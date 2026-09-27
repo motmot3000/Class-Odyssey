@@ -1069,107 +1069,348 @@ input { caret-color: var(--cyan); }
 }
 
 /* ============================================================
-   Title backdrop — the dais behind the character reflects prestige.
-   Decoration is drawn with precise, centred geometry (masks, borders and
-   rules) so nothing crosses or gets cut: a baselined rule with a gem from
-   tier 2, banner rails from tier 3, a medallion from tier 4 and radiant
-   rays plus a title emblem from tier 5. Everything lives inside the dais.
+   Title backdrop — a prestige ladder around the hero.
+   Nothing is painted on the character: every ornament lives on the sides,
+   above the head or on the floor, while a coloured aura rises from the hero.
+   Each title owns a palette and a motif, and each step up adds a layer:
+     Rookie   quiet floor line
+     Pupil    sapphire books, a first soft aura
+     Explorer teal compasses on a dotted voyage orbit
+     Star     starlight constellations twinkling around
+     Champion crimson shields, rising laurels and embers
+     Leader   emerald war standards, rank chevrons, dust of gold
+     King     violet throne arch, gilded filigree, crowns, gold dust
+     Master   arcane azure rays, floating letters, a floor sigil
+     Legend   prismatic halo, wings, trophies, a radiant plinth
    ============================================================ */
-.title-halo,
-.title-emblem,
-.title-frame { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.title-halo::before,
-.title-halo::after,
-.title-frame::before,
-.title-frame::after { content: ""; position: absolute; pointer-events: none; }
 
-.dais[data-title-tier="2"] { --halo-color: #2f6fa8; --halo-soft: rgba(47,111,168,.22); }
-.dais[data-title-tier="3"] { --halo-color: #2b7d63; --halo-soft: rgba(43,125,99,.26); }
-.dais[data-title-tier="4"] { --halo-color: #a23b3b; --halo-soft: rgba(162,59,59,.28); }
-.dais[data-title-tier="5"] { --halo-color: #b8871f; --halo-soft: rgba(197,150,42,.34); }
-
-/* Four prestige titles own their accent, independent of the shared tier
- * ladder: Explorer teal, Champion amber, King royal violet, Legend rose. The
- * emblem mask (badge) and the accent together give each a distinct identity. */
-.dais[data-title-id="pathfinder"] { --halo-color: #1f9aa3; --halo-soft: rgba(31,154,163,.28); }
-.dais[data-title-id="realm-champion"] { --halo-color: #c07a1e; --halo-soft: rgba(192,122,30,.30); }
-.dais[data-title-id="paragon-sovereign"] { --halo-color: #6a4bb0; --halo-soft: rgba(106,75,176,.30); }
-.dais[data-title-id="class-legend"] { --halo-color: #c04a86; --halo-soft: rgba(192,74,134,.32); }
-
-/* Ambient tint, rising with the tier. */
-.dais[data-title-tier="2"] .title-halo::before { inset: 0; background: radial-gradient(62% 56% at 50% 90%, var(--halo-soft), transparent 72%); }
-.dais[data-title-tier="3"] .title-halo::before { inset: 0; background: radial-gradient(66% 60% at 50% 92%, var(--halo-soft), transparent 74%); }
-.dais[data-title-tier="4"] .title-halo::before { inset: 0; background: radial-gradient(72% 64% at 50% 94%, var(--halo-soft), transparent 76%); }
-.dais[data-title-tier="5"] .title-halo::before { inset: 0; background: radial-gradient(78% 70% at 50% 96%, var(--halo-soft), transparent 78%); }
-
-/* Tier 4: a precise ring medallion behind the shoulders. */
-.dais[data-title-tier="4"] .title-halo::after,
-.dais[data-title-tier="5"] .title-halo::after {
-  left: 50%; top: 47%; width: 46%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  border: 1px solid color-mix(in srgb, var(--halo-color) 48%, transparent);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--halo-color) 10%, transparent);
+/* Palette — one identity per title, shared by the dais and the title tag. */
+[data-title-id] { --t-main: #8a9a8c; --t-accent: #c3cdbf; --t-soft: transparent; }
+[data-title-id="perfect-pupil"] { --t-main: #4a8fe0; --t-accent: #a5cbf6; --t-soft: rgba(74,143,224,.18); }
+[data-title-id="pathfinder"] { --t-main: #1fb3a6; --t-accent: #e9bd62; --t-soft: rgba(31,179,166,.22); }
+[data-title-id="scholar-virtuoso"] { --t-main: #f0b93a; --t-accent: #fff0b3; --t-soft: rgba(240,185,58,.24); }
+[data-title-id="realm-champion"] { --t-main: #e0492f; --t-accent: #f2a341; --t-soft: rgba(224,73,47,.28); }
+[data-title-id="grand-archon"] { --t-main: #2fbf73; --t-accent: #e6cf82; --t-soft: rgba(47,191,115,.28); }
+[data-title-id="paragon-sovereign"] { --t-main: #9466ff; --t-accent: #f6c74f; --t-soft: rgba(148,102,255,.32); }
+[data-title-id="grammar-master"] { --t-main: #46b4ff; --t-accent: #c58cff; --t-soft: rgba(70,180,255,.30); }
+[data-title-id="class-legend"] { --t-main: #ff5aa5; --t-accent: #ffd36b; --t-soft: rgba(255,90,165,.32); }
+[data-title-id] { --t-line: var(--t-main); --t-glint: var(--t-accent); }
+:root[data-theme="light"] [data-title-id] {
+  --t-line: color-mix(in srgb, var(--t-main) 74%, #14231c);
+  --t-glint: color-mix(in srgb, var(--t-accent) 58%, #3b2a06);
 }
-.dais[data-title-tier="5"] .title-halo::after { box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--halo-color) 14%, transparent), 0 0 34px color-mix(in srgb, var(--halo-color) 28%, transparent); }
 
-/* Tier 5: radiant rays, evenly spaced and masked away from the centre. */
+/* Emblem silhouettes (also used as the crest of the title tag). */
+[data-title-id="perfect-pupil"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.2' d='M4 14c9-2 18 0 28 7 10-7 19-9 28-7v34c-9-2-18 0-28 7-10-7-19-9-28-7z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M4 14c9-2 18 0 28 7 10-7 19-9 28-7v34c-9-2-18 0-28 7-10-7-19-9-28-7z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M32 21v34'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M10 23c6 0 11 2 15 5M10 30c6 0 11 2 15 5M54 23c-6 0-11 2-15 5M54 30c-6 0-11 2-15 5'/%3E%3Cpath fill='%23000' d='M32 2.4Q33.01 5.99 36.6 7Q33.01 8.01 32 11.6Q30.99 8.01 27.4 7Q30.99 5.99 32 2.4Z'/%3E%3C/svg%3E"); }
+[data-title-id="pathfinder"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Ccircle cx='32' cy='32' r='26' fill='%23000' fill-opacity='.14'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' /%3E%3Ccircle cx='32' cy='32' r='20.5' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='1.5 3'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M32 2v6M32 56v6M2 32h6M56 32h6'/%3E%3Cpath fill='%23000' d='M32 9Q35.5 28.5 32 32Q28.5 28.5 32 9Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M32 9Q37 27 55 32Q37 37 32 55Q27 37 9 32Q27 27 32 9Z'/%3E%3Cpath fill='%23000' d='M29.4 32a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0Z'/%3E%3C/svg%3E"); }
+[data-title-id="scholar-virtuoso"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.22' d='M32 5L38.47 23.1L57.68 23.66L42.46 35.4L47.87 53.84L32 43L16.13 53.84L21.54 35.4L6.32 23.66L25.53 23.1Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M32 5L38.47 23.1L57.68 23.66L42.46 35.4L47.87 53.84L32 43L16.13 53.84L21.54 35.4L6.32 23.66L25.53 23.1Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' d='M32 17.5L35.64 27.48L46.27 27.86L37.9 34.42L40.82 44.64L32 38.7L23.18 44.64L26.1 34.42L17.73 27.86L28.36 27.48Z'/%3E%3Cpath fill='%23000' d='M13 5Q13.88 8.12 17 9Q13.88 9.88 13 13Q12.12 9.88 9 9Q12.12 8.12 13 5ZM51 5Q51.88 8.12 55 9Q51.88 9.88 51 13Q50.12 9.88 47 9Q50.12 8.12 51 5ZM32 53.4Q32.79 56.21 35.6 57Q32.79 57.79 32 60.6Q31.21 57.79 28.4 57Q31.21 56.21 32 53.4Z'/%3E%3C/svg%3E"); }
+[data-title-id="realm-champion"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.18' d='M32 5l24 7v17c0 14-10 24-24 29C18 53 8 43 8 29V12z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M32 5l24 7v17c0 14-10 24-24 29C18 53 8 43 8 29V12z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' d='M32 11l17 5v11c0 10-8 17-17 21-9-4-17-11-17-21V16z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' d='M32 11v37'/%3E%3Cpath fill='%23000' d='M32 18L34.17 24.01L40.56 24.22L35.52 28.14L37.29 34.28L32 30.7L26.71 34.28L28.48 28.14L23.44 24.22L29.83 24.01Z'/%3E%3C/svg%3E"); }
+[data-title-id="grand-archon"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' d='M32 2L33.94 7.33L39.61 7.53L35.14 11.02L36.7 16.47L32 13.3L27.3 16.47L28.86 11.02L24.39 7.53L30.06 7.33Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='M12 30l20-11 20 11M12 41l20-11 20 11'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='M12 52l20-11 20 11'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' d='M18 58l14-7.5 14 7.5'/%3E%3C/svg%3E"); }
+[data-title-id="paragon-sovereign"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.22' d='M7 43l6-24 13 11 6-14 6 14 13-11 6 24z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M7 43l6-24 13 11 6-14 6 14 13-11 6 24z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M8 43h48v9H8z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M32 3v9M27.5 7.5h9'/%3E%3Cpath fill='%23000' d='M10.6 17a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0ZM48.6 17a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0ZM30 14.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0ZM16 47.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0ZM29.6 47.5a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0ZM44 47.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z'/%3E%3C/svg%3E"); }
+[data-title-id="grammar-master"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.2' d='M32 9l28 12-28 12-28-12z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M32 9l28 12-28 12-28-12z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M17 27l15 6 15-6v13c0 4-7 7-15 7s-15-3-15-7z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M32 21l26 2v15'/%3E%3Cpath fill='%23000' d='M55 41a3 3 0 1 0 6 0a3 3 0 1 0 -6 0ZM29.6 21a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0Z'/%3E%3C/svg%3E"); }
+[data-title-id="class-legend"] { --title-emblem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' %3E%3Cpath fill='%23000' fill-opacity='.22' d='M21 11h22v11a11 11 0 0 1-22 0z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M21 11h22v11a11 11 0 0 1-22 0z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M21 15c-7 0-9 3-9 8s4 8 9 8M43 15c7 0 9 3 9 8s-4 8-9 8'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M32 33v8'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M22 41h20v5H22zM16 46h32v6H16z'/%3E%3Cpath fill='%23000' d='M32 12.5L33.23 15.8L36.76 15.95L34 18.15L34.94 21.55L32 19.6L29.06 21.55L30 18.15L27.24 15.95L30.77 15.8ZM8 4Q8.88 7.12 12 8Q8.88 8.88 8 12Q7.12 8.88 4 8Q7.12 7.12 8 4ZM56 4Q56.88 7.12 60 8Q56.88 8.88 56 12Q55.12 8.88 52 8Q55.12 7.12 56 4Z'/%3E%3C/svg%3E"); }
+
+/* ---- Layers ---- */
+.title-halo, .title-orbit, .title-flourish, .title-emblem, .title-sparkles, .title-frame { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.title-halo::before, .title-halo::after, .title-orbit::before, .title-orbit::after,
+.title-flourish::before, .title-flourish::after, .title-emblem::before, .title-emblem::after,
+.title-sparkles::before, .title-sparkles::after, .title-frame::before, .title-frame::after { position: absolute; pointer-events: none; }
+.title-flourish::before, .title-flourish::after, .title-emblem::before, .title-emblem::after {
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-size: contain; mask-size: contain;
+}
+
+/* Aura: coloured light rising from the hero's feet. */
+.title-halo::before { inset: 0; background: var(--aura, none); }
+
+/* Side emblems, mirrored left and right of the hero. */
+.title-emblem::before, .title-emblem::after {
+  top: var(--emblem-top, 28%);
+  width: var(--emblem-size, 16%);
+  height: 30%;
+  background: linear-gradient(180deg, var(--t-glint), var(--t-line) 72%);
+  -webkit-mask-image: var(--title-emblem); mask-image: var(--title-emblem);
+  -webkit-mask-position: center; mask-position: center;
+  opacity: .95;
+}
+.title-emblem::before { left: var(--emblem-x, 5%); }
+.title-emblem::after { right: var(--emblem-x, 5%); scale: -1 1; }
+
+/* Tall side flourishes (laurels, standards, filigree, letters, wings). */
+.title-flourish::before, .title-flourish::after {
+  top: var(--fl-top, auto); bottom: var(--fl-bottom, auto);
+  width: var(--fl-w, 20%); height: var(--fl-h, 50%);
+  background: var(--fl-paint, linear-gradient(180deg, var(--t-glint), var(--t-line)));
+  -webkit-mask-image: var(--title-flourish); mask-image: var(--title-flourish);
+  -webkit-mask-position: var(--fl-pos, left bottom); mask-position: var(--fl-pos, left bottom);
+}
+.title-flourish::before { left: var(--fl-x, 3%); }
+.title-flourish::after {
+  right: var(--fl-x, 3%);
+  -webkit-mask-image: var(--title-flourish-r, var(--title-flourish)); mask-image: var(--title-flourish-r, var(--title-flourish));
+  scale: var(--fl-flip, -1 1);
+}
+
+/* Particles on the sides and above the head, twinkling out of phase. */
+.title-sparkles::before, .title-sparkles::after {
+  inset: 0;
+  background: var(--sp-paint, var(--t-glint));
+  -webkit-mask-image: var(--title-sparkles-a); mask-image: var(--title-sparkles-a);
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  animation: title-twinkle 3.8s ease-in-out infinite;
+}
+.title-sparkles::after {
+  -webkit-mask-image: var(--title-sparkles-b); mask-image: var(--title-sparkles-b);
+  animation-delay: -1.9s;
+}
+
+/* Radiant rays, masked away from the hero and slowly turning. */
 .title-frame::before {
-  inset: -22% -8% 14%;
-  background: repeating-conic-gradient(from 0deg at 50% 66%,
-    color-mix(in srgb, var(--halo-color) 46%, transparent) 0deg 1.3deg, transparent 1.3deg 12deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 36%, #000 48%, transparent 82%);
-  mask: radial-gradient(closest-side, transparent 36%, #000 48%, transparent 82%);
-  opacity: 0;
-}
-.dais[data-title-tier="5"] .title-frame::before { opacity: .6; }
-
-/* A precise baselined rule with a centred gem: quiet frame for tier 2,
- * doubled rails for tier 3 and up. */
-.title-frame::after {
-  left: 24%; right: 24%; bottom: 11%; height: 0;
-  border-top: 1px solid color-mix(in srgb, var(--halo-color) 62%, transparent);
-  background:
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--halo-color) 90%, transparent) 0 2.4px, transparent 2.6px),
-    linear-gradient(to right, transparent 46%, color-mix(in srgb, var(--halo-color) 70%, transparent) 46% 54%, transparent 54%) no-repeat;
-  opacity: 0;
-}
-.dais[data-title-tier="2"] .title-frame::after { opacity: .9; }
-.dais[data-title-tier="3"] .title-frame::after,
-.dais[data-title-tier="4"] .title-frame::after,
-.dais[data-title-tier="5"] .title-frame::after {
-  opacity: 1;
-  box-shadow: 0 4px 0 -1px color-mix(in srgb, var(--halo-color) 34%, transparent);
-  bottom: 12%;
+  left: 50%; top: 42%; width: 150%; aspect-ratio: 1; translate: -50% -50%;
+  background: repeating-conic-gradient(from 0deg, var(--ray-color, transparent) 0deg 1.1deg, transparent 1.1deg 9deg);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 27%, #000 40%, transparent 70%);
+  mask: radial-gradient(circle closest-side, transparent 27%, #000 40%, transparent 70%);
+  opacity: var(--ray-opacity, .45);
+  animation: title-spin 140s linear infinite;
 }
 
-/* The arch line behind the head picks up the title colour from tier 3 up. */
-.dais[data-title-tier="3"]::before,
-.dais[data-title-tier="4"]::before,
-.dais[data-title-tier="5"]::before { border-color: color-mix(in srgb, var(--halo-color) 55%, var(--stage-line)); }
+/* Floor ornament under the hero's feet. */
+.title-frame::after { left: 30%; right: 30%; bottom: 10.5%; height: 12px; background-repeat: no-repeat; }
 
-/* Title emblems: alpha masks recoloured to the tier, pinned above the head so
- * they are never cropped and never cross the character. */
-.title-emblem { background: var(--halo-color, currentColor); opacity: 0; -webkit-mask-position: 50% 6%; mask-position: 50% 6%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: 30% auto; mask-size: 30% auto; }
-.dais[data-title-tier="3"] .title-emblem { -webkit-mask-size: 26% auto; mask-size: 26% auto; }
-.dais[data-title-tier="5"] .title-emblem { -webkit-mask-size: 34% auto; mask-size: 34% auto; }
+/* Floor sigil (Master, Legend). */
+.title-orbit::after {
+  left: 16%; right: 16%; bottom: 5%; height: 13%; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--t-line) 70%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--t-glint) 70%, transparent); outline-offset: -7px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--t-line) 30%, transparent), inset 0 0 14px color-mix(in srgb, var(--t-line) 25%, transparent);
+}
 
-.dais[data-title-id="perfect-pupil"] .title-emblem,
-.dais[data-title-id="pathfinder"] .title-emblem,
-.dais[data-title-id="scholar-virtuoso"] .title-emblem,
-.dais[data-title-id="realm-champion"] .title-emblem,
-.dais[data-title-id="grand-archon"] .title-emblem,
-.dais[data-title-id="paragon-sovereign"] .title-emblem,
-.dais[data-title-id="grammar-master"] .title-emblem,
-.dais[data-title-id="class-legend"] .title-emblem { opacity: .85; }
+@keyframes title-twinkle { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes title-drift { from { translate: 0 1.5%; } to { translate: 0 -2.5%; } }
+@keyframes title-spin { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .title-sparkles::before, .title-sparkles::after, .title-frame::before, .title-halo::after, .title-flourish::before, .title-flourish::after { animation: none !important; }
+  .title-sparkles::before, .title-sparkles::after { opacity: .85; }
+}
 
-.dais[data-title-id="perfect-pupil"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M46 16c-5-4-12-6-20-6H18v22h8c8 0 15 2 20 6M50 16c5-4 12-6 20-6h8v22h-8c-8 0-15 2-20 6M48 16v22' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M46 16c-5-4-12-6-20-6H18v22h8c8 0 15 2 20 6M50 16c5-4 12-6 20-6h8v22h-8c-8 0-15 2-20 6M48 16v22' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="pathfinder"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l6 14 14 6-14 6-6 14-6-14-14-6 14-6z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='48' cy='26' r='6' fill='none' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l6 14 14 6-14 6-6 14-6-14-14-6 14-6z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Ccircle cx='48' cy='26' r='6' fill='none' stroke='%23000' stroke-width='3'/%3E%3C/svg%3E"); }
-.dais[data-title-id="scholar-virtuoso"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l7 16 17 2-12 12 3 17-15-9-15 9 3-17-12-12 17-2z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 6l7 16 17 2-12 12 3 17-15-9-15 9 3-17-12-12 17-2z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="realm-champion"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M28 10h40v14c0 9-9 15-20 18-11-3-20-9-20-18z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 20h28M48 14v22' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M28 10h40v14c0 9-9 15-20 18-11-3-20-9-20-18z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 20h28M48 14v22' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="grand-archon"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M30 40V12l18 8 18-8v28' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M30 18 18 12v22l12 6' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M30 40V12l18 8 18-8v28' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M30 18 18 12v22l12 6' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="paragon-sovereign"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M22 38 28 12l12 10 8-14 8 14 12-10 6 26z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M22 38h52' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M22 38 28 12l12 10 8-14 8 14 12-10 6 26z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M22 38h52' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="grammar-master"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M18 38c4-16 14-24 30-24s26 8 30 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 30c2-3 4-6 5-10M74 30c-2-3-4-6-5-10M30 22c2-2 4-3 6-4M66 22c-2-2-4-3-6-4' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M18 38c4-16 14-24 30-24s26 8 30 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 30c2-3 4-6 5-10M74 30c-2-3-4-6-5-10M30 22c2-2 4-3 6-4M66 22c-2-2-4-3-6-4' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
-.dais[data-title-id="class-legend"] .title-emblem { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 4l5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M24 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1zM72 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath d='M48 4l5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1z' fill='none' stroke='%23000' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M24 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1zM72 14l2 5 5 1-4 4 1 5-4-3-4 3 1-5-4-4 5-1z' fill='none' stroke='%23000' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+/* The arch line of the card picks up the title colour from Star upward. */
+.dais[data-title-id="scholar-virtuoso"]::before,
+.dais[data-title-id="realm-champion"]::before,
+.dais[data-title-id="grand-archon"]::before,
+.dais[data-title-id="paragon-sovereign"]::before,
+.dais[data-title-id="grammar-master"]::before,
+.dais[data-title-id="class-legend"]::before { border-color: color-mix(in srgb, var(--t-line) 50%, var(--stage-line)); }
+
+/* ---- 1 · Rookie: a quiet floor line, nothing else. ---- */
+.dais[data-title-id="rookie"] .title-frame::after { content: ""; }
+.dais[data-title-id="rookie"] .title-frame::after { left: 34%; right: 34%; opacity: .55; background: linear-gradient(90deg, transparent, var(--t-line) 30% 70%, transparent) center 5px / 100% 1px no-repeat; }
+
+/* ---- 2 · Pupil: sapphire books and a first soft aura. ---- */
+.dais[data-title-id="perfect-pupil"] .title-halo::before,
+.dais[data-title-id="perfect-pupil"] .title-emblem::before,
+.dais[data-title-id="perfect-pupil"] .title-emblem::after,
+.dais[data-title-id="perfect-pupil"] .title-frame::after { content: ""; }
+.dais[data-title-id="perfect-pupil"] { --aura: radial-gradient(52% 44% at 50% 94%, var(--t-soft), transparent 70%); --emblem-size: 15%; --emblem-top: 32%; --emblem-x: 6%; }
+.dais[data-title-id="perfect-pupil"] .title-frame::after { left: 29%; right: 29%; background: radial-gradient(circle at 50% 5.5px, var(--t-line) 0 2px, transparent 2.5px), linear-gradient(90deg, transparent, var(--t-line) 25% 75%, transparent) center 5px / 100% 1px no-repeat; }
+
+/* ---- 3 · Explorer: compasses set on a dotted voyage orbit. ---- */
+.dais[data-title-id="pathfinder"] .title-halo::before,
+.dais[data-title-id="pathfinder"] .title-orbit::before,
+.dais[data-title-id="pathfinder"] .title-emblem::before,
+.dais[data-title-id="pathfinder"] .title-emblem::after,
+.dais[data-title-id="pathfinder"] .title-frame::after { content: ""; }
+.dais[data-title-id="pathfinder"] { --aura: radial-gradient(56% 48% at 50% 94%, var(--t-soft), transparent 72%); --emblem-size: 15%; --emblem-top: 24%; --emblem-x: 4%; }
+.dais[data-title-id="pathfinder"] .title-orbit::before {
+  inset: 6% 8% 8%; border-radius: 50%;
+  border: 1.5px dashed color-mix(in srgb, var(--t-line) 55%, transparent);
+  -webkit-mask: linear-gradient(#000 60%, transparent 92%); mask: linear-gradient(#000 60%, transparent 92%);
+}
+.dais[data-title-id="pathfinder"] .title-frame::after {
+  left: 26%; right: 26%;
+  background: radial-gradient(circle at 50% 5.5px, var(--t-glint) 0 2.6px, transparent 3px), repeating-linear-gradient(90deg, var(--t-line) 0 6px, transparent 6px 11px) center 5px / 100% 1.5px no-repeat;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 22% 78%, transparent); mask: linear-gradient(90deg, transparent, #000 22% 78%, transparent);
+}
+
+/* ---- 4 · Star: starlight above the head and twinkling constellations. ---- */
+.dais[data-title-id="scholar-virtuoso"] .title-halo::before,
+.dais[data-title-id="scholar-virtuoso"] .title-emblem::before,
+.dais[data-title-id="scholar-virtuoso"] .title-emblem::after,
+.dais[data-title-id="scholar-virtuoso"] .title-sparkles::before,
+.dais[data-title-id="scholar-virtuoso"] .title-sparkles::after,
+.dais[data-title-id="scholar-virtuoso"] .title-frame::after { content: ""; }
+.dais[data-title-id="scholar-virtuoso"] {
+  --aura: radial-gradient(58% 50% at 50% 94%, var(--t-soft), transparent 72%), radial-gradient(26% 16% at 50% 6%, color-mix(in srgb, var(--t-glint) 28%, transparent), transparent 80%);
+  --emblem-size: 15%; --emblem-top: 22%; --emblem-x: 5%;
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='none' stroke='%23000' stroke-opacity='.45' stroke-width='.35' d='M9 20L21 9L36 5M15 42L26 52L24 78M91 18L79 9L64 5M86 46L74 58L77 80'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M9 17.2Q9.62 19.38 11.8 20Q9.62 20.62 9 22.8Q8.38 20.62 6.2 20Q8.38 19.38 9 17.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M21 7.2Q21.4 8.6 22.8 9Q21.4 9.4 21 10.8Q20.6 9.4 19.2 9Q20.6 8.6 21 7.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M15 39.8Q15.48 41.52 17.2 42Q15.48 42.48 15 44.2Q14.52 42.48 12.8 42Q14.52 41.52 15 39.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M6 64.2Q6.4 65.6 7.8 66Q6.4 66.4 6 67.8Q5.6 66.4 4.2 66Q5.6 65.6 6 64.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M24 76.5Q24.33 77.67 25.5 78Q24.33 78.33 24 79.5Q23.67 78.33 22.5 78Q23.67 77.67 24 76.5Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M91 15.4Q91.57 17.43 93.6 18Q91.57 18.57 91 20.6Q90.43 18.57 88.4 18Q90.43 17.43 91 15.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M79 7.3Q79.37 8.63 80.7 9Q79.37 9.37 79 10.7Q78.63 9.37 77.3 9Q78.63 8.63 79 7.3Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M86 43.8Q86.48 45.52 88.2 46Q86.48 46.48 86 48.2Q85.52 46.48 83.8 46Q85.52 45.52 86 43.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M95 66.3Q95.37 67.63 96.7 68Q95.37 68.37 95 69.7Q94.63 68.37 93.3 68Q94.63 67.63 95 66.3Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M77 78.5Q77.33 79.67 78.5 80Q77.33 80.33 77 81.5Q76.67 80.33 75.5 80Q76.67 79.67 77 78.5Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M50 2.2Q50.4 3.6 51.8 4Q50.4 4.4 50 5.8Q49.6 4.4 48.2 4Q49.6 3.6 50 2.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M12.3 30a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M25.4 52a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M3.3 90a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M87.3 30a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M73.4 58a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M96.3 92a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M35.4 5a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M63.4 5a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M18 26.4Q18.35 27.65 19.6 28Q18.35 28.35 18 29.6Q17.65 28.35 16.4 28Q17.65 27.65 18 26.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M4 44.4Q4.35 45.65 5.6 46Q4.35 46.35 4 47.6Q3.65 46.35 2.4 46Q3.65 45.65 4 44.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M20 62Q20.44 63.56 22 64Q20.44 64.44 20 66Q19.56 64.44 18 64Q19.56 63.56 20 62Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M11 94.4Q11.35 95.65 12.6 96Q11.35 96.35 11 97.6Q10.65 96.35 9.4 96Q10.65 95.65 11 94.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M82 26.4Q82.35 27.65 83.6 28Q82.35 28.35 82 29.6Q81.65 28.35 80.4 28Q81.65 27.65 82 26.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M96 38.4Q96.35 39.65 97.6 40Q96.35 40.35 96 41.6Q95.65 40.35 94.4 40Q95.65 39.65 96 38.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M80 64Q80.44 65.56 82 66Q80.44 66.44 80 68Q79.56 66.44 78 66Q79.56 65.56 80 64Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M90 98.4Q90.35 99.65 91.6 100Q90.35 100.35 90 101.6Q89.65 100.35 88.4 100Q89.65 99.65 90 98.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M30 10.7Q30.29 11.71 31.3 12Q30.29 12.29 30 13.3Q29.71 12.29 28.7 12Q29.71 11.71 30 10.7Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M70 10.7Q70.29 11.71 71.3 12Q70.29 12.29 70 13.3Q69.71 12.29 68.7 12Q69.71 11.71 70 10.7Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M6.4 34a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M26.4 40a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M15.4 110a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M92.4 56a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M72.4 40a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M84.4 112a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+}
+.dais[data-title-id="scholar-virtuoso"] .title-frame::after {
+  left: 25%; right: 25%;
+  background: radial-gradient(ellipse 18% 4px at 50% 5.5px, var(--t-glint), transparent), linear-gradient(90deg, transparent, var(--t-line) 20% 80%, transparent) center 5px / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--t-glint) 70%, transparent));
+}
+
+/* ---- 5 · Champion: crimson shields, rising laurels and embers. ---- */
+.dais[data-title-id="realm-champion"] .title-halo::before,
+.dais[data-title-id="realm-champion"] .title-halo::after,
+.dais[data-title-id="realm-champion"] .title-flourish::before,
+.dais[data-title-id="realm-champion"] .title-flourish::after,
+.dais[data-title-id="realm-champion"] .title-emblem::before,
+.dais[data-title-id="realm-champion"] .title-emblem::after,
+.dais[data-title-id="realm-champion"] .title-sparkles::before,
+.dais[data-title-id="realm-champion"] .title-sparkles::after,
+.dais[data-title-id="realm-champion"] .title-frame::after { content: ""; }
+.dais[data-title-id="realm-champion"] {
+  --aura: radial-gradient(60% 54% at 50% 94%, var(--t-soft), transparent 74%);
+  --emblem-size: 13%; --emblem-top: 11%; --emblem-x: 6%;
+  --title-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 100' %3E%3Cpath fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M10 98Q-2 50 32 5'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(8.06 88.43) rotate(-140.82)' d='M0 0C3.6 -3.6 8.64 -3.6 12 0C8.64 3.6 3.6 3.6 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(8.06 88.43) rotate(-56.82)' d='M0 0C3.6 -3.6 8.64 -3.6 12 0C8.64 3.6 3.6 3.6 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(7.04 78.92) rotate(-135.38)' d='M0 0C3.43 -3.43 8.24 -3.43 11.45 0C8.24 3.43 3.43 3.43 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(7.04 78.92) rotate(-51.38)' d='M0 0C3.43 -3.43 8.24 -3.43 11.45 0C8.24 3.43 3.43 3.43 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(6.94 69.47) rotate(-129.81)' d='M0 0C3.27 -3.27 7.85 -3.27 10.9 0C7.85 3.27 3.27 3.27 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(6.94 69.47) rotate(-45.81)' d='M0 0C3.27 -3.27 7.85 -3.27 10.9 0C7.85 3.27 3.27 3.27 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(7.76 60.08) rotate(-124.21)' d='M0 0C3.11 -3.11 7.45 -3.11 10.35 0C7.45 3.11 3.11 3.11 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(7.76 60.08) rotate(-40.21)' d='M0 0C3.11 -3.11 7.45 -3.11 10.35 0C7.45 3.11 3.11 3.11 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(9.5 50.75) rotate(-118.69)' d='M0 0C2.94 -2.94 7.06 -2.94 9.8 0C7.06 2.94 2.94 2.94 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(9.5 50.75) rotate(-34.69)' d='M0 0C2.94 -2.94 7.06 -2.94 9.8 0C7.06 2.94 2.94 2.94 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(12.16 41.48) rotate(-113.34)' d='M0 0C2.78 -2.78 6.66 -2.78 9.25 0C6.66 2.78 2.78 2.78 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(12.16 41.48) rotate(-29.34)' d='M0 0C2.78 -2.78 6.66 -2.78 9.25 0C6.66 2.78 2.78 2.78 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(15.74 32.27) rotate(-108.25)' d='M0 0C2.61 -2.61 6.26 -2.61 8.7 0C6.26 2.61 2.61 2.61 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(15.74 32.27) rotate(-24.25)' d='M0 0C2.61 -2.61 6.26 -2.61 8.7 0C6.26 2.61 2.61 2.61 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(20.24 23.12) rotate(-103.46)' d='M0 0C2.44 -2.44 5.87 -2.44 8.15 0C5.87 2.44 2.44 2.44 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(20.24 23.12) rotate(-19.46)' d='M0 0C2.44 -2.44 5.87 -2.44 8.15 0C5.87 2.44 2.44 2.44 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' transform='translate(25.66 14.03) rotate(-99.02)' d='M0 0C2.28 -2.28 5.47 -2.28 7.6 0C5.47 2.28 2.28 2.28 0 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.95' transform='translate(25.66 14.03) rotate(-15.02)' d='M0 0C2.28 -2.28 5.47 -2.28 7.6 0C5.47 2.28 2.28 2.28 0 0Z'/%3E%3Cpath fill='%23000' d='M10.64 63.77a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0ZM16.4 39.63a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0ZM33 1Q33.66 3.34 36 4Q33.66 4.66 33 7Q32.34 4.66 30 4Q32.34 3.34 33 1Z'/%3E%3C/svg%3E");
+  --fl-bottom: 8%; --fl-x: 2%; --fl-w: 21%; --fl-h: 56%; --fl-pos: left bottom;
+  --fl-paint: linear-gradient(0deg, var(--t-line), var(--t-glint));
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M14.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M84.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M19.5 44a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M79.5 44a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M8 94.5L8.93 96L8 97.5L7.07 96Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M18 84.9L18.68 86L18 87.1L17.32 86Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M12 70.7L12.81 72L12 73.3L11.19 72Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M24 61L24.62 62L24 63L23.38 62Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M6 48.9L6.68 50L6 51.1L5.32 50Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M92 92.5L92.93 94L92 95.5L91.07 94Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M82 82.9L82.68 84L82 85.1L81.32 84Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M88 68.7L88.81 70L88 71.3L87.19 70Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M76 59L76.62 60L76 61L75.38 60Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M95 46.9L95.68 48L95 49.1L94.32 48Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M8.4 64a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M90.4 64a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M25.5 80a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M73.5 80a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M14 104.9L14.68 106L14 107.1L13.32 106Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M4 80.7L4.81 82L4 83.3L3.19 82Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M22 97.1L22.56 98L22 98.9L21.44 98Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M16 55.1L16.56 56L16 56.9L15.44 56Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M86 104.9L86.68 106L86 107.1L85.32 106Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M96 78.7L96.81 80L96 81.3L95.19 80Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M78 95.1L78.56 96L78 96.9L77.44 96Z'/%3E%3Cpath fill='%23000' fill-opacity='0.6' d='M84 55.1L84.56 56L84 56.9L83.44 56Z'/%3E%3C/svg%3E");
+  --sp-paint: linear-gradient(0deg, var(--t-line), var(--t-glint));
+}
+.dais[data-title-id="realm-champion"] .title-sparkles::before, .dais[data-title-id="realm-champion"] .title-sparkles::after { animation: title-twinkle 3.2s ease-in-out infinite, title-drift 6s ease-in-out infinite alternate; }
+.dais[data-title-id="realm-champion"] .title-halo::after { left: 22%; right: 22%; bottom: 5%; height: 14%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--t-glint) 42%, transparent), transparent); }
+.dais[data-title-id="realm-champion"] .title-frame::after {
+  left: 23%; right: 23%;
+  background: radial-gradient(circle at 50% 4px, var(--t-glint) 0 2.6px, transparent 3px),
+    linear-gradient(90deg, transparent, var(--t-line) 15% 85%, transparent) center 4px / 100% 1.5px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--t-glint) 70%, transparent) 25% 75%, transparent) center 8px / 100% 1px no-repeat;
+}
+
+/* ---- 6 · Leader: emerald war standards, rank chevrons, golden dust. ---- */
+.dais[data-title-id="grand-archon"] .title-halo::before,
+.dais[data-title-id="grand-archon"] .title-flourish::before,
+.dais[data-title-id="grand-archon"] .title-flourish::after,
+.dais[data-title-id="grand-archon"] .title-emblem::before,
+.dais[data-title-id="grand-archon"] .title-emblem::after,
+.dais[data-title-id="grand-archon"] .title-sparkles::before,
+.dais[data-title-id="grand-archon"] .title-sparkles::after,
+.dais[data-title-id="grand-archon"] .title-frame::after { content: ""; }
+.dais[data-title-id="grand-archon"] {
+  --aura: radial-gradient(44% 66% at 50% 76%, var(--t-soft), transparent 74%), radial-gradient(64% 30% at 50% 100%, color-mix(in srgb, var(--t-glint) 18%, transparent), transparent 70%);
+  --emblem-size: 11%; --emblem-top: 66%; --emblem-x: 6%;
+  --title-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 100' %3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M1.5 4h27'/%3E%3Cpath fill='%23000' d='M-0.1 4a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0 -3.8 0ZM26.3 4a1.9 1.9 0 1 0 3.8 0a1.9 1.9 0 1 0 -3.8 0Z'/%3E%3Cpath fill='%23000' fill-opacity='.26' d='M4 6h22v66l-11-9-11 9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round' d='M4 6h22v66l-11-9-11 9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' d='M7 9h16v57l-8-6.5-8 6.5z'/%3E%3Cpath fill='%23000' d='M15 16L16.23 19.3L19.76 19.45L17 21.65L17.94 25.05L15 23.1L12.06 25.05L13 21.65L10.24 19.45L13.77 19.3Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M9.5 35l5.5-3.5 5.5 3.5M9.5 42l5.5-3.5 5.5 3.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' d='M4 72v5M26 72v5M15 63v4'/%3E%3Cpath fill='%23000' d='M2.7 78.5a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0ZM24.7 78.5a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0ZM13.9 68.5a1.1 1.1 0 1 0 2.2 0a1.1 1.1 0 1 0 -2.2 0Z'/%3E%3C/svg%3E");
+  --fl-top: 0; --fl-x: 3%; --fl-w: 15%; --fl-h: 64%; --fl-pos: center top;
+  --fl-paint: linear-gradient(180deg, var(--t-glint) 0 7%, var(--t-line) 12%, color-mix(in srgb, var(--t-line) 70%, var(--t-glint)));
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M7 12.2Q7.4 13.6 8.8 14Q7.4 14.4 7 15.8Q6.6 14.4 5.2 14Q6.6 13.6 7 12.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M22 22.8Q22.26 23.74 23.2 24Q22.26 24.26 22 25.2Q21.74 24.26 20.8 24Q21.74 23.74 22 22.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M12 52.6Q12.31 53.69 13.4 54Q12.31 54.31 12 55.4Q11.69 54.31 10.6 54Q11.69 53.69 12 52.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M5 82.8Q5.26 83.74 6.2 84Q5.26 84.26 5 85.2Q4.74 84.26 3.8 84Q4.74 83.74 5 82.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M93 10.2Q93.4 11.6 94.8 12Q93.4 12.4 93 13.8Q92.6 12.4 91.2 12Q92.6 11.6 93 10.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M78 22.8Q78.26 23.74 79.2 24Q78.26 24.26 78 25.2Q77.74 24.26 76.8 24Q77.74 23.74 78 22.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M88 54.6Q88.31 55.69 89.4 56Q88.31 56.31 88 57.4Q87.69 56.31 86.6 56Q87.69 55.69 88 54.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M95 84.8Q95.26 85.74 96.2 86Q95.26 86.26 95 87.2Q94.74 86.26 93.8 86Q94.74 85.74 95 84.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M40 2.8Q40.26 3.74 41.2 4Q40.26 4.26 40 5.2Q39.74 4.26 38.8 4Q39.74 3.74 40 2.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M60 2.8Q60.26 3.74 61.2 4Q60.26 4.26 60 5.2Q59.74 4.26 58.8 4Q59.74 3.74 60 2.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M15.4 38a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M25.5 70a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M8.4 102a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M83.4 38a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M73.5 70a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M90.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M15 4.8Q15.26 5.74 16.2 6Q15.26 6.26 15 7.2Q14.74 6.26 13.8 6Q14.74 5.74 15 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M3 34.8Q3.26 35.74 4.2 36Q3.26 36.26 3 37.2Q2.74 36.26 1.8 36Q2.74 35.74 3 34.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M20 88.6Q20.31 89.69 21.4 90Q20.31 90.31 20 91.4Q19.69 90.31 18.6 90Q19.69 89.69 20 88.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M85 4.8Q85.26 5.74 86.2 6Q85.26 6.26 85 7.2Q84.74 6.26 83.8 6Q84.74 5.74 85 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M97 34.8Q97.26 35.74 98.2 36Q97.26 36.26 97 37.2Q96.74 36.26 95.8 36Q96.74 35.74 97 34.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M80 88.6Q80.31 89.69 81.4 90Q80.31 90.31 80 91.4Q79.69 90.31 78.6 90Q79.69 89.69 80 88.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M28 45Q28.22 45.78 29 46Q28.22 46.22 28 47Q27.78 46.22 27 46Q27.78 45.78 28 45Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M72 45Q72.22 45.78 73 46Q72.22 46.22 72 47Q71.78 46.22 71 46Q71.78 45.78 72 45Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M9.5 64a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M23.4 112a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M89.5 64a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M75.4 112a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+}
+.dais[data-title-id="grand-archon"] .title-sparkles::before, .dais[data-title-id="grand-archon"] .title-sparkles::after { opacity: .7; }
+.dais[data-title-id="grand-archon"] .title-frame::after {
+  left: 23%; right: 23%;
+  background: radial-gradient(circle at 36% 5px, var(--t-glint) 0 1.6px, transparent 2px), radial-gradient(circle at 50% 5px, var(--t-glint) 0 2.4px, transparent 2.8px), radial-gradient(circle at 64% 5px, var(--t-glint) 0 1.6px, transparent 2px),
+    linear-gradient(90deg, transparent, var(--t-line) 12% 88%, transparent) center 5px / 100% 1.5px no-repeat;
+}
+
+/* ---- 7 · King: violet throne arch, gilded filigree, crowns, gold dust. ---- */
+.dais[data-title-id="paragon-sovereign"] .title-halo::before,
+.dais[data-title-id="paragon-sovereign"] .title-halo::after,
+.dais[data-title-id="paragon-sovereign"] .title-orbit::before,
+.dais[data-title-id="paragon-sovereign"] .title-flourish::before,
+.dais[data-title-id="paragon-sovereign"] .title-flourish::after,
+.dais[data-title-id="paragon-sovereign"] .title-emblem::before,
+.dais[data-title-id="paragon-sovereign"] .title-emblem::after,
+.dais[data-title-id="paragon-sovereign"] .title-sparkles::before,
+.dais[data-title-id="paragon-sovereign"] .title-sparkles::after,
+.dais[data-title-id="paragon-sovereign"] .title-frame::after { content: ""; }
+.dais[data-title-id="paragon-sovereign"] {
+  --aura: radial-gradient(46% 70% at 50% 72%, var(--t-soft), transparent 74%), radial-gradient(30% 14% at 50% 4%, color-mix(in srgb, var(--t-glint) 22%, transparent), transparent 80%);
+  --emblem-size: 13%; --emblem-top: 42%; --emblem-x: 4%;
+  --title-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60' %3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 57V17Q3 3 17 3H57'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round' d='M9 50V21Q9 9 21 9H50'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M57 3c0 8-9 9-11 3-1.5-4 4-6 5-2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M3 57c8 0 9-9 3-11-4-1.5-6 4-2 5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M15 15c9-3 16 3 12 10-3 5-10 2-7-3'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round' d='M24 9c2 5 7 7 12 6M9 24c5 2 7 7 6 12'/%3E%3Cpath fill='%23000' d='M19 21a2 2 0 1 0 4 0a2 2 0 1 0 -4 0ZM36.7 6a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0ZM4.7 38a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='.9' d='M3 3c3 0 5 2 5 5-3 0-5-2-5-5z'/%3E%3C/svg%3E");
+  --fl-top: 1.5%; --fl-x: 1.5%; --fl-w: 24%; --fl-h: 30%; --fl-pos: left top;
+  --fl-paint: linear-gradient(135deg, var(--t-glint), color-mix(in srgb, var(--t-glint) 55%, var(--t-line)));
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M7 12.2Q7.4 13.6 8.8 14Q7.4 14.4 7 15.8Q6.6 14.4 5.2 14Q6.6 13.6 7 12.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M22 22.8Q22.26 23.74 23.2 24Q22.26 24.26 22 25.2Q21.74 24.26 20.8 24Q21.74 23.74 22 22.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M12 52.6Q12.31 53.69 13.4 54Q12.31 54.31 12 55.4Q11.69 54.31 10.6 54Q11.69 53.69 12 52.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M5 82.8Q5.26 83.74 6.2 84Q5.26 84.26 5 85.2Q4.74 84.26 3.8 84Q4.74 83.74 5 82.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M93 10.2Q93.4 11.6 94.8 12Q93.4 12.4 93 13.8Q92.6 12.4 91.2 12Q92.6 11.6 93 10.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M78 22.8Q78.26 23.74 79.2 24Q78.26 24.26 78 25.2Q77.74 24.26 76.8 24Q77.74 23.74 78 22.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M88 54.6Q88.31 55.69 89.4 56Q88.31 56.31 88 57.4Q87.69 56.31 86.6 56Q87.69 55.69 88 54.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M95 84.8Q95.26 85.74 96.2 86Q95.26 86.26 95 87.2Q94.74 86.26 93.8 86Q94.74 85.74 95 84.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M40 2.8Q40.26 3.74 41.2 4Q40.26 4.26 40 5.2Q39.74 4.26 38.8 4Q39.74 3.74 40 2.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M60 2.8Q60.26 3.74 61.2 4Q60.26 4.26 60 5.2Q59.74 4.26 58.8 4Q59.74 3.74 60 2.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M15.4 38a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M25.5 70a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M8.4 102a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M83.4 38a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M73.5 70a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M90.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M15 4.8Q15.26 5.74 16.2 6Q15.26 6.26 15 7.2Q14.74 6.26 13.8 6Q14.74 5.74 15 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M3 34.8Q3.26 35.74 4.2 36Q3.26 36.26 3 37.2Q2.74 36.26 1.8 36Q2.74 35.74 3 34.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M20 88.6Q20.31 89.69 21.4 90Q20.31 90.31 20 91.4Q19.69 90.31 18.6 90Q19.69 89.69 20 88.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M85 4.8Q85.26 5.74 86.2 6Q85.26 6.26 85 7.2Q84.74 6.26 83.8 6Q84.74 5.74 85 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M97 34.8Q97.26 35.74 98.2 36Q97.26 36.26 97 37.2Q96.74 36.26 95.8 36Q96.74 35.74 97 34.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M80 88.6Q80.31 89.69 81.4 90Q80.31 90.31 80 91.4Q79.69 90.31 78.6 90Q79.69 89.69 80 88.6Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M28 45Q28.22 45.78 29 46Q28.22 46.22 28 47Q27.78 46.22 27 46Q27.78 45.78 28 45Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M72 45Q72.22 45.78 73 46Q72.22 46.22 72 47Q71.78 46.22 71 46Q71.78 45.78 72 45Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M9.5 64a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M23.4 112a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M89.5 64a0.5 0.5 0 1 0 1 0a0.5 0.5 0 1 0 -1 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M75.4 112a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+}
+.dais[data-title-id="paragon-sovereign"] .title-orbit::before {
+  left: 21%; right: 21%; top: 5%; bottom: 12%;
+  border: 3px double color-mix(in srgb, var(--t-glint) 65%, transparent); border-bottom: 0;
+  border-radius: 50% 50% 0 0 / 24% 24% 0 0;
+  -webkit-mask: linear-gradient(#000 50%, transparent 94%); mask: linear-gradient(#000 50%, transparent 94%);
+}
+.dais[data-title-id="paragon-sovereign"] .title-halo::after { left: 20%; right: 20%; bottom: 5%; height: 14%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--t-glint) 40%, transparent), transparent); }
+.dais[data-title-id="paragon-sovereign"] .title-frame::after {
+  left: 20%; right: 20%; height: 14px;
+  background: radial-gradient(circle at 50% 6px, var(--t-main) 0 3px, var(--t-glint) 3px 4px, transparent 4.5px),
+    radial-gradient(circle at 34% 6px, var(--t-glint) 0 1.8px, transparent 2.2px), radial-gradient(circle at 66% 6px, var(--t-glint) 0 1.8px, transparent 2.2px),
+    linear-gradient(90deg, transparent, var(--t-glint) 10% 90%, transparent) center 3px / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent, var(--t-glint) 10% 90%, transparent) center 9px / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--t-glint) 60%, transparent));
+}
+
+/* ---- 8 · Master: arcane rays, floating letters, a floor sigil. ---- */
+.dais[data-title-id="grammar-master"] .title-halo::before,
+.dais[data-title-id="grammar-master"] .title-orbit::after,
+.dais[data-title-id="grammar-master"] .title-flourish::before,
+.dais[data-title-id="grammar-master"] .title-flourish::after,
+.dais[data-title-id="grammar-master"] .title-emblem::before,
+.dais[data-title-id="grammar-master"] .title-emblem::after,
+.dais[data-title-id="grammar-master"] .title-sparkles::before,
+.dais[data-title-id="grammar-master"] .title-sparkles::after,
+.dais[data-title-id="grammar-master"] .title-frame::before,
+.dais[data-title-id="grammar-master"] .title-frame::after { content: ""; }
+.dais[data-title-id="grammar-master"] {
+  --aura: radial-gradient(44% 72% at 50% 70%, var(--t-soft), transparent 74%), radial-gradient(60% 30% at 50% 100%, color-mix(in srgb, var(--t-glint) 22%, transparent), transparent 70%);
+  --emblem-size: 14%; --emblem-top: 9%; --emblem-x: 5%;
+  --title-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 100' %3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M3 20L10 2l7 18M5.8 13h8.4'/%3E%3Cpath fill='%23000' d='M10 26L11.24 28L10 30L8.76 28Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M4 52V34h6a4.5 4.5 0 0 1 0 9H4h7a4.5 4.5 0 0 1 0 9z'/%3E%3Cpath fill='%23000' d='M10 58L11.24 60L10 62L8.76 60Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M16 70a7 9 0 1 0 0 11'/%3E%3Cpath fill='%23000' d='M8.8 93a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0Z'/%3E%3C/svg%3E");
+  --title-flourish-r: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 100' %3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M5 7c0-5 10-5 10 1 0 4-5 4-5 8.5'/%3E%3Cpath fill='%23000' d='M8.6 21a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0ZM10 27L11.24 29L10 31L8.76 29Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M10 36v11'/%3E%3Cpath fill='%23000' d='M8.6 52a1.4 1.4 0 1 0 2.8 0a1.4 1.4 0 1 0 -2.8 0ZM10 59L11.24 61L10 63L8.76 61Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' d='M16 88c-3 3-6 4-9 3-4-2-3-6 0-8l4-3c3-2 3-6 0-7-3 0-4 3-2 6l8 10'/%3E%3C/svg%3E");
+  --fl-top: 34%; --fl-x: 6%; --fl-w: 9%; --fl-h: 44%; --fl-pos: center; --fl-flip: 1 1;
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M8.8 24a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M21.2 40a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M5 62a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M16.7 88a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M88.8 22a1.2 1.2 0 1 0 2.4 0a1.2 1.2 0 1 0 -2.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M77.2 40a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M93 64a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M80.7 86a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M14 48.7L14.81 50L14 51.3L13.19 50Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M86 48.7L86.81 50L86 51.3L85.19 50Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M30 7L30.62 8L30 9L29.38 8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M70 7L70.62 8L70 9L69.38 8Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M3.2 40a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M25 58a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M11.1 104a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M95.2 40a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M73 58a1 1 0 1 0 2 0a1 1 0 1 0 -2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M87.1 104a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M44.3 5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M54.3 5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M20 13L20.62 14L20 15L19.38 14Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M80 13L80.62 14L80 15L79.38 14Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M8 74.9L8.68 76L8 77.1L7.32 76Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M92 74.9L92.68 76L92 77.1L91.32 76Z'/%3E%3C/svg%3E");
+  --sp-paint: linear-gradient(180deg, var(--t-glint), var(--t-line));
+  --ray-color: color-mix(in srgb, var(--t-line) 50%, transparent); --ray-opacity: .4;
+}
+.dais[data-title-id="grammar-master"] .title-flourish::before, .dais[data-title-id="grammar-master"] .title-flourish::after { animation: title-drift 5s ease-in-out infinite alternate; }
+.dais[data-title-id="grammar-master"] .title-flourish::after { animation-delay: -2.5s; }
+.dais[data-title-id="grammar-master"] .title-sparkles::before, .dais[data-title-id="grammar-master"] .title-sparkles::after { animation: title-twinkle 4s ease-in-out infinite, title-drift 7s ease-in-out infinite alternate; }
+.dais[data-title-id="grammar-master"] .title-frame::after {
+  left: 24%; right: 24%;
+  background: radial-gradient(circle at 50% 5px, var(--t-glint) 0 2.2px, transparent 2.6px), linear-gradient(90deg, transparent, var(--t-line) 15% 85%, transparent) center 5px / 100% 1px no-repeat;
+}
+
+/* ---- 9 · Legend: prismatic halo, wings, trophies, a radiant plinth. ---- */
+.dais[data-title-id="class-legend"] .title-halo::before,
+.dais[data-title-id="class-legend"] .title-halo::after,
+.dais[data-title-id="class-legend"] .title-orbit::before,
+.dais[data-title-id="class-legend"] .title-orbit::after,
+.dais[data-title-id="class-legend"] .title-flourish::before,
+.dais[data-title-id="class-legend"] .title-flourish::after,
+.dais[data-title-id="class-legend"] .title-emblem::before,
+.dais[data-title-id="class-legend"] .title-emblem::after,
+.dais[data-title-id="class-legend"] .title-sparkles::before,
+.dais[data-title-id="class-legend"] .title-sparkles::after,
+.dais[data-title-id="class-legend"] .title-frame::before,
+.dais[data-title-id="class-legend"] .title-frame::after { content: ""; }
+.dais[data-title-id="class-legend"] {
+  --aura: radial-gradient(46% 74% at 50% 68%, var(--t-soft), transparent 74%), radial-gradient(64% 32% at 50% 100%, color-mix(in srgb, var(--t-glint) 26%, transparent), transparent 70%), radial-gradient(30% 14% at 50% 4%, color-mix(in srgb, var(--t-glint) 26%, transparent), transparent 80%);
+  --emblem-size: 11%; --emblem-top: 64%; --emblem-x: 7%;
+  --title-flourish: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 72' %3E%3Cpath fill='%23000' fill-opacity='.22' d='M58 28C46 10 24 2 3 4L16 13 4 17 19 24 8 29 23 34 14 41 29 43 22 52 36 51 32 61 44 56 45 67 52 52Q58 42 58 28Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M58 28C46 10 24 2 3 4L16 13 4 17 19 24 8 29 23 34 14 41 29 43 22 52 36 51 32 61 44 56 45 67 52 52Q58 42 58 28Z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round' d='M57 30L16 13M57 32L19 24M57 34L23 34M57 36L29 43M57 38L36 51M57 40L44 56'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' d='M56 29C46 16 30 9 12 8'/%3E%3Cpath fill='%23000' fill-opacity='.35' d='M58 28C50 17 38 12 26 11 36 17 46 22 57 32Z'/%3E%3C/svg%3E");
+  --fl-top: 10%; --fl-x: 0%; --fl-w: 34%; --fl-h: 48%; --fl-pos: right center;
+  --fl-paint: linear-gradient(160deg, color-mix(in srgb, var(--t-glint) 45%, #fff), var(--t-glint) 35%, var(--t-main) 95%);
+  --title-sparkles-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M8 13.4Q8.57 15.43 10.6 16Q8.57 16.57 8 18.6Q7.43 16.57 5.4 16Q7.43 15.43 8 13.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M20 4.2Q20.4 5.6 21.8 6Q20.4 6.4 20 7.8Q19.6 6.4 18.2 6Q19.6 5.6 20 4.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M26 28.6Q26.31 29.69 27.4 30Q26.31 30.31 26 31.4Q25.69 30.31 24.6 30Q25.69 29.69 26 28.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M5 38.2Q5.4 39.6 6.8 40Q5.4 40.4 5 41.8Q4.6 40.4 3.2 40Q4.6 39.6 5 38.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M16 59.8Q16.48 61.52 18.2 62Q16.48 62.48 16 64.2Q15.52 62.48 13.8 62Q15.52 61.52 16 59.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M4 86.4Q4.35 87.65 5.6 88Q4.35 88.35 4 89.6Q3.65 88.35 2.4 88Q3.65 87.65 4 86.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M26 94.2Q26.4 95.6 27.8 96Q26.4 96.4 26 97.8Q25.6 96.4 24.2 96Q25.6 95.6 26 94.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M92 13.4Q92.57 15.43 94.6 16Q92.57 16.57 92 18.6Q91.43 16.57 89.4 16Q91.43 15.43 92 13.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M80 4.2Q80.4 5.6 81.8 6Q80.4 6.4 80 7.8Q79.6 6.4 78.2 6Q79.6 5.6 80 4.2Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M74 28.6Q74.31 29.69 75.4 30Q74.31 30.31 74 31.4Q73.69 30.31 72.6 30Q73.69 29.69 74 28.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M95 38.2Q95.4 39.6 96.8 40Q95.4 40.4 95 41.8Q94.6 40.4 93.2 40Q94.6 39.6 95 38.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M84 59.8Q84.48 61.52 86.2 62Q84.48 62.48 84 64.2Q83.52 62.48 81.8 62Q83.52 61.52 84 59.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.8' d='M96 86.4Q96.35 87.65 97.6 88Q96.35 88.35 96 89.6Q95.65 88.35 94.4 88Q95.65 87.65 96 86.4Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M74 94.2Q74.4 95.6 75.8 96Q74.4 96.4 74 97.8Q73.6 96.4 72.2 96Q73.6 95.6 74 94.2Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M50 1Q50.44 2.56 52 3Q50.44 3.44 50 5Q49.56 3.44 48 3Q49.56 2.56 50 1Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M12.3 28a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M23.4 48a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M8.3 74a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M19.3 108a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M86.3 28a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M75.4 48a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M90.3 74a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M79.3 108a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M35.4 4a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M63.4 4a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3C/svg%3E");
+  --title-sparkles-b: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath fill='%23000' fill-opacity='1' d='M14 26.6Q14.31 27.69 15.4 28Q14.31 28.31 14 29.4Q13.69 28.31 12.6 28Q13.69 27.69 14 26.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M24 46.8Q24.26 47.74 25.2 48Q24.26 48.26 24 49.2Q23.74 48.26 22.8 48Q23.74 47.74 24 46.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M10 74.4Q10.35 75.65 11.6 76Q10.35 76.35 10 77.6Q9.65 76.35 8.4 76Q9.65 75.65 10 74.4Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M18 108.6Q18.31 109.69 19.4 110Q18.31 110.31 18 111.4Q17.69 110.31 16.6 110Q17.69 109.69 18 108.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M86 26.6Q86.31 27.69 87.4 28Q86.31 28.31 86 29.4Q85.69 28.31 84.6 28Q85.69 27.69 86 26.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M76 46.8Q76.26 47.74 77.2 48Q76.26 48.26 76 49.2Q75.74 48.26 74.8 48Q75.74 47.74 76 46.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M90 74.4Q90.35 75.65 91.6 76Q90.35 76.35 90 77.6Q89.65 76.35 88.4 76Q89.65 75.65 90 74.4Z'/%3E%3Cpath fill='%23000' fill-opacity='0.7' d='M82 108.6Q82.31 109.69 83.4 110Q82.31 110.31 82 111.4Q81.69 110.31 80.6 110Q81.69 109.69 82 108.6Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M35 4.8Q35.26 5.74 36.2 6Q35.26 6.26 35 7.2Q34.74 6.26 33.8 6Q34.74 5.74 35 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M65 4.8Q65.26 5.74 66.2 6Q65.26 6.26 65 7.2Q64.74 6.26 63.8 6Q64.74 5.74 65 4.8Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M3.4 22a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M27.4 70a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M5.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M95.4 22a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M71.4 70a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='0.9' d='M93.4 104a0.6 0.6 0 1 0 1.2 0a0.6 0.6 0 1 0 -1.2 0Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M22 17.1L22.56 18L22 18.9L21.44 18Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M78 17.1L78.56 18L78 18.9L77.44 18Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M3 57.1L3.56 58L3 58.9L2.44 58Z'/%3E%3Cpath fill='%23000' fill-opacity='1' d='M97 57.1L97.56 58L97 58.9L96.44 58Z'/%3E%3C/svg%3E");
+  --sp-paint: linear-gradient(180deg, var(--t-glint), var(--t-main));
+  --ray-color: color-mix(in srgb, var(--t-glint) 55%, transparent); --ray-opacity: .5;
+}
+.dais[data-title-id="class-legend"] .title-halo::after {
+  left: 50%; top: 42%; width: 120%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff5aa5, #ffd36b, #7ee8ff, #b58cff, #ff5aa5);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 30%, #000 36%, transparent 56%);
+  mask: radial-gradient(circle closest-side, transparent 30%, #000 36%, transparent 56%);
+  opacity: .3; animation: title-spin 60s linear infinite reverse;
+}
+.dais[data-title-id="class-legend"] .title-orbit::before {
+  left: 20%; right: 20%; top: 3%; bottom: 9%; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--t-glint) 45%, transparent);
+  box-shadow: inset 0 0 26px color-mix(in srgb, var(--t-glint) 32%, transparent), 0 0 22px color-mix(in srgb, var(--t-main) 22%, transparent);
+}
+.dais[data-title-id="class-legend"] .title-frame::after {
+  left: 21%; right: 21%; bottom: 11%; height: 6px; border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--t-main) 18%, var(--t-glint) 50%, var(--t-main) 82%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--t-main) 55%, transparent), 0 0 30px color-mix(in srgb, var(--t-glint) 30%, transparent);
+}
 
 /* The character must always sit above its title backdrop. */
 .dais-lg canvas { z-index: 2; }
