@@ -32,6 +32,8 @@ test('the live base characters are the delivered stylized catalogue', () => {
   assert.equal(manifest.parts['hair:spiky-short'] || 0, 0);
   assert.equal(manifest.parts['outfit:grand-archmage'] || 0, 0);
   assert.equal(manifest.parts['weapon:lore-lantern'] || 0, 0);
+  for (const id of ['templar-dagger', 'medieval-sword', 'metal-wand', 'japanese-blade', 'wooden-staff', 'epic-sword']) assert.ok(manifest.parts[`weapon:${id}`] > 0, id);
+  for (const id of ['wooden-shield', 'knight-shield', 'hero-shield']) assert.ok(manifest.parts[`shield:${id}`] > 0, id);
 });
 
 test('baked fallback portraits match the live base so the old base never flashes', () => {

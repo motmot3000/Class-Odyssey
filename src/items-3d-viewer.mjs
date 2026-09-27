@@ -218,7 +218,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       }
     } else if (value === 'item' || value === 'head') {
       const bounds = new THREE.Box3();
-      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon', 'pet'];
+      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon', 'shield', 'pet'];
       model.traverseVisible(obj => {
         if (!slots.includes(obj.userData.shop_slot)) return;
         if (value === 'head' && obj.userData.head_bounds_min) {

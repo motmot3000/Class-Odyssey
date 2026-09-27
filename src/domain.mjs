@@ -84,11 +84,23 @@ export const HATS = [
 const MOVED_TO_ACCESSORIES = new Set(["explorer-cap", "sunglasses"]);
 const RENAMED_ITEMS = { "celestial-crown": "gold-crown" };
 
-/* The Items category (weapons, shields, books) is withdrawn. `no-weapon`
- * remains as the internal empty-hands state for saved pupils and exports; it is
- * never offered as a shop tab. */
+/* Blades, wands and staves are held in the right fist, shields on the left
+ * arm: both can be worn together. Ordered by level; Epic Sword is the rarest. */
 export const WEAPONS = [
-  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." }
+  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." },
+  { id: "templar-dagger", name: "Templar Dagger", minLevel: 3, price: 30, description: "A broad dagger with a red cross pommel." },
+  { id: "medieval-sword", name: "Knight's Sword", minLevel: 4, price: 45, description: "A long steel sword with a corded grip." },
+  { id: "metal-wand", name: "Silver Wand", minLevel: 5, price: 55, description: "A short silver wand with an emerald between two flame horns." },
+  { id: "japanese-blade", name: "Katana", minLevel: 7, price: 75, description: "A curved katana with a round tsuba and a silk-wrapped hilt." },
+  { id: "wooden-staff", name: "Mage Staff", minLevel: 8, price: 90, description: "A tall oak staff cradling a glowing stone." },
+  { id: "epic-sword", name: "Epic Sword", minLevel: 10, price: 120, description: "A legendary blade with a crescent guard and glowing crystals." }
+];
+
+export const SHIELDS = [
+  { id: "no-shield", name: "No Shield", minLevel: 1, price: 0, description: "A free left hand." },
+  { id: "wooden-shield", name: "Wooden Shield", minLevel: 2, price: 20, description: "A round plank shield with an iron boss." },
+  { id: "knight-shield", name: "Knight's Shield", minLevel: 6, price: 60, description: "A domed bronze shield with a braided gold rim." },
+  { id: "hero-shield", name: "Hero Shield", minLevel: 10, price: 100, description: "A blue heater shield bearing a red phoenix." }
 ];
 
 /* Short and Long are the delivered cuts, free and shared by both characters:
@@ -156,6 +168,7 @@ export const SHOP_ITEMS = [
   ...SKINS.map((item) => ({ ...item, type: "outfit" })),
   ...HATS.map((item) => ({ ...item, type: "hat" })),
   ...WEAPONS.map((item) => ({ ...item, type: "weapon" })),
+  ...SHIELDS.map((item) => ({ ...item, type: "shield" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
   ...EYE_COLORS.map((item) => ({ ...item, type: "eyeColor" })),
@@ -695,6 +708,7 @@ function normalizePupil(source) {
   const title = TITLES.some((item) => item.id === pupil.title) ? pupil.title : "rookie";
   const hat = HATS.some((item) => item.id === pupil.hat) ? pupil.hat : "no-hat";
   const weapon = WEAPONS.some((item) => item.id === pupil.weapon) ? pupil.weapon : "no-weapon";
+  const shield = SHIELDS.some((item) => item.id === pupil.shield) ? pupil.shield : "no-shield";
   const gender = pupil.gender === "girl" ? "girl" : "boy";
   const skinTone = SKIN_TONES.some((tone) => tone.id === pupil.skinTone) ? pupil.skinTone : "light";
   const defaultHair = gender === "girl" ? "long" : "short";
@@ -710,6 +724,7 @@ function normalizePupil(source) {
     title,
     hat,
     weapon,
+    shield,
     hair,
     hairColor,
     eyeColor,
@@ -742,6 +757,7 @@ function normalizePupil(source) {
     title,
     hat: ownedItems.includes(hat) ? hat : "no-hat",
     weapon: ownedItems.includes(weapon) ? weapon : "no-weapon",
+    shield: ownedItems.includes(shield) ? shield : "no-shield",
     gender,
     skinTone: ownedItems.includes(skinTone) ? skinTone : "light",
     face: "smile",

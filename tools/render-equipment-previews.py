@@ -27,6 +27,11 @@ scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Medium High Contrast'
 camera.data.type = 'ORTHO'
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj.get('shop_slot')]
+def open_hands(obj):
+    """Portraits hold nothing: open hands and hanging arms, never the fists."""
+    return obj.get('part') != 'fist' and obj.get('arm_pose') in (None, 'straight')
+
+
 def manifest_revision(path):
     return json.loads(path.read_text())['appearanceRevision']
 
@@ -90,9 +95,9 @@ def render(path):
     print('PREVIEW_READY', path, flush=True)
 
 
-ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','hair','accessory']})
+ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','shield','hair','accessory']})
 for slot, item in ([] if PORTRAITS_ONLY else ids):
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open')
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open' and obj.get('arm_pose') in (None, 'straight'))
     if not selected: raise ValueError(f'No meshes for {item}')
     assert all(obj.get('shop_slot') not in ['core','persona'] for obj in selected)
     frame(selected, 320, 320, 'ear' if item in ('elf-ears', 'pierced-ears') else None)
@@ -101,7 +106,7 @@ for slot, item in ([] if PORTRAITS_ONLY else ids):
 
 for persona, hair in [('male','short'),('female','long')]:
     defaults = {'core':'base','persona':persona,'outfit':'starter','hair':hair}
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == persona and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == persona and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open' and open_hands(obj))
     frame(selected,768,1152,front=True)
     render(f'portraits/{persona}.png')
     report['portraits'][persona] = {'file':f'portraits/{persona}.webp','pose':'base-v2-arms-lowered','view':'front','width':768,'height':1152,'hair':hair,
@@ -115,14 +120,15 @@ for persona, hair in [('male','short'),('female','long')]:
 for persona in ([] if PORTRAITS_ONLY else ['male','female']):
     for outfit in ['story-keeper','honor-knight','realm-sovereign']:
         defaults={'core':'base','persona':persona,'outfit':outfit,'hair':'short' if persona=='male' else 'long'}
-        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open')
+        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open' and open_hands(obj))
         frame(selected,600,900)
         render(f'review/{persona}-{outfit}.png')
 
-# Refresh the catalogue's fallback render with the current fitted equipment.
+# Refresh the catalogue's fallback render with the current fitted equipment:
+# sword and shield in hand, so the fists replace the open hands.
 if not PORTRAITS_ONLY:
-    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','accessory':'explorer-cap','weapon':'lore-lantern'}
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
+    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','accessory':'explorer-cap','weapon':'medieval-sword','shield':'wooden-shield'}
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open' and obj.get('part') != 'hand' and obj.get('arm_pose') in (None, 'ready'))
     frame(selected,600,900)
     scene.render.filepath = str(ROOT/'assets/items-3d/preview.png')
     bpy.ops.render.render(write_still=True)
