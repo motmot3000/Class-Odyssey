@@ -43,10 +43,10 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
   for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 21);
+  assert.equal(modeledItemIds().length, 30);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
-    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair', 'accessory'].includes(node.extras.shop_slot));
+    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'shield', 'hair', 'accessory'].includes(node.extras.shop_slot));
     assert.ok(['male','female'].includes(node.extras.fit_persona), `Missing body fit: ${node.name}`);
   }
   for (const id of ['straight-short', 'spiky-short', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
@@ -84,7 +84,9 @@ test('all equipment retains human-scale world bounds, including the transformed 
         for (const y of [accessor.min[1], accessor.max[1]]) {
           for (const z of [accessor.min[2], accessor.max[2]]) {
             const p = new Vector3(x, y, z).applyMatrix4(world);
-            assert.ok(Math.abs(p.x) < 1 && p.y > -.03 && p.y < 2.22 && Math.abs(p.z) < .7, `${node.name} escaped fitted bounds: ${p.toArray()}`);
+            // A weapon held ready points forward: the longest blade reaches ~.81 m.
+            const reach = node.extras?.shop_slot === 'weapon' ? .9 : .7;
+            assert.ok(Math.abs(p.x) < 1 && p.y > -.03 && p.y < 2.22 && Math.abs(p.z) < reach, `${node.name} escaped fitted bounds: ${p.toArray()}`);
           }
         }
       }
@@ -143,6 +145,42 @@ test('the shared haircuts ship while Braids and Royal Hair stay out', () => {
   }
 });
 
+test('a held item closes its hand: open hands and fists swap per side', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      const hands = (look, part) => parts.filter(data => ['hand', 'fist'].includes(data.part) && visiblePart(data, { ...DEFAULT_LOOK, persona, ...look }))
+        .filter(data => data.part === part).map(data => data.hand_side).sort();
+      assert.deepEqual(hands({}, 'hand'), ['left', 'right']);
+      assert.deepEqual(hands({}, 'fist'), []);
+      assert.deepEqual(hands({ weapon: 'epic-sword' }, 'fist'), ['right']);
+      assert.deepEqual(hands({ weapon: 'epic-sword' }, 'hand'), ['left']);
+      assert.deepEqual(hands({ weapon: 'templar-dagger', shield: 'hero-shield' }, 'fist'), ['left', 'right']);
+      assert.deepEqual(hands({ shield: 'wooden-shield' }, 'hand'), ['right']);
+      const held = parts.filter(data => visiblePart(data, { ...DEFAULT_LOOK, persona, weapon: 'medieval-sword', shield: 'knight-shield' }) && ['weapon', 'shield'].includes(data.shop_slot));
+      assert.deepEqual(held.map(data => data.shop_id).sort(), ['knight-shield', 'medieval-sword']);
+    }
+  }
+});
+
+test('the weapon arm bends as its weapon asks: ready for blades and wands, level for a staff', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      const arms = (weapon) => [...new Set(parts.filter(data => data.arm_pose && visiblePart(data, { ...DEFAULT_LOOK, persona, weapon }))
+        .map(data => data.arm_pose))];
+      assert.deepEqual(arms('no-weapon'), ['straight']);
+      assert.deepEqual(arms('japanese-blade'), ['ready']);
+      assert.deepEqual(arms('metal-wand'), ['ready']);
+      assert.deepEqual(arms('wooden-staff'), ['staff']);
+      // Each weapon rides the fist of the bend it asks for.
+      for (const data of parts.filter(data => data.shop_slot === 'weapon' && data.fit_persona === persona)) {
+        assert.equal(data.held_arm_pose, data.shop_id === 'wooden-staff' ? 'staff' : 'ready', data.shop_id);
+      }
+    }
+  }
+});
+
 test('items-only export excludes the welded body but keeps the equipped models', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
   for (const preset of Object.values(PRESETS)) {
@@ -182,7 +220,11 @@ test('the shipped bodies match the validated athletic silhouettes exactly', () =
       const points = new Set();
       worldMeshes(gltf, (node, primitive, world, data) => {
         const deliveredEars = fitted && data.part === 'ears' && data.ear_style === 'elf';
-        if (data.part !== 'skin' && !deliveredEars) return;
+        // The open hands ship apart too (a fist replaces them when holding).
+        const openHands = fitted && data.part === 'hand';
+        if (data.part !== 'skin' && !deliveredEars && !openHands) return;
+        // The weapon forearm also ships bent up; the hanging one is the body.
+        if (fitted && data.arm_pose && data.arm_pose !== 'straight') return;
         if (fitted && data.fit_persona !== persona) return;
         for (const p of positions(gltf, gltf.accessors[primitive.attributes.POSITION], world)) {
           points.add(p.toArray().map(v => Math.round(v*10000)).join(','));
@@ -244,7 +286,7 @@ test('the shipped catalogue ships the supplied haircuts and a plain starter outf
 test('head and held item mounts match each character’s anatomical anchors', () => {
   const contract = JSON.parse(readFileSync(new URL('../assets/items-3d/sources/manifest.json', import.meta.url)));
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
-  for (const part of parts.filter(data => ['hair','hat','weapon'].includes(data.shop_slot))) {
+  for (const part of parts.filter(data => ['hair','hat','weapon','shield'].includes(data.shop_slot))) {
     const gender = part.fit_persona === 'male' ? 'boy' : 'girl';
     const expected = contract.characters[gender].anchors[part.attachment]?.world;
     assert.ok(expected, `Unknown mount ${part.attachment}`);
@@ -253,6 +295,8 @@ test('head and held item mounts match each character’s anatomical anchors', ()
     if (['hair','hat'].includes(part.shop_slot)) assert.equal(part.attachment, 'hat_seat');
     if (part.shop_id === 'pencil-sword') assert.equal(part.attachment, 'grip_right');
     if (part.shop_id === 'star-shield') assert.equal(part.attachment, 'wrist_left');
+    if (part.shop_slot === 'weapon') assert.equal(part.attachment, 'grip_right');
+    if (part.shop_slot === 'shield') assert.equal(part.attachment, 'grip_left');
   }
 });
 

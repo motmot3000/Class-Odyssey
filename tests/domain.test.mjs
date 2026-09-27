@@ -273,15 +273,25 @@ test("shop covers all categories with regular level unlocks up to level 10", () 
     assert.ok(items.length > 0);
     assert.ok(items.some((item) => item.minLevel >= 6));
   }
-  // Faces are withdrawn; Items only keeps the empty-hands state. Hair unlocks
-  // run up to the level-6 Spiky and Bun; skin tones stop at the first unlocks.
-  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
+  // Faces are withdrawn. Blades (right hand) and shields (left arm) climb to
+  // level 10. Hair unlocks run up to the level-6 Spiky and Bun; skin tones
+  // stop at the first unlocks.
+  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon", "templar-dagger", "medieval-sword", "metal-wand", "japanese-blade", "wooden-staff", "epic-sword"]);
+  assert.deepEqual(getShopItems("shield").map((item) => item.id), ["no-shield", "wooden-shield", "knight-shield", "hero-shield"]);
   assert.deepEqual(getShopItems("hair").map((item) => item.id), ["short", "long", "medium-cut", "bald", "curly", "spiky", "bun"]);
   assert.equal(getShopItems("tone").length, 5);
 });
 
 test("items and titles follow their intended progression", () => {
-  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon"]);
+  assert.deepEqual(getShopItems("weapon").map((item) => item.id), ["no-weapon", "templar-dagger", "medieval-sword", "metal-wand", "japanese-blade", "wooden-staff", "epic-sword"]);
+  // Epic Sword is the dearest, highest-level blade; the Hero Shield tops shields.
+  const blades = getShopItems("weapon");
+  assert.equal(Math.max(...blades.map((item) => item.price)), getShopItem("epic-sword").price);
+  assert.equal(getShopItem("epic-sword").minLevel, 10);
+  assert.equal(getShopItem("hero-shield").minLevel, 10);
+  for (const list of [blades, getShopItems("shield")]) {
+    for (let i = 1; i < list.length; i += 1) assert.ok(list[i].minLevel >= list[i - 1].minLevel && list[i].price > list[i - 1].price);
+  }
   assert.deepEqual(
     getShopItems("outfit").map((item) => item.id),
     ["starter", "vocab-ranger", "grammar-mage", "story-keeper", "honor-knight"]

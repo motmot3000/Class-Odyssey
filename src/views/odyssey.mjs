@@ -2,7 +2,7 @@
  * the domain enforces purchases, and the runtime owns the shared 3D canvas.
  */
 
-import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, SKIN_TONES, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, SKIN_TONES, WEAPONS, SHIELDS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
@@ -46,7 +46,7 @@ const ico = (name, cls = "") => {
 export const ODYSSEY_ANGLES = ["front", "quarter", "back", "head", "item"];
 
 // Map shop categories to persisted cosmetic fields (outfit is stored as skin).
-export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", hair: "hair", hairColor: "hairColor", eyeColor: "eyeColor", accessory: "accessory" };
+export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", shield: "shield", hair: "hair", hairColor: "hairColor", eyeColor: "eyeColor", accessory: "accessory" };
 
 // Portraits and the workshop must derive exactly the same equipped look.
 export function gameLook(pupil, draft = null) {
@@ -80,6 +80,7 @@ export function cosmeticChangesFromDraft(draft = {}) {
     ...(draft.skin ? { outfit: draft.skin } : {}),
     ...(draft.hat ? { hat: draft.hat } : {}),
     ...(draft.weapon ? { weapon: draft.weapon } : {}),
+    ...(draft.shield ? { shield: draft.shield } : {}),
     ...(draft.hair ? { hair: draft.hair } : {}),
     ...(draft.hairColor ? { hairColor: draft.hairColor } : {}),
     ...(draft.eyeColor ? { eyeColor: draft.eyeColor } : {}),
@@ -367,6 +368,8 @@ export function renderOdysseyPersonalize(pupil, ui) {
           ${section(t("app.gear.hairColor"), HAIR_COLORS, "hairColor")}
           ${section(t("app.gear.eyeColor"), EYE_COLORS, "eyeColor")}
           ${section(t("app.gear.accessory"), ACCESSORIES, "accessory")}
+          ${section(t("app.gear.weapon"), WEAPONS, "weapon")}
+          ${section(t("app.gear.shield"), SHIELDS, "shield")}
           ${section(t("app.gear.skin"), SKIN_TONES, "skinTone")}
 
           <div class="atelier-actions">
