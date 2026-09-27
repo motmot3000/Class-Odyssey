@@ -5,11 +5,11 @@
 ### Base de personnage live
 
 Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
-`assets/character-stylized/catalogue.glb` (`stylized-v8`) via
+`assets/character-stylized/catalogue.glb` (`stylized-v9`) via
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v13-ear-outfits`) reste la référence de la chaîne d'outils et des
+(`catalogue-v13-ear-outfits-headwear-held-items`) reste la référence de la chaîne d'outils et des
 tests.
 
 Le **catalogue de cosmétiques est réduit** :
@@ -24,8 +24,13 @@ Le **catalogue de cosmétiques est réduit** :
   pantalon livré ; toutes les autres sont des tenues complètes (`coversLegs`)
   qui apportent leurs propres jambes et masquent le pantalon. Les bottes
   livrées restent identiques pour toutes les tenues.
-- **Objets** : catégorie retirée (armes, boucliers, livre, lanterne). L'état
-  interne `no-weapon` subsiste pour les sauvegardes, sans onglet.
+- **Armes** (main droite) : Dague templière (niveau 3, 30), Épée de chevalier
+  (niveau 4, 45), Baguette d'argent (niveau 5, 55), Katana (`japanese-blade`,
+  niveau 7, 75), Bâton de mage (niveau 8, 90) et Épée épique (niveau 10, 120,
+  la plus chère). **Boucliers** (bras gauche) : Bouclier de bois (niveau 2, 20),
+  Bouclier du chevalier (niveau 6, 60) et Bouclier du héros (niveau 10, 100,
+  modèle fourni, blason repris tel quel). Les deux se portent ensemble ; `no-weapon` / `no-shield`
+  sont les mains libres. Voir « Objets tenus » plus bas.
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
   personnages — un garçon démarre en Short (coupe courte sculptée), une fille en
   Long. **Chauve** (niveau 2, 20), **Tresse** (niveau 3, 30, coupe portée avec
@@ -229,10 +234,16 @@ Les sélections utilisent directement les identifiants et les prix de
 
 - **5 tenues** : Scout, Ranger, Mage, Warrior, Knight. Archmage et King sont
   retirés ; le **titre** King reste.
-- **9 couvre-chefs** : No Hat, Goggles, Sunglasses, Beret, Wizard Hat, King’s
-  Crown, Helmet, Classy Hat, Royal Crown.
-- **Objets** : catégorie retirée ; Empty Hands reste l’état interne
-  (`no-weapon`) sans onglet.
+- **6 couvre-chefs** : No Hat, Beret (niveau 2), Wizard Hat (3), Classy Hat
+  (5), Helmet (7) et King’s Crown (10, 100 pièces). La Royal Crown est retirée :
+  une sauvegarde qui la possédait reçoit la King’s Crown.
+- **Accessoires** (un à la fois) : Goggles (niveau 1) et Sunglasses (2), qui
+  quittent les couvre-chefs, puis Elf Ears (4) et Pierced Ears (5). Une
+  sauvegarde qui portait des lunettes en chapeau les porte en accessoire.
+- **6 armes et 3 boucliers** : Dague templière (3), Épée de chevalier (4),
+  Baguette d’argent (5), Katana (7), Bâton de mage (8), Épée épique (10) ;
+  Bouclier de bois (2), Bouclier du chevalier (6), Bouclier du héros (10).
+  Empty Hands (`no-weapon`) et No Shield (`no-shield`) sont gratuits.
 - **6 coiffures** : Short Hair (livrée, gratuite, par défaut des garçons) et
   Long Hair (livrée, gratuite, par défaut des filles), Bald (niveau 2, 20),
   Braid (niveau 3, 30), Medium Cut (niveau 3, 30), Spiky Hair (niveau 6, 50) et
@@ -282,9 +293,18 @@ entre les mèches restent visibles en très gros plan.
 `measure-hair-fit.py` **cumule désormais tous les maillages d’une coupe** pour
 qu’aucune pièce ne masque le clipping d’une autre.
 
-Wizard Hat et Classy Hat ont des bords annulaires
-avec une véritable ouverture ; le béret est ajusté et
-incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`**
+Couvre-chefs et lunettes sont modélisés dans `tools/blender/headwear.py`
+(surfaces paramétriques et profils balayés, pièces fusionnées par matière).
+Wizard Hat (pointe pliée, plis, étoiles brodées, boucle sertie) et Classy Hat
+(bord relevé sur les côtés, calotte cintrée, gros-grain et nœud) gardent
+l’ouverture annulaire d’origine ; le béret a un liseré de cuir, une broche et
+deux plumes. La King’s Crown porte fleurs de lys, pointes à perles, bandeau
+perlé et joyaux sertis. Le Helmet est un casque à nasal : calotte à crête,
+bandes et bandeau rivetés, garde-joues, couvre-nuque à deux lames et cornes
+dans des douilles en laiton. Les lunettes sont dessinées sur le visage mesuré
+de Noa puis portées par l’assise du chapeau : elles tiennent sous chaque
+chapeau ; seules les Goggles, posées sur le front, sont masquées par le
+bandeau du Helmet. **La couronne utilise `crowned`**
 pour chaque coupe : ajustement radial progressif au niveau du bandeau
 métallique, en n’écrasant que le volume du crâne et jamais la frange, ce qui
 évite de la faire traverser le visage.
@@ -459,3 +479,38 @@ Captures fournies dans `/tmp/opencode/` : `equipment-desktop-final.png`,
 Le snapshot source V1 était `assets/items-3d/reference.glb`, remplacé comme
 entrée du constructeur par les deux fichiers `sources/*-medium.glb`.
 `preview.png` reste un rendu Blender réel avec son sidecar `preview.png.json`.
+
+## Objets tenus (armes et boucliers)
+
+Les objets sont redessinés procéduralement dans `tools/blender/held_items.py`
+(palette mate du jeu : acier satiné, or brossé, cuir, émail) ; les modèles
+fournis n'ont servi que de référence de silhouette, sauf le **plateau du
+bouclier du héros** : c'est le modèle fourni lui-même
+(`assets/items-3d/sources/held/hero-shield.glb`, `held_items.SOURCED`), sa
+texture ramenée à des aplats propres (bleu, rouge, argent, or, bois) pour
+garder le blason exact. Poignée et sangle restent celles du jeu. `hold_items()`
+(`tools/build-items-3d.py`) intervient en dernier, sur la peau finie :
+
+- la main ouverte de chaque côté est détachée de la peau le long de ses arêtes
+  (aucun sommet ajouté : peau + mains = surface livrée) et livrée en pièce
+  `persona` (`part: hand`, `hand_side`) ; l'avant-bras est bouché sous la manche ;
+- un **poing fermé** sculpté en SDF (`tools/blender/fist_model.py`, OpenVDB)
+  pousse de l'avant-bras autour d'une poignée standard de 2,7 cm
+  (`GRIP_RADIUS`) ; il prend la matière et un texel de peau du poignet, donc
+  le teint du viewer ;
+- **bras armé plié** (`tools/blender/arm_pose.py`) : l'avant-bras droit — peau
+  et manche de chaque tenue — est découpé le long de ses arêtes et livré deux
+  fois, pendant (`arm_pose: straight`) et plié au coude à 78° (`arm_pose:
+  bent`), visible tant qu'une arme est tenue. Une manche est retenue si elle
+  entoure le bras et recouvre la peau de l'avant-bras plutôt que celle du
+  corps ; les découpes que le bras pendant cachait sont rebouchées et le
+  pantalon est rentré sous les robes à cet endroit ;
+- chaque arme est posée sur `grip_frame('weapon') @ BLADE_TO_GRIP` du poing
+  droit (poing du bras plié, pouce en haut : lame debout, plat vers la caméra ;
+  le bâton repose au sol), chaque
+  bouclier sur `grip_frame('shield') @ SHIELD_TO_GRIP` du poing gauche (les
+  écus du chevalier et du héros ajoutent une sangle d'avant-bras).
+
+`visiblePart` échange main ouverte et poing selon `look.weapon` /
+`look.shield`. Tout nouvel objet tenu réutilise le même poing : il suffit de
+placer sa poignée sur l'axe `+Z` de l'espace lame.

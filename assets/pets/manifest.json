@@ -1,0 +1,122 @@
+{
+  "revision": "pets-v9",
+  "units": "meters",
+  "up": "+Y in glTF",
+  "forward": "+Z in glTF",
+  "items": {
+    "fripouille": {
+      "sourceArchive": "3d-modelling-my-cat-fripouille.zip",
+      "sourceSha256": "27f98f89016b848b699daa7a8c6fd4ab42acb16da008a79ff4ad2971b57ba52f",
+      "triangles": 9224,
+      "meshes": 5,
+      "heightMeters": 0.44,
+      "bounds": [
+        [
+          0.2538605332374573,
+          -0.38719168305397034,
+          0.0
+        ],
+        [
+          0.4261394739151001,
+          0.44719168543815613,
+          0.4399999976158142
+        ]
+      ],
+      "validation": "PASS",
+      "adaptation": "Original coat and anatomy; matte painted materials and a plain fitted woven scarf; static supplied pose."
+    },
+    "ranger-dog": {
+      "sourceArchive": "dog.zip",
+      "sourceSha256": "79056ddaa58deacf8565a214d565d00bd96b06321ea176e078883cd23df12276",
+      "triangles": 18815,
+      "meshes": 3,
+      "heightMeters": 0.62,
+      "bounds": [
+        [
+          0.26762890815734863,
+          -0.5349227786064148,
+          -5.212646283325739e-05
+        ],
+        [
+          0.5323711037635803,
+          0.5948795080184937,
+          0.6200786232948303
+        ]
+      ],
+      "validation": "PASS",
+      "adaptation": "Original coat and anatomy; matte painted materials and a plain fitted woven scarf; static supplied pose."
+    },
+    "starry-dragon": {
+      "sourceArchive": "starry-skies-dragon.zip",
+      "sourceSha256": "50d0ada59eeb7fd54422ce36e3bb6a7653b00f0297434d175535815bfe20b76a",
+      "triangles": 21352,
+      "meshes": 16,
+      "heightMeters": 0.7,
+      "bounds": [
+        [
+          0.23999997973442078,
+          -0.4330109655857086,
+          0.0
+        ],
+        [
+          1.2724156379699707,
+          0.4330109655857086,
+          0.6999999284744263
+        ]
+      ],
+      "validation": "PASS",
+      "adaptation": "Original turquoise, coral and gold body texture; game-style face: large round gold eyes with dark rim, soft oval pupils, catchlights, thin dark eyelid outline and a low gold crest. Original wings, horns and tail plume retained.",
+      "headRevision": "friendly-epic-v2"
+    },
+    "meadow-rabbit": {
+      "sourceArchive": "descriptive-text-of-rabbit (1).zip",
+      "sourceSha256": "caf011b83ba2468246e59b38f8e0e80ae460e9cc4e3559f537fc13b0b0d8d0f3",
+      "triangles": 13048,
+      "meshes": 1,
+      "heightMeters": 0.3,
+      "bounds": [
+        [
+          0.26637911796569824,
+          -0.13732610642910004,
+          -4.192948108538985e-05
+        ],
+        [
+          0.4348107874393463,
+          0.19815392792224884,
+          0.30005162954330444
+        ]
+      ],
+      "validation": "PASS",
+      "adaptation": "Small seated still pose, soft cream coat, hazel eyes, no scarf; no rig or animation."
+    },
+    "scarlet-parrot": {
+      "sourceArchive": "parrot.zip",
+      "sourceSha256": "2b20bb6655b62b6dd68f95399ef41e89a481905e68550343209810239f6efaa6",
+      "triangles": 20086,
+      "meshes": 1,
+      "heightMeters": 0.21,
+      "mount": "shoulder",
+      "footGaps": [
+        -0.002,
+        -0.0019
+      ],
+      "footWorstGap": 0.0046,
+      "bounds": [
+        [
+          0.08502038568258286,
+          -0.1413756161928177,
+          1.1582958698272705
+        ],
+        [
+          0.2556311786174774,
+          0.3049275577068329,
+          1.6145360469818115
+        ]
+      ],
+      "validation": "PASS",
+      "adaptation": "Scarlet macaw perched on the hero\u2019s left shoulder (shared by both bases), looking forward, tail down the back; matte painted feathers, static pose."
+    }
+  },
+  "bytes": 2890488,
+  "sha256": "97895b1578a6be81bc65b13cbbe8f76ccb048858e22ec850ca6aeae5dee037a7"
+}

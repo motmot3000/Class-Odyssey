@@ -42,7 +42,10 @@ persona = None
 HEAD_FIT = {'center_y': -.012, 'hair_center_z': 1.625, 'hat_seat_z': 1.692,
             'hat_inner_x': .118, 'hat_inner_y': .143, 'under_hat_z': 1.700}
 HEAD_FITS = {}
-APPEARANCE_REVISION = 'stylized-v8' if STYLIZED else 'catalogue-v13-ear-outfits'
+# Eyewear accessories are fitted on the hat seat like hats; the ear
+# accessories are split from each character's own skin (split_ears).
+EYEWEAR = {'explorer-cap', 'sunglasses'}
+APPEARANCE_REVISION = 'stylized-v9' if STYLIZED else 'catalogue-v13-ear-outfits-headwear-held-items'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
@@ -83,6 +86,10 @@ from refit_female_base import rebuild_torso, clear_ear_space, ear_weight, swept_
 from human_ears import ear_islands, skull_tree, cap_openings, human_ear_matrix, jewellery_layout, side_outline, skull_x
 from human_ear_model import ear_mesh as human_ear_mesh
 from hair_fill import hair_tree, ear_attachment, ear_zone_shell, append_geometry
+import headwear
+import fist_model
+import held_items
+import arm_pose
 
 
 def texture_node(mat, filename):
@@ -435,7 +442,7 @@ def tag(obj, name, mat=None):
     obj['shop_slot'] = slot
     obj['shop_id'] = item
     if persona: obj['fit_persona'] = persona
-    if slot in ['hair', 'hat']:
+    if slot in ['hair', 'hat'] or (slot == 'accessory' and item in EYEWEAR):
         obj['attachment'] = 'hat-seat'
         obj['attachment_origin'] = [0, HEAD_FIT['hat_seat_z'], -HEAD_FIT['center_y']]
         obj['attachment_axes'] = 'glTF: +Y up, +Z front, metres'
@@ -2070,82 +2077,29 @@ def hairstyles(source):
         bm.transform(clipped.matrix_world.inverted()); bm.to_mesh(clipped.data); bm.free()
 
 
-def hat_brim(name, outer_x, outer_y, mat, wave=.007):
-    """Real annular brim with a head-sized opening, not a flattened solid ball."""
-    vertices = []
-    n, rows = 64, 5
-    for j in range(rows):
-        t = j/(rows-1)
-        rx = HEAD_FIT['hat_inner_x']*(1-t) + outer_x*t
-        ry = HEAD_FIT['hat_inner_y']*(1-t) + outer_y*t
-        for i in range(n):
-            a = i*TAU/n
-            vertices.append((rx*math.cos(a), HEAD_FIT['center_y']+ry*math.sin(a),
-                             HEAD_FIT['hat_seat_z'] + t*t*(wave*math.sin(2*a+.5)-.003)))
-    obj = mesh(name, vertices, [(j*n+i, j*n+(i+1)%n, (j+1)*n+(i+1)%n, (j+1)*n+i) for j in range(rows-1) for i in range(n)], mat)
-    solid = obj.modifiers.new('Bound fabric brim thickness', 'SOLIDIFY'); solid.thickness = .005
-    line('fine bound brim edge', vertices[-n:], .0025, mat, True)
-    return obj
+def hat_seat_matrix(who):
+    """Authored hat space -> the character's measured head (hat seat)."""
+    seat = CONTRACT['characters'][CHARACTERS[who]]['anchors']['hat_seat']
+    scale = Vector(((seat['ellipse']['rx']+.008)/HEAD_FIT['hat_inner_x'],
+                    (seat['ellipse']['rz']+.018)/HEAD_FIT['hat_inner_y'], 1))
+    return anchor_matrix('hat_seat', who) @ Matrix.Translation((0,0,.012)) @ Matrix.Diagonal((*scale,1)) @ Matrix.Translation((0,-HEAD_FIT['center_y'],-HEAD_FIT['hat_seat_z']))
 
 
 def hats():
+    """Hats and eyewear, modelled in tools/blender/headwear.py.
+
+    Eyewear belongs to the accessory slot but rides the same hat-seat fit:
+    it is drawn on Noa's measured face, moved into hat space with the inverse
+    of his fit, and the shared fit then places it on each character.
+    """
     global slot, item
-    slot = 'hat'
-    item = 'explorer-cap'
-    ring('leather goggle strap', 0, -.019, 1.709, .106, .13, .008, LEATHER)
-    for sign in [-1, 1]:
-        ell('brass goggle frame', (sign * .057, -.157, 1.709), (.048, .025, .038), GOLD)
-        ell('blue glass lens', (sign * .057, -.179, 1.709), (.035, .008, .027), GEM)
-    line('goggle bridge', [(-.016, -.177, 1.709), (0, -.185, 1.711), (.016, -.177, 1.709)], .006, LEATHER)
-    item = 'sunglasses'
-    for sign in [-1, 1]:
-        box('black glasses frame', (sign * .050, -.149, 1.593), (.085, .014, .047), CHARCOAL, .014)
-        box('dark tinted lens', (sign * .050, -.159, 1.595), (.068, .007, .032), GLASS, .009)
-        line('glasses temple arm', [(sign * .092, -.144, 1.60), (sign * .111, -.08, 1.603), (sign * .116, .015, 1.585)], .005, CHARCOAL)
-    line('glasses bridge', [(-.011, -.156, 1.60), (0, -.163, 1.603), (.011, -.156, 1.60)], .005, CHARCOAL)
-    item = 'feather-beret'
-    shell('fitted beret opening', [(1.690,.118,.143,-.012),(1.717,.119,.145,-.012)], LEATHER)
-    beret = ell('soft angled beret crown', (-.030, -.003, 1.742), (.158, .155, .060), SAGE)
-    beret.rotation_euler.y = -.10
-    line('beret radial seam', [(-.151,-.012,1.744),(-.101,-.013,1.790),(-.032,-.013,1.805),(.065,-.013,1.767)], .0018, SAGE)
-    tress('tapered ivory feather', [(-.118,-.097,1.736),(-.155,-.083,1.79),(-.169,-.064,1.847)], [.002,.014,.001],[.002,.004,.001], IVORY)
-    ell('small beret pin', (-.119,-.110,1.726), (.011,.005,.011), GOLD)
-    item = 'wizard-hat'
-    hat_brim('shaped wizard brim', .217, .188, PURPLE)
-    shell('curved cloth wizard crown', [(1.688,.118,.143,-.012),(1.735,.120,.144,-.01),(1.83,.099,.112,.003),
-          (1.94,.061,.073,.013),(2.02,.030,.039,-.005),(2.046,.013,.018,-.039),(2.034,.002,.003,-.078)], PURPLE)
-    shell('flat golden hat ribbon', [(1.705,.121,.146,-.012),(1.730,.123,.147,-.010)], GOLD, thickness=.002)
-    prism('small hat crystal', [(0,.015),(.011,0),(0,-.015),(-.011,0)], (0,-.163,1.718), .009, GEM)
-    item = 'classy-hat'
-    hat_brim('tailored top hat brim', .181, .171, CHARCOAL, .004)
-    shell('tailored top hat crown', [(1.690,.119,.144,-.012),(1.735,.121,.145,-.012),
-          (1.928,.128,.142,-.009),(1.937,.122,.137,-.009),(1.937,.002,.002,-.009)], CHARCOAL)
-    shell('burgundy silk ribbon', [(1.705,.124,.148,-.012),(1.742,.124,.148,-.012)], RED, thickness=.002)
-    for item, high in [('gold-crown', False), ('celestial-crown', True)]:
-        ring('fitted gold crown base', 0, -.012, 1.699, .119, .146, .005, GOLD)
-        n = 48
-        vertices = []
-        for j in range(2):
-            for i in range(n):
-                a = i * TAU / n
-                z = 1.699 if j == 0 else 1.737 + (.050 if high else .030) * (1 if i % 8 == 0 else 0)
-                vertices.append((.121 * math.cos(a), -.012 + .148 * math.sin(a), z))
-        crown = mesh('eight-point crown', vertices, [(i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n)], GOLD, False)
-        solid = crown.modifiers.new('Solid gold wall', 'SOLIDIFY'); solid.thickness = .009
-        for i in range(8):
-            a = i * TAU / 8
-            ell('crown gemstone', (.125 * math.cos(a), -.012 + .152 * math.sin(a), 1.721), (.010, .010, .014), GEM if high else RED, 12)
-        if high:
-            for sign in [-1, 1]:
-                line('arched royal band', [(sign*.119,-.012,1.754),(sign*.076,-.012,1.850),(0,-.012,1.892)], .006, GOLD)
-            ell('royal top crystal', (0,-.012,1.912), (.017,.017,.025), GEM, 12)
-    item = 'steel-helm'
-    shell('rounded helmet dome', [(1.646, .134, .154, .005), (1.745, .137, .15, .005), (1.811, .098, .109, .005), (1.839, .002, .002, .005)], STEEL, thickness=.01)
-    ring('helmet brow rim', 0, .005, 1.653, .137, .157, .009, GOLD)
-    for sign in [-1, 1]:
-        ell('temple plate', (sign * .131, .017, 1.60), (.023, .099, .075), STEEL)
-        line('ivory helmet horn', [(sign * .119, .01, 1.777), (sign * .208, .01, 1.834), (sign * .245, .03, 1.934)], .023, IVORY)
-    box('narrow nose guard', (0, -.168, 1.627), (.016, .014, .078), STEEL, .005)
+
+    def emit(obj, item_id, name, key):
+        global slot, item
+        slot, item = ('accessory' if item_id in EYEWEAR else 'hat'), item_id
+        tag(obj, name, HEADWEAR_MATERIALS[key])
+    headwear.build(emit, hat_seat_matrix('male').inverted(), HEADWEAR_MATERIALS)
+    slot, item = 'core', 'base'
 
 
 def sword(x, y, z, length=.61, name='sword'):
@@ -2258,20 +2212,18 @@ def hand_mount(name, kind):
 def fit_equipment():
     global slot, item, persona
     bpy.context.view_layer.update()
-    templates = [obj for obj in objects if obj.get('shop_slot') in ['hair','hat','weapon']]
+    templates = [obj for obj in objects if obj.get('shop_slot') in ['hair','hat','weapon']
+                 or (obj.get('shop_slot') == 'accessory' and obj.get('shop_id') in EYEWEAR)]
     for persona, gender in CHARACTERS.items():
-        seat = CONTRACT['characters'][gender]['anchors']['hat_seat']
-        scale = Vector(((seat['ellipse']['rx']+.008)/HEAD_FIT['hat_inner_x'],
-                        (seat['ellipse']['rz']+.018)/HEAD_FIT['hat_inner_y'], 1))
-        head_matrix = anchor_matrix('hat_seat') @ Matrix.Translation((0,0,.012)) @ Matrix.Diagonal((*scale,1)) @ Matrix.Translation((0,-HEAD_FIT['center_y'],-HEAD_FIT['hat_seat_z']))
-        HEAD_FITS[persona] = {'anchor': seat['world'], 'clearance': [0,.012,0],
+        head_matrix = hat_seat_matrix(persona)
+        HEAD_FITS[persona] = {'anchor': CONTRACT['characters'][gender]['anchors']['hat_seat']['world'], 'clearance': [0,.012,0],
                              'templateToCharacter': column_major(C @ head_matrix @ C.inverted())}
         for original in templates:
             if original.get('template_persona', persona) != persona:
                 continue
             slot, item = original['shop_slot'], original['shop_id']
             fitted = duplicate(original, gender+' / '+original.name)
-            if slot in ['hair','hat']:
+            if slot in ['hair','hat','accessory']:
                 transform, name = head_matrix, 'hat_seat'
             else:
                 name = original['mount_anchor']
@@ -2839,6 +2791,212 @@ def split_ears(selected):
     return created
 
 
+HELD_SIDES = {'weapon': ('right', 'ready'), 'shield': ('left', 'shield')}
+
+
+def held_item_object(name, pieces, matrix):
+    """One mesh per item: every piece bevelled as authored, then joined."""
+    finishes = []
+    bm = bmesh.new()
+    for piece in pieces:
+        data = bpy.data.meshes.new(piece.name)
+        data.from_pydata(piece.verts, [], piece.faces)
+        data.update()
+        scratch = bpy.data.objects.new(piece.name, data)
+        bpy.context.scene.collection.objects.link(scratch)
+        if piece.bevel:
+            bevel = scratch.modifiers.new('bevel', 'BEVEL')
+            bevel.width, bevel.segments, bevel.limit_method = piece.bevel, 2, 'ANGLE'
+        evaluated = bpy.data.meshes.new_from_object(scratch.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        if piece.finish not in finishes:
+            finishes.append(piece.finish)
+        index = finishes.index(piece.finish)
+        part = bmesh.new(); part.from_mesh(evaluated)
+        bmesh.ops.triangulate(part, faces=[f for f in part.faces if len(f.verts) > 4])
+        bmesh.ops.recalc_face_normals(part, faces=part.faces)
+        for face in part.faces:
+            face.material_index = index
+            face.smooth = piece.smooth
+        part.to_mesh(evaluated); part.free()
+        bm.from_mesh(evaluated)
+        bpy.data.objects.remove(scratch, do_unlink=True)
+        bpy.data.meshes.remove(data); bpy.data.meshes.remove(evaluated)
+    data = bpy.data.meshes.new(name)
+    bm.transform(matrix); bm.to_mesh(data); bm.free()
+    for finish in finishes:
+        data.materials.append(FINISHES[finish])
+    obj = bpy.data.objects.new(name, data)
+    bpy.context.scene.collection.objects.link(obj)
+    return tag(obj, name)
+
+
+SOURCED_MESHES = {}
+
+
+def sourced_board(item, matrix):
+    """A supplied shield board (held_items.SOURCED), placed in world space."""
+    spec = held_items.SOURCED[item]
+    if item not in SOURCED_MESHES:
+        selection = list(bpy.context.selected_objects)
+        active = bpy.context.view_layer.objects.active
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=str(SOURCES / 'held' / spec['file']))
+        imported = [obj for obj in bpy.data.objects if obj not in before]
+        mesh = next(obj.data for obj in imported if obj.type == 'MESH')
+        for obj in imported:
+            bpy.data.objects.remove(obj, do_unlink=True)
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in selection:
+            obj.select_set(True)
+        bpy.context.view_layer.objects.active = active
+        lo = Vector([min(v.co[i] for v in mesh.vertices) for i in range(3)])
+        hi = Vector([max(v.co[i] for v in mesh.vertices) for i in range(3)])
+        mesh.transform(Matrix.Translation((-(lo.x + hi.x) / 2, spec['board'] - hi.y, -(lo.z + hi.z) / 2 + spec['lift'])))
+        SOURCED_MESHES[item] = mesh
+    data = SOURCED_MESHES[item].copy()
+    data.transform(matrix)
+    obj = bpy.data.objects.new(f'{item} board', data)
+    bpy.context.scene.collection.objects.link(obj)
+    return tag(obj, 'supplied board, crest as drawn')
+
+
+def hold_items(selected):
+    """Right-hand blades and left-arm shields, held by sculpted fists.
+
+    Per character: the open hands are split off the finished skin (the cut
+    follows its edges, so skin + open hands stay the delivered surface) and
+    ship as `persona` parts (`part: hand`); a closed fist per side
+    (`part: fist`) replaces the hand when that side holds an item. Every
+    item then sits on its fist's grip frame (fist_model.grip_frame).
+    """
+    global slot, item, persona
+    created = []
+    for skin in [obj for obj in selected if obj.get('part') == 'skin' and obj.get('fit_persona')]:
+        persona = skin['fit_persona']; gender = CHARACTERS[persona]
+        for kind, (side, pose) in HELD_SIDES.items():
+            frame = fist_model.hand_frame(CONTRACT, gender, side)
+            world = skin.matrix_world
+            profile = fist_model.forearm_tree([world @ v.co for v in skin.data.vertices],
+                                              [list(p.vertices) for p in skin.data.polygons], frame)
+            texel = fist_model.wrist_texel(skin, frame)
+            slot, item = 'persona', persona
+            hand, cap = fist_model.split_hand(skin, frame, texel)
+            hand.name = f'{gender} • open {side} hand'
+            hand['part'], hand['hand_side'], hand['hand_pose'] = 'hand', side, 'open'
+            tag(hand, hand.name)
+            created.append(hand)
+            # The weapon arm bends at the elbow (arm_pose.POSES): one fist per
+            # bend, riding the bent forearm; each item picks its bend.
+            grips = {}
+            for arm, degrees in (arm_pose.POSES.items() if kind == 'weapon' else [(None, 0)]):
+                pose = arm or pose
+                held_frame = arm_pose.bend_matrix(CONTRACT, gender, side, degrees) @ frame if arm else frame
+                slot, item = 'persona', persona
+                fist = fist_model.fist_mesh(f'{gender} • {side} fist' + (f' ({arm})' if arm else ''), profile, pose, held_frame)
+                fist_model.dress_as_skin(fist, skin, texel)
+                fist['part'], fist['hand_side'], fist['hand_pose'] = 'fist', side, kind
+                if arm:
+                    fist['arm_pose'], fist['arm_side'], fist['arm_flexion'] = arm, side, degrees
+                fist['fist_model'] = 'sculpted closed fist (SDF, fist_model.py)'
+                tag(fist, fist.name)
+                created.append(fist)
+                grips[arm] = held_frame @ fist_model.grip_frame(pose)
+            slot = kind
+            anchor_name = 'grip_' + side
+            reference = anchor(anchor_name)
+            makers = held_items.BLADES if kind == 'weapon' else held_items.SHIELDS
+            for item in makers:
+                if kind == 'weapon':
+                    arm = held_items.arm_pose_of(item)
+                    pieces, matrix = held_items.BLADES[item](), grips[arm] @ held_items.blade_to_grip(item)
+                else:
+                    pieces, matrix = held_items.shield_pieces(item), grips[None] @ held_items.SHIELD_TO_GRIP
+                objs = [held_item_object(gender, pieces, matrix)]
+                if item in getattr(held_items, 'SOURCED', {}):
+                    objs.append(sourced_board(item, matrix))
+                for obj in objs:
+                    obj['part'] = kind
+                    obj['attachment'] = anchor_name
+                    obj['attachment_origin'] = reference['position']
+                    obj['attachment_quaternion'] = reference['quaternion']
+                    obj['attachment_axes'] = 'glTF: +Y up, +Z front, metres; anatomical left/right'
+                    obj['held_by'] = f'{side} fist'
+                    if kind == 'weapon':
+                        obj['held_arm_pose'] = held_items.arm_pose_of(item)
+                    created.append(obj)
+        skin['hands'] = 'separate: persona open hands, fists when holding'
+    slot, item, persona = 'core', 'base', None
+    for obj in created:
+        obj.select_set(True)
+    return created
+
+
+def bend_weapon_arms(selected):
+    """The right forearm of every character, skin and sleeves, ships hanging
+    (`arm_pose: straight`) and once per bend of arm_pose.POSES (`ready` for
+    blades and wands, `staff`), shown with the weapon that asks for it."""
+    created = []
+    for skin in [obj for obj in selected if obj.get('part') == 'skin' and obj.get('fit_persona')]:
+        persona_id = skin['fit_persona']; gender = CHARACTERS[persona_id]
+        world = skin.matrix_world
+        points = [world @ v.co for v in skin.data.vertices]
+        bend = arm_pose.ArmBend(CONTRACT, gender, points)
+        bend.attach_skin(points, [tuple(e.vertices) for e in skin.data.edges])
+        wearers = [obj for obj in selected if obj.type == 'MESH' and obj.get('fit_persona') == persona_id
+                   and obj.get('shop_slot') in ('outfit', 'accessory') and obj.data.polygons]
+        for obj in wearers:
+            # Cut-outs the hanging arm used to hide.
+            filled = arm_pose.fill_hidden_holes(obj, bend)
+            if filled: obj['arm_shadow_filled'] = filled
+        for obj in [skin] + wearers:
+            pieces = arm_pose.split_arm(obj, bend, skin=obj is skin)
+            if not pieces: continue
+            if obj is not skin:
+                # The flank where the sleeve was welded to it.
+                filled = arm_pose.fill_hidden_holes(obj, bend)
+                if filled: obj['arm_shadow_filled'] = obj.get('arm_shadow_filled', 0) + filled
+            for piece in pieces:
+                piece.name = f"{obj.name} • {piece['arm_pose']} right forearm"
+                objects.append(piece); created.append(piece)
+        tuck_trousers(selected, persona_id, bend)
+    for obj in created:
+        obj.select_set(True)
+    return created
+
+
+def tuck_trousers(selected, persona_id, bend, gap=.0025):
+    """Pull the trousers inside every long garment where the hanging arm hid
+    them poking through: a bent arm would reveal it."""
+    trousers = [obj for obj in selected if obj.get('fit_persona') == persona_id and 'Pant_' in obj.name]
+    garments = [obj for obj in selected if obj.get('fit_persona') == persona_id and obj.get('shop_slot') == 'outfit'
+                and obj.data.polygons and not obj.get('arm_pose')]
+    skin = next(obj for obj in selected if obj.get('fit_persona') == persona_id and obj.get('part') == 'skin')
+    skin_tree = BVHTree.FromObject(skin, bpy.context.evaluated_depsgraph_get())
+    trees = [BVHTree.FromObject(obj, bpy.context.evaluated_depsgraph_get()) for obj in garments]
+    for pants in trousers:
+        world = pants.matrix_world; inverse = world.inverted()
+        moved = 0
+        for vertex in pants.data.vertices:
+            p = world @ vertex.co
+            t, d = bend.coordinates(np.array([p[:]]))
+            if not (arm_pose.HIDDEN_SPAN[0] < t[0] < arm_pose.HIDDEN_SPAN[1] and d[0] < arm_pose.HIDDEN_REACH):
+                continue
+            need = 0.0
+            for tree in trees:
+                hit = tree.find_nearest(p, .03)
+                if hit[0] is None: continue
+                outside = (p - hit[0]).dot(hit[1])
+                need = max(need, outside + gap)
+            if need <= 0: continue
+            inward = -(world.to_3x3() @ vertex.normal).normalized()
+            under = skin_tree.find_nearest(p, .05)
+            room = (under[3] - .001) if under[0] is not None else need
+            step = max(0.0, min(need, room))
+            if step > 0:
+                vertex.co = inverse @ (p + inward * step); moved += 1
+        if moved: pants['arm_shadow_tucked'] = moved
+
+
 def export():
     # The haircuts as fitted, before the elf-ear clearance tucks locks away:
     # their cover decides where hair_fill grows hair back around the human ear.
@@ -2953,6 +3111,9 @@ def export():
                 obj['conformed_vertices'] = conform_hair_to_head(obj, skins[persona_id])
     # Last geometry step: every haircut is already fitted around the elf ears.
     split_ears(list(bpy.context.selected_objects))
+    # Held items come last: they sit on the finished forearm and hand frames.
+    hold_items(list(bpy.context.selected_objects))
+    bend_weapon_arms(list(bpy.context.selected_objects))
     bpy.ops.export_scene.gltf(filepath=str(OUT / 'catalogue.glb'), export_format='GLB', use_selection=True,
                               export_apply=True, export_yup=True, export_animations=False, export_extras=True)
     manifest = {}
@@ -2966,9 +3127,9 @@ def export():
               'parts': manifest, 'staticPose': True, 'headFit': HEAD_FIT, 'headFits': HEAD_FITS}
     (OUT / 'manifest.json').write_text(json.dumps(report, indent=2) + '\n')
     # Saved workspace opens on one coherent loadout, all alternatives in Outliner.
-    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'hat': 'explorer-cap', 'weapon': 'no-weapon'}
+    defaults = {'core': 'base', 'persona': 'male', 'outfit': 'vocab-ranger', 'hair': 'short', 'accessory': 'explorer-cap', 'weapon': 'no-weapon', 'shield': 'no-shield'}
     for obj in bpy.context.scene.objects:
-        visible = defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit', 'open') == 'open' and obj.get('fit_persona','male') == 'male'
+        visible = defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit', 'open') == 'open' and obj.get('fit_persona','male') == 'male' and obj.get('part') != 'fist' and obj.get('arm_pose') in (None, 'straight')
         obj.hide_render = not visible
         obj.hide_set(not visible)
     scene = bpy.context.scene
@@ -3040,7 +3201,23 @@ HOSE = {'grammar-mage': material('Mage plum hose', '#30243A', .90),
 AMBER = material('Lantern warm light', '#E6B555', .38, .05, 1.1)
 HAIR = material('Hair / selectable color', '#594432', .52)
 HAIR_DARK = material('Hair / shadow strands', '#493829', .57)
+# Held item finishes (tools/blender/held_items.py), in the same matte palette.
+FINISHES = {'steel': STEEL, 'gold': GOLD, 'leather': LEATHER, 'red': RED, 'ivory': IVORY, 'enamel': ENAMEL,
+            'gem': GEM, 'charcoal': CHARCOAL,
+            'bright_steel': material('Polished steel', '#B9C6CC', .26, .75),
+            'dark_steel': material('Dark blued steel', '#5E6B72', .40, .65),
+            'iron': material('Forged iron', '#5F666B', .55, .55),
+            'bronze': material('Warm bronze', '#A8743F', .42, .62),
+            'dark_bronze': material('Dark bronze', '#6E4A2C', .50, .50),
+            'dark_leather': material('Dark grip leather', '#3A2E26', .82),
+            'wood': material('Oak wood', '#8A6440', .78),
+            'burgundy': material('Burgundy grip leather', '#5E2630', .70),
+            'gem_glow': material('Luminous crystal', '#7FD3D8', .20, .10, .6),
+            'leaf': material('Fresh leaf', '#6E9A55', .62),
+            'verdigris': material('Verdigris steel', '#4E7775', .38, .60),
+            'emerald': material('Emerald', '#3FA886', .18, .10, .5)}
 HAIR_LIGHT = material('Hair / highlight strands', '#645039', .50)
+HEADWEAR_MATERIALS = headwear.make_materials(material)
 surface_maps(HAIR, OUT/'textures/hair-normal.png', OUT/'textures/hair-roughness.png', .32)
 HAIR.node_tree.nodes.get('Principled BSDF').inputs['Specular IOR Level'].default_value=.32
 

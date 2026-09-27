@@ -86,14 +86,16 @@ const OUTFITS = {
 };
 const HEADGEAR = {
   "no-hat": "none",
-  "explorer-cap": "goggles",
-  sunglasses: "sunglasses",
   "feather-beret": "beret",
   "wizard-hat": "wizard",
   "gold-crown": "crown",
   "steel-helm": "helm",
-  "classy-hat": "tophat",
-  "celestial-crown": "celestial"
+  "classy-hat": "tophat"
+};
+/* Eyewear is an accessory: it is drawn over whichever hat is worn. */
+const EYEWEAR = {
+  "explorer-cap": "goggles",
+  sunglasses: "sunglasses"
 };
 const HANDGEAR = {
   "no-weapon": "none",
@@ -576,6 +578,7 @@ function heroShapes(opt) {
 
   /* --- couvre-chef par-dessus le visage */
   H.push(...headgearShapes(head));
+  if (opt.eyewear && !(opt.eyewear === "goggles" && head === "helm")) H.push(...headgearShapes(opt.eyewear));
   S.push(...H.map((shape) => ({
     ...shape,
     a: { ...shape.a, transform: `${shape.a.transform || ""} translate(-8 -4) scale(1.08)`.trim() }
@@ -969,16 +972,6 @@ function headgearShapes(head) {
     S.push(c(112, 21, 3, "#2F5C43", { sw: 1.1 }));
     S.push(c(100, 35, 2.8, GOLD.lite, { noStroke: true }));
     S.push(fold("M79,30 C87,34 93,35 98,35", GOLD.lite, 1.8, 0.8));
-  } else if (head === "celestial") {
-    S.push(p("M72,34 L70,7 L84,21 L100,0 L116,21 L130,7 L128,34 Z", GOLD.base));
-    S.push(p("M77,27 C77,10 88,3 100,3 C112,3 123,10 123,27", "none", { sw: 4.2, stroke: GOLD.dark }));
-    S.push(p("M74,29 C87,36 113,36 126,29 L126,40 C114,47 86,47 74,40 Z", GOLD.dark));
-    S.push(p("M78,31 C90,36 110,36 122,31 L121,38 C110,43 90,43 79,38 Z", "#8E3230"));
-    S.push(c(84, 18, 3.2, "#8E3230"));
-    S.push(c(100, 9, 4.2, "#7FC7D9"));
-    S.push(c(116, 18, 3.2, "#2F5C43"));
-    S.push(c(100, 35, 3.4, "#FFF4C8", { noStroke: true }));
-    S.push(fold("M78,30 C88,35 96,36 101,36", "#FFFFFF", 2, 0.85));
   }
   return S;
 }
@@ -1099,6 +1092,7 @@ export function renderHero(pupil) {
     hairStyle: HAIRCUTS[pupil.hair] || "court",
     hairColor: pupil.hairColor,
     head: HEADGEAR[pupil.hat] || "none",
+    eyewear: EYEWEAR[pupil.accessory] || null,
     hand: HANDGEAR[pupil.weapon] || "none",
     face: pupil.face,
     girl: pupil.gender === "girl",
@@ -1115,6 +1109,7 @@ const ITEM_CROPS = {
   tone: "54 18 92 150",
   hat: "50 2 100 92",
   sunglasses: "70 30 60 45",
+  "explorer-cap": "66 12 68 40",
   face: "76 30 48 52",
   evil: "76 30 48 52",
   hair: "60 2 80 80",
@@ -1178,6 +1173,7 @@ export function renderItemArt(item, pupil) {
 
   if (item.type === "outfit") Object.assign(base, OUTFITS[item.id] || OUTFITS.starter);
   else if (item.type === "hat") base.head = HEADGEAR[item.id] || "none";
+  else if (item.type === "accessory") base.eyewear = EYEWEAR[item.id] || null;
   else if (item.type === "weapon") base.hand = HANDGEAR[item.id] || "none";
   else if (item.type === "face") base.face = item.id;
   else if (item.type === "hair") base.hairStyle = HAIRCUTS[item.id] || "court";
