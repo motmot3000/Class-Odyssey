@@ -71,7 +71,7 @@ test("full-size pupil dialog declares the matching model and preserves its stats
 test("item dialogs show the 3D product thumbnail without an old avatar", () => {
   const item=SHOP_ITEMS.find(item=>item.type==="hat" && item.id!=="no-hat");
   const html=renderItemDialog(item,pupil());
-  assert.match(html,/data-item-thumbnail="explorer-cap"/);
+  assert.match(html,/data-item-thumbnail="feather-beret"/);
   assert.doesNotMatch(html,/<svg class="avatar|is-hero-preview/);
   assert.doesNotMatch(html,/data-base-character-viewer/);
 });

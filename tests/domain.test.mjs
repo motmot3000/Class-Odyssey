@@ -132,7 +132,9 @@ test("the shared haircuts ship with Bald and the Braid", () => {
   assert.equal(getShopItem("braided"), null);
   assert.equal(getShopItem("royal-hair"), null);
   assert.equal(getShopItem("wink"), null);
-  assert.equal(getShopItem("sunglasses")?.type, "hat");
+  assert.equal(getShopItem("sunglasses")?.type, "accessory");
+  assert.equal(getShopItem("explorer-cap")?.type, "accessory");
+  assert.equal(getShopItem("celestial-crown"), null);
   assert.equal(getShopItem("evil"), null);
   assert.equal(getShopItem("story-keeper")?.name, "Warrior");
   assert.equal(getShopItem("scholar-virtuoso")?.name, "Star");
@@ -247,7 +249,7 @@ test("money buys an eligible shop item and equip it", () => {
   state = purchaseItem(state, pupilId, item.id);
   const upgraded = getPupilById(state, pupilId);
   assert.equal(upgraded.money, 5);
-  assert.equal(upgraded.hat, "explorer-cap");
+  assert.equal(upgraded.accessory, "explorer-cap");
   assert.equal(isItemOwned(upgraded, "explorer-cap"), true);
 });
 
@@ -409,8 +411,37 @@ test("brown is the default eye colour and old saves fall back to it", () => {
   assert.equal(getPupilById(normalizeState(state), pupil.id).eyeColor, "brown-eyes");
 });
 
+test("hats unlock in order and the King's Crown crowns level 10", () => {
+  assert.deepEqual(getShopItems("hat").map((item) => [item.id, item.minLevel, item.price]), [
+    ["no-hat", 1, 0], ["feather-beret", 2, 20], ["wizard-hat", 3, 30],
+    ["classy-hat", 5, 55], ["steel-helm", 7, 75], ["gold-crown", 10, 100]
+  ]);
+  for (const [itemId, minLevel, price] of [["explorer-cap", 1, 15], ["sunglasses", 2, 25]]) {
+    assert.equal(getShopItem(itemId).minLevel, minLevel);
+    assert.equal(getShopItem(itemId).price, price);
+  }
+});
+
+test("old saves move eyewear to the accessory slot and the Royal Crown to the King's Crown", () => {
+  const state = createInitialState();
+  const [goggles, royal, both] = getCurrentClass(state).pupils;
+  Object.assign(goggles, { hat: "explorer-cap", ownedItems: [...goggles.ownedItems, "explorer-cap"] });
+  Object.assign(royal, { hat: "celestial-crown", ownedItems: [...royal.ownedItems, "celestial-crown"] });
+  Object.assign(both, { hat: "sunglasses", accessory: "elf-ears", ownedItems: [...both.ownedItems, "sunglasses", "elf-ears"] });
+  const next = normalizeState(state);
+  const migrated = (id) => getPupilById(next, id);
+  assert.equal(migrated(goggles.id).hat, "no-hat");
+  assert.equal(migrated(goggles.id).accessory, "explorer-cap");
+  assert.equal(migrated(royal.id).hat, "gold-crown");
+  assert.equal(isItemOwned(migrated(royal.id), "gold-crown"), true);
+  assert.equal(migrated(royal.id).ownedItems.includes("celestial-crown"), false);
+  assert.equal(migrated(both.id).hat, "no-hat");
+  assert.equal(migrated(both.id).accessory, "elf-ears");
+  assert.equal(isItemOwned(migrated(both.id), "sunglasses"), true);
+});
+
 test("ear accessories unlock at their levels, persist, and old saves keep human ears", () => {
-  assert.deepEqual(getShopItems("accessory").map((item) => item.id), ["no-accessory", "elf-ears", "pierced-ears"]);
+  assert.deepEqual(getShopItems("accessory").map((item) => item.id), ["no-accessory", "explorer-cap", "sunglasses", "elf-ears", "pierced-ears"]);
   for (const [itemId, minLevel, price] of [["elf-ears", 4, 30], ["pierced-ears", 5, 50]]) {
     let state = createInitialState();
     const pupilId = getCurrentClass(state).pupils[0].id;

@@ -11,7 +11,7 @@ export const CATEGORIES = [
   { type: 'shield', field: 'shield', label: 'Shields' },
   { type: 'pet', field: 'pet', label: 'Pets' }
 ];
-export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'explorer-cap', weapon: 'no-weapon', shield: 'no-shield', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'no-accessory', pet: 'no-pet', tone: 'medium' };
+export const DEFAULT_LOOK = { persona: 'male', skin: 'vocab-ranger', hat: 'no-hat', weapon: 'no-weapon', shield: 'no-shield', hair: 'short', hairColor: 'brown-hair', eyeColor: 'brown-eyes', accessory: 'explorer-cap', pet: 'no-pet', tone: 'medium' };
 /* These accessories bring their own ears, which replace the default human ears. */
 export const EAR_ACCESSORIES = new Set(['elf-ears', 'pierced-ears']);
 export const HAIR_PALETTE = { 'brown-hair': '#594432', 'blond-hair': '#CBA75B', 'black-hair': '#252630', 'white-hair': '#E4DFD5', 'red-hair': '#A34A37', 'green-hair': '#4D785C', 'blue-hair': '#447CB0' };
@@ -30,7 +30,7 @@ export const SKIN_TONE_NEUTRAL = 'medium';
 const ASSET_BASE = typeof document === 'undefined' || !document.baseURI
   ? new URL('../assets/', import.meta.url)
   : new URL('../assets/', document.baseURI);
-export const CATALOGUE_REVISION = 'catalogue-v13-held-items';
+export const CATALOGUE_REVISION = 'catalogue-v13-headwear-held-items';
 export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, ASSET_BASE).href;
 
 /* Live base characters used by the game and by the 3D workshop. These are the
@@ -65,12 +65,12 @@ export function pupilLook(pupil, draft = null) {
   };
 }
 export const PRESETS = {
-  ranger: { skin: 'vocab-ranger', hat: 'explorer-cap' },
+  ranger: { skin: 'vocab-ranger', hat: 'no-hat', accessory: 'explorer-cap' },
   mage: { skin: 'grammar-mage', hat: 'wizard-hat' },
   knight: { skin: 'honor-knight', hat: 'steel-helm' }
 };
 const COVERED_HATS = new Set(['feather-beret', 'wizard-hat', 'classy-hat']);
-const OPEN_CROWNS = new Set(['gold-crown', 'celestial-crown']);
+const OPEN_CROWNS = new Set(['gold-crown']);
 
 const heldItem = (id) => Boolean(id) && !['no-weapon', 'no-shield'].includes(id) && Boolean(getShopItem(id));
 // Right forearm per held weapon (tools/blender/arm_pose.py POSES): blades and
@@ -103,6 +103,9 @@ export function visiblePart(data, look, itemsOnly = false) {
   }
   const category = CATEGORIES.find((entry) => entry.type === slot);
   if (!category || look[category.field] !== data.shop_id) return false;
+  // Eyewear fits under every hat, except the goggles: the helmet's brow band
+  // takes their forehead seat.
+  if (slot === 'accessory' && data.shop_id === 'explorer-cap' && look.hat === 'steel-helm') return false;
   if (slot === 'hair') {
     if (look.hat === 'steel-helm') return false;
     const fit = COVERED_HATS.has(look.hat) ? 'covered' : OPEN_CROWNS.has(look.hat) ? 'crowned' : 'open';
