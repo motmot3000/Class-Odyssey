@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { getShopItems } from '../src/domain.mjs';
+import { getShopItem, getShopItems } from '../src/domain.mjs';
 import { DEFAULT_LOOK, PRESETS, visiblePart, lookFromParams, modeledItemIds } from '../src/items-3d-model.mjs';
 
 function readGlb(filename = '../assets/items-3d/catalogue.glb') {
@@ -42,8 +42,8 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const gltf = readGlb();
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
-  for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 21);
+  for (const id of modeledItemIds().filter(id => getShopItem(id).type !== 'pet')) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
+  assert.equal(modeledItemIds().length, 26);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
     assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair', 'accessory'].includes(node.extras.shop_slot));

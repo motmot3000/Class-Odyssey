@@ -19,7 +19,7 @@ export function alphaBounds(pixels, width, height, threshold = 16) {
 /** Remove camera margins, not anatomy or equipment. Keep the complete alpha
  * silhouette inside a small margin at the original canvas resolution.
  */
-export function renderPortraitImage(source) {
+export function renderPortraitImage(source, { centered = false } = {}) {
   const output = document.createElement("canvas");
   output.width = source.width;
   output.height = source.height;
@@ -29,6 +29,12 @@ export function renderPortraitImage(source) {
   const pixels = context.getImageData(0, 0, output.width, output.height).data;
   const bounds = alphaBounds(pixels, output.width, output.height);
   if (bounds) {
+    if (centered) {
+      // Keep the hero on the centreline even when a pet widens one side.
+      const halfWidth = Math.max(output.width / 2 - bounds.x, bounds.x + bounds.width - output.width / 2);
+      bounds.x = output.width / 2 - halfWidth;
+      bounds.width = halfWidth * 2;
+    }
     const scale = Math.min(output.width * .94 / bounds.width, output.height * .96 / bounds.height);
     const width = bounds.width * scale;
     const height = bounds.height * scale;

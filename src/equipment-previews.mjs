@@ -1,5 +1,5 @@
 import { getShopItem } from './domain.mjs';
-import { modeledItemIds, pupilLook, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION } from './items-3d-model.mjs';
+import { modeledItemIds, pupilLook, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION, PETS_REVISION } from './items-3d-model.mjs';
 import { escapeHtml, icon, renderTitle } from './ui.mjs';
 import { t, tItem } from './i18n.mjs';
 import { cachedHeroPortrait } from './portrait-runtime.mjs';
@@ -9,7 +9,8 @@ const root = new URL('../assets/items-3d/previews/', import.meta.url);
 export const isModeledItem = item => Boolean(item && modeled.has(item.id));
 
 export function previewAsset(path) {
-  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : CATALOGUE_REVISION;
+  const pet = getShopItem(path.split('/').at(-1).replace('.webp', ''))?.type === 'pet';
+  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : pet ? PETS_REVISION : CATALOGUE_REVISION;
   return new URL(`${path}?v=${revision}`, root).href;
 }
 
