@@ -37,7 +37,7 @@ export const CATALOGUE_URL = new URL(`items-3d/catalogue.glb?v=${CATALOGUE_REVIS
  * delivered, stylized reference models (isolated stylized build): natural faces,
  * delivered silhouettes and their own painted materials. The older baked
  * production catalogue (CATALOGUE_URL) stays only for the pipeline tests. */
-export const BASE_CATALOGUE_REVISION = 'stylized-v9';
+export const BASE_CATALOGUE_REVISION = 'stylized-v10';
 export const BASE_CATALOGUE_URL = new URL(`character-stylized/catalogue.glb?v=${BASE_CATALOGUE_REVISION}`, ASSET_BASE).href;
 // Companions are a separate lightweight catalogue shared by both personas.
 export const PETS_REVISION = 'pets-v9';

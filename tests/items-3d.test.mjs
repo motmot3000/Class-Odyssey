@@ -335,7 +335,9 @@ test('every outfit hides its continuous waist edge inside the belt and has no ol
 test('armoured outfits have fitted chest panels, articulated shoulders and full leg armour',()=>{
   const nodes=readGlb().nodes.filter(node=>node.mesh!==undefined);
   for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight','horse-keeper']){
-    const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id);
+    // Weapon-arm variants (arm_pose) duplicate the forearm pieces for each
+    // held-item pose; count the base construction once.
+    const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id&&!node.extras?.arm_pose);
     const kind=name=>parts.filter(node=>node.extras.armour_construction===name).length;
     assert.ok(kind('anatomical fitted plate')>=6);
     assert.equal(kind('articulated shoulder'),6);

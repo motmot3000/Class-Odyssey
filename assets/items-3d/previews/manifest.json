@@ -1,6 +1,6 @@
 {
-  "revision": "catalogue-v13-headwear-held-items",
-  "catalogueSha256": "62a6989f9506516e41836861844a436f94ab97e3bf67811676e03fa24751e1f4",
+  "revision": "catalogue-v13-ear-outfits-headwear-held-items",
+  "catalogueSha256": "a34887353a00f8335d54bd86a70fddf7fd517fffedb77b918d0a662cce093a88",
   "renderSource": "catalogue.blend",
   "items": {
     "elf-ears": {
@@ -93,16 +93,52 @@
       "meshCount": 3,
       "containsBody": false
     },
+    "alchemist": {
+      "slot": "outfit",
+      "file": "items/alchemist.webp",
+      "meshCount": 76,
+      "containsBody": false
+    },
+    "bard": {
+      "slot": "outfit",
+      "file": "items/bard.webp",
+      "meshCount": 11,
+      "containsBody": false
+    },
+    "black-mage": {
+      "slot": "outfit",
+      "file": "items/black-mage.webp",
+      "meshCount": 53,
+      "containsBody": false
+    },
+    "cartographer": {
+      "slot": "outfit",
+      "file": "items/cartographer.webp",
+      "meshCount": 66,
+      "containsBody": false
+    },
     "grammar-mage": {
       "slot": "outfit",
       "file": "items/grammar-mage.webp",
-      "meshCount": 16,
+      "meshCount": 34,
+      "containsBody": false
+    },
+    "healer": {
+      "slot": "outfit",
+      "file": "items/healer.webp",
+      "meshCount": 59,
       "containsBody": false
     },
     "honor-knight": {
       "slot": "outfit",
       "file": "items/honor-knight.webp",
-      "meshCount": 58,
+      "meshCount": 177,
+      "containsBody": false
+    },
+    "horse-keeper": {
+      "slot": "outfit",
+      "file": "items/horse-keeper.webp",
+      "meshCount": 255,
       "containsBody": false
     },
     "starter": {
@@ -114,13 +150,13 @@
     "story-keeper": {
       "slot": "outfit",
       "file": "items/story-keeper.webp",
-      "meshCount": 58,
+      "meshCount": 141,
       "containsBody": false
     },
     "vocab-ranger": {
       "slot": "outfit",
       "file": "items/vocab-ranger.webp",
-      "meshCount": 13,
+      "meshCount": 45,
       "containsBody": false
     },
     "hero-shield": {
@@ -185,6 +221,14 @@
       "source": "assets/pets/catalogue.glb",
       "revision": "pets-v9"
     },
+    "meadow-rabbit": {
+      "slot": "pet",
+      "file": "items/meadow-rabbit.webp",
+      "meshCount": 1,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
+    },
     "ranger-dog": {
       "slot": "pet",
       "file": "items/ranger-dog.webp",
@@ -193,9 +237,9 @@
       "source": "assets/pets/catalogue.glb",
       "revision": "pets-v9"
     },
-    "meadow-rabbit": {
+    "scarlet-parrot": {
       "slot": "pet",
-      "file": "items/meadow-rabbit.webp",
+      "file": "items/scarlet-parrot.webp",
       "meshCount": 1,
       "containsBody": false,
       "source": "assets/pets/catalogue.glb",
@@ -205,14 +249,6 @@
       "slot": "pet",
       "file": "items/starry-dragon.webp",
       "meshCount": 16,
-      "containsBody": false,
-      "source": "assets/pets/catalogue.glb",
-      "revision": "pets-v9"
-    },
-    "scarlet-parrot": {
-      "slot": "pet",
-      "file": "items/scarlet-parrot.webp",
-      "meshCount": 1,
       "containsBody": false,
       "source": "assets/pets/catalogue.glb",
       "revision": "pets-v9"
@@ -226,8 +262,8 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v9, daylight, full silhouette",
-      "bytes": 38094
+      "renderer": "Three.js, stylized-v10, daylight, full silhouette",
+      "bytes": 38326
     },
     "female": {
       "file": "portraits/female.webp",
@@ -236,9 +272,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v9, daylight, full silhouette",
-      "bytes": 39868
+      "renderer": "Three.js, stylized-v10, daylight, full silhouette",
+      "bytes": 40020
     }
   },
-  "portraitRevision": "stylized-v9-front-hd"
+  "portraitRevision": "stylized-v10-front-hd"
 }

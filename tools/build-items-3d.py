@@ -45,7 +45,7 @@ HEAD_FITS = {}
 # Eyewear accessories are fitted on the hat seat like hats; the ear
 # accessories are split from each character's own skin (split_ears).
 EYEWEAR = {'explorer-cap', 'sunglasses'}
-APPEARANCE_REVISION = 'stylized-v9' if STYLIZED else 'catalogue-v13-ear-outfits-headwear-held-items'
+APPEARANCE_REVISION = 'stylized-v10' if STYLIZED else 'catalogue-v13-ear-outfits-headwear-held-items'
 # Haircuts are being signed off one family at a time. HAIR_ITEMS restricts the
 # build to a comma-separated subset; an empty value ships a shaved head only.
 # Unset keeps every authored cut for studio experiments.
