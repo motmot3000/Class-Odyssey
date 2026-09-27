@@ -135,6 +135,15 @@ export const ACCESSORIES = [
   { id: "pierced-ears", name: "Pierced Ears", minLevel: 5, price: 50, description: "Human ears with gold hoops and studs." }
 ];
 
+export const PETS = [
+  { id: "no-pet", name: "No Pet", minLevel: 1, price: 0, description: "Adventure without a companion." },
+  { id: "meadow-rabbit", name: "Meadow Rabbit", minLevel: 1, price: 10, description: "A tiny, quiet cream rabbit with hazel eyes." },
+  { id: "fripouille", name: "Fripouille", minLevel: 3, price: 40, description: "A curious ginger-and-white cat with a ranger scarf." },
+  { id: "ranger-dog", name: "Ranger Dog", minLevel: 4, price: 50, description: "A loyal golden dog with a traveller scarf." },
+  { id: "scarlet-parrot", name: "Scarlet Parrot", minLevel: 7, price: 50, description: "A bright scarlet macaw that rides on your shoulder." },
+  { id: "starry-dragon", name: "Starry Dragon", minLevel: 9, price: 90, description: "A proud turquoise, coral and gold dragon with bright golden eyes." }
+];
+
 export const SKIN_TONES = [
   { id: "light", name: "Light Skin", color: "#ffd7b0", minLevel: 1, price: 0, description: "A natural light skin tone." },
   { id: "medium", name: "Medium Skin", color: "#f2c193", minLevel: 1, price: 0, description: "A natural medium skin tone." },
@@ -151,6 +160,7 @@ export const SHOP_ITEMS = [
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
   ...EYE_COLORS.map((item) => ({ ...item, type: "eyeColor" })),
   ...ACCESSORIES.map((item) => ({ ...item, type: "accessory" })),
+  ...PETS.map((item) => ({ ...item, type: "pet" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
   ...SKIN_TONES.map((item) => ({ ...item, type: "tone" }))
 ];
@@ -692,6 +702,7 @@ function normalizePupil(source) {
   const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
   const eyeColor = EYE_COLORS.some((item) => item.id === pupil.eyeColor) ? pupil.eyeColor : "brown-eyes";
   const accessory = ACCESSORIES.some((item) => item.id === pupil.accessory) ? pupil.accessory : "no-accessory";
+  const pet = PETS.some((item) => item.id === pupil.pet) ? pupil.pet : "no-pet";
   const starterItems = SHOP_ITEMS.filter((item) => item.price === 0).map((item) => item.id);
   const ownedItems = [...new Set([
     ...starterItems,
@@ -703,6 +714,7 @@ function normalizePupil(source) {
     hairColor,
     eyeColor,
     accessory,
+    pet,
     skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
@@ -737,6 +749,7 @@ function normalizePupil(source) {
     hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
     eyeColor: ownedItems.includes(eyeColor) ? eyeColor : "brown-eyes",
     accessory: ownedItems.includes(accessory) ? accessory : "no-accessory",
+    pet: ownedItems.includes(pet) ? pet : "no-pet",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
 }

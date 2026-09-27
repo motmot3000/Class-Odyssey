@@ -1170,7 +1170,9 @@ function giveXp(amount, reason) {
   if (!targets.length || !Number.isFinite(amount) || amount < 1) return;
   targets.forEach((id) => pendingFlash.add(id));
   commit(awardXp(state, targets, amount, reason));
-  toast(`+${amount} XP · ${reason} · ${describeTargets(targets)}`, "xp");
+  toast(reason
+    ? `+${amount} XP · ${reason} · ${describeTargets(targets)}`
+    : `+${amount} XP · ${describeTargets(targets)}`, "xp");
 }
 
 function giveMoney(amount) {
@@ -1552,15 +1554,25 @@ function endSetupTour({ complete = true, silent = false } = {}) {
 }
 
 function setupTourSteps() {
+  const inConsole = (selector) => `.teacher-console-content ${selector}`;
   return [
     { target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), body: t("onboarding.theme.body"), preview: true },
+    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
     {
       target: () => (state.classes.length ? ".class-picker" : '[data-action="add-class"]'),
       title: t("onboarding.class.title"),
       body: () => t(state.classes.length ? "onboarding.class.body" : "onboarding.class.body.empty")
     },
-    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
-    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") }
+    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") },
+    {
+      target: () => (ui.teacherDialog === 'console' ? inConsole('[data-action="focus-add"]') : '[data-action="teacher-console"]'),
+      title: t("onboarding.console.add.title"),
+      body: t("onboarding.console.add.body")
+    },
+    { target: inConsole('[data-action="award-xp"]'), title: t("onboarding.console.xp.title"), body: t("onboarding.console.xp.body") },
+    { target: inConsole('[data-action="hp-minus"]'), title: t("onboarding.console.hp.title"), body: t("onboarding.console.hp.body") },
+    { target: inConsole('[data-action="award-money"]'), title: t("onboarding.console.coins.title"), body: t("onboarding.console.coins.body") },
+    { target: null, title: t("onboarding.final.title"), body: t("onboarding.final.body") }
   ];
 }
 

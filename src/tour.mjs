@@ -322,6 +322,13 @@ export function createGuidedTour({ steps = [], labels = {}, onFinish, onExit, on
     renderStep();
     resolve();
     apply();
+    const anchor = anchorFor();
+    if (anchor) {
+      const rect = anchor.getBoundingClientRect();
+      if (rect.top < 8 || rect.bottom > window.innerHeight - 8) {
+        anchor.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center", inline: "nearest" });
+      }
+    }
   }
 
   function next() {
