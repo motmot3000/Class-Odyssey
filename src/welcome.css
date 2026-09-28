@@ -38,11 +38,6 @@
 .welcome-intro h1 { margin: 0; font: 700 clamp(40px,5vw,66px)/1.06 var(--font-display); letter-spacing: -.01em; color: var(--welcome-ink); text-wrap: initial; overflow-wrap: normal; }
 .welcome-intro h1 span { color: var(--welcome-teal); }
 .welcome-intro > p { max-width: 430px; margin-top: 22px; color: var(--welcome-muted); font: 400 18px/1.6 var(--font-ui); }
-.welcome-beta-banner { display: flex; align-items: center; gap: 12px; margin: 16px 0 18px; padding: 10px 16px; border-radius: 999px; background: rgba(248,247,239,0.95); border: 1px solid var(--welcome-rule); color: var(--welcome-text); font: 400 12px/1.5 var(--font-ui); }
-.welcome-beta-banner .welcome-beta { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 28px; padding: 0 10px; border-radius: 999px; background: var(--welcome-gold); color: #fff; font: 700 10px/1.4 var(--font-display); letter-spacing: .12em; text-transform: uppercase; }
-.welcome-beta-banner .welcome-beta-text { flex: 1; color: var(--welcome-muted); }
-.welcome-beta-banner .welcome-support-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--welcome-teal); color: #fff; font: 600 11px var(--font-ui); text-decoration: none; transition: background .2s ease; }
-.welcome-beta-banner .welcome-support-btn:hover { background: #24544e; }
 .welcome-mobile-enter { display: none; }
 .welcome-gamification { max-width: 470px; margin-top: 30px; padding: 22px 24px 22px; border: 1px solid rgba(28,91,86,.2); border-radius: 14px; background: rgba(248,247,239,.9); box-shadow: 0 10px 30px rgba(16,31,37,.1); }
 .welcome-gamification h2 { margin: 0; font: 700 21px/1.25 var(--font-display); letter-spacing: -.005em; color: var(--welcome-teal); text-align: left; }
@@ -88,7 +83,6 @@
 .welcome-account-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 22px; color: #566552; font: 400 11px/1.5 var(--font-ui); }
 .welcome-account-note .icon { width: 14px; height: 14px; }
 .welcome-disclaimer { margin: 16px 0 0; padding-top: 14px; border-top: 1px dashed var(--welcome-rule); color: #6b7866; font: 400 11.5px/1.5 var(--font-ui); text-align: center; }
-.welcome-beta { display: inline-block; margin-right: 6px; padding: 2px 7px; border-radius: 999px; background: #e7e9df; border: 1px solid #c3ccbb; color: var(--welcome-teal); font: 700 10px/1.4 var(--font-display); letter-spacing: .12em; text-transform: uppercase; vertical-align: 1px; }
 .welcome-gate .gate-error { margin-top: 18px; color: #792f23; background: #f9e7dc; border: 1px solid #c47e61; }
 .welcome-page :focus-visible { outline-color: var(--welcome-teal); }
 body:has(#app[data-view="welcome"]) #language-switcher { position: absolute; top: 28px; right: clamp(24px,4.5vw,80px); bottom: auto; z-index: 40; }

@@ -19,11 +19,6 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         <span class="welcome-rule" aria-hidden="true"></span>
         <p class="welcome-kicker">${t("welcome.kicker")}</p>
         <h1 id="adventure-title">${t("welcome.headlineStart")}<br /><span>${t("welcome.headlineEnd")}</span></h1>
-        <div class="welcome-beta-banner">
-          <span class="welcome-beta">${t("welcome.beta")}</span>
-          <span class="welcome-beta-text">${t("welcome.disclaimer")}</span>
-          <a class="welcome-support-btn" href="https://www.buymeacoffee.com/classodyssey" target="_blank" rel="noopener noreferrer">${t("welcome.supportBtn")}☕</a>
-        </div>
         <p>${t("welcome.adventureHint")}</p>
         <aside class="welcome-gamification" aria-labelledby="gamification-title">
           <h2 id="gamification-title">${t("welcome.gamificationQuestion")}</h2>
