@@ -1,5 +1,5 @@
 import { getShopItem } from './domain.mjs';
-import { modeledItemIds, pupilLook, HAIR_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION } from './items-3d-model.mjs';
+import { modeledItemIds, pupilLook, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PORTRAIT_REVISION, PETS_REVISION } from './items-3d-model.mjs';
 import { escapeHtml, icon, renderTitle } from './ui.mjs';
 import { t, tItem } from './i18n.mjs';
 import { cachedHeroPortrait } from './portrait-runtime.mjs';
@@ -8,8 +8,13 @@ const modeled = new Set(modeledItemIds());
 const root = new URL('../assets/items-3d/previews/', import.meta.url);
 export const isModeledItem = item => Boolean(item && modeled.has(item.id));
 
+// Bumped when the item thumbnails are re-framed without a new catalogue.
+const THUMBNAIL_FRAMING = 'fit84';
+
 export function previewAsset(path) {
-  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : CATALOGUE_REVISION;
+  const pet = getShopItem(path.split('/').at(-1).replace('.webp', ''))?.type === 'pet';
+  const itemRevision = `${pet ? PETS_REVISION : CATALOGUE_REVISION}-${THUMBNAIL_FRAMING}`;
+  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : itemRevision;
   return new URL(`${path}?v=${revision}`, root).href;
 }
 
@@ -32,9 +37,9 @@ export function renderItemThumbnail(item, { className = 'item-thumbnail' } = {})
   // Titles have no 3D model: show the real, tier-styled title instead of a plain chip.
   if (item.type === 'title') return `<span class="shop-title-thumb">${renderTitle({ title: item.id })}</span>`;
   const canonical = getShopItem(item.id);
-  const color = item.type === 'hairColor' ? HAIR_PALETTE[item.id] : item.type === 'tone' ? canonical?.color : null;
+  const color = item.type === 'hairColor' ? HAIR_PALETTE[item.id] : item.type === 'eyeColor' ? EYE_PALETTE[item.id] : item.type === 'tone' ? canonical?.color : null;
   if (color && /^#[\da-f]{6}$/i.test(color)) return `<span class="cosmetic-swatch" style="--swatch:${color}" aria-hidden="true"></span>`;
-  const symbol = item.type === 'bespoke' ? 'palette' : item.type === 'face' ? 'spark' : 'close';
+  const symbol = item.type === 'face' ? 'spark' : 'close';
   return `<span class="empty-slot-preview" aria-hidden="true">${icon(symbol)}</span>`;
 }
 

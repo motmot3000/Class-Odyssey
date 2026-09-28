@@ -23,3 +23,22 @@ export function renderConsent({ pending = false, error = "" } = {}) {
       </form>
     </main>`;
 }
+
+export function renderTeacherSetup({ pending = false, error = "", recovery = false } = {}) {
+  const off = pending ? "disabled" : "";
+  return `
+    <main class="page page-narrow consent-page">
+      <form class="consent-card" data-action="setup-teacher-password" aria-busy="${pending}" ${error ? 'aria-describedby="teacher-setup-error"' : ""}>
+        <h1>${t(recovery ? "google.teacher.recoveryTitle" : "google.teacher.title")}</h1>
+        <p>${t(recovery ? "google.teacher.recoveryBody" : "google.teacher.body")}</p>
+        <label class="field"><span>${t("google.teacher.password")}</span><input name="password" type="password" autocomplete="new-password" required minlength="6" maxlength="128" ${off} /></label>
+        <label class="field"><span>${t("welcome.field.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" ${off} /></label>
+        <p class="field-hint">${t("welcome.passwordHint")}</p>
+        ${error ? `<p id="teacher-setup-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
+        <div class="consent-actions">
+          <button class="btn btn-primary" type="submit" ${off}>${t(pending ? "consent.pending" : recovery ? "google.teacher.recoverySubmit" : "google.teacher.submit")}</button>
+          <button class="btn btn-ghost" type="button" data-action="sign-out" ${off}>${t("lock.action.signout")}</button>
+        </div>
+      </form>
+    </main>`;
+}

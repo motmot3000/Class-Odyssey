@@ -15,13 +15,13 @@
 | Game rules and catalogue | `src/domain.mjs` | Pure state transitions, XP, HP, inventory, purchases and import migration |
 | Persisted shape | `src/state-schema.mjs` | Shared browser/API validation; no DOM or filesystem dependency |
 | Authentication client | `src/session.mjs`, `src/api.mjs` | Session tokens, bounded API calls, offline verifier and account-bound teacher unlock |
-| Screens | `src/views/` | Escaped HTML; the active game screens live in `sheikah.mjs` |
+| Screens | `src/views/` | Escaped HTML; the active game screens live in `odyssey.mjs` |
 | Shared UI and languages | `src/ui.mjs`, `src/i18n*.mjs` | Icons, titles, stats and keyed FR/EN copy |
 | HTTP routes | `server/server.mjs` | Authentication, request validation, per-client rate limits (trust-proxy aware), account caps and revision conflict responses |
 | Disk persistence | `server/api.mjs` | Password hashing, token index, atomic writes and backup recovery |
 | Public files | `server/static.mjs` | Allowlisted paths, symlink checks, correct 404 responses and streamed assets |
 
-`src/views/board.mjs` and `src/views/student.mjs` are retained legacy renderers. They are **not** the active Sheikah picker/board. `src/avatar.mjs` also retains the vector renderer and shared stat icons. Do not mistake either for the source of current 3D portraits.
+`src/views/board.mjs` and `src/views/student.mjs` are retained legacy renderers. They are **not** the active Odyssey picker/board. `src/avatar.mjs` also retains the vector renderer and shared stat icons. Do not mistake either for the source of current 3D portraits.
 
 ## A state change, end to end
 
@@ -50,8 +50,8 @@ Every asynchronous result must check its captured account/token before touching 
 
 - `src/items-3d-model.mjs`: serializable looks, catalogue revision, slot/persona visibility and share-link validation.
 - `src/items-3d-viewer.mjs`: Three.js renderer, framing, item isolation, lighting, export and GPU disposal.
-- `src/sheikah-viewer.mjs`: small adapter between the game screens and the catalogue viewer.
-- `src/sheikah-runtime.mjs`: owns the one visible canvas and moves it between current view hosts.
+- `src/odyssey-viewer.mjs`: small adapter between the game screens and the catalogue viewer.
+- `src/odyssey-runtime.mjs`: owns the one visible canvas and moves it between current view hosts.
 - `src/shared-resource.mjs`: shared in-flight loading with generation-based reset. A late result after a retry is disposed, not mounted.
 - `src/portrait-runtime.mjs`: one offscreen renderer, serialized jobs and a 64-entry LRU image cache. Equal looks share a job.
 - `src/portrait-image.mjs`: transparent-margin detection and full-silhouette image framing.
@@ -69,11 +69,11 @@ Two different lifetime checks matter: **host identity** prevents mounting into a
 
 ## Sources versus generated files
 
-Do not hand-edit minified files in `assets/sheikah/` or `assets/items-3d/web/`:
+Do not hand-edit minified files in `assets/odyssey/` or `assets/items-3d/web/`:
 
 ```sh
 npm run build:items-3d
-npm run build:sheikah
+npm run build:odyssey
 ```
 
 The equipment build removes obsolete, known generated chunk filenames only
@@ -82,7 +82,7 @@ same esbuild output graph; unrelated files are not pruned.
 
 For geometry, `tools/build-items-3d.py` imports immutable source characters, fits clothing/armour to anatomical contours and emits `catalogue.blend`, `catalogue.glb` and its manifest. `tools/render-equipment-previews.py` renders product-only images and portraits; `tools/finalize-equipment-previews.py` produces WebP files. See [the equipment pipeline](items-3d/README.md) for commands and Blender/Pillow requirements.
 
-The base characters' faces, skin and starter outfit come from the refit revision: `tools/prepare_refit_textures.py` authors `assets/characters-refit/textures`, the catalogue build re-sculpts the frontal face bowl and applies the approved `Douce` expression and reference-eye maps, and drops the starter collar. `tools/freeze_approved_faces.py` keeps the frozen snapshots in `assets/characters-approved/faces-v1`. Haircuts are shared by both characters for now: `HAIR_ITEMS=short,long,curly` makes the build ship the two delivered cuts (`SUPPLIED_HAIR`, fitted to each head) plus the sculpted Afro, so `HAIRS` is `short`/`long`/`bald`/`curly` and Braids/Royal Hair stay out. The cosmetics catalogue is scoped down: Archmage and King outfits and the whole Items category are withdrawn (`no-weapon` remains internal only), Guerrier/Chevalier ship without greaves, tattoos and Golden Skin are removed, and Explorer/Champion/King/Legend keep their names with their own accent and badge. See [the refit revision](characters-refit/README.md).
+The base characters' faces, skin and starter outfit come from the refit revision: `tools/prepare_refit_textures.py` authors `assets/characters-refit/textures`, the catalogue build re-sculpts the frontal face bowl and applies the approved `Douce` expression and reference-eye maps, and drops the starter collar. `tools/freeze_approved_faces.py` keeps the frozen snapshots in `assets/characters-approved/faces-v1`. Haircuts are shared by both characters for now: `HAIR_ITEMS=short,long,medium-cut,curly` makes the build ship the three delivered cuts (`SUPPLIED_HAIR`, fitted to each head) plus the sculpted Afro, so `HAIRS` is `short`/`long`/`medium-cut`/`bald`/`curly` and Braids/Royal Hair stay out. The cosmetics catalogue is scoped down: Archmage and King outfits and the whole Items category are withdrawn (`no-weapon` remains internal only), there is one outfit per level up to 10 (Bard 1 … Horse Keeper 10); every outfit above Ranger is a full outfit that hide the delivered trousers (`coversLegs`, `core_part`) while the boots stay, and Guerrier/Chevalier ship with leg armour, tattoos and Golden Skin are removed, and Explorer/Champion/King/Legend keep their names with their own accent and badge. See [the refit revision](characters-refit/README.md).
 
 Skin tone is applied at runtime: one medium albedo is baked and `src/items-3d-viewer.mjs` multiplies the `base_skin_map` / `skin_plain` materials by the tone ratio from `SKIN_TONE_COLORS` (`src/items-3d-model.mjs`). The tone field rides in the look (`tone`), so portraits, the dressing and the shop all agree. Faces are paused (empty category); tattoo skins and Golden Skin are removed.
 

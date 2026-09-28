@@ -29,9 +29,15 @@ services:
       TRUST_PROXY: "1"
       FOUNDER_USERNAME: ${FOUNDER_USERNAME:?FOUNDER_USERNAME is required}
       FOUNDER_PASSWORD: ${FOUNDER_PASSWORD:?FOUNDER_PASSWORD is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ADMIN_CONSOLE_KEY: ${ADMIN_CONSOLE_KEY:-}
+      GEOIP_DB: ${GEOIP_DB:-}
       NODE_ENV: production
     volumes:
       - ./data:/data
+      # Optional offline City database: set GEOIP_DB=/geoip/GeoLite2-City.mmdb
+      # - ./geoip:/geoip:ro
     healthcheck:
       test:
         - CMD

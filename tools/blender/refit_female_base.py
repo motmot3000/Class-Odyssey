@@ -128,22 +128,22 @@ EAR_OUTLINE = ((-.0150, 1.5180), (-.0300, 1.5340), (-.0300, 1.5625), (-.0204, 1.
                (.0316, 1.5693), (.0232, 1.5553), (.0110, 1.5424))
 
 
-def ear_weight(y, z):
+def ear_weight(y, z, outline=EAR_OUTLINE, band=.014):
     """Soft stencil of the actual ear outline, not a rectangular shaved side."""
     inside = False
     distance = float('inf')
-    for i, (ay, az) in enumerate(EAR_OUTLINE):
-        by, bz = EAR_OUTLINE[(i + 1) % len(EAR_OUTLINE)]
+    for i, (ay, az) in enumerate(outline):
+        by, bz = outline[(i + 1) % len(outline)]
         dy, dz = by - ay, bz - az
         t = max(0.0, min(1.0, ((y - ay) * dy + (z - az) * dz) / (dy * dy + dz * dz)))
         distance = min(distance, math.hypot(y - ay - t * dy, z - az - t * dz))
         if (az > z) != (bz > z) and y < ay + (z - az) * dy / dz:
             inside = not inside
     signed = distance if inside else -distance
-    return smooth((signed + .014) / .014)
+    return smooth((signed + band) / band)
 
 
-def clear_ear_space(obj):
+def clear_ear_space(obj, weight=ear_weight, revision='anatomical-outline-v2'):
     """Tuck whole hair surfaces medially behind the ear, with smooth shoulders.
 
     The ear extends from x=±.090 to ±.135, z=1.52..1.61 on the current base.
@@ -158,7 +158,7 @@ def clear_ear_space(obj):
         side = 1.0 if p.x >= 0 else -1.0
         if not -.05 < p.y < .075 or not 1.50 < p.z < 1.635:
             continue
-        w = ear_weight(p.y, p.z)
+        w = weight(p.y, p.z)
         if w <= 0 or abs(p.x) <= .077:
             continue
         # Monotonic compression (not face removal) preserves connected locks.
@@ -167,7 +167,7 @@ def clear_ear_space(obj):
         vertex.co = inverse @ p
         moved += 1
     obj.data.update()
-    obj['ear_clearance_revision'] = 'anatomical-outline-v2'
+    obj['ear_clearance_revision'] = revision
     obj['ear_clearance_vertices'] = moved
     return moved
 
@@ -226,7 +226,7 @@ def fit_posterior_hair(obj, skin):
     return obj
 
 
-def swept_temple_locks(reference):
+def swept_temple_locks(reference, clear=clear_ear_space, paths=None, label='swept temple'):
     """Join the supplied temple curls to the back lengths around each ear.
 
     These are tapered, volumetric, combed locks, rather than a flat scalp plate.
@@ -234,7 +234,7 @@ def swept_temple_locks(reference):
     Coordinates are in the final character frame, after equipment fitting.
     """
     import bpy
-    paths = [
+    paths = paths or [
         ([(.084, -.035, 1.670), (.100, -.010, 1.637), (.102, .027, 1.622),
           (.100, .057, 1.606), (.092, .081, 1.580)],
          [.002, .013, .012, .014, .001], [.002, .004, .004, .005, .0005]),
@@ -278,11 +278,11 @@ def swept_temple_locks(reference):
             bm=bmesh.new();bm.from_mesh(data)
             bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(data);bm.free()
             for polygon in data.polygons:polygon.use_smooth=True
-            obj=bpy.data.objects.new(f'long / girl / swept temple {sign} {index} / {reference.get("hat_fit", "open")}',data)
+            obj=bpy.data.objects.new(f'{reference.get("shop_id")} / {label} {sign} {index} / {reference.get("hat_fit", "open")}',data)
             bpy.context.scene.collection.objects.link(obj)
             for key in ['shop_slot','shop_id','fit_persona','hat_fit','appearance_revision','base_revision']:
                 if key in reference:obj[key]=reference[key]
             for mat in reference.data.materials:data.materials.append(mat)
-            clear_ear_space(obj)
+            clear(obj)
             created.append(obj)
     return created

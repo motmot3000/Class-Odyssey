@@ -1,0 +1,4 @@
+assets/character-stylized/catalogue.glb filter=lfs diff=lfs merge=lfs -text
+assets/items-3d/catalogue.blend filter=lfs diff=lfs merge=lfs -text
+assets/items-3d/catalogue.glb filter=lfs diff=lfs merge=lfs -text
+assets/character-stylized/catalogue.blend filter=lfs diff=lfs merge=lfs -text

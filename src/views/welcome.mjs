@@ -49,16 +49,16 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.creating" : "welcome.submit.create")}</span>${icon("back", "welcome-arrow")}</button>
           </form>` : `
           <form class="gate-form" data-action="sign-in" aria-busy="${pending}" ${error ? 'aria-describedby="gate-error"' : ""}>
-            <label class="field"><span>${t("welcome.field.emailOrUsername")}</span><input id="gate-username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required value="${escapeHtml(values.username || "")}" ${off} /></label>
+            <label class="field"><span>${t("welcome.field.email")}</span><input id="gate-username" name="username" autocomplete="email" autocapitalize="none" spellcheck="false" required value="${escapeHtml(values.username || "")}" ${off} /></label>
             <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="current-password" required ${off} /></label>
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.signing" : "welcome.enter")}</span>${icon("back", "welcome-arrow")}</button>
+            <button class="welcome-forgot" type="button" data-action="forgot-password" ${off}>${t("settings.reset")}</button>
           </form>`}
         ${google ? `
           <p class="gate-or" aria-hidden="true"><span>${t("welcome.or")}</span></p>
-          <a class="btn btn-google" href="api/auth/google" data-action="google-signin">${GOOGLE_MARK}<span>${t("welcome.google")}</span></a>` : ""}
+          <a class="btn btn-google" href="api/auth/google" data-action="google-signin">${GOOGLE_MARK}<span>${t(signup ? "welcome.google.signup" : "welcome.google.signin")}</span></a>` : ""}
         ${error ? `<p id="gate-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
         <p class="welcome-account-note">${icon("user")}<span>${t("welcome.classAccount")}</span></p>
-        <p class="welcome-disclaimer"><span class="welcome-beta">${t("welcome.beta")}</span>${t("welcome.disclaimer")}</p>
       </div></section>
     </div>`;
 }

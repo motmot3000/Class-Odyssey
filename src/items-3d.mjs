@@ -1,6 +1,6 @@
 import { getShopItems, getShopItem } from './domain.mjs';
 import { renderHero } from './avatar.mjs';
-import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds, BASE_CATALOGUE_URL } from './items-3d-model.mjs';
+import { CATEGORIES, DEFAULT_LOOK, HAIR_PALETTE, EYE_PALETTE, PRESETS, lookFromParams, lookSummary, modeledItemIds, BASE_CATALOGUE_URL, BASE_PREVIEW_URL } from './items-3d-model.mjs';
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -20,6 +20,19 @@ const names = { male: 'Noa', female: 'Mila' };
 $('#collection-count').textContent = `${modeledItemIds().length} modèles`;
 $('#categories').innerHTML = CATEGORIES.map(({ type, label }) => `<button type="button" data-category="${type}" aria-pressed="${type === category}">${label}</button>`).join('');
 
+/* The loading poster is set here so it always points at the delivered base and
+ * carries the revision: a plain baked URL stayed cached and the old character
+ * flashed back on every refresh. */
+$('#poster').src = BASE_PREVIEW_URL;
+
+/* One click from the workshop to the running game, signed in as the local
+ * admin. The app only honours the credentials on localhost, so this never
+ * exposes the account outside the developer machine. */
+const APP_PORT = '5180';
+const appUrl = new URL(`${location.protocol}//${location.hostname}:${APP_PORT}/`);
+appUrl.searchParams.set('autologin', 'admin:1234');
+$('#open-app').href = appUrl.href;
+
 function setReady(ready) {
   controlsReady = ready;
   $$('[data-persona], [data-preset], [data-angle], [data-category], #choices button, #rotate, #export, #export-kind, #reset, #compare').forEach(button => { button.disabled = !ready; });
@@ -29,7 +42,7 @@ function renderChoices() {
   const field = CATEGORIES.find(entry => entry.type === category).field;
   $('#choices').innerHTML = getShopItems(category).map(item => `
     <button class="choice" data-item="${item.id}" type="button" aria-pressed="${look[field] === item.id}" ${controlsReady ? '' : 'disabled'}>
-      ${category === 'hairColor' ? `<span class="swatch" style="--hair-color:${HAIR_PALETTE[item.id]}" aria-hidden="true"></span>` : '<span class="selection-dot" aria-hidden="true"></span>'}
+      ${category === 'hairColor' ? `<span class="swatch" style="--hair-color:${HAIR_PALETTE[item.id]}" aria-hidden="true"></span>` : category === 'eyeColor' ? `<span class="swatch" style="--hair-color:${EYE_PALETTE[item.id]}" aria-hidden="true"></span>` : '<span class="selection-dot" aria-hidden="true"></span>'}
       <span><strong>${item.name}</strong><small>Niveau ${item.minLevel}${look[field] === item.id ? ' · Équipé' : ''}</small></span>
       <span class="price">${item.price ? `${item.price} pièces` : 'Gratuit'}</span>
     </button>`).join('');

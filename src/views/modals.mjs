@@ -32,23 +32,16 @@ const TYPE_LABEL = {
   outfit: () => t("modal.type.outfit"),
   hat: () => t("modal.type.hat"),
   weapon: () => t("modal.type.weapon"),
+  shield: () => t("modal.type.shield"),
   hair: () => t("modal.type.hair"),
   hairColor: () => t("modal.type.hairColor"),
+  eyeColor: () => t("modal.type.eyeColor"),
+  accessory: () => t("modal.type.accessory"),
+  pet: () => t("modal.type.pet"),
   title: () => t("modal.type.title"),
   tone: () => t("modal.type.tone"),
   bespoke: () => t("modal.type.bespoke")
 };
-
-export function renderAddClassDialog() {
-  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-class-title">
-    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
-    <h2 id="add-class-title">${t('class.add.title')}</h2>
-    <form class="add-form" data-action="create-class">
-      <label class="field"><span>${t('class.add.name')}</span><input name="name" autocomplete="off" required maxlength="60" placeholder="${t('class.add.placeholder')}" autofocus /></label>
-      <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.add.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
-    </form>
-  </dialog>`;
-}
 
 export function renderAddPupilDialog(classroom) {  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
     <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
@@ -158,6 +151,42 @@ export function renderItemDialog(item, pupil) {
       ` : ""}
     </dialog>
   `;
+}
+
+/* Help request: the message is delivered to the admin console inbox, the
+ * reply address is the account email shown in the panel. */
+export function renderHelpDialog({ email = "" } = {}) {
+  const categories = ["bug", "class", "account", "billing", "other"];
+  return `<dialog class="dialog dialog-help" aria-labelledby="help-dialog-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="help-dialog-title">${t('settings.help.title')}</h2>
+    <p class="panel-note">${t('settings.help.body', { email: escapeHtml(email || '—') })}</p>
+    <form class="help-form" data-action="send-support">
+      <label class="field"><span>${t('settings.help.category')}</span><select name="category">
+        ${categories.map((category) => `<option value="${category}">${t(`settings.help.cat.${category}`)}</option>`).join("")}
+      </select></label>
+      <label class="field"><span>${t('settings.help.subject')}</span><input name="subject" maxlength="120" /></label>
+      <label class="field"><span>${t('settings.help.message')}</span><textarea name="message" rows="5" maxlength="2000" required autofocus placeholder="${t('settings.help.placeholder')}"></textarea></label>
+      <div class="row"><button class="btn btn-primary" type="submit">${icon('book')}${t('settings.help.send')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
+    </form>
+  </dialog>`;
+}
+
+/* Signed-out recovery: request a code by email, then set a new password. */
+export function renderPasswordResetDialog() {
+  return `<dialog class="dialog dialog-reset" aria-labelledby="reset-dialog-title">
+    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
+    <h2 id="reset-dialog-title">${t('settings.reset')}</h2>
+    <p class="panel-note">${t('settings.reset.dialogHint')}</p>
+    <form class="access-form" data-action="confirm-password-reset">
+      <label class="field"><span>${t('welcome.field.email')}</span><input name="email" type="email" autocomplete="email" maxlength="160" required autofocus /></label>
+      <button class="btn btn-sm" type="button" data-action="request-password-reset">${t('settings.reset.send')}</button>
+      <label class="field"><span>${t('settings.reset.code')}</span><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required /></label>
+      <label class="field"><span>${t('settings.reset.next')}</span><input name="next" type="password" autocomplete="new-password" required minlength="6" maxlength="128" /></label>
+      <label class="field"><span>${t('console.account.repeat')}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" /></label>
+      <button class="btn btn-primary" type="submit">${t('settings.reset.confirm')}</button>
+    </form>
+  </dialog>`;
 }
 
 /* One rule is a bilingual pair: the French text is required, the English one

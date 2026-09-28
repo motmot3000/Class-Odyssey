@@ -40,6 +40,20 @@ console Google) pour activer le bouton. L'URI de redirection autorisée est
 hôte. Sans ces variables, `/api/config` annonce `google: false` et aucune
 connexion Google n'est proposée.
 
+La réinitialisation du mot de passe envoie un code à six chiffres par e-mail.
+Le transport s'active avec `RESEND_API_KEY` et `MAIL_FROM` (expéditeur vérifié
+chez Resend). Sans ces variables, la demande est enregistrée et le code est
+écrit dans les journaux du serveur hors production ; les autres paramètres du
+flux restent identiques.
+
+Le site public est provisoirement servi sous
+`https://www.thomaswunsche.com/classodyssey/`. Le vhost Caddy transmet
+`X-Forwarded-Prefix: /classodyssey` et le serveur l'utilise pour l'URI de
+retour, le cookie OAuth et la redirection finale. Inscrire cet URI exact dans
+le client Google, en plus des URI du sous-domaine de secours, du domaine
+principal et du développement local. `compose.yaml` transmet au conteneur
+`GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` depuis le `.env` non versionné.
+
 Elles doivent être fournies au processus `docker compose` par l'environnement
 du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
 écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
@@ -79,14 +93,29 @@ reste ainsi récupérable. Les comptes créés ensuite commencent avec des class
 | DELETE  | `/api/session`                             | Révoque la session courante |
 | POST    | `/api/session/verify`                      | Vérifie le mot de passe pour la console enseignant |
 | PUT     | `/api/session/password`                    | Change le mot de passe et révoque les autres sessions |
+| PUT     | `/api/account/profile`                     | Modifie le nom affiché et l'e-mail (identifiant) |
+| POST    | `/api/session/password/reset`              | Envoie un code de réinitialisation à l'adresse e-mail |
+| POST    | `/api/session/password/reset/confirm`      | Vérifie le code et définit le nouveau mot de passe |
+| POST    | `/api/support/messages`                    | Dépose une demande d'aide (lue par la console admin) |
 | PUT     | `/api/account/terms`                       | Enregistre l'acceptation des textes légaux (comptes créés via Google) |
+| PUT     | `/api/account/teacher-password`            | Définit le mot de passe console d'un nouveau compte Google |
+| PUT     | `/api/account/teacher-password/recover`    | Réinitialise ce mot de passe après une connexion Google récente |
 | GET     | `/api/state`                               | Lit l'état du compte connecté |
 | PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |
 | GET     | `/api/admin/accounts`                      | Liste les comptes (`admin`) |
 | PUT     | `/api/admin/accounts/:id/password`         | Réinitialise le mot de passe d'un autre compte (`admin`) |
+| GET     | `/api/console/overview`                    | Métadonnées et dernières IP des comptes (clé serveur) |
+| GET     | `/api/console/audit`                       | Journal de modération (clé serveur) |
+| GET     | `/api/console/support`                     | Messages d'aide et nombre de messages ouverts (clé serveur) |
+| PATCH   | `/api/console/support/:id`                 | Statut et note interne d'un message d'aide (clé serveur) |
+| PATCH   | `/api/console/accounts/:id`                | Nom affiché, note interne, suspension/réactivation (clé serveur) |
+| DELETE  | `/api/console/accounts/:id/sessions`       | Révoque les sessions du compte (clé serveur) |
+| DELETE  | `/api/console/accounts/:id`                | Supprime le compte après confirmation (clé serveur) |
 
-Les routes autres que `health`, inscription et connexion exigent
-`X-Session-Token`. Les jetons ne sont stockés que sous forme de condensat
+Les routes autres que `health`, inscription, connexion et `/api/console/*` exigent
+`X-Session-Token`. Les routes `/api/console/*` exigent `X-Console-Key`, configurée
+uniquement côté serveur avec `ADMIN_CONSOLE_KEY` (au moins 32 caractères) ; sans
+clé elles sont désactivées. Les jetons ne sont stockés que sous forme de condensat
 SHA-256, les mots de passe avec `scrypt` (asynchrone, sel de 16 octets, dérivé
 de 32 octets, comparaison en temps constant), et aucune réponse d'administration
 n'expose ces valeurs. Le mot de passe fait au minimum 6 caractères. Une session
@@ -95,7 +124,10 @@ La création d'un compte exige `termsAccepted: true` ; le serveur enregistre
 `terms: { acceptedAt, version }` sur le compte (version issue de
 `src/terms.mjs`). Les comptes créés via Google, dont le flux ne peut pas
 afficher la case, acceptent les textes à la première connexion via
-`PUT /api/account/terms`.
+`PUT /api/account/terms`, puis choisissent un mot de passe dédié à la console
+du professeur. Ce mot de passe ne permet pas la connexion au compte ; Google
+reste la méthode de connexion. Une nouvelle connexion Google permet de
+réinitialiser ce mot de passe si l'ancien est oublié.
 Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
 `TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
 inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est

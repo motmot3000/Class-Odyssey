@@ -3,26 +3,27 @@ import test from "node:test";
 import { createInitialState, getCurrentClass } from "../src/domain.mjs";
 import { setLang } from "../src/i18n.mjs";
 import { renderWelcome } from "../src/views/welcome.mjs";
-import { renderConsent } from "../src/views/consent.mjs";
+import { renderConsent, renderTeacherSetup } from "../src/views/consent.mjs";
+import { renderLockScreen } from "../src/views/lock.mjs";
 import { renderConsole } from "../src/views/console.mjs";
-import { renderAddPupilDialog } from "../src/views/modals.mjs";
+import { renderAddPupilDialog, renderHelpDialog, renderPasswordResetDialog } from "../src/views/modals.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderMentions, renderPrivacy, renderTerms } from "../src/views/legal.mjs";
 import { renderAppFooter } from "../src/views/footer.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
-import { renderSheikahShop, renderSheikahStudent, renderSheikahTopbar, renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
+import { renderOdysseyShop, renderOdysseyStudent, renderOdysseyTopbar, renderOdysseySheet, renderOdysseyPersonalize } from "../src/views/odyssey.mjs";
 
 test("Students cards expose the full hero stats and direct Dressing/Shop actions", () => {
   const classroom = getCurrentClass(createInitialState());
   const pupil = { ...classroom.pupils[0], xp: 250, hp: 3, money: 42 };
-  const html = renderSheikahStudent({ classroom: { ...classroom, pupils: [pupil] }, ui: {}, pupil: null });
+  const html = renderOdysseyStudent({ classroom: { ...classroom, pupils: [pupil] }, ui: {}, pupil: null });
   assert.match(html, /class="rune-card student-card/);
   assert.match(html, /aria-valuenow="250"/);
   assert.match(html, /3 of 5 hit points/);
   assert.match(html, /42 coins/);
   assert.match(html, /data-action="student-pick"/);
-  assert.match(html, /data-action="sheikah-personalize"[^>]*data-pupil-id=/);
-  assert.match(html, /data-action="sheikah-shop"[^>]*data-pupil-id=/);
+  assert.match(html, /data-action="odyssey-personalize"[^>]*data-pupil-id=/);
+  assert.match(html, /data-action="odyssey-shop"[^>]*data-pupil-id=/);
   assert.match(html, />Dressing</);
   assert.doesNotMatch(html, /data-action="award-xp"|data-action="toggle-pupil"/);
 });
@@ -59,7 +60,7 @@ test("Class navigation has no separate teacher/student views and exposes a prote
   const previousDocument = globalThis.document;
   globalThis.document = { documentElement:{dataset:{theme:'light'}} };
   try {
-    const html=renderSheikahTopbar({view:'class',state:createInitialState(),account:{username:'teacher',displayName:'Test'},unlocked:false});
+    const html=renderOdysseyTopbar({view:'class',state:createInitialState(),account:{username:'teacher',displayName:'Test'},unlocked:false});
     assert.doesNotMatch(html,/data-action="show-board"|data-action="show-student"/);
     assert.match(html,/data-action="show-class"/);
     assert.match(html,/data-action="teacher-console"/);
@@ -75,11 +76,11 @@ test("Class navigation has no separate teacher/student views and exposes a prote
 test("an open teacher panel enables single-card selection and hero navigation stays neutral", () => {
   const classroom=getCurrentClass(createInitialState());
   const pupil=classroom.pupils[0];
-  const html=renderSheikahStudent({classroom,ui:{},pupil:null,classView:true,selectionMode:true,selectedIds:[pupil.id]});
+  const html=renderOdysseyStudent({classroom,ui:{},pupil:null,classView:true,selectionMode:true,selectedIds:[pupil.id]});
   assert.match(html,/data-action="toggle-pupil"/);
   assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
-  const sheet=renderSheikahSheet(pupil,{}, {student:true});
-  const dressing=sheet.match(/<button[^>]+data-action="sheikah-personalize"[^>]*>/)[0];
+  const sheet=renderOdysseySheet(pupil,{}, {student:true});
+  const dressing=sheet.match(/<button[^>]+data-action="odyssey-personalize"[^>]*>/)[0];
   assert.doesNotMatch(dressing,/btn-primary|aria-pressed="true"|is-active/);
   assert.doesNotMatch(sheet,/equipment-details|Hero equipment/);
   assert.match(sheet,/hero-class-return/);
@@ -89,15 +90,15 @@ test("an open teacher panel enables single-card selection and hero navigation st
 test("Dressing and Shop both return to the hero from the same header control", () => {
   const classroom=getCurrentClass(createInitialState());
   const pupil=classroom.pupils[0];
-  const dressing=renderSheikahPersonalize(pupil,{angle:'quarter'});
-  const shop=renderSheikahShop(pupil,{shopCategory:'outfit'});
+  const dressing=renderOdysseyPersonalize(pupil,{angle:'quarter'});
+  const shop=renderOdysseyShop(pupil,{shopCategory:'outfit'});
   for (const html of [dressing,shop]) {
     const header=html.match(/<header class="sheet-heading">[\s\S]*?<\/header>/)[0];
     assert.match(header,/class="btn btn-back"/);
     assert.ok(header.indexOf('btn-back')<header.indexOf('<h1>'));
     assert.match(header,/data-action="hero-back"/);
   }
-  assert.doesNotMatch(dressing,/data-action="sheikah-back"|data-action="show-class"/);
+  assert.doesNotMatch(dressing,/data-action="odyssey-back"|data-action="show-class"/);
   assert.doesNotMatch(shop,/data-action="shop-back"/);
 });
 
@@ -106,18 +107,18 @@ test("pupil search filters names, escapes user content and offers a recovery act
     { ...getCurrentClass(createInitialState()).pupils[0], name: "Élodie <script>", id: "elodie" },
     { ...getCurrentClass(createInitialState()).pupils[1], name: "Alex", id: "alex" }
   ] };
-  const html = renderSheikahStudent({ classroom, ui: { query: "élo" }, pupil: null });
+  const html = renderOdysseyStudent({ classroom, ui: { query: "élo" }, pupil: null });
   assert.match(html, /data-pupil-id="elodie"/);
   assert.doesNotMatch(html, /data-pupil-id="alex"|<script>/);
   assert.match(html, /Élodie &lt;script&gt;/);
-  const empty = renderSheikahStudent({ classroom, ui: { query: "missing" }, pupil: null });
+  const empty = renderOdysseyStudent({ classroom, ui: { query: "missing" }, pupil: null });
   assert.match(empty, /data-action="clear-search"/);
   assert.doesNotMatch(empty, /data-action="student-pick"/);
 });
 
 test("the shop names its pupil and returns to the hero without switching roles", () => {
   const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: "Mila & Noa", money: 73 };
-  const html = renderSheikahShop(pupil, { shopCategory: "outfit" });
+  const html = renderOdysseyShop(pupil, { shopCategory: "outfit" });
   assert.match(html, /Mila &amp; Noa/);
   assert.match(html, /data-action="hero-back"/);
   assert.match(html, /<strong>73<\/strong>/);
@@ -127,7 +128,7 @@ test("the shop names its pupil and returns to the hero without switching roles",
 
 test("the shop previews each title on its own tier backdrop", () => {
   const pupil = getCurrentClass(createInitialState()).pupils[0];
-  const html = renderSheikahShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
+  const html = renderOdysseyShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
   assert.match(html, /class="dais dais-lg title-stage" data-title-tier="5" data-title-id="class-legend"/);
   assert.match(html, /title-emblem/);
   assert.match(html, /data-title-labelled/);
@@ -136,6 +137,18 @@ test("the shop previews each title on its own tier backdrop", () => {
   assert.ok(ids.includes("perfect-pupil") && ids.includes("grammar-master") && ids.includes("rookie"));
   assert.ok(new Set(ids).size >= 8);
   assert.doesNotMatch(html, /angle-bar/);
+});
+
+test("item previews in the shop never sit on a title backdrop", () => {
+  const pupil = { ...getCurrentClass(createInitialState()).pupils[0], title: "class-legend" };
+  const outfit = renderOdysseyShop(pupil, { shopCategory: "outfit" });
+  assert.match(outfit, /data-viewer-host/);
+  assert.doesNotMatch(outfit, /data-viewer-host[^>]*data-title-tier/);
+  assert.doesNotMatch(outfit, /title-halo|title-emblem|title-frame/);
+  // The title category keeps its dedicated backdrop so pupils still see it.
+  const title = renderOdysseyShop(pupil, { shopCategory: "title", shopPreview: "class-legend" });
+  assert.match(title, /title-stage" data-title-tier="5" data-title-id="class-legend"/);
+  assert.match(title, /title-emblem/);
 });
 
 test("locked pupils can return from the rules without hitting the teacher gate", () => {
@@ -200,6 +213,26 @@ test("the gate offers Google sign-in only when the server advertises it", () => 
       assert.match(html, /href="api\/auth\/google"/);
       assert.match(html, /class="google-mark"/);
       assert.doesNotMatch(html, /welcome\.google|welcome\.or/);
+      const signup = renderWelcome({ google: true, tab: "signup" });
+      assert.match(signup, /data-action="google-signin"/);
+      assert.notEqual(html.match(/class="btn btn-google"[^>]*>.*?<span>(.*?)<\/span>/)?.[1], signup.match(/class="btn btn-google"[^>]*>.*?<span>(.*?)<\/span>/)?.[1]);
+    } finally { setLang("en"); }
+  }
+});
+
+test("Google account setup asks for a separate teacher password in both languages", () => {
+  for (const lang of ["fr", "en"]) {
+    try {
+      setLang(lang);
+      const html = renderTeacherSetup();
+      assert.match(html, /data-action="setup-teacher-password"/);
+      assert.match(html, /name="password"[^>]*minlength="6"/);
+      assert.match(html, /name="confirm"/);
+      assert.doesNotMatch(html, /google\.teacher\./);
+      const reset = renderTeacherSetup({ recovery: true });
+      assert.match(reset, /data-action="setup-teacher-password"/);
+      assert.doesNotMatch(reset, /google\.teacher\./);
+      assert.match(renderLockScreen({ account: { googleOnly: true } }), /data-action="recover-teacher-password"/);
     } finally { setLang("en"); }
   }
 });
@@ -229,13 +262,40 @@ test("account management connects own-account settings and labels other-account 
   assert.match(html, /type="password"[^>]*required[^>]*aria-label=/);
 });
 
+test("account settings expose profile, password recovery and help in both languages", () => {
+  const account = { username: "__VG_EMAIL_58bef97775b0__", email: "__VG_EMAIL_58bef97775b0__", displayName: "thomas.vunch" };
+  try {
+    for (const lang of ["fr", "en"]) {
+      setLang(lang);
+      const settings = renderConsole({ classroom: null, ui: { openPanels: new Set(["account"]) }, targets: [], focused: null, canUndo: false, events: [], unlockedUntil: null, account });
+      assert.match(settings, /data-action="update-profile"/);
+      assert.match(settings, /data-action="change-password"/);
+      assert.match(settings, /data-action="request-password-reset"/);
+      assert.match(settings, /data-action="confirm-password-reset"/);
+      assert.match(settings, /data-action="open-help"/);
+      assert.doesNotMatch(settings, /settings\.(title|profile|password|help|reset)/);
+
+      const help = renderHelpDialog({ email: account.email });
+      assert.match(help, /data-action="send-support"/);
+      assert.match(help, /name="message"/);
+      assert.match(help, /name="category"/);
+      assert.doesNotMatch(help, /settings\.help\./);
+
+      const reset = renderPasswordResetDialog();
+      assert.match(reset, /data-action="request-password-reset"/);
+      assert.match(reset, /data-action="confirm-password-reset"/);
+      assert.match(renderWelcome(), /data-action="forgot-password"/);
+    }
+  } finally { setLang("en"); }
+});
+
 test("new public, pupil and recovery copy renders in both application languages", () => {
   const pupil = getCurrentClass(createInitialState()).pupils[0];
   try {
     for (const lang of ["fr", "en"]) {
       setLang(lang);
-      const html = renderWelcome() + renderSheikahStudent({ pupil, ui: {} });
-      assert.doesNotMatch(html, /welcome\.adventure|view\.simplified|view\.retry|sheikah\.equipment/);
+      const html = renderWelcome() + renderOdysseyStudent({ pupil, ui: {} });
+      assert.doesNotMatch(html, /welcome\.adventure|view\.simplified|view\.retry|odyssey\.equipment/);
       assert.match(html, /data-action="retry-viewer"/);
       assert.match(html, /class="viewer-fallback"/);
     }

@@ -83,7 +83,6 @@
 .welcome-account-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 22px; color: #566552; font: 400 11px/1.5 var(--font-ui); }
 .welcome-account-note .icon { width: 14px; height: 14px; }
 .welcome-disclaimer { margin: 16px 0 0; padding-top: 14px; border-top: 1px dashed var(--welcome-rule); color: #6b7866; font: 400 11.5px/1.5 var(--font-ui); text-align: center; }
-.welcome-beta { display: inline-block; margin-right: 6px; padding: 2px 7px; border-radius: 999px; background: #e7e9df; border: 1px solid #c3ccbb; color: var(--welcome-teal); font: 700 10px/1.4 var(--font-display); letter-spacing: .12em; text-transform: uppercase; vertical-align: 1px; }
 .welcome-gate .gate-error { margin-top: 18px; color: #792f23; background: #f9e7dc; border: 1px solid #c47e61; }
 .welcome-page :focus-visible { outline-color: var(--welcome-teal); }
 body:has(#app[data-view="welcome"]) #language-switcher { position: absolute; top: 28px; right: clamp(24px,4.5vw,80px); bottom: auto; z-index: 40; }

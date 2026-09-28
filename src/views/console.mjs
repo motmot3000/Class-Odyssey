@@ -9,14 +9,9 @@ import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel
 import { renderShop } from "./shop.mjs";
 import { getLang, t, tItem, translateMessage } from "../i18n.mjs";
 
-const XP_PRESETS = [
-  { amount: 100, reason: "console.preset.homework" },
-  { amount: 150, reason: "console.preset.vocabulary" },
-  { amount: 50, reason: "console.preset.nice" },
-  { amount: 500, reason: "console.preset.bonus" }
-];
+const XP_PRESETS = [50, 100, 200, 500, 1000];
 
-const COIN_PRESETS = [10, 20, 30, 50];
+const COIN_PRESETS = [10, 20, 50, 100];
 
 export function renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset = false, unlockedUntil = null, account = null }) {
   const open = (name) => (ui.openPanels.has(name) ? "open" : "");
@@ -24,7 +19,7 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
   return `
     <div class="console-head">
       <h2>${t("console.title")}</h2>
-      ${classroom ? `<button class="btn btn-primary btn-sm" type="button" data-action="focus-add">${icon('plus')}<span>${t('console.roster.add')}</span></button>` : ""}
+      <button class="btn btn-primary btn-sm" type="button" data-action="focus-add" ${classroom ? "" : "disabled"} title="${classroom ? "" : t("console.target.noClass")}">${icon('plus')}<span>${t('console.roster.add')}</span></button>
     </div>
     ${unlockedUntil ? `<div class="teacher-session-lock">
       <button class="btn btn-sm" type="button" data-action="lock-adult">${icon('lock')}<span>${t('console.account.lock')}</span></button>
@@ -51,18 +46,55 @@ function renderAccountPanel(open, unlockedUntil, account) {
   const endsAt = Number.isFinite(unlockedUntil)
     ? new Date(unlockedUntil).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
     : null;
+  const email = account?.email || "";
   return `
     <details class="panel" data-panel="account" ${open("account")}>
-      <summary>${icon("lock")}<span>${t("console.account")}</span></summary>
+      <summary>${icon("lock")}<span>${t("settings.title")}</span></summary>
       <p class="account-line"><strong>${escapeHtml(account?.displayName || "")}</strong><span>@${escapeHtml(account?.username || "")}</span></p>
-      <p class="panel-note">${t("console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
+      <p class="panel-note">${t(account?.googleOnly ? "google.teacher.accountNote" : "console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
+      <p class="section-label">${t("console.account.language")}</p>
+      <div class="onboarding-choices">
+        <button class="btn btn-sm${getLang() === "fr" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="fr" aria-pressed="${getLang() === "fr"}">Français</button>
+        <button class="btn btn-sm${getLang() === "en" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="en" aria-pressed="${getLang() === "en"}">English</button>
+      </div>
+
+      <p class="section-label">${t("settings.profile")}</p>
+      <form class="access-form" data-action="update-profile">
+        <label class="field"><span>${t("settings.displayName")}</span><input name="displayName" autocomplete="nickname" maxlength="60" value="${escapeHtml(account?.displayName || "")}" required /></label>
+        <label class="field"><span>${t("settings.email")}</span><input name="email" type="email" autocomplete="email" maxlength="160" value="${escapeHtml(email)}" required /></label>
+        <p class="field-hint">${t("settings.emailHint")}</p>
+        <button class="btn btn-primary btn-sm" type="submit">${t("settings.saveProfile")}</button>
+      </form>
+
+      <hr class="rule" />
+      <p class="section-label">${t("settings.password")}</p>
       <form class="access-form" data-action="change-password">
         <label class="field"><span>${t("console.account.current")}</span><input name="current" type="password" autocomplete="current-password" /></label>
         <label class="field"><span>${t("console.account.new")}</span><input name="next" type="password" autocomplete="new-password" /></label>
         <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" /></label>
         <button class="btn btn-primary btn-sm" type="submit">${t("console.account.change")}</button>
       </form>
-       <hr class="rule" /><div class="button-row"><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button><a class="btn btn-sm" href="./assets/labs/index.html">${t("app.labs")}</a></div>
+
+      <details class="account-reset">
+        <summary>${t("settings.reset")}</summary>
+        <p class="panel-note">${t("settings.reset.hint", { email: escapeHtml(email) })}</p>
+        <form class="inline-form" data-action="request-password-reset">
+          <button class="btn btn-sm" type="submit">${t("settings.reset.send")}</button>
+        </form>
+        <form class="access-form" data-action="confirm-password-reset">
+          <label class="field"><span>${t("settings.reset.code")}</span><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required /></label>
+          <label class="field"><span>${t("settings.reset.next")}</span><input name="next" type="password" autocomplete="new-password" required minlength="6" maxlength="128" /></label>
+          <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" /></label>
+          <button class="btn btn-primary btn-sm" type="submit">${t("settings.reset.confirm")}</button>
+        </form>
+      </details>
+
+      <hr class="rule" />
+      <p class="section-label">${t("settings.help")}</p>
+      <button class="btn btn-sm" type="button" data-action="open-help">${icon("book")}<span>${t("settings.help.open")}</span></button>
+
+      <hr class="rule" />
+      <div class="button-row"><button class="btn btn-sm btn-quiet-danger" data-action="sign-out">${t("console.account.signout")}</button><a class="btn btn-sm" href="./assets/labs/index.html">${t("app.labs")}</a></div>
     </details>`;
 }
 
@@ -75,7 +107,6 @@ function renderTarget(classroom, ui, targets) {
       <section class="target is-empty">
         <h3 class="section-label">${t("console.target.giveTo")}</h3>
         <p class="panel-note">${t("console.target.noClass")}</p>
-        <button class="btn btn-primary btn-sm" type="button" data-action="add-class">${icon("plus")}<span>${t("class.add.title")}</span></button>
       </section>`;
   }
   const allIds = classroom.pupils.map((pupil) => pupil.id);
@@ -113,10 +144,9 @@ function renderAward(ui, targets) {
     <section class="award">
       <h3 class="section-label">${t("console.award.experience")}</h3>
       <div class="award-grid">
-        ${XP_PRESETS.map((preset) => `
-          <button class="award-btn" type="button" data-action="award-xp" data-amount="${preset.amount}" data-reason="${escapeHtml(t(preset.reason))}" ${off}>
-            <strong>+${preset.amount}</strong>
-            <span>${t(preset.reason)}</span>
+        ${XP_PRESETS.map((amount) => `
+          <button class="award-btn" type="button" data-action="award-xp" data-amount="${amount}" ${off}>
+            <strong>+${amount}</strong>
           </button>
         `).join("")}
       </div>

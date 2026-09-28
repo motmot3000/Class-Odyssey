@@ -1,4 +1,4 @@
-/* Shared surfaces: every application route uses the Sheikah tokens. */
+/* Shared surfaces: every application route uses the Odyssey tokens. */
 
 img { display: block; max-width: 100%; }
 input, select, textarea { font: inherit; color: inherit; caret-color: var(--cyan); }
@@ -128,66 +128,116 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .title-chip, .hero-title-tag { color: var(--amber); font-family: var(--font-display); font-weight: 600; overflow-wrap: anywhere; }
 .title-chip { font-size: 16px; }
 
-/* Earned titles are a prestige ladder. Tier 1 is quiet; each tier adds colour,
- * ornament, glow and (for tier 4-5) a plaque, ending in a radiant gold legend. */
+/* Earned titles are a prestige ladder. The tag takes its colours from the same
+ * per-title palette as the backdrop (--t-main / --t-accent, see odyssey.css):
+ *   tier 1  quiet, muted lettering
+ *   tier 2  coloured lettering and ornaments, a small crest on the plaque
+ *   tier 3  wider ornaments, spaced lettering, a soft glow
+ *   tier 4  gilded two-tone lettering between rules, a framed plaque
+ *   tier 5  shimmering lettering, a radiant plaque with corner brackets */
 .hero-title-tag {
-  --title-color: #5c6b5e;
-  --title-glow: transparent;
+  --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 72%, var(--ink));
+  --t-text-2: color-mix(in srgb, var(--t-accent, #c3cdbf) 62%, var(--ink));
   display: block;
-  color: var(--title-color);
+  color: var(--t-text);
   font-size: 20px;
   line-height: 1.2;
   text-align: center;
 }
+:root[data-theme="light"] .hero-title-tag {
+  --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 56%, var(--ink));
+  --t-text-2: color-mix(in srgb, var(--t-accent, #c3cdbf) 44%, var(--ink));
+}
 .hero-title-label { display: block; margin-bottom: 8px; font: 600 11px/1.3 var(--font-ui); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
-.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; position: relative; }
-.hero-title-name { min-width: 0; overflow-wrap: anywhere; }
-.title-ornament { width: 28px; height: 24px; flex: 0 0 auto; }
+.hero-title-ribbon { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; position: relative; isolation: isolate; }
+/* The name keeps its width; the ornaments give way first on narrow plaques. */
+.hero-title-name { flex: 0 0 auto; max-width: 100%; overflow-wrap: anywhere; }
+.title-ornament { width: 26px; height: 22px; flex: 0 1 auto; min-width: 10px; opacity: .9; }
 .title-ornament:last-child { transform: scaleX(-1); }
 .title-ornament .orn-gem { fill: currentColor; }
 .title-ornament .orn-dot { fill: currentColor; stroke: none; }
 
-.hero-title-tag[data-title-tier="1"] { --title-color: #5c6b5e; }
-.hero-title-tag[data-title-tier="2"] { --title-color: #2f6fa8; --title-glow: rgba(47,111,168,.28); }
-.hero-title-tag[data-title-tier="3"] { --title-color: #2b7d63; --title-glow: rgba(43,125,99,.34); }
-.hero-title-tag[data-title-tier="4"] { --title-color: #a23b3b; --title-glow: rgba(162,59,59,.40); }
-.hero-title-tag[data-title-tier="5"] { --title-color: #a07a1e; --title-glow: rgba(197,150,42,.55); }
+/* Crest: the title's emblem, shown on the plaque from tier 2 upward. */
+.title-glyph {
+  display: block; width: 30px; height: 30px; margin: 0 auto 8px;
+  background: linear-gradient(180deg, var(--t-text-2), var(--t-text));
+  -webkit-mask: var(--title-emblem) center / contain no-repeat;
+  mask: var(--title-emblem) center / contain no-repeat;
+}
+.hero-title-tag[data-title-tier="3"] .title-glyph { width: 34px; height: 34px; }
+.hero-title-tag[data-title-tier="4"] .title-glyph { width: 40px; height: 40px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--t-main) 45%, transparent)); }
+.hero-title-tag[data-title-tier="5"] .title-glyph { width: 46px; height: 46px; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--t-main) 60%, transparent)); }
 
-/* Four prestige titles carry their own identity instead of inheriting the tier
- * colour: Explorer teal, Champion amber, King royal violet, Legend rose. Names
- * are unchanged; only the visual treatment differs. */
-.hero-title-tag[data-title-id="pathfinder"] { --title-color: #1f7f88; --title-glow: rgba(31,127,136,.32); }
-.hero-title-tag[data-title-id="realm-champion"] { --title-color: #9c5f12; --title-glow: rgba(156,95,18,.36); }
-.hero-title-tag[data-title-id="paragon-sovereign"] { --title-color: #5c3f9c; --title-glow: rgba(92,63,156,.36); }
-.hero-title-tag[data-title-id="class-legend"] { --title-color: #a83a72; --title-glow: rgba(168,58,114,.40); }
+/* 1 · quiet */
+.hero-title-tag[data-title-tier="1"] { --t-text: color-mix(in srgb, var(--t-main, #8a9a8c) 50%, var(--ink-2)); }
+.hero-title-tag[data-title-tier="1"] .title-ornament { width: 20px; opacity: .55; }
 
+/* 3 · spaced lettering with a soft glow */
 .hero-title-tag[data-title-tier="3"] .title-ornament,
 .hero-title-tag[data-title-tier="4"] .title-ornament,
-.hero-title-tag[data-title-tier="5"] .title-ornament { width: 38px; height: 28px; }
-.hero-title-tag[data-title-tier="4"] .hero-title-name,
-.hero-title-tag[data-title-tier="5"] .hero-title-name { border-block: 1px solid color-mix(in srgb, var(--title-color) 55%, transparent); padding-block: 4px; }
-.hero-title-tag[data-title-tier="5"] .hero-title-name {
-  text-shadow: 0 0 10px var(--title-glow), 0 0 22px var(--title-glow);
-  letter-spacing: .02em;
-}
-.hero-title-tag[data-title-tier="4"] .hero-title-name { text-shadow: 0 0 8px var(--title-glow); }
+.hero-title-tag[data-title-tier="5"] .title-ornament { width: 36px; height: 28px; }
+.hero-title-tag[data-title-tier="3"] .hero-title-name { letter-spacing: .04em; text-shadow: 0 0 12px color-mix(in srgb, var(--t-main) 38%, transparent); }
 
-/* Tier 5 gets a radiant plaque; tier 4 a restrained rimmed one. */
-.hero-title-tag[data-title-tier="5"][data-title-labelled],
-.hero-title-tag[data-title-tier="5"] .hero-title-ribbon { position: relative; }
+/* 4-5 · gilded two-tone lettering between fine rules */
+.hero-title-tag[data-title-tier="4"] .title-ornament,
+.hero-title-tag[data-title-tier="5"] .title-ornament { color: var(--t-text-2); }
+.hero-title-tag[data-title-tier="4"] .hero-title-name,
+.hero-title-tag[data-title-tier="5"] .hero-title-name {
+  padding-block: 4px;
+  letter-spacing: .06em;
+  border-block: 1px solid color-mix(in srgb, var(--t-text) 45%, transparent);
+  background: linear-gradient(90deg, var(--t-text), var(--t-text-2) 50%, var(--t-text)) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--t-main) 40%, transparent));
+}
+.hero-title-tag[data-title-tier="5"] .hero-title-name { animation: title-shine 7s linear infinite; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--t-main) 55%, transparent)); }
+@keyframes title-shine { to { background-position: 200% 0; } }
+
+/* 5 · radiant glow behind the name */
 .hero-title-tag[data-title-tier="5"] .hero-title-ribbon::before {
   content: "";
   position: absolute;
+  z-index: -1;
   inset: -14px -22px;
   border-radius: 999px;
-  background: radial-gradient(closest-side, var(--title-glow), transparent 78%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--t-main) 34%, transparent), transparent 78%);
   pointer-events: none;
 }
+
+/* Plaque (hero sheet, dressing room, shop preview) */
 .hero-title-tag[data-title-labelled] { padding: 16px 10px; font-size: clamp(26px,2.6vw,36px); background: var(--slate); border-block: 1px solid var(--line-2); position: relative; }
 .hero-title-tag[data-title-labelled] .title-ornament { width: 44px; height: 32px; }
-.hero-title-tag[data-title-tier="4"][data-title-labelled],
-.hero-title-tag[data-title-tier="5"][data-title-labelled] { background: linear-gradient(180deg, color-mix(in srgb, var(--title-color) 12%, var(--slate)), var(--slate)); border-block-color: color-mix(in srgb, var(--title-color) 45%, transparent); }
-.hero-title-tag[data-title-tier="5"][data-title-labelled] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--title-color) 40%, transparent); }
+.hero-title-tag[data-title-tier="2"][data-title-labelled],
+.hero-title-tag[data-title-tier="3"][data-title-labelled] { border-block-color: color-mix(in srgb, var(--t-main) 38%, var(--line-2)); }
+.hero-title-tag[data-title-tier="4"][data-title-labelled] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--t-main) 14%, var(--slate)), var(--slate));
+  border-block-color: color-mix(in srgb, var(--t-main) 55%, transparent);
+}
+.hero-title-tag[data-title-tier="5"][data-title-labelled] {
+  background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--t-main) 22%, var(--slate)), var(--slate) 72%);
+  border-block-color: color-mix(in srgb, var(--t-accent) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t-main) 38%, transparent), 0 0 26px color-mix(in srgb, var(--t-main) 18%, transparent);
+}
+/* Corner brackets on the plaque from tier 4, gilded at tier 5. */
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::after,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after {
+  content: "";
+  position: absolute;
+  width: 16px; height: 16px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--t-text) 70%, transparent);
+  pointer-events: none;
+}
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before { top: 6px; left: 6px; border-width: 1.5px 0 0 1.5px; }
+.hero-title-tag[data-title-tier="4"][data-title-labelled]::after,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after { bottom: 6px; right: 6px; border-width: 0 1.5px 1.5px 0; }
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::before,
+.hero-title-tag[data-title-tier="5"][data-title-labelled]::after { width: 22px; height: 22px; border-color: var(--t-text-2); }
 
 .rune-card-title { padding: 0 10px 10px; position: relative; z-index: 2; }
 .workshop-identity { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; }
@@ -238,6 +288,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .rule-form { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
 .rule-form .field > span { display: block; margin-bottom: 6px; }
 .rule-form .row { display: flex; justify-content: flex-end; gap: var(--s3); }
+
+/* Account settings: profile, password recovery and help live in the console. */
+.account-reset { margin-top: 12px; }
+.account-reset > summary { cursor: pointer; color: var(--cyan); font-weight: 600; }
+.account-reset[open] > summary { margin-bottom: 8px; }
+.account-reset .access-form { margin-top: 12px; }
+.dialog-help { width: min(520px, calc(100vw - 32px)); }
+.dialog-help h2 { padding-right: 32px; }
+.help-form { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
+.help-form .row { display: flex; justify-content: flex-end; gap: var(--s3); }
+.dialog-reset { width: min(480px, calc(100vw - 32px)); }
+.dialog-reset h2 { padding-right: 32px; }
+.dialog-reset .access-form { margin-top: 18px; }
+.welcome-forgot { align-self: flex-start; margin-top: 10px; padding: 0; font: inherit; color: var(--cyan); background: none; border: 0; cursor: pointer; text-decoration: underline; }
+.welcome-forgot:hover, .welcome-forgot:focus-visible { color: var(--ink); }
 @media (max-width: 640px) {
   .rules-head { grid-template-columns: 42px minmax(0,1fr); gap: 14px; }
   .rules-emblem { width: 42px; height: 54px; }
@@ -336,6 +401,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   z-index: 90;
 }
 
+/* The flag is a welcome-page affordance. Once signed in, the language is the
+ * one chosen at setup and can only be changed from the account settings, so
+ * the floating control is hidden everywhere in the account. */
+html[data-signed-in="true"] #language-switcher { display: none; }
+
 body:has(.layout) #language-switcher {
   bottom: max(76px, calc(64px + env(safe-area-inset-bottom)));
 }
@@ -423,18 +493,24 @@ dialog.dialog:not([open]) { display: none; }
 .teacher-console-tab {
   position: fixed; z-index: 31; right: 0; top: max(calc(var(--topbar-h) + 12px), calc(50dvh - 96px));
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; width: 44px; padding: 14px 8px; min-height: 160px;
-  border: 1px solid var(--line-2); border-right: 0; border-radius: 10px 0 0 10px;
-  background: var(--panel-solid); color: var(--cyan); cursor: pointer;
-  box-shadow: -3px 3px 12px rgb(0 0 0 / 10%);
+  gap: 10px; width: 52px; padding: 16px 10px; min-height: 176px;
+  border: 2px solid var(--console-edge, var(--cyan-2)); border-right: 0; border-radius: 12px 0 0 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cyan) 16%, var(--panel-solid)), var(--panel-solid));
+  color: var(--cyan); cursor: pointer;
+  box-shadow: -4px 4px 16px rgb(0 0 0 / 22%);
 }
-.teacher-console-tab span { writing-mode: vertical-rl; font: 600 13px/1.2 var(--font-ui); letter-spacing: .03em; }
+.teacher-console-tab span { writing-mode: vertical-rl; font: 700 14px/1.2 var(--font-ui); letter-spacing: .04em; }
 .teacher-console-tab:hover { background: var(--cyan-soft); border-color: var(--cyan); }
 .teacher-console-tab:focus-visible { outline-offset: -4px; }
 .teacher-console-dialog {
   position: fixed; inset: 0 0 0 auto; margin: 0;
-  width: min(480px,calc(100vw - 44px)); max-width: none;
+  width: min(480px,calc(100vw - 52px)); max-width: none;
   height: 100dvh; max-height: 100dvh; padding: 24px;
+  border-left: 1px solid var(--line-2);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cyan) 7%, transparent), transparent 260px),
+    var(--surface-1, var(--panel-solid));
+  box-shadow: -18px 0 44px rgb(0 0 0 / 28%), inset 2px 0 0 -1px var(--console-edge, var(--cyan-2));
   border-radius: 12px 0 0 12px; overflow: hidden; z-index: 45;
 }
 .teacher-session-status { min-height: 18px; padding-top: 10px; color: var(--muted); font-size: 12px; }
@@ -449,13 +525,30 @@ body[data-teacher-panel="open"] .teacher-console-tab { z-index: 46; right: min(4
 /* On narrow screens, keep part of the class visible and interactive. */
 @media (max-width: 720px) {
   body[data-teacher-panel="open"] #app { padding-bottom: 52dvh; }
-  .teacher-console-dialog { inset: auto 0 0 auto; width: 100%; height: 52dvh; max-height: 52dvh; border-radius: 12px 12px 0 0; padding: 16px; }
+  .teacher-console-dialog {
+    inset: auto 0 0 auto; width: 100%; height: 52dvh; max-height: 52dvh;
+    padding: 16px; border-radius: 12px 12px 0 0;
+    border-left: 1px solid var(--line-2);
+    box-shadow: 0 -18px 44px rgb(0 0 0 / 32%), inset 0 2px 0 -1px var(--console-edge, var(--cyan-2));
+  }
+  .teacher-console-dialog::before {
+    content: ""; position: absolute; top: 7px; left: 50%; width: 58px; height: 5px;
+    transform: translateX(-50%); border-radius: var(--r-pill);
+    background: var(--console-edge, var(--cyan-2)); opacity: 0.85;
+  }
   body[data-teacher-panel="open"] .teacher-console-tab { right: 0; top: calc(48dvh - 44px); width: auto; min-height: 44px; height: 44px; flex-direction: row; padding: 8px 14px; border-radius: 8px 0 0 0; }
   body[data-teacher-panel="open"] .teacher-console-tab span { writing-mode: horizontal-tb; }
   body[data-teacher-panel="open"] #language-switcher { bottom: calc(52dvh + 56px); }
 }
-.teacher-console-dialog .console-head { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; padding-right: 40px; }
-.teacher-console-dialog .console-head h2 { min-width: 0; font-size: clamp(18px,2vw,22px); }
+/* Keep the close control clear of the drawer's own scroll rail. */
+.teacher-console-dialog .dialog-close { right: calc(var(--scroll-page, 22px) + 22px); }
+.teacher-console-dialog .console-head {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center;
+  padding: 0 calc(var(--scroll-page, 22px) + 62px) var(--s3) 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 14%, transparent), transparent 92%);
+  border-bottom: 2px solid var(--console-edge, var(--cyan-2));
+}
+.teacher-console-dialog .console-head h2 { min-width: 0; font-size: clamp(17px,1.7vw,20px); letter-spacing: 0.04em; }
 .teacher-console-content { height: 100%; max-height: none; overflow: auto; padding-right: 6px; }
 .teacher-console-dialog details.panel { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
 .teacher-console-dialog details.panel > summary { padding-block: 10px; }

@@ -19,6 +19,7 @@ export function escapeHtml(value) {
 
 const PATHS = {
   spark: `<path d="m10 2 2 5 5 3-5 2-2 6-2-6-5-2 5-3 2-5Z"/>`,
+  heroes: `<circle cx="7" cy="7" r="3"/><path d="M2 17c0-3 2.4-5 5-5s5 2 5 5Z"/><circle cx="14.5" cy="8" r="2.3"/><path d="M11.5 17c0-2.6 1.6-4.3 3.2-4.3S18 14.4 18 17Z"/>`,
   coin: `<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="4.5"/><path d="m10 6 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/>`,
   palette: `<path d="M10 3a7 7 0 1 0 0 14h1a2 2 0 0 0 1-3.7 1.4 1.4 0 0 1 .8-2.6H15A3 3 0 0 0 18 8c0-3-4-5-8-5Z"/><circle cx="6" cy="9" r=".7"/><circle cx="8" cy="6" r=".7"/><circle cx="12" cy="6" r=".7"/>`,
   undo: `<path d="M4 9h9a4.5 4.5 0 0 1 0 9h-4"/><path d="M7.5 5.5 4 9l3.5 3.5"/>`,
@@ -109,6 +110,16 @@ export function titleBackdropAttributes(pupil) {
   return `data-title-tier="${titleTierOf(pupil)}" data-title-id="${escapeHtml(item?.id || "rookie")}"`;
 }
 
+/* Decorative layers around the hero. Each title decides in CSS which layers it
+ * lights up (aura, orbit, side flourishes, emblems, particles, floor), so early
+ * titles stay quiet and later ones accumulate ornament. None of them sits on
+ * the character: they frame it from the sides, the floor and above the head. */
+export function renderTitleBackdrop() {
+  return ["halo", "orbit", "flourish", "emblem", "sparkles", "frame"]
+    .map((layer) => `<span class="title-${layer}" aria-hidden="true"></span>`)
+    .join("");
+}
+
 export function renderTitle(pupil, { labelled = false } = {}) {
   const item = titleItemOf(pupil);
   const tier = titleTierOf(pupil);
@@ -122,6 +133,7 @@ export function renderTitle(pupil, { labelled = false } = {}) {
   </svg>`;
   return `<span class="hero-title-tag title-${escapeHtml(item.id)}" data-title-tier="${tier}" data-title-id="${escapeHtml(item.id)}" ${labelled ? 'data-title-labelled' : ''}>
     ${labelled ? `<span class="hero-title-label">${t('modal.type.title')}</span>` : ''}
+    ${labelled && tier >= 2 ? '<span class="title-glyph" aria-hidden="true"></span>' : ''}
     <span class="hero-title-ribbon">${ornament}<span class="hero-title-name">${escapeHtml(tItem(item,'name'))}</span>${ornament}</span>
   </span>`;
 }
@@ -140,6 +152,7 @@ export function gearOf(pupil) {
     [t("app.gear.hat"), getItemName("hat", pupil.hat)],
     [t("app.gear.hair"), getItemName("hair", pupil.hair)],
     [t("app.gear.hairColor"), getItemName("hairColor", pupil.hairColor || "brown-hair")],
+    [t("app.gear.pet"), getItemName("pet", pupil.pet || "no-pet")],
     [t("app.gear.skin"), getItemName("tone", pupil.skinTone)]
   ];
 }
@@ -172,6 +185,7 @@ export function translateReward(reward) {
     if (reward === item.name) return name;
     if (reward === `${item.name} title`) return t("reward.title", { name });
     if (reward === `${item.name} hair color`) return t("reward.hairColor", { name });
+    if (reward === `${item.name} eye color`) return t("reward.eyeColor", { name });
   }
   return translateMessage(reward);
 }

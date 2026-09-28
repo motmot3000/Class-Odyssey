@@ -1,8 +1,59 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { visiblePart, HAIR_PALETTE, CATALOGUE_REVISION, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
-import { renderPortraitImage } from './portrait-image.mjs';
+import { visiblePart, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PETS_CATALOGUE_URL, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
+
+/* Shared portrait frame, in metres (glTF: Y up, hero faces +Z, feet at 0).
+ * Tallest headwear (wizard hat) reaches 2.09 m; the widest hand items stay
+ * within ±0.5 m. Aspect matches the class-card stage. */
+const PORTRAIT_FRAME = { bottom: -.03, top: 2.13, aspect: .8, heroHalfWidth: .5, margin: .04, width: 560 };
+
+// Eye colours re-tint the delivered iris map in plain sRGB: every coloured
+// pixel keeps its natural shading (its luminance) but takes the target hue, so
+// the pupil, limbal ring and catchlight survive and the iris still reads as a
+// real eye rather than a flat wash. One texture is baked per colour.
+const irisTextures = new Map();
+// Mid-luminance of the delivered iris; pixels around it land exactly on the
+// target colour, brighter fibres lighten and the shaded rim darkens.
+const IRIS_REFERENCE_LUMA = 0.30;
+function srgbFromHex(hex) {
+  const value = Number.parseInt(hex.replace('#', ''), 16);
+  return { r: ((value >> 16) & 255) / 255, g: ((value >> 8) & 255) / 255, b: (value & 255) / 255 };
+}
+function recolorIris(source, hex) {
+  if (!source?.image || typeof document === 'undefined') return null;
+  const key = `${source.uuid}|${hex}`;
+  if (irisTextures.has(key)) return irisTextures.get(key);
+  const size = source.image.width || 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(source.image, 0, 0, size, size);
+  const image = context.getImageData(0, 0, size, size);
+  const data = image.data;
+  const target = srgbFromHex(hex);
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const lightness = (max + min) / 2;
+    const saturation = max === min ? 0 : (max - min) / (1 - Math.abs(2 * lightness - 1));
+    // Leave the pupil (dark), the catchlight (white) and the sclera alone.
+    if (saturation <= 0.18 || lightness <= 0.12 || lightness >= 0.90) continue;
+    const ratio = Math.min(1.25, Math.max(0.4, (0.299 * r + 0.587 * g + 0.114 * b) / IRIS_REFERENCE_LUMA));
+    data[i] = Math.min(255, Math.round(target.r * ratio * 255));
+    data[i + 1] = Math.min(255, Math.round(target.g * ratio * 255));
+    data[i + 2] = Math.min(255, Math.round(target.b * ratio * 255));
+  }
+  context.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.flipY = source.flipY;
+  texture.wrapS = source.wrapS;
+  texture.wrapT = source.wrapT;
+  irisTextures.set(key, texture);
+  return texture;
+}
 
 // The single baked body is multiplied by the target skin tone. Ratios are
 // computed in linear working space so the result matches the tone palette.
@@ -15,6 +66,18 @@ function skinTint(tone) {
     skinTints.set(key, new THREE.Color(target.r / neutral.r, target.g / neutral.g, target.b / neutral.b));
   }
   return skinTints.get(key);
+}
+
+function disposeModel(model) {
+  const geometries = new Set(), materials = new Set(), textures = new Set();
+  model?.traverse(obj => {
+    if (obj.geometry) geometries.add(obj.geometry);
+    for (const mat of (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean)) materials.add(mat);
+  });
+  for (const material of materials) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+  geometries.forEach(geometry => geometry.dispose());
+  materials.forEach(material => material.dispose());
+  textures.forEach(texture => texture.dispose());
 }
 
 export async function createItemsViewer(container, initialLook, { onProgress, onError, onFreeView, modelURL = `/assets/items-3d/catalogue.glb?v=${CATALOGUE_REVISION}`, theme = 'light' } = {}) {
@@ -55,9 +118,15 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   };
   let model;
   try {
-    const gltf = await new GLTFLoader().loadAsync(modelURL, event => { if (event.total) onProgress?.(Math.round(event.loaded / event.total * 100)); });
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(modelURL, event => { if (event.total) onProgress?.(Math.round(event.loaded / event.total * 90)); });
     model = gltf.scene;
-  } catch (error) { environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
+    // Load once alongside the hero: all subsequent previews and snapshots are
+    // synchronous, including switching pets while a portrait is being baked.
+    const pets = await loader.loadAsync(PETS_CATALOGUE_URL);
+    model.add(pets.scene);
+    onProgress?.(100);
+  } catch (error) { disposeModel(model); environment.dispose(); ground.geometry.dispose(); ground.material.dispose(); renderer.dispose(); throw error; }
   scene.add(model);
   model.userData.source_credit = 'Noa/Mila — characters-base, base-v2-2026-09, test-modelisation. Source morphology: Nintendo / The Models Resource — Trikeboy. Welded bases and anchor-fitted equipment: Class Odyssey study.';
   let look = { ...initialLook };
@@ -80,10 +149,26 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     head: { yaw: .10, target: [0, 1.77, 0], distance: 1.42, elevation: .05 },
     item: { yaw: .10, target: [0, 1, 0], distance: 2.5, elevation: .09 }
   };
+  // Horizontal radius of everything worn around the hero's vertical axis. A
+  // big companion or a long blade must stay in frame at every yaw, so the
+  // body views back off only as far as that radius requires.
+  let reach = 0;
+  function measureReach() {
+    reach = 0;
+    model.updateMatrixWorld(true);
+    const bounds = new THREE.Box3();
+    model.traverseVisible(obj => { if (obj.isMesh) bounds.expandByObject(obj, true); });
+    if (bounds.isEmpty()) return;
+    reach = Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.z), Math.abs(bounds.max.z));
+  }
   function placeCamera() {
+    const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const fitReach = ['front', 'quarter', 'back', 'free'].includes(angle) && reach > .45
+      ? reach / (tanHalf * camera.aspect) * 1.06 + reach * .5
+      : 0;
     const d = previewSize
-      ? Math.max(previewSize.y/2, Math.hypot(previewSize.x, previewSize.z)/(2*camera.aspect)) / Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * 1.18 + previewSize.length()*.2
-      : distance * Math.max(1, .82 / camera.aspect);
+      ? Math.max(previewSize.y/2, Math.hypot(previewSize.x, previewSize.z)/(2*camera.aspect)) / tanHalf * 1.18 + previewSize.length()*.2
+      : Math.max(distance * Math.max(1, .82 / camera.aspect), fitReach);
     camera.position.set(target.x + Math.sin(yaw) * d, target.y + elevation, target.z + Math.cos(yaw) * d);
     camera.lookAt(target);
   }
@@ -102,6 +187,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
   }
   function applyLook(next) {
     const wasPreview = Boolean(look.preview);
+    const petChanged = look.pet !== next.pet;
     look = { ...next };
     const tint = skinTint(look.tone);
     ground.visible = !look.preview;
@@ -118,13 +204,20 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
             if (mat.name.includes('highlight')) mat.color.multiplyScalar(1.18);
             continue;
           }
+          if (mat.name.toLowerCase().includes('iris')) {
+            if (!mat.userData.irisSource) mat.userData.irisSource = mat.map;
+            const tinted = recolorIris(mat.userData.irisSource, EYE_PALETTE[look.eyeColor] || EYE_PALETTE['brown-eyes']);
+            if (tinted && mat.map !== tinted) { mat.map = tinted; mat.color.set(0xffffff); mat.needsUpdate = true; }
+            continue;
+          }
           if (!mat.userData?.base_skin_map && !mat.userData?.skin_plain) continue;
           if (!mat.userData.baseSkinColor) mat.userData.baseSkinColor = mat.color.clone();
           mat.color.copy(mat.userData.baseSkinColor).multiply(tint);
         }
       }
     });
-    if (look.preview || wasPreview || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
+    measureReach();
+    if (look.preview || wasPreview || petChanged || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
     requestDraw();
     return counts();
   }
@@ -146,7 +239,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       }
     } else if (value === 'item' || value === 'head') {
       const bounds = new THREE.Box3();
-      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon'];
+      const slots = value === 'head' ? ['persona', 'hair', 'hat'] : ['weapon', 'shield', 'pet'];
       model.traverseVisible(obj => {
         if (!slots.includes(obj.userData.shop_slot)) return;
         if (value === 'head' && obj.userData.head_bounds_min) {
@@ -221,25 +314,45 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     counts,
     resize,
     exportLook,
+    /* Class portraits share ONE world-space frame: every hero is drawn at the
+     * same scale with the feet on the same baseline, whatever is equipped.
+     * Cropping to the silhouette made a staff, a wizard hat or a dragon shrink
+     * the hero, so no two cards matched. The frame only slides sideways to
+     * make room for a companion, and grows only if the content cannot fit. */
     snapshot() {
       if (lost || disposed) return null;
-      const previousTarget=target.clone(), previousSize=previewSize, previousElevation=elevation;
-      const wasGroundVisible=ground.visible;
+      const wasGroundVisible = ground.visible;
+      const previousRatio = renderer.getPixelRatio();
       try {
-        const bounds=new THREE.Box3();
+        const bounds = new THREE.Box3();
         model.updateMatrixWorld(true);
-        model.traverseVisible(obj=>{if(obj.isMesh) bounds.expandByObject(obj,true);});
+        model.traverseVisible(obj => { if (obj.isMesh) bounds.expandByObject(obj, true); });
+        const { bottom, top, aspect, heroHalfWidth, margin, width: pixelWidth } = PORTRAIT_FRAME;
+        let height = top - bottom;
+        let width = height * aspect;
+        let minX = -heroHalfWidth, maxX = heroHalfWidth, maxY = top;
         if (!bounds.isEmpty()) {
-          bounds.getCenter(target);
-          previewSize=bounds.getSize(new THREE.Vector3());
-          elevation=previewSize.y*.025;
+          minX = Math.min(minX, bounds.min.x - margin);
+          maxX = Math.max(maxX, bounds.max.x + margin);
+          maxY = Math.max(maxY, bounds.max.y + margin);
         }
-        ground.visible=false;
-        placeCamera(); renderer.render(scene,camera);
-        return renderPortraitImage(canvas);
+        if (maxX - minX > width) { width = maxX - minX; height = width / aspect; }
+        if (maxY - bottom > height) { height = maxY - bottom; width = height * aspect; }
+        // Centre on the hero; slide only as far as a companion requires.
+        const centerX = Math.min(Math.max(0, maxX - width / 2), minX + width / 2);
+        const centerY = bottom + height / 2;
+        const shot = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, .1, 40);
+        shot.position.set(centerX, centerY, 12);
+        shot.lookAt(centerX, centerY, 0);
+        ground.visible = false;
+        renderer.setPixelRatio(1);
+        renderer.setSize(pixelWidth, Math.round(pixelWidth / aspect), false);
+        renderer.render(scene, shot);
+        return canvas.toDataURL('image/webp', .85);
       } finally {
-        target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
-        ground.visible=wasGroundVisible;
+        ground.visible = wasGroundVisible;
+        renderer.setPixelRatio(previousRatio);
+        resize();
       }
     },
     destroy() {
@@ -248,15 +361,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
       active = false;
       observer.disconnect();
       cancelAnimationFrame(frame);
-      const geometries=new Set(), materials=new Set(), textures=new Set();
-      model.traverse(obj=>{
-        if (obj.geometry) geometries.add(obj.geometry);
-        for (const mat of (Array.isArray(obj.material)?obj.material:[obj.material]).filter(Boolean)) materials.add(mat);
-      });
-      for (const material of materials) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
-      geometries.forEach(geometry=>geometry.dispose());
-      materials.forEach(material=>material.dispose());
-      textures.forEach(texture=>texture.dispose());
+      disposeModel(model);
       environment.dispose(); ground.geometry.dispose(); ground.material.dispose();
       renderer.dispose();
       canvas.remove();

@@ -5,17 +5,20 @@ import test from 'node:test';
 import { createInitialState, getCurrentClass, SHOP_ITEMS } from '../src/domain.mjs';
 import { CATALOGUE_REVISION, BASE_CATALOGUE_REVISION, BASE_CATALOGUE_URL, PORTRAIT_REVISION, modeledItemIds, visiblePart, DEFAULT_LOOK, resolveAssetBase } from '../src/items-3d-model.mjs';
 import { renderItemThumbnail, renderHeroPortrait } from '../src/equipment-previews.mjs';
-import { renderSheikahStudent, renderSheikahShop } from '../src/views/sheikah.mjs';
+import { renderOdysseyStudent, renderOdysseyShop } from '../src/views/odyssey.mjs';
 
 const root = new URL('../assets/items-3d/', import.meta.url);
 function catalogue() {
   const data=readFileSync(new URL('catalogue.glb',root));
-  return JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
+  const main = JSON.parse(data.subarray(20,20+data.readUInt32LE(12)).toString());
+  const pets = readFileSync(new URL('../pets/catalogue.glb', root));
+  main.nodes.push(...JSON.parse(pets.subarray(20,20+pets.readUInt32LE(12)).toString()).nodes);
+  return main;
 }
 
 test('the live base characters are the delivered stylized catalogue', () => {
-  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v4');
-  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v4$/);
+  assert.equal(BASE_CATALOGUE_REVISION, 'stylized-v10');
+  assert.match(BASE_CATALOGUE_URL, /assets\/character-stylized\/catalogue\.glb\?v=stylized-v10$/);
   assert.notEqual(BASE_CATALOGUE_URL, CATALOGUE_REVISION);
   const data = readFileSync(new URL('../assets/character-stylized/catalogue.glb', import.meta.url));
   assert.equal(data.toString('ascii', 0, 4), 'glTF');
@@ -23,9 +26,14 @@ test('the live base characters are the delivered stylized catalogue', () => {
   assert.equal(manifest.appearanceRevision, BASE_CATALOGUE_REVISION);
   assert.ok(manifest.parts['persona:male'] > 0 && manifest.parts['persona:female'] > 0);
   assert.ok(manifest.parts['outfit:story-keeper'] > 0);
-  assert.ok(manifest.parts['hair:short'] > 0 && manifest.parts['hair:long'] > 0 && manifest.parts['hair:curly'] > 0);
+  assert.ok(manifest.parts['hair:short'] > 0 && manifest.parts['hair:long'] > 0 && manifest.parts['hair:medium-cut'] > 0 && manifest.parts['hair:curly'] > 0);
+  assert.ok(manifest.parts['hair:spiky'] > 0 && manifest.parts['hair:bun'] > 0);
+  assert.equal(manifest.parts['hair:straight-short'] || 0, 0);
+  assert.equal(manifest.parts['hair:spiky-short'] || 0, 0);
   assert.equal(manifest.parts['outfit:grand-archmage'] || 0, 0);
   assert.equal(manifest.parts['weapon:lore-lantern'] || 0, 0);
+  for (const id of ['templar-dagger', 'medieval-sword', 'metal-wand', 'japanese-blade', 'wooden-staff', 'epic-sword']) assert.ok(manifest.parts[`weapon:${id}`] > 0, id);
+  for (const id of ['wooden-shield', 'knight-shield', 'hero-shield']) assert.ok(manifest.parts[`shield:${id}`] > 0, id);
 });
 
 test('browser catalogues stay inside the deployed page sub-path', () => {
@@ -39,7 +47,7 @@ test('baked fallback portraits match the live base so the old base never flashes
   const report = JSON.parse(readFileSync(new URL('previews/manifest.json', root)));
   assert.equal(report.portraitRevision, PORTRAIT_REVISION);
   for (const persona of ['male', 'female']) {
-    assert.match(report.portraits[persona].renderer, /stylized-v4/);
+    assert.match(report.portraits[persona].renderer, /stylized-v10/);
     const file = readFileSync(new URL(`previews/${report.portraits[persona].file}`, root));
     assert.equal(file.toString('ascii', 0, 4), 'RIFF');
   }
@@ -70,7 +78,7 @@ test('isolated previews hide the real body and every other slot for both persona
     const look={...DEFAULT_LOOK,persona,hat:'steel-helm',preview:{slot:item.type,id:item.id}};
     const visible=parts.filter(data=>visiblePart(data,look));
     assert.ok(visible.length, item.id);
-    assert.ok(visible.every(data=>data.shop_slot === item.type && data.shop_id === item.id && data.fit_persona === persona));
+    assert.ok(visible.every(data=>data.shop_slot === item.type && data.shop_id === item.id && (item.type === 'pet' ? !data.fit_persona : data.fit_persona === persona)));
     if(item.type==='hair') assert.ok(visible.every(data=>data.hat_fit==='open'));
   }
 });
@@ -79,12 +87,12 @@ test('picker, fallback portraits and shop markup use current assets and preserve
   const classroom=getCurrentClass(createInitialState());
   const pupil={...classroom.pupils[0],name:'Alex <script>',hat:'wizard-hat',hairColor:'blue-hair'};
   const before=structuredClone(pupil);
-  const picker=renderSheikahStudent({classroom:{...classroom,pupils:[pupil]},ui:{query:''},pupil:null});
+  const picker=renderOdysseyStudent({classroom:{...classroom,pupils:[pupil]},ui:{query:''},pupil:null});
   assert.match(picker,/data-hero-portrait/);
   assert.match(picker,/items-3d\/previews\/portraits\/male\.webp/);
   assert.doesNotMatch(picker,/assets\/wardrobe\/|<script>/);
   assert.match(renderHeroPortrait(pupil),/wizard-hat/);
-  const shop=renderSheikahShop(pupil,{shopCategory:'hat',shopPreview:'wizard-hat',angle:'quarter'});
+  const shop=renderOdysseyShop(pupil,{shopCategory:'hat',shopPreview:'wizard-hat',angle:'quarter'});
   assert.match(shop,/&quot;preview&quot;:\{&quot;slot&quot;:&quot;hat&quot;/);
   assert.match(shop,/items\/wizard-hat\.webp/);
   assert.doesNotMatch(shop,/data-hero-portrait|assets\/wardrobe\/|<svg class="avatar/);

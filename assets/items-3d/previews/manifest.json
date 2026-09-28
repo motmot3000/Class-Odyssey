@@ -1,12 +1,42 @@
 {
-  "revision": "catalogue-v8-scoped-cosmetics",
-  "catalogueSha256": "07a1033bebfa53b81d96e22678c998ce9b85757eecee5b0ef85eb55caa3cbbee",
+  "revision": "catalogue-v13-ear-outfits-headwear-held-items",
+  "catalogueSha256": "a34887353a00f8335d54bd86a70fddf7fd517fffedb77b918d0a662cce093a88",
   "renderSource": "catalogue.blend",
   "items": {
+    "elf-ears": {
+      "slot": "accessory",
+      "file": "items/elf-ears.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "explorer-cap": {
+      "slot": "accessory",
+      "file": "items/explorer-cap.webp",
+      "meshCount": 4,
+      "containsBody": false
+    },
+    "pierced-ears": {
+      "slot": "accessory",
+      "file": "items/pierced-ears.webp",
+      "meshCount": 6,
+      "containsBody": false
+    },
+    "sunglasses": {
+      "slot": "accessory",
+      "file": "items/sunglasses.webp",
+      "meshCount": 3,
+      "containsBody": false
+    },
+    "bun": {
+      "slot": "hair",
+      "file": "items/bun.webp",
+      "meshCount": 5,
+      "containsBody": false
+    },
     "curly": {
       "slot": "hair",
       "file": "items/curly.webp",
-      "meshCount": 1,
+      "meshCount": 2,
       "containsBody": false
     },
     "long": {
@@ -15,89 +45,213 @@
       "meshCount": 2,
       "containsBody": false
     },
-    "short": {
+    "medium-cut": {
       "slot": "hair",
-      "file": "items/short.webp",
+      "file": "items/medium-cut.webp",
       "meshCount": 1,
       "containsBody": false
     },
-    "celestial-crown": {
-      "slot": "hat",
-      "file": "items/celestial-crown.webp",
-      "meshCount": 13,
+    "short": {
+      "slot": "hair",
+      "file": "items/short.webp",
+      "meshCount": 4,
+      "containsBody": false
+    },
+    "spiky": {
+      "slot": "hair",
+      "file": "items/spiky.webp",
+      "meshCount": 1,
       "containsBody": false
     },
     "classy-hat": {
       "slot": "hat",
       "file": "items/classy-hat.webp",
-      "meshCount": 4,
-      "containsBody": false
-    },
-    "explorer-cap": {
-      "slot": "hat",
-      "file": "items/explorer-cap.webp",
-      "meshCount": 6,
+      "meshCount": 2,
       "containsBody": false
     },
     "feather-beret": {
       "slot": "hat",
       "file": "items/feather-beret.webp",
-      "meshCount": 5,
+      "meshCount": 7,
       "containsBody": false
     },
     "gold-crown": {
       "slot": "hat",
       "file": "items/gold-crown.webp",
-      "meshCount": 10,
+      "meshCount": 6,
       "containsBody": false
     },
     "steel-helm": {
       "slot": "hat",
       "file": "items/steel-helm.webp",
-      "meshCount": 7,
-      "containsBody": false
-    },
-    "sunglasses": {
-      "slot": "hat",
-      "file": "items/sunglasses.webp",
-      "meshCount": 7,
+      "meshCount": 5,
       "containsBody": false
     },
     "wizard-hat": {
       "slot": "hat",
       "file": "items/wizard-hat.webp",
-      "meshCount": 5,
+      "meshCount": 3,
+      "containsBody": false
+    },
+    "alchemist": {
+      "slot": "outfit",
+      "file": "items/alchemist.webp",
+      "meshCount": 76,
+      "containsBody": false
+    },
+    "bard": {
+      "slot": "outfit",
+      "file": "items/bard.webp",
+      "meshCount": 11,
+      "containsBody": false
+    },
+    "black-mage": {
+      "slot": "outfit",
+      "file": "items/black-mage.webp",
+      "meshCount": 53,
+      "containsBody": false
+    },
+    "cartographer": {
+      "slot": "outfit",
+      "file": "items/cartographer.webp",
+      "meshCount": 66,
       "containsBody": false
     },
     "grammar-mage": {
       "slot": "outfit",
       "file": "items/grammar-mage.webp",
-      "meshCount": 15,
+      "meshCount": 34,
+      "containsBody": false
+    },
+    "healer": {
+      "slot": "outfit",
+      "file": "items/healer.webp",
+      "meshCount": 59,
       "containsBody": false
     },
     "honor-knight": {
       "slot": "outfit",
       "file": "items/honor-knight.webp",
-      "meshCount": 57,
+      "meshCount": 177,
+      "containsBody": false
+    },
+    "horse-keeper": {
+      "slot": "outfit",
+      "file": "items/horse-keeper.webp",
+      "meshCount": 255,
       "containsBody": false
     },
     "starter": {
       "slot": "outfit",
       "file": "items/starter.webp",
-      "meshCount": 7,
+      "meshCount": 8,
       "containsBody": false
     },
     "story-keeper": {
       "slot": "outfit",
       "file": "items/story-keeper.webp",
-      "meshCount": 57,
+      "meshCount": 141,
       "containsBody": false
     },
     "vocab-ranger": {
       "slot": "outfit",
       "file": "items/vocab-ranger.webp",
-      "meshCount": 12,
+      "meshCount": 45,
       "containsBody": false
+    },
+    "hero-shield": {
+      "slot": "shield",
+      "file": "items/hero-shield.webp",
+      "meshCount": 2,
+      "containsBody": false
+    },
+    "knight-shield": {
+      "slot": "shield",
+      "file": "items/knight-shield.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "wooden-shield": {
+      "slot": "shield",
+      "file": "items/wooden-shield.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "epic-sword": {
+      "slot": "weapon",
+      "file": "items/epic-sword.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "japanese-blade": {
+      "slot": "weapon",
+      "file": "items/japanese-blade.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "medieval-sword": {
+      "slot": "weapon",
+      "file": "items/medieval-sword.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "metal-wand": {
+      "slot": "weapon",
+      "file": "items/metal-wand.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "templar-dagger": {
+      "slot": "weapon",
+      "file": "items/templar-dagger.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "wooden-staff": {
+      "slot": "weapon",
+      "file": "items/wooden-staff.webp",
+      "meshCount": 1,
+      "containsBody": false
+    },
+    "fripouille": {
+      "slot": "pet",
+      "file": "items/fripouille.webp",
+      "meshCount": 5,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
+    },
+    "meadow-rabbit": {
+      "slot": "pet",
+      "file": "items/meadow-rabbit.webp",
+      "meshCount": 1,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
+    },
+    "ranger-dog": {
+      "slot": "pet",
+      "file": "items/ranger-dog.webp",
+      "meshCount": 3,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
+    },
+    "scarlet-parrot": {
+      "slot": "pet",
+      "file": "items/scarlet-parrot.webp",
+      "meshCount": 1,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
+    },
+    "starry-dragon": {
+      "slot": "pet",
+      "file": "items/starry-dragon.webp",
+      "meshCount": 16,
+      "containsBody": false,
+      "source": "assets/pets/catalogue.glb",
+      "revision": "pets-v9"
     }
   },
   "portraits": {
@@ -108,8 +262,8 @@
       "width": 768,
       "height": 1152,
       "hair": "short",
-      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
-      "bytes": 50418
+      "renderer": "Three.js, stylized-v10, daylight, full silhouette",
+      "bytes": 38326
     },
     "female": {
       "file": "portraits/female.webp",
@@ -118,9 +272,9 @@
       "width": 768,
       "height": 1152,
       "hair": "long",
-      "renderer": "Three.js, stylized-v4, daylight, full silhouette",
-      "bytes": 52704
+      "renderer": "Three.js, stylized-v10, daylight, full silhouette",
+      "bytes": 40020
     }
   },
-  "portraitRevision": "stylized-v4-front-hd"
+  "portraitRevision": "stylized-v10-front-hd"
 }

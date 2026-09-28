@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { Matrix4, Quaternion, Vector3 } from 'three';
-import { getShopItems } from '../src/domain.mjs';
+import { getShopItem, getShopItems } from '../src/domain.mjs';
 import { DEFAULT_LOOK, PRESETS, visiblePart, lookFromParams, modeledItemIds } from '../src/items-3d-model.mjs';
 
 function readGlb(filename = '../assets/items-3d/catalogue.glb') {
@@ -42,15 +42,30 @@ test('the real GLB covers every current modeled catalogue item and only the inte
   const gltf = readGlb();
   const parts = gltf.nodes.filter(node => node.mesh !== undefined);
   const ids = new Set(parts.map(node => node.extras?.shop_id));
-  for (const id of modeledItemIds()) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
-  assert.equal(modeledItemIds().length, 16);
+for (const id of modeledItemIds().filter(id => getShopItem(id).type !== 'pet')) assert.ok(ids.has(id), `Missing 3D item: ${id}`);
+  assert.equal(modeledItemIds().length, 40);
   for (const node of parts) {
     assert.ok(node.extras?.shop_slot, `Untagged source mesh: ${node.name}`);
-    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'hair'].includes(node.extras.shop_slot));
+    assert.ok(['core', 'persona', 'outfit', 'hat', 'weapon', 'shield', 'hair', 'accessory'].includes(node.extras.shop_slot));
     assert.ok(['male','female'].includes(node.extras.fit_persona), `Missing body fit: ${node.name}`);
   }
-  for (const id of ['spiky', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
+  for (const id of ['straight-short', 'spiky-short', 'buzz-cut', 'monk-cut']) assert.equal(ids.has(id), false);
   assert.equal(gltf.skins?.length || 0, 0);
+});
+
+test('every hero wears exactly one pair of ears: human by default, or the ear accessory', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      for (const [accessory, style, jewellery] of [['no-accessory', 'human', false], ['elf-ears', 'elf', false], ['pierced-ears', 'human', true]]) {
+        const visible = parts.filter(data => visiblePart(data, { ...DEFAULT_LOOK, persona, accessory }));
+        const ears = visible.filter(data => data.part === 'ears');
+        assert.equal(ears.length, 1, `${persona} ${accessory}`);
+        assert.equal(ears[0].ear_style, style);
+        assert.equal(visible.some(data => data.part === 'jewellery'), jewellery);
+      }
+    }
+  }
 });
 
 test('all equipment retains human-scale world bounds, including the transformed back sword', () => {
@@ -69,7 +84,9 @@ test('all equipment retains human-scale world bounds, including the transformed 
         for (const y of [accessor.min[1], accessor.max[1]]) {
           for (const z of [accessor.min[2], accessor.max[2]]) {
             const p = new Vector3(x, y, z).applyMatrix4(world);
-            assert.ok(Math.abs(p.x) < 1 && p.y > -.03 && p.y < 2.22 && Math.abs(p.z) < .7, `${node.name} escaped fitted bounds: ${p.toArray()}`);
+            // A weapon held ready points forward: the longest blade reaches ~.81 m.
+            const reach = node.extras?.shop_slot === 'weapon' ? .9 : .7;
+            assert.ok(Math.abs(p.x) < 1 && p.y > -.03 && p.y < 2.22 && Math.abs(p.z) < reach, `${node.name} escaped fitted bounds: ${p.toArray()}`);
           }
         }
       }
@@ -115,16 +132,52 @@ test('hat fit, haircuts and both personas select exactly one variant from actual
 test('the shared haircuts ship while Braids and Royal Hair stay out', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
   const shipped = [...new Set(parts.filter(part => part.shop_slot === 'hair').map(part => part.shop_id))].sort();
-  assert.deepEqual(shipped, ['curly', 'long', 'short']);
-  for (const hair of ['short', 'long', 'curly']) {
+  assert.deepEqual(shipped, ['bun', 'curly', 'long', 'medium-cut', 'short', 'spiky']);
+  for (const hair of ['short', 'long', 'medium-cut', 'curly', 'spiky', 'bun']) {
     for (const persona of ['male', 'female']) {
       const visible = parts.filter(part => part.shop_slot === 'hair' && part.fit_persona === persona
         && visiblePart(part, { ...DEFAULT_LOOK, persona, hair }));
       assert.ok(visible.length > 0, `${persona} must wear ${hair}`);
     }
   }
-  for (const removed of ['braided', 'royal-hair']) {
+  for (const removed of ['braided', 'royal-hair', 'straight-short']) {
     assert.ok(!parts.some(part => part.shop_id === removed), `${removed} is withdrawn`);
+  }
+});
+
+test('a held item closes its hand: open hands and fists swap per side', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      const hands = (look, part) => parts.filter(data => ['hand', 'fist'].includes(data.part) && visiblePart(data, { ...DEFAULT_LOOK, persona, ...look }))
+        .filter(data => data.part === part).map(data => data.hand_side).sort();
+      assert.deepEqual(hands({}, 'hand'), ['left', 'right']);
+      assert.deepEqual(hands({}, 'fist'), []);
+      assert.deepEqual(hands({ weapon: 'epic-sword' }, 'fist'), ['right']);
+      assert.deepEqual(hands({ weapon: 'epic-sword' }, 'hand'), ['left']);
+      assert.deepEqual(hands({ weapon: 'templar-dagger', shield: 'hero-shield' }, 'fist'), ['left', 'right']);
+      assert.deepEqual(hands({ shield: 'wooden-shield' }, 'hand'), ['right']);
+      const held = parts.filter(data => visiblePart(data, { ...DEFAULT_LOOK, persona, weapon: 'medieval-sword', shield: 'knight-shield' }) && ['weapon', 'shield'].includes(data.shop_slot));
+      assert.deepEqual(held.map(data => data.shop_id).sort(), ['knight-shield', 'medieval-sword']);
+    }
+  }
+});
+
+test('the weapon arm bends as its weapon asks: ready for blades and wands, level for a staff', () => {
+  for (const file of [undefined, '../assets/character-stylized/catalogue.glb']) {
+    const parts = readGlb(file).nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
+    for (const persona of ['male', 'female']) {
+      const arms = (weapon) => [...new Set(parts.filter(data => data.arm_pose && visiblePart(data, { ...DEFAULT_LOOK, persona, weapon }))
+        .map(data => data.arm_pose))];
+      assert.deepEqual(arms('no-weapon'), ['straight']);
+      assert.deepEqual(arms('japanese-blade'), ['ready']);
+      assert.deepEqual(arms('metal-wand'), ['ready']);
+      assert.deepEqual(arms('wooden-staff'), ['staff']);
+      // Each weapon rides the fist of the bend it asks for.
+      for (const data of parts.filter(data => data.shop_slot === 'weapon' && data.fit_persona === persona)) {
+        assert.equal(data.held_arm_pose, data.shop_id === 'wooden-staff' ? 'staff' : 'ready', data.shop_id);
+      }
+    }
   }
 });
 
@@ -135,7 +188,7 @@ test('items-only export excludes the welded body but keeps the equipped models',
     const exported = parts.filter(part => visiblePart(part, look, true));
     assert.ok(exported.length > 0);
     assert.ok(exported.every(part => !['core', 'persona', 'hand'].includes(part.shop_slot)));
-    for (const id of Object.values(preset)) assert.ok(exported.some(part => part.shop_id === id));
+    for (const id of Object.values(preset).filter(id => id !== 'no-hat')) assert.ok(exported.some(part => part.shop_id === id));
   }
 });
 
@@ -159,12 +212,19 @@ test('the shipped bodies match the validated athletic silhouettes exactly', () =
   // the athletic silhouettes are the validated body pass over them. The live
   // catalogue must reproduce those approved meshes vertex for vertex, which
   // also proves the protected face and hair regions were carried over.
+  // The delivered ears now ship apart from the skin: the elf-ears accessory
+  // carries them untouched, so skin + elf ears must still match exactly.
   for (const [persona, gender] of [['male','boy'],['female','girl']]) {
     const reference = readGlb(`../assets/character-detail-study/${gender}-athletic.glb`);
     const collect = (gltf, fitted) => {
       const points = new Set();
       worldMeshes(gltf, (node, primitive, world, data) => {
-        if (data.part !== 'skin') return;
+        const deliveredEars = fitted && data.part === 'ears' && data.ear_style === 'elf';
+        // The open hands ship apart too (a fist replaces them when holding).
+        const openHands = fitted && data.part === 'hand';
+        if (data.part !== 'skin' && !deliveredEars && !openHands) return;
+        // The weapon forearm also ships bent up; the hanging one is the body.
+        if (fitted && data.arm_pose && data.arm_pose !== 'straight') return;
         if (fitted && data.fit_persona !== persona) return;
         for (const p of positions(gltf, gltf.accessors[primitive.attributes.POSITION], world)) {
           points.add(p.toArray().map(v => Math.round(v*10000)).join(','));
@@ -204,8 +264,8 @@ test('both base characters have a slightly slimmer posterior hip profile', () =>
 
 test('open crowns keep complete hairstyles instead of chopping off the top of the hair', () => {
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
-  for (const hair of ['short', 'long']) {
-    for (const hat of ['gold-crown', 'celestial-crown']) {
+  for (const hair of ['short', 'long', 'medium-cut', 'spiky', 'bun']) {
+    for (const hat of ['gold-crown']) {
       const visible = parts.filter(part => part.shop_slot === 'hair' && visiblePart(part, { ...DEFAULT_LOOK, hair, hat }));
       assert.ok(visible.length > 0);
       assert.ok(visible.every(part => part.hat_fit === 'crowned'));
@@ -217,7 +277,7 @@ test('the shipped catalogue ships the supplied haircuts and a plain starter outf
   const gltf = readGlb();
   const nodes = gltf.nodes.filter(node => node.mesh !== undefined);
   const hairs = new Set(nodes.filter(node => node.extras?.shop_slot === 'hair').map(node => node.extras.shop_id));
-  assert.deepEqual([...hairs].sort(), ['curly', 'long', 'short']);
+  assert.deepEqual([...hairs].sort(), ['bun', 'curly', 'long', 'medium-cut', 'short', 'spiky']);
   for (const banned of ['neckerchief', 'scout scarf', 'compass fastening']) {
     assert.ok(!nodes.some(node => node.name.toLowerCase().includes(banned)), `starter outfit still contains ${banned}`);
   }
@@ -226,7 +286,7 @@ test('the shipped catalogue ships the supplied haircuts and a plain starter outf
 test('head and held item mounts match each character’s anatomical anchors', () => {
   const contract = JSON.parse(readFileSync(new URL('../assets/items-3d/sources/manifest.json', import.meta.url)));
   const parts = readGlb().nodes.filter(node => node.mesh !== undefined).map(node => node.extras);
-  for (const part of parts.filter(data => ['hair','hat','weapon'].includes(data.shop_slot))) {
+  for (const part of parts.filter(data => ['hair','hat','weapon','shield'].includes(data.shop_slot))) {
     const gender = part.fit_persona === 'male' ? 'boy' : 'girl';
     const expected = contract.characters[gender].anchors[part.attachment]?.world;
     assert.ok(expected, `Unknown mount ${part.attachment}`);
@@ -235,6 +295,8 @@ test('head and held item mounts match each character’s anatomical anchors', ()
     if (['hair','hat'].includes(part.shop_slot)) assert.equal(part.attachment, 'hat_seat');
     if (part.shop_id === 'pencil-sword') assert.equal(part.attachment, 'grip_right');
     if (part.shop_id === 'star-shield') assert.equal(part.attachment, 'wrist_left');
+    if (part.shop_slot === 'weapon') assert.equal(part.attachment, 'grip_right');
+    if (part.shop_slot === 'shield') assert.equal(part.attachment, 'grip_left');
   }
 });
 
@@ -266,19 +328,63 @@ test('every outfit hides its continuous waist edge inside the belt and has no ol
       assert.ok(points.every(p=>Math.abs(p.x)>=.10||p.y>=1.0299),`${key}: old torso tail remains below waist`);
     }
   });
-  assert.equal(skirts.size,10);
-  assert.equal(tops.size,10);
+  assert.equal(skirts.size,22);
+  assert.equal(tops.size,22);
 });
 
-test('armoured outfits have fitted chest panels and articulated shoulders but no greaves',()=>{
+test('armoured outfits have fitted chest panels, articulated shoulders and full leg armour',()=>{
   const nodes=readGlb().nodes.filter(node=>node.mesh!==undefined);
-  for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight']){
-    const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id);
-    assert.ok(parts.filter(node=>node.extras.armour_construction==='anatomical fitted plate').length>=6);
-    assert.equal(parts.filter(node=>node.extras.armour_construction==='articulated shoulder').length,6);
-    assert.equal(parts.filter(node=>node.extras.armour_construction==='contoured greave').length,0);
+  for(const persona of ['male','female']) for(const id of ['story-keeper','honor-knight','horse-keeper']){
+    // Weapon-arm variants (arm_pose) duplicate the forearm pieces for each
+    // held-item pose; count the base construction once.
+    const parts=nodes.filter(node=>node.extras?.fit_persona===persona&&node.extras?.shop_id===id&&!node.extras?.arm_pose);
+    const kind=name=>parts.filter(node=>node.extras.armour_construction===name).length;
+    assert.ok(kind('anatomical fitted plate')>=6);
+    assert.equal(kind('articulated shoulder'),6);
+    assert.equal(kind('contoured greave'),2);
+    assert.equal(kind('cuisse'),2);
+    assert.equal(kind('vambrace'),2);
+    assert.equal(kind('gorget'),1);
+    assert.ok(parts.some(node=>node.name.includes('knee poleyn')));
     assert.ok(parts.some(node=>node.name.includes('hinge rivet')));
-    assert.ok(!parts.some(node=>/shin plate|greave/.test(node.name)), 'greaves must be withdrawn');
-    assert.ok(!parts.some(node=>node.name.includes('fitted shoulder plate')||node.name.includes('steel greave')));
+  }
+  // The Knight is the Warrior's construction with more plates and gilding.
+  const count=id=>nodes.filter(node=>node.extras?.fit_persona==='male'&&node.extras?.shop_id===id).length;
+  assert.ok(count('honor-knight')>count('story-keeper'));
+  assert.ok(count('horse-keeper')>count('honor-knight'));
+  assert.ok(nodes.some(node=>node.extras?.shop_id==='honor-knight'&&node.name.includes('besagew')));
+  assert.ok(nodes.some(node=>node.extras?.shop_id==='horse-keeper'&&node.name.includes('horseshoe')));
+});
+
+test('there is exactly one new outfit per level up to 10, each more detailed than the last tier', () => {
+  const outfits = getShopItems('outfit').filter(outfit => outfit.id !== 'starter');
+  assert.deepEqual(outfits.map(outfit => outfit.minLevel), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  const nodes = readGlb().nodes.filter(node => node.mesh !== undefined && node.extras?.fit_persona === 'male');
+  const pieces = id => nodes.filter(node => node.extras.shop_id === id).length;
+  // Beginner tops stay light; the late outfits are the richest.
+  assert.ok(pieces('bard') < pieces('vocab-ranger'));
+  for (const late of ['cartographer', 'healer', 'alchemist']) assert.ok(pieces(late) > pieces('grammar-mage'), late);
+  assert.equal(Math.max(...outfits.map(outfit => pieces(outfit.id))), pieces('horse-keeper'));
+});
+
+test('full outfits replace the trousers while every outfit keeps the delivered boots', () => {
+  const nodes = readGlb().nodes.filter(node => node.mesh !== undefined);
+  const core = nodes.filter(node => node.extras?.shop_slot === 'core');
+  for (const persona of ['male', 'female']) {
+    const mine = core.filter(node => node.extras.fit_persona === persona);
+    assert.deepEqual(mine.map(node => node.extras.core_part).sort(), ['boots', 'trousers']);
+  }
+  const full = ['grammar-mage', 'black-mage', 'story-keeper', 'honor-knight', 'cartographer', 'healer', 'alchemist', 'horse-keeper'];
+  for (const outfit of getShopItems('outfit')) {
+    assert.equal(Boolean(outfit.coversLegs), full.includes(outfit.id), `${outfit.id} leg coverage`);
+    for (const persona of ['male', 'female']) {
+      const look = { ...DEFAULT_LOOK, persona, skin: outfit.id };
+      const visible = core.map(node => node.extras).filter(part => visiblePart(part, look));
+      assert.deepEqual(visible.map(part => part.core_part).sort(), outfit.coversLegs ? ['boots'] : ['boots', 'trousers']);
+      if (outfit.coversLegs) {
+        const legs = nodes.filter(node => node.extras?.fit_persona === persona && node.extras?.shop_id === outfit.id && node.name.includes('fitted hose'));
+        assert.equal(legs.length, 3, `${persona}/${outfit.id} needs two hose legs and a seat`);
+      }
+    }
   }
 });

@@ -1,5 +1,5 @@
 /* Legacy grid/list renderer retained for compatibility and regression tests.
- * The live Sheikah board is rendered by views/sheikah.mjs.
+ * The live Odyssey board is rendered by views/odyssey.mjs.
  */
 
 import { isEliminated } from "../domain.mjs";

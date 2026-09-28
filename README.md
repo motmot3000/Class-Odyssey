@@ -21,17 +21,19 @@ chiffres, points, tirets ou underscores) et renseigner `FOUNDER_PASSWORD`
 npm run dev
 ```
 
-Puis ouvrir l'URL annoncée par le serveur, par défaut :
+`npm run dev` démarre deux serveurs : l'**atelier 3D** sur le port `5201` et
+l'**application** sur le port `5180`. L'atelier est annoncé en premier, donc Go
+Live ouvre :
 
 ```text
-http://localhost:5180
+http://127.0.0.1:5201/items-3d.html
 ```
 
-Go Live utilise automatiquement `npm run dev`. Ce mode essaie le port défini
-par `PORT` dans `.env` (sinon `5180`) ; s'il est déjà occupé, le système lui
-attribue un port libre. Go Live ouvre l'URL effective annoncée par le serveur.
-`npm start` permet de démarrer sur un port strictement fixé et signale un conflit
-si celui-ci est occupé.
+L'atelier embarque un bouton **Lancer l'application en temps réel** qui ouvre
+l'application sur `http://127.0.0.1:5180` et connecte automatiquement le compte
+administrateur local (les identifiants ne sont acceptés que depuis `localhost` /
+`127.0.0.1`). `npm run dev:app` démarre l'application seule, et `npm start`
+démarre sur un port strictement fixé en signalant un conflit s'il est occupé.
 
 `npm run dev` et `npm start` chargent automatiquement le fichier `.env`, ignoré
 par Git. Les variables déjà exportées dans le terminal sont prioritaires.
@@ -41,15 +43,21 @@ de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
 
 ### Connexion Google (facultatif)
 
-Le bouton **Continuer avec Google** apparaît dès que `GOOGLE_CLIENT_ID` et
+Le bouton **Se connecter avec son compte Google** apparaît dès que `GOOGLE_CLIENT_ID` et
 `GOOGLE_CLIENT_SECRET` sont renseignés. Dans la console Google Cloud, créer un
 identifiant OAuth 2.0 de type « application Web » et autoriser l'URI de
-redirection `https://<domaine>/api/auth/google/callback` (en local,
+redirection `https://www.thomaswunsche.com/classodyssey/api/auth/google/callback`
+(ou `https://classodyssey.thomaswunsche.com/api/auth/google/callback`, puis
+`https://classodyssey.com/api/auth/google/callback` après l'ouverture du domaine ; en local,
 `http://127.0.0.1:5180/api/auth/google/callback`, ou le port choisi). À la
 première connexion, Class Odyssey crée le compte à partir de l'adresse Google
 vérifiée ; si un compte existe déjà avec cet e-mail, Google ouvre ce compte.
-Aucun mot de passe n'est nécessaire : un administrateur peut en définir un plus
-tard depuis **Accounts**.
+Un nouveau compte Google accepte les textes légaux puis choisit un **mot de
+passe de console du professeur** (6 caractères minimum). Il est déverrouillé
+pour cinq minutes après sa création, puis demandé pour accéder aux commandes
+enseignant après reconnexion. Ce mot de passe ne sert jamais à se connecter au
+compte Google : il peut être modifié depuis la console et réinitialisé après
+une nouvelle authentification Google avec l'adresse e-mail vérifiée.
 
 Les données locales sont conservées dans `server/data/`, propre à chaque
 worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
@@ -98,11 +106,19 @@ ouvre l'URL retrouve les données de son compte.
 
 Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
 
+## Console d'administration locale
+
+La console séparée est dans `admin-console/` et s'ouvre sur
+`http://127.0.0.1:5191` avec `npm run console`. Elle lit les comptes en direct
+depuis le backend du site, sans mot de passe à saisir dans le navigateur.
+L'installation et la connexion au VPS sont décrites dans
+[`admin-console/README.md`](admin-console/README.md).
+
 ## Structure du code
 
 ```text
 index.html          coque HTML (topbar + zones app/toasts/dialogues)
-src/sheikah.css     système visuel partagé, thèmes sombre et clair
+src/odyssey.css     système visuel partagé, thèmes sombre et clair
 src/shell.css       navigation, connexion, règles, comptes, boutique et dialogues
 styles.css          ancien habillage conservé pour les prototypes
 src/app.mjs         état d'interface, routage, événements délégués, persistance

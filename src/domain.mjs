@@ -20,12 +20,21 @@ export const SKINS = [
     price: 0
   },
   {
+    id: "bard",
+    name: "Bard",
+    minLevel: 1,
+    colors: ["#a4566b", "#e7cf9a", "#2a1a22"],
+    reward: "Bard outfit",
+    description: "A rose tunic with a cream sash and a music pin.",
+    price: 10
+  },
+  {
     id: "vocab-ranger",
     name: "Ranger",
     minLevel: 2,
     colors: ["#1fbf92", "#f4c64e", "#1b2f3f"],
     reward: "Ranger outfit",
-    description: "Green ranger cloak.",
+    description: "Green tunic with a brown adventurer's capelet and hood.",
     price: 20
   },
   {
@@ -34,8 +43,9 @@ export const SKINS = [
     minLevel: 3,
     colors: ["#8f6cff", "#ff7b92", "#241a3a"],
     reward: "Mage outfit",
-    description: "Purple mage robe.",
-    price: 35
+    description: "Long purple mage robe with a cape.",
+    price: 35,
+    coversLegs: true
   },
   {
     id: "story-keeper",
@@ -43,8 +53,19 @@ export const SKINS = [
     minLevel: 4,
     colors: ["#ffb545", "#3f8cff", "#2d2638"],
     reward: "Warrior outfit",
-    description: "Red armor with a cape.",
-    price: 55
+    description: "Red armor with a cape and leg guards.",
+    price: 55,
+    coversLegs: true
+  },
+  {
+    id: "black-mage",
+    name: "Black Mage",
+    minLevel: 5,
+    colors: ["#8e2a2f", "#e2bc70", "#1d191d"],
+    reward: "Black Mage outfit",
+    description: "Crimson robe with a pointed black mantle and glowing runes.",
+    price: 65,
+    coversLegs: true
   },
   {
     id: "honor-knight",
@@ -52,8 +73,49 @@ export const SKINS = [
     minLevel: 6,
     colors: ["#33507e", "#e2bc70", "#152036"],
     reward: "Knight armor",
-    description: "Blue knight armor.",
-    price: 75
+    description: "Blue knight armor with gold trim and full leg plates.",
+    price: 75,
+    coversLegs: true
+  },
+  {
+    id: "cartographer",
+    name: "Map Maker",
+    minLevel: 7,
+    colors: ["#2d6468", "#b49962", "#1d4144"],
+    reward: "Map Maker outfit",
+    description: "Explorer coat with a map case, a compass and a spyglass.",
+    price: 85,
+    coversLegs: true
+  },
+  {
+    id: "healer",
+    name: "Healer",
+    minLevel: 8,
+    colors: ["#e2dbca", "#2c7470", "#b49962"],
+    reward: "Healer outfit",
+    description: "White robe with a teal tabard, a hood and healing potions.",
+    price: 90,
+    coversLegs: true
+  },
+  {
+    id: "alchemist",
+    name: "Alchemist",
+    minLevel: 9,
+    colors: ["#7a4b27", "#62f08c", "#27221f"],
+    reward: "Alchemist outfit",
+    description: "Leather apron, glowing potions and a mantle with magic signs.",
+    price: 95,
+    coversLegs: true
+  },
+  {
+    id: "horse-keeper",
+    name: "Horse Keeper",
+    minLevel: 10,
+    colors: ["#c2cbd1", "#6b2336", "#e8e0cb"],
+    reward: "Horse Keeper armor",
+    description: "Shining silver armor with gold horseshoes and a white cape.",
+    price: 110,
+    coversLegs: true
   }
 ];
 
@@ -71,31 +133,49 @@ export const TITLES = [
 
 export const HATS = [
   { id: "no-hat", name: "No Hat", minLevel: 1, price: 0, description: "No hat on your head." },
-  { id: "explorer-cap", name: "Goggles", minLevel: 1, price: 15, description: "Cool explorer goggles." },
-  { id: "sunglasses", name: "Sunglasses", minLevel: 2, price: 25, description: "Black sunglasses." },
   { id: "feather-beret", name: "Beret", minLevel: 2, price: 20, description: "A smart green beret with a gold pin." },
   { id: "wizard-hat", name: "Wizard Hat", minLevel: 3, price: 30, description: "A tall pointed wizard hat." },
-  { id: "gold-crown", name: "King's Crown", minLevel: 5, price: 55, description: "Shiny gold crown." },
-  { id: "steel-helm", name: "Helmet", minLevel: 6, price: 65, description: "Horned steel knight helmet." },
-  { id: "classy-hat", name: "Classy Hat", minLevel: 7, price: 75, description: "A refined black top hat." },
-  { id: "celestial-crown", name: "Royal Crown", minLevel: 10, price: 100, description: "The greatest golden crown." }
+  { id: "classy-hat", name: "Classy Hat", minLevel: 5, price: 55, description: "A refined black top hat." },
+  { id: "steel-helm", name: "Helmet", minLevel: 7, price: 75, description: "Horned steel knight helmet." },
+  { id: "gold-crown", name: "King's Crown", minLevel: 10, price: 100, description: "A jewelled gold crown for the greatest heroes." }
 ];
 
-/* The Items category (weapons, shields, books) is withdrawn. `no-weapon`
- * remains as the internal empty-hands state for saved pupils and exports; it is
- * never offered as a shop tab. */
+/* Older saves wore eyewear in the hat slot and could own the withdrawn Royal
+ * Crown. Eyewear moves to the accessory slot; the Royal Crown becomes the
+ * King's Crown, which now holds its level-10 place. */
+const MOVED_TO_ACCESSORIES = new Set(["explorer-cap", "sunglasses"]);
+const RENAMED_ITEMS = { "celestial-crown": "gold-crown" };
+
+/* Blades, wands and staves are held in the right fist, shields on the left
+ * arm: both can be worn together. Ordered by level; Epic Sword is the rarest. */
 export const WEAPONS = [
-  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." }
+  { id: "no-weapon", name: "Empty Hands", minLevel: 1, price: 0, description: "Ready for adventure." },
+  { id: "templar-dagger", name: "Templar Dagger", minLevel: 3, price: 30, description: "A broad dagger with a red cross pommel." },
+  { id: "medieval-sword", name: "Knight's Sword", minLevel: 4, price: 45, description: "A long steel sword with a corded grip." },
+  { id: "metal-wand", name: "Silver Wand", minLevel: 5, price: 55, description: "A short silver wand with an emerald between two flame horns." },
+  { id: "japanese-blade", name: "Katana", minLevel: 7, price: 75, description: "A curved katana with a round tsuba and a silk-wrapped hilt." },
+  { id: "wooden-staff", name: "Mage Staff", minLevel: 8, price: 90, description: "A tall oak staff cradling a glowing stone." },
+  { id: "epic-sword", name: "Epic Sword", minLevel: 10, price: 120, description: "A legendary blade with a crescent guard and glowing crystals." }
 ];
 
-/* Short and Long are the delivered cuts, free and shared by both characters;
- * Bald and the Braid carry the first cosmetic unlocks. The old sculpted Afro
- * is withdrawn. */
+export const SHIELDS = [
+  { id: "no-shield", name: "No Shield", minLevel: 1, price: 0, description: "A free left hand." },
+  { id: "wooden-shield", name: "Wooden Shield", minLevel: 2, price: 20, description: "A round plank shield with an iron boss." },
+  { id: "knight-shield", name: "Knight's Shield", minLevel: 6, price: 60, description: "A domed bronze shield with a braided gold rim." },
+  { id: "hero-shield", name: "Hero Shield", minLevel: 10, price: 100, description: "A blue heater shield bearing a red phoenix." }
+];
+
+/* Short and Long are the delivered cuts, free and shared by both characters:
+ * a boy starts on Short, a girl on Long. The old sculpted Afro is withdrawn;
+ * the previous delivered Short became the Spiky unlock. */
 export const HAIRS = [
-  { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "Classic short haircut." },
+  { id: "short", name: "Short Hair", minLevel: 1, price: 0, description: "A classic short cut with a swept side fringe." },
   { id: "long", name: "Long Hair", minLevel: 1, price: 0, description: "Nice long hair." },
+  { id: "medium-cut", name: "Medium Cut", minLevel: 3, price: 30, description: "A wavy medium-length cut with a side-swept fringe." },
   { id: "bald", name: "Bald", minLevel: 2, price: 20, description: "A clean fully shaved head." },
-  { id: "curly", name: "Braid", minLevel: 3, price: 30, description: "A neat long braid with bangs." }
+  { id: "curly", name: "Braid", minLevel: 3, price: 30, description: "A neat long braid with bangs." },
+  { id: "spiky", name: "Spiky Hair", minLevel: 6, price: 50, description: "Bold short hair with visible spikes." },
+  { id: "bun", name: "Bun", minLevel: 6, price: 50, description: "A twisted bun held by a gold pin, with a swept fringe." }
 ];
 
 export const HAIR_COLORS = [
@@ -108,16 +188,34 @@ export const HAIR_COLORS = [
   { id: "blue-hair", name: "Blue", minLevel: 5, price: 50, description: "Vivid blue hair." }
 ];
 
-export const BESPOKE_ITEMS = [
-  {
-    id: "custom-bespoke",
-    name: "Custom Item",
-    minLevel: 10,
-    price: 100,
-    type: "bespoke",
-    reward: "Custom Item",
-    description: "At level 10, create your own special item for 100 coins."
-  }
+/* Eye colours tint the delivered iris at runtime, so no extra mesh ships for
+ * them. Brown is the default every hero starts with. */
+export const EYE_COLORS = [
+  { id: "brown-eyes", name: "Brown", minLevel: 1, price: 0, color: "#6E4A2E", description: "Classic brown eyes." },
+  { id: "green-eyes", name: "Green", minLevel: 3, price: 30, color: "#2F4C36", description: "Fresh green eyes." },
+  { id: "blue-eyes", name: "Blue", minLevel: 4, price: 30, color: "#3B5E86", description: "Bright blue eyes." },
+  { id: "red-eyes", name: "Red", minLevel: 6, price: 50, color: "#7E3A34", description: "Striking red eyes." },
+  { id: "violet-eyes", name: "Violet", minLevel: 8, price: 50, color: "#63497F", description: "Mysterious violet eyes." }
+];
+
+/* One accessory at a time. Eyewear sits on the face; the ear accessories
+ * replace the rounded human ears every hero has: the delivered pointed elf
+ * ears, or human ears with a few gold piercings. */
+export const ACCESSORIES = [
+  { id: "no-accessory", name: "No Accessory", minLevel: 1, price: 0, description: "Natural human ears." },
+  { id: "explorer-cap", name: "Goggles", minLevel: 1, price: 15, description: "Brass explorer goggles worn on the forehead." },
+  { id: "sunglasses", name: "Sunglasses", minLevel: 2, price: 25, description: "Stylish black sunglasses." },
+  { id: "elf-ears", name: "Elf Ears", minLevel: 4, price: 30, description: "Long pointed elf ears." },
+  { id: "pierced-ears", name: "Pierced Ears", minLevel: 5, price: 50, description: "Human ears with gold hoops and studs." }
+];
+
+export const PETS = [
+  { id: "no-pet", name: "No Pet", minLevel: 1, price: 0, description: "Adventure without a companion." },
+  { id: "meadow-rabbit", name: "Meadow Rabbit", minLevel: 1, price: 10, description: "A tiny, quiet cream rabbit with hazel eyes." },
+  { id: "fripouille", name: "Fripouille", minLevel: 3, price: 40, description: "A curious ginger-and-white cat with a ranger scarf." },
+  { id: "ranger-dog", name: "Ranger Dog", minLevel: 4, price: 50, description: "A loyal golden dog with a traveller scarf." },
+  { id: "scarlet-parrot", name: "Scarlet Parrot", minLevel: 7, price: 50, description: "A bright scarlet macaw that rides on your shoulder." },
+  { id: "starry-dragon", name: "Starry Dragon", minLevel: 9, price: 90, description: "A proud turquoise, coral and gold dragon with bright golden eyes." }
 ];
 
 export const SKIN_TONES = [
@@ -132,11 +230,14 @@ export const SHOP_ITEMS = [
   ...SKINS.map((item) => ({ ...item, type: "outfit" })),
   ...HATS.map((item) => ({ ...item, type: "hat" })),
   ...WEAPONS.map((item) => ({ ...item, type: "weapon" })),
+  ...SHIELDS.map((item) => ({ ...item, type: "shield" })),
   ...HAIRS.map((item) => ({ ...item, type: "hair" })),
   ...HAIR_COLORS.map((item) => ({ ...item, type: "hairColor" })),
+  ...EYE_COLORS.map((item) => ({ ...item, type: "eyeColor" })),
+  ...ACCESSORIES.map((item) => ({ ...item, type: "accessory" })),
+  ...PETS.map((item) => ({ ...item, type: "pet" })),
   ...TITLES.map((item) => ({ ...item, type: "title" })),
-  ...SKIN_TONES.map((item) => ({ ...item, type: "tone" })),
-  ...BESPOKE_ITEMS
+  ...SKIN_TONES.map((item) => ({ ...item, type: "tone" }))
 ];
 
 const CLASS_NAMES = ["7P", "8P"];
@@ -610,13 +711,9 @@ export function getUnlockedSkins(level) {
   return SKINS.filter((skin) => skin.minLevel <= level);
 }
 
-export function getUnlockedTitles(level) {
-  return TITLES.filter((title) => title.minLevel <= level);
-}
-
 export function getRewardsForLevel(level) {
   const rewards = SHOP_ITEMS.filter((item) => item.minLevel === level).map((item) =>
-    item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.name
+    item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.type === "eyeColor" ? `${item.name} eye color` : item.name
   );
   if (level > 1) rewards.push("HP restored");
   return rewards;
@@ -661,18 +758,23 @@ function samplePupils(prefix, entries) {
   );
 }
 
-function normalizePupil(pupil) {
+function normalizePupil(source) {
+  const pupil = migrateLegacyItems(source);
   const level = Math.max(1, nonNegativeInteger(pupil.level, 1));
   const maxHp = Math.min(MAX_HEARTS, Math.max(1, nonNegativeInteger(pupil.maxHp, 5)));
   const skin = SKINS.some((item) => item.id === pupil.skin) ? pupil.skin : "starter";
   const title = TITLES.some((item) => item.id === pupil.title) ? pupil.title : "rookie";
   const hat = HATS.some((item) => item.id === pupil.hat) ? pupil.hat : "no-hat";
   const weapon = WEAPONS.some((item) => item.id === pupil.weapon) ? pupil.weapon : "no-weapon";
+  const shield = SHIELDS.some((item) => item.id === pupil.shield) ? pupil.shield : "no-shield";
   const gender = pupil.gender === "girl" ? "girl" : "boy";
   const skinTone = SKIN_TONES.some((tone) => tone.id === pupil.skinTone) ? pupil.skinTone : "light";
   const defaultHair = gender === "girl" ? "long" : "short";
   const hair = HAIRS.some((item) => item.id === pupil.hair) ? pupil.hair : defaultHair;
   const hairColor = HAIR_COLORS.some((item) => item.id === pupil.hairColor) ? pupil.hairColor : "brown-hair";
+  const eyeColor = EYE_COLORS.some((item) => item.id === pupil.eyeColor) ? pupil.eyeColor : "brown-eyes";
+  const accessory = ACCESSORIES.some((item) => item.id === pupil.accessory) ? pupil.accessory : "no-accessory";
+  const pet = PETS.some((item) => item.id === pupil.pet) ? pupil.pet : "no-pet";
   const starterItems = SHOP_ITEMS.filter((item) => item.price === 0).map((item) => item.id);
   const ownedItems = [...new Set([
     ...starterItems,
@@ -680,8 +782,12 @@ function normalizePupil(pupil) {
     title,
     hat,
     weapon,
+    shield,
     hair,
     hairColor,
+    eyeColor,
+    accessory,
+    pet,
     skinTone,
     ...(Array.isArray(pupil.ownedItems) ? pupil.ownedItems.filter((id) => getShopItem(id)) : [])
   ])];
@@ -709,13 +815,31 @@ function normalizePupil(pupil) {
     title,
     hat: ownedItems.includes(hat) ? hat : "no-hat",
     weapon: ownedItems.includes(weapon) ? weapon : "no-weapon",
+    shield: ownedItems.includes(shield) ? shield : "no-shield",
     gender,
     skinTone: ownedItems.includes(skinTone) ? skinTone : "light",
     face: "smile",
     hair: ownedItems.includes(hair) ? hair : defaultHair,
     hairColor: ownedItems.includes(hairColor) ? hairColor : "brown-hair",
+    eyeColor: ownedItems.includes(eyeColor) ? eyeColor : "brown-eyes",
+    accessory: ownedItems.includes(accessory) ? accessory : "no-accessory",
+    pet: ownedItems.includes(pet) ? pet : "no-pet",
     lastLevelUpAt: pupil.lastLevelUpAt || null
   };
+}
+
+function migrateLegacyItems(pupil) {
+  const rename = (id) => RENAMED_ITEMS[id] || id;
+  const next = { ...pupil };
+  if (Array.isArray(pupil.ownedItems)) next.ownedItems = pupil.ownedItems.map(rename);
+  next.hat = rename(pupil.hat);
+  if (MOVED_TO_ACCESSORIES.has(pupil.hat)) {
+    // Eyewear leaves the hat slot; it is worn as the accessory unless the
+    // pupil already chose one.
+    if (!pupil.accessory || pupil.accessory === "no-accessory") next.accessory = pupil.hat;
+    next.hat = "no-hat";
+  }
+  return next;
 }
 
 function applyXp(pupil, amount) {

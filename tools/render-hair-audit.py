@@ -12,9 +12,10 @@ import bpy
 import math
 import os
 import sys
+from pathlib import Path
 from mathutils import Vector
 
-ROOT = '/home/motmot3000/orca/workspaces/class-odyssey/haircut'
+ROOT = str(Path(__file__).resolve().parents[1])
 CATALOGUE = f'{ROOT}/assets/character-stylized/catalogue.glb'
 OUT = '/tmp/opencode/hair-audit'
 os.makedirs(OUT, exist_ok=True)

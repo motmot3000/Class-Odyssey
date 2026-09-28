@@ -282,7 +282,7 @@ const CONFIDENTIALITE = {
         heading: "Données que nous traitons",
         body: `
           <h3>1. Données de compte (enseignant)</h3>
-          <p>Lors de la création d'un compte, nous traitons : l'adresse e-mail, le nom d'utilisateur qui en dérive, le mot de passe (conservé uniquement sous forme hachée), la date de création et la date de dernière connexion. Le mot de passe n'est jamais conservé en clair.</p>
+          <p>Lors de la création d'un compte, nous traitons : l'adresse e-mail, le nom d'utilisateur qui en dérive, le mot de passe (conservé uniquement sous forme hachée), la date de création et la date de dernière connexion. Le mot de passe n'est jamais conservé en clair. Si vous choisissez Google, nous recevons de Google votre adresse e-mail vérifiée et votre nom. Votre mot de passe Google n'est jamais communiqué à Class Odyssey ; le mot de passe distinct de la console du professeur est conservé uniquement sous forme hachée.</p>
           <h3>2. Données de classe et des élèves</h3>
           <p>Pour faire fonctionner le jeu, l'enseignant saisit des données concernant ses élèves : prénom, personnage choisi, apparence, niveau, XP, points de vie, pièces et achats. Ces données peuvent concerner des mineurs (élèves d'environ 11 à 13 ans). Elles sont saisies par l'enseignant, qui est responsable de disposer du fondement légal ou de l'accord nécessaire pour ce traitement.</p>
           <h3>3. Données conservées sur votre appareil</h3>
@@ -306,7 +306,7 @@ const CONFIDENTIALITE = {
         body: `
           <p>Class Odyssey utilise des cookies et technologies similaires <strong>strictement nécessaires</strong> à son fonctionnement, ainsi qu'une mesure d'audience soumise à votre <strong>consentement</strong>. Rien n'est déposé pour la mesure d'audience tant que vous n'avez pas fait un choix explicite dans le bandeau de consentement.</p>
           <h3>Cookies strictement nécessaires</h3>
-          <p>Session et authentification du compte, sécurité des requêtes, préférences d'affichage (thème, langue). Ils ne servent à aucun suivi publicitaire ni profilage et ne peuvent être désactivés sans empêcher la connexion. Le cookie <code>tarteaucitron</code> mémorise vos choix de consentement ; il est lui aussi strictement nécessaire.</p>
+          <p>Session et authentification du compte, sécurité des requêtes, préférences d'affichage (thème, langue). La connexion Google utilise un cookie temporaire strictement nécessaire au retour sécurisé de Google ; il est supprimé après la connexion. Ces éléments ne servent à aucun suivi publicitaire ni profilage. Le cookie <code>tarteaucitron</code> mémorise vos choix de consentement ; il est lui aussi strictement nécessaire.</p>
           <h3>Mesure d'audience (Google Analytics 4)</h3>
           <p>Avec votre accord uniquement, nous utilisons <strong>Google Analytics 4</strong> pour comprendre comment l'application est utilisée : pages consultées, durée de visite, parcours, type d'appareil, source de la visite et interactions (défilement, clics sortants). L'adresse IP est anonymisée avant enregistrement et les données sont exploitées sous forme agrégée, à des fins d'amélioration du service uniquement. Durée de conservation : jusqu'à 14 mois. Vous pouvez retirer votre accord à tout moment sans que cela affecte l'utilisation du service.</p>
           <h3>Publicité (Google Ads)</h3>
@@ -320,7 +320,7 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Transferts de données à l'étranger",
-        body: `<p>Les données sont hébergées en Suisse et Class Odyssey ne les transfère pas hors de Suisse, à l'exception suivante : si vous consentez à la mesure d'audience, les données de navigation agrégées sont traitées par Google (Google Ireland Limited et, le cas échéant, Google LLC) dans le cadre des garanties appropriées prévues par le RGPD. Sans ce consentement, aucune donnée de navigation n'est transmise à Google. Les polices de caractères sont servies localement depuis le site : aucun appel à un service de polices tiers n'est effectué.</p>`
+        body: `<p>Les données des comptes et des classes sont hébergées en Suisse. Si vous choisissez la connexion Google, votre navigateur est redirigé vers Google pour l'authentification ; Google traite les données nécessaires à celle-ci selon sa propre politique, et nous recevons votre adresse e-mail vérifiée et votre nom. Séparément, si vous consentez à la mesure d'audience, les données de navigation agrégées sont traitées par Google (Google Ireland Limited et, le cas échéant, Google LLC) dans le cadre des garanties appropriées prévues par le RGPD. Sans ce consentement, Google Analytics ne reçoit aucune donnée de navigation. Les polices sont servies localement.</p>`
       },
       {
         heading: "Durée de conservation",
@@ -376,7 +376,7 @@ const CONFIDENTIALITE = {
         heading: "Data we process",
         body: `
           <h3>1. Account data (teacher)</h3>
-          <p>When an account is created, we process: the email address, the username derived from it, the password (stored only in hashed form), the creation date and the last sign-in date. The password is never stored in clear text.</p>
+          <p>When an account is created, we process: the email address, the username derived from it, the password (stored only in hashed form), the creation date and the last sign-in date. The password is never stored in clear text. If you choose Google, we receive your verified email address and name from Google. Your Google password is never shared with Class Odyssey; the separate teacher console password is stored only as a hash.</p>
           <h3>2. Class and pupil data</h3>
           <p>To run the game, the teacher enters data about their pupils: first name, chosen character, appearance, level, XP, hit points, coins and purchases. This data may concern minors (pupils aged roughly 11 to 13). It is entered by the teacher, who is responsible for having the legal basis or necessary consent for that processing.</p>
           <h3>3. Data stored on your device</h3>
@@ -400,7 +400,7 @@ const CONFIDENTIALITE = {
         body: `
           <p>Class Odyssey uses cookies and similar technologies that are <strong>strictly necessary</strong> for its operation, as well as audience measurement subject to your <strong>consent</strong>. Nothing is stored for audience measurement until you have made an explicit choice in the consent banner.</p>
           <h3>Strictly necessary cookies</h3>
-          <p>Account session and authentication, request security, display preferences (theme, language). They are not used for advertising or profiling and cannot be disabled without preventing sign-in. The <code>tarteaucitron</code> cookie remembers your consent choices; it is itself strictly necessary.</p>
+          <p>Account session and authentication, request security, display preferences (theme, language). Google sign-in uses a temporary cookie strictly necessary for the secure return from Google; it is removed after sign-in. These elements are not used for advertising or profiling. The <code>tarteaucitron</code> cookie remembers your consent choices; it is also strictly necessary.</p>
           <h3>Audience measurement (Google Analytics 4)</h3>
           <p>Only with your agreement do we use <strong>Google Analytics 4</strong> to understand how the application is used: pages viewed, visit duration, navigation paths, device type, traffic source and interactions (scrolling, outbound clicks). The IP address is anonymised before storage and the data is used in aggregate form, solely to improve the service. Retention period: up to 14 months. You may withdraw your agreement at any time without affecting your use of the service.</p>
           <h3>Advertising (Google Ads)</h3>
@@ -414,7 +414,7 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Transfers of data abroad",
-        body: `<p>The data is hosted in Switzerland and Class Odyssey does not transfer it outside Switzerland, with the following exception: if you consent to audience measurement, the aggregated browsing data is processed by Google (Google Ireland Limited and, where applicable, Google LLC) under the appropriate safeguards provided by the GDPR. Without that consent, no browsing data is transmitted to Google. Fonts are served locally from the site: no third-party font service is called.</p>`
+        body: `<p>Account and class data is hosted in Switzerland. If you choose Google sign-in, your browser is redirected to Google for authentication; Google processes the data necessary for this under its own privacy policy, and we receive your verified email address and name. Separately, if you consent to audience measurement, aggregated browsing data is processed by Google (Google Ireland Limited and, where applicable, Google LLC) under appropriate GDPR safeguards. Without that consent, Google Analytics receives no browsing data. Fonts are served locally.</p>`
       },
       {
         heading: "Retention period",

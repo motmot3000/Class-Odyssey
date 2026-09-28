@@ -52,7 +52,7 @@ export function createStaticHandler({ publicDir, dataDir }) {
     const parts = relative.split(path.sep);
     if (parts.some(part => part.startsWith("."))) return false;
     return ENTRIES.has(relative) || ["assets", "src"].includes(parts[0])
-      || (parts[0] === "prototype" && parts[1] === "sheikah" && PROTOTYPE_TYPES.has(path.extname(target)));
+      || (parts[0] === "prototype" && parts[1] === "odyssey" && PROTOTYPE_TYPES.has(path.extname(target)));
   }
   return function serveStatic(req, res, pathname) {
     const notFound = () => res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");

@@ -60,7 +60,7 @@ for (const { name, autoPort, dynamicPort } of [
   });
 }
 
-async function fixture({ legacyState, rateLimit, publicDir } = {}) {
+async function fixture({ legacyState, rateLimit, publicDir, mailer } = {}) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "class-odyssey-"));
   if (legacyState) fs.writeFileSync(path.join(dataDir, "state.json"), JSON.stringify(legacyState));
   const server = createGameServer({
@@ -68,7 +68,8 @@ async function fixture({ legacyState, rateLimit, publicDir } = {}) {
     founderUsername: FOUNDER.username,
     founderPassword: FOUNDER.password,
     rateLimit,
-    publicDir
+    publicDir,
+    mailer
   });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
@@ -106,7 +107,7 @@ async function signIn(request, username = FOUNDER.username, password = FOUNDER.p
 test("merged workshop entry points are served without exposing private files", async () => {
   const app = await fixture();
   try {
-    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/gamification.html", "/prototype/sheikah/index.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
+    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/gamification.html", "/prototype/odyssey/index.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
       const { response } = await app.request(route);
       assert.equal(response.status, 200, route);
       assert.match(response.headers.get("content-type"), /text\/html/);
@@ -375,11 +376,12 @@ test("account settings and email persist per account and stay changeable", async
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "noemail", password: "password" } })).response.status, 400);
     assert.equal((await app.request("/api/accounts", { method: "POST", body: { username: "bademail", email: "nope", password: "password" } })).response.status, 400);
 
-    // Signup without a username derives it from the email; signing in works
-    // with either the email or the derived username.
+    // The email is the account identity: it becomes the username, and the
+    // display name defaults to its local part.
     const emailOnly = await app.request("/api/accounts", { method: "POST", body: { email: "marie.dupont@example.test", password: "password", termsAccepted: true } });
     assert.equal(emailOnly.response.status, 201);
-    assert.equal(emailOnly.payload.account.username, "marie.dupont");
+    assert.equal(emailOnly.payload.account.username, emailOnly.payload.account.email);
+    assert.equal(emailOnly.payload.account.displayName, "marie.dupont");
     assert.equal(emailOnly.payload.account.terms.version, "2026-09-18");
     assert.ok(emailOnly.payload.account.terms.acceptedAt);
     const emailSignin = await app.request("/api/session", { method: "POST", body: { username: "Marie.Dupont@example.test", password: "password" } });
@@ -477,6 +479,91 @@ test("scalar JSON is rejected and signin/signup throttling does not depend on us
   } finally {
     await signinApp.close();
   }
+});
+
+test("the account profile exposes the email identity and stays editable", async () => {
+  const app = await fixture();
+  try {
+    const teacher = await (async () => {
+      const created = await app.request("/api/accounts", { method: "POST", body: { email: "teacher.profile@example.test", password: "teacher-secret", termsAccepted: true } });
+      assert.equal(created.response.status, 201);
+      return created.payload;
+    })();
+    assert.equal(teacher.account.username, teacher.account.email);
+    assert.equal(teacher.account.displayName, teacher.account.email.split("@")[0]);
+
+    const renamed = await app.request("/api/account/profile", { method: "PUT", token: teacher.token, body: { displayName: "  Marie   Curie " } });
+    assert.equal(renamed.response.status, 200);
+    assert.equal(renamed.payload.account.displayName, "Marie Curie");
+
+    const moved = await app.request("/api/account/profile", { method: "PUT", token: teacher.token, body: { email: "moved.profile@example.test" } });
+    assert.equal(moved.response.status, 200);
+    assert.equal(moved.payload.account.email, "moved.profile@example.test");
+    assert.equal(moved.payload.account.username, "moved.profile@example.test");
+    // The old identity no longer opens the account; the new one does.
+    assert.equal((await app.request("/api/session", { method: "POST", body: { username: "teacher.profile@example.test", password: "teacher-secret" } })).response.status, 401);
+    assert.equal((await app.request("/api/session", { method: "POST", body: { username: "moved.profile@example.test", password: "teacher-secret" } })).response.status, 200);
+
+    // Invalid and duplicate values are refused.
+    assert.equal((await app.request("/api/account/profile", { method: "PUT", token: teacher.token, body: { email: "nope" } })).response.status, 400);
+    const other = await signUp(app.request, "teacher.other");
+    assert.equal((await app.request("/api/account/profile", { method: "PUT", token: teacher.token, body: { email: other.account.email } })).response.status, 409);
+    assert.equal((await app.request("/api/account/profile", { method: "PUT", body: { displayName: "Anonymous" } })).response.status, 401);
+  } finally { await app.close(); }
+});
+
+test("help requests land in a shared inbox for the admin console", async () => {
+  const app = await fixture();
+  try {
+    const teacher = await signUp(app.request, "teacher.help");
+    assert.equal((await app.request("/api/support/messages", { method: "POST", body: { message: "Help!" } })).response.status, 401);
+    const sent = await app.request("/api/support/messages", { method: "POST", token: teacher.token, body: { category: "bug", subject: "  Login loop ", message: "  I cannot sign in.\n\n  Please help.  " } });
+    assert.equal(sent.response.status, 201);
+    assert.ok(sent.payload.id);
+    const store = JSON.parse(fs.readFileSync(path.join(app.dataDir, "support-messages.json"), "utf8"));
+    assert.equal(store.messages.length, 1);
+    assert.equal(store.messages[0].message, "I cannot sign in.\n\nPlease help.");
+    assert.equal(store.messages[0].subject, "Login loop");
+    assert.equal(store.messages[0].status, "open");
+    assert.equal(store.messages[0].email, teacher.account.email);
+    assert.equal((await app.request("/api/support/messages", { method: "POST", token: teacher.token, body: { message: "   " } })).response.status, 400);
+  } finally { await app.close(); }
+});
+
+function capturingMailer() {
+  const sent = [];
+  return { enabled: true, sent, async send(message) { sent.push(message); return { delivered: true }; } };
+}
+
+test("password recovery emails a single-use code that resets the password", async () => {
+  const mailer = capturingMailer();
+  const app = await fixture({ mailer });
+  try {
+    const teacher = await signUp(app.request, "teacher.reset", "before-reset");
+    const second = await signIn(app.request, "teacher.reset", "before-reset");
+    const requested = await app.request("/api/session/password/reset", { method: "POST", body: { email: teacher.account.email, lang: "fr" } });
+    assert.equal(requested.response.status, 200);
+    assert.equal(requested.payload.delivered, true);
+    assert.equal(mailer.sent.length, 1);
+    assert.equal(mailer.sent[0].to, teacher.account.email);
+    const code = mailer.sent[0].text.match(/[0-9]{6}/)[0];
+
+    assert.equal((await app.request("/api/session/password/reset/confirm", { method: "POST", body: { email: teacher.account.email, code: "000000", next: "after-reset" } })).response.status, 400);
+    assert.equal((await app.request("/api/session/password/reset/confirm", { method: "POST", body: { email: teacher.account.email, code, next: "short" } })).response.status, 400);
+    const confirmed = await app.request("/api/session/password/reset/confirm", { method: "POST", body: { email: teacher.account.email, code, next: "after-reset" } });
+    assert.equal(confirmed.response.status, 200);
+    // Sessions were revoked and the new password works.
+    assert.equal((await app.request("/api/session", { token: teacher.token })).response.status, 401);
+    assert.equal((await app.request("/api/session", { token: second.token })).response.status, 401);
+    assert.equal((await app.request("/api/session", { method: "POST", body: { username: teacher.account.email, password: "after-reset" } })).response.status, 200);
+    // The code cannot be replayed.
+    assert.equal((await app.request("/api/session/password/reset/confirm", { method: "POST", body: { email: teacher.account.email, code, next: "replayed" } })).response.status, 400);
+
+    // An unknown address still gets the same generic answer.
+    const unknown = await app.request("/api/session/password/reset", { method: "POST", body: { email: "nobody@example.test" } });
+    assert.equal(unknown.response.status, 200);
+    assert.equal(mailer.sent.length, 1);
+  } finally { await app.close(); }
 });
 
 test("the latest account index can be recovered from its atomic backup", async () => {

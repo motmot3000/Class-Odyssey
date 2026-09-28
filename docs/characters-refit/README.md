@@ -137,6 +137,8 @@ node tools/serve-character-study.mjs
 | --- | --- |
 | `assets/characters-refit/textures/` | Peau, visage, normales, rugosités et iris refit, avec leur provenance (`.json`) |
 | `assets/characters-refit/hair/*.glb` | Coiffures fournies, décimées et placées dans le repère de construction |
+| `tools/port-medium-cut.py` | Extrait, cale et place la coupe mi-longue fournie (`beautiful-hair-1.zip`) dans le repère du catalogue |
+| `tools/medium_cut_locks.py` | Reconstruit l'avant de la coupe mi-longue en mèches-rubans (frange ondulée à raie décalée, dessus bouclé, mèches latérales jusqu'à la mâchoire), ajustées aux peaux de Noa et Mila |
 | `tools/prepare_refit_textures.py` | Génère les cartes refit depuis la révision surface-v3 (reproductible, graine fixe) |
 | `tools/blender/prepare_refit_hair.py` | Extrait, allège et replace les deux coiffures fournies |
 | `tools/blender/render_character_views.py` | Rendus de comparaison avant/après (ne modifie jamais le catalogue) |

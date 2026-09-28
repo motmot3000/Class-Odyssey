@@ -5,36 +5,106 @@
 ### Base de personnage live
 
 Le jeu affiche désormais les personnages **stylisés livrés**, servis depuis
-`assets/character-stylized/catalogue.glb` (`stylized-v4`) via
+`assets/character-stylized/catalogue.glb` (`stylized-v10`) via
 `BASE_CATALOGUE_URL`. Cette base garde les visages et les silhouettes livrés,
 ajoute une expression naturelle (sourcils détendus, léger sourire) et des
 matières mates. Le catalogue de production `assets/items-3d/catalogue.glb`
-(`catalogue-v8-scoped-cosmetics`) reste la référence de la chaîne d'outils et des
+(`catalogue-v13-ear-outfits-headwear-held-items`) reste la référence de la chaîne d'outils et des
 tests.
 
 Le **catalogue de cosmétiques est réduit** :
 
-- **Tenues** : Scout, Ranger, Mage, Guerrier (niveau 4, 55) et Chevalier
-  (niveau 6, 75). Archimage et Roi sont retirés ; le **titre** Roi reste.
-  Guerrier et Chevalier n'ont plus de jambières.
-- **Objets** : catégorie retirée (armes, boucliers, livre, lanterne). L'état
-  interne `no-weapon` subsiste pour les sauvegardes, sans onglet.
+- **Tenues** : une nouvelle tenue par niveau jusqu'au niveau 10, de plus en
+  plus travaillée. Éclaireur est la tenue de départ gratuite ; puis Barde (1),
+  Ranger (2), Mage (3), Guerrier (4), Mage noir (5), Chevalier (6),
+  Cartographe / Map Maker (7), Guérisseur (8), Alchimiste (9) et Gardien des
+  chevaux / Horse Keeper (10), l'armure du Chevalier la plus ornée (argent,
+  bordeaux, fers à cheval dorés, cape blanche). Archimage et Roi restent
+  retirés ; le **titre** Roi reste. Éclaireur, Barde et Ranger gardent le
+  pantalon livré ; toutes les autres sont des tenues complètes (`coversLegs`)
+  qui apportent leurs propres jambes et masquent le pantalon. Les bottes
+  livrées restent identiques pour toutes les tenues.
+- **Armes** (main droite) : Dague templière (niveau 3, 30), Épée de chevalier
+  (niveau 4, 45), Baguette d'argent (niveau 5, 55), Katana (`japanese-blade`,
+  niveau 7, 75), Bâton de mage (niveau 8, 90) et Épée épique (niveau 10, 120,
+  la plus chère). **Boucliers** (bras gauche) : Bouclier de bois (niveau 2, 20),
+  Bouclier du chevalier (niveau 6, 60) et Bouclier du héros (niveau 10, 100,
+  modèle fourni, blason repris tel quel). Les deux se portent ensemble ; `no-weapon` / `no-shield`
+  sont les mains libres. Voir « Objets tenus » plus bas.
 - **Cheveux** : **Courts** et **Longs** sont gratuits et partagés par les deux
-  personnages — un garçon en Long reçoit la coupe longue livrée adaptée à sa
-  tête, une fille en Short la coupe courte livrée adaptée à la sienne. **Bald**
-  (niveau 2, 20) et **Tresse** (niveau 3, 30, coupe portée avec frange et
-  longue natte, `characters-refit/hair/curly.glb`) sont les premiers
-  déblocages. L'ancien Afro sculpté, Braids et Royal Hair sont retirés.
+  personnages — un garçon démarre en Short (coupe courte sculptée), une fille en
+  Long. **Chauve** (niveau 2, 20), **Tresse** (niveau 3, 30, coupe portée avec
+  frange et longue natte, `characters-refit/hair/curly.glb`) et **Medium Cut**
+  (niveau 3, 30, `characters-refit/hair/medium-cut.glb`) suivent, puis
+  **Spiky Hair** (niveau 6, 50, l'ancienne coupe courte livrée) et **Chignon**
+  (niveau 6, 50, `characters-refit/hair/bun.glb`, épingle dorée). L'ancien Afro
+  sculpté, Braids et Royal Hair sont retirés.
 - **Visages** : catégorie supprimée ; l'expression vient de la base 3D.
+- **Yeux** : cinq couleurs — **brun** par défaut, **vert** (niveau 3, 30),
+  **bleu** (niveau 4, 30), **rouge** (niveau 6, 50) et **violet** (niveau 8,
+  50). La couleur est appliquée à l'iris livré en temps réel (teinte et
+  saturation), sans modèle supplémentaire. La catégorie **Personnalisé** est
+  retirée.
 - **Teints** : tatouages et Peau dorée retirés ; les cinq teints naturels
   restent.
 - **Titres** : Explorer, Champion, King et Legend gardent leur nom mais portent
   une identité visuelle propre (accent et badge distincts, `data-title-id`).
+- **Oreilles et accessoires** : tous les personnages ont des **oreilles
+  humaines sculptées** par défaut (`persona / human ears`). L'onglet
+  Accessoires propose **Oreilles d'elfe** (niveau 4, 30 ; les oreilles pointues
+  livrées, intactes) et **Oreilles percées** (niveau 5, 50 ; oreilles humaines,
+  anneaux et clous dorés, disposition asymétrique). `no-accessory` est l'état
+  gratuit par défaut. Un accessoire d'oreilles masque l'oreille humaine
+  (`EAR_ACCESSORIES` dans `items-3d-model.mjs`).
 
-Les coupes partagées utilisent les deux coiffures livrées
+Les oreilles livrées sont des coques libres posées sur une **ouverture de la
+peau**. `split_ears` (`tools/build-items-3d.py`) les sépare de la peau, garde
+les oreilles elfiques intactes (accessoire) et **referme l'ouverture**
+(`cap_openings`, une seule UV de peau unie) : toute oreille se pose sur un
+crâne fermé. L'oreille humaine est une **oreille anatomique sculptée**
+(`tools/blender/human_ear_model.py` : champ de distance signée — hélix, anthélix
+en Y, fossette, conque, tragus, antitragus, lobe — maillé par OpenVDB, ~5 200
+faces), posée sur le crâne par `human_ear_matrix` (`human_ears.py`) et teintée
+par une texel unie de la peau. Les bijoux des oreilles percées sont placés sur
+sa face externe (`jewellery_layout`).
+
+Les cheveux sont ajustés au crâne seul, mais les **mèches proches de l'oreille
+existent en deux versions** (propriété `ear_fit`) : rentrées autour de
+l'oreille elfique (`clear_ear_space`, contour `EAR_OUTLINE`) ou autour de
+l'oreille humaine (même dégagement, contour = enveloppe de l'oreille sculptée,
+`side_outline` + `human_ear_weight`). Ce sont les vraies mèches de la coupe,
+avec sa texture et son sens de coiffage, pas une coque de remplissage.
+`split_ear_variants` ne duplique que les faces qui diffèrent ; le reste de la
+coupe est partagé. Le viewer (`visiblePart`) affiche `ear_fit: 'elf'` avec
+l'accessoire `elf-ears`, sinon `human` (oreilles par défaut et percées).
+
+Cas particuliers : Short (sculptée) est regénérée autour de l'oreille humaine
+(`EAR_SHAPE=human tools/blender/sculpt_straight_short.py` →
+`straight-short-human-ear.glb`) ; pour Long, la couche occipitale et les mèches
+de tempe (dessinées sur l'oreille elfique) restent rentrées pour les deux.
+`tools/blender/hair_fill.py` (coque sur le crâne) ne sert plus qu'aux coupes
+sans variante (catalogue de production).
+
+Les coupes partagées utilisent les coiffures livrées et portées
 (`SUPPLIED_HAIR`), ajustées à chaque tête par la transformation du siège de
 chapeau ; `SCULPTED_HAIR` reste réservé aux familles sculptées dans Blender.
-`HAIR_ITEMS=short,long,curly` limite le build à ces trois familles.
+La coupe courte `short` est sculptée par
+`tools/blender/sculpt_straight_short.py` : raie sur le côté, frange balayée en
+diagonale avec du volume à la racine, dessus plus fourni, côtés près du crâne et
+nuque dégradée. Les mèches poussent sur le crâne mesuré de Noa et Mila, en
+faisceaux qui se séparent en pointes fines. Le contour suit la silhouette
+latérale mesurée de l'oreille (patte devant, arc net au-dessus, dégradé
+derrière) et les mèches se plaquent en l'approchant. Une nuance par sommet
+(racines plus sombres, ton propre à chaque mèche) multiplie la couleur de
+cheveux choisie en boutique (`Hair / sculpted fibres`, exporté en `COLOR_0`).
+Elle ne passe donc pas par le dégagement d'oreille générique ; seule la
+conformation à la peau s'applique.
+
+```sh
+blender -b --factory-startup --python-exit-code 1 --python tools/blender/sculpt_straight_short.py
+```
+
+`HAIR_ITEMS=short,long,medium-cut,curly,spiky,bun` limite le build à ces familles.
 
 La **couleur de peau** est fonctionnelle : une seule peau est cuite (médium) et
 le viewer multiplie son albédo par le teint cible (`SKIN_TONE_COLORS` dans
@@ -45,7 +115,7 @@ Peaux de la boutique.
 Pour reconstruire la base stylisée :
 
 ```sh
-STYLIZED=1 HAIR_ITEMS=short,long,curly blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
+STYLIZED=1 HAIR_ITEMS=short,long,medium-cut,curly,spiky,bun blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.py
 ```
 
 L'atelier autonome peut inspecter n'importe quelle base : `items-3d.html?model=/assets/character-stylized/catalogue.glb`.
@@ -63,9 +133,37 @@ sportives (fesses moins projetées, épaules/torse/bras plus dessinés chez Noa,
 hanches et cuisses plus pleines chez Mila) en protégeant tout ce qui dépasse
 1,455 m. Les géométries source du corps et le contrat d'ancrage restent
 inchangés.
-La taille des cinq tenues suit désormais le contour réel de la ceinture,
-sans bord elliptique rapporté. Guerrier et Chevalier portent des plaques
-ajustées et des lames d'épaule articulées, sans jambières.
+La taille de toutes les tenues suit le contour réel de la ceinture, sans bord
+elliptique rapporté.
+
+La passe `catalogue-v10-full-outfits` / `stylized-v6` restructure les tenues :
+
+- Le vêtement bas livré est découpé à la construction (`split_footwear`) en
+  deux pièces `core` : `core_part: 'boots'` (toujours visible) et
+  `core_part: 'trousers'`, masqué par `visiblePart` quand la tenue porte
+  `coversLegs`. Le corps livré n'a pas de peau sous le pantalon : les tenues
+  complètes ajoutent donc des chausses mesurées (`LegFit`) sur le pantalon et
+  le tibia, rentrées dans les bottes.
+- Capes, pèlerine et capuche sont drapées depuis le col (`drape`) : chaque
+  colonne ne fait que s'élargir en rencontrant épaules, bras ou dos, et passe
+  derrière les bras. Elles sont exclues de l'affinement du bassin.
+- Bandes, fermoirs, sangles, runes et plaques sont posés par lancer de rayons
+  sur le vêtement porteur (`on_surface`, `limb_rings`), sans coordonnées
+  fixes.
+- Passe `catalogue-v11-ten-levels` / `stylized-v7` : Barde (couleur, écharpe
+  et broche), Cartographe (manteau aux genoux, étui à cartes, boussole,
+  longue-vue, pèlerine), Guérisseur (robe ivoire, tabard turquoise, emblème
+  coupe et feuilles, capuche, pèlerine, sacoche et fioles), Alchimiste
+  (tablier de cuir, bandoulière de fioles lumineuses, gantelets, lunettes,
+  pèlerine à signes lumineux, cape) et Horse Keeper (troisième palier de
+  `articulated_armour`).
+- Ranger : pèlerine brune à capuche, fermoir à cabillot, baudrier, bourses et
+  brassards lacés. Mage : robe longue évasée, manches cloche, cape indigo.
+  Mage noir : robe pourpre à ourlet dentelé, pèlerine noire à pointes,
+  plastron noir et runes lumineuses, écharpe. Guerrier : gorgerin, épaulières
+  en dôme, canons d'avant-bras, cubitières, tassettes, cuissards, genouillères
+  et grèves. Chevalier : même construction, bords dorés, filigranes, rondelles,
+  quatre tassettes, chaîne de cape et écu à l'étoile.
 
 Les cartes de classe et la sélection d’élève sont rendues depuis le même
 catalogue que le workshop. Deux portraits actuels servent de secours, puis
@@ -84,7 +182,7 @@ blender -b --factory-startup --python-exit-code 1 --python tools/build-items-3d.
 blender -b assets/items-3d/catalogue.blend --python-exit-code 1 --python tools/render-equipment-previews.py
 python3 tools/finalize-equipment-previews.py
 npm run build:items-3d
-npm run build:sheikah
+npm run build:odyssey
 npm test
 ```
 
@@ -136,12 +234,22 @@ Les sélections utilisent directement les identifiants et les prix de
 
 - **5 tenues** : Scout, Ranger, Mage, Warrior, Knight. Archmage et King sont
   retirés ; le **titre** King reste.
-- **9 couvre-chefs** : No Hat, Goggles, Sunglasses, Beret, Wizard Hat, King’s
-  Crown, Helmet, Classy Hat, Royal Crown.
-- **Objets** : catégorie retirée ; Empty Hands reste l’état interne
-  (`no-weapon`) sans onglet.
-- **4 coiffures** : Short Hair et Long Hair (livrées, gratuites et partagées),
-  Bald (niveau 2, 20) et Braid (niveau 3, 30, frange et longue natte).
+- **6 couvre-chefs** : No Hat, Beret (niveau 2), Wizard Hat (3), Classy Hat
+  (5), Helmet (7) et King’s Crown (10, 100 pièces). La Royal Crown est retirée :
+  une sauvegarde qui la possédait reçoit la King’s Crown.
+- **Accessoires** (un à la fois) : Goggles (niveau 1) et Sunglasses (2), qui
+  quittent les couvre-chefs, puis Elf Ears (4) et Pierced Ears (5). Une
+  sauvegarde qui portait des lunettes en chapeau les porte en accessoire.
+- **6 armes et 3 boucliers** : Dague templière (3), Épée de chevalier (4),
+  Baguette d’argent (5), Katana (7), Bâton de mage (8), Épée épique (10) ;
+  Bouclier de bois (2), Bouclier du chevalier (6), Bouclier du héros (10).
+  Empty Hands (`no-weapon`) et No Shield (`no-shield`) sont gratuits.
+- **6 coiffures** : Short Hair (livrée, gratuite, par défaut des garçons) et
+  Long Hair (livrée, gratuite, par défaut des filles), Bald (niveau 2, 20),
+  Braid (niveau 3, 30), Medium Cut (niveau 3, 30), Spiky Hair (niveau 6, 50) et
+  Bun (niveau 6, 50).
+- **5 couleurs d'yeux** : Brown (défaut), Green (niveau 3, 30), Blue (niveau 4,
+  30), Red (niveau 6, 50) et Violet (niveau 8, 50).
 - **7 couleurs de cheveux** : Brown, Blond, Black, White, Red, Green, Blue.
 - **5 teints naturels** et **9 titres**.
 - No Hat et Empty Hands retirent les objets de leur emplacement.
@@ -185,9 +293,18 @@ entre les mèches restent visibles en très gros plan.
 `measure-hair-fit.py` **cumule désormais tous les maillages d’une coupe** pour
 qu’aucune pièce ne masque le clipping d’une autre.
 
-Wizard Hat et Classy Hat ont des bords annulaires
-avec une véritable ouverture ; le béret est ajusté et
-incliné, les couronnes abaissées. **Les deux couronnes utilisent `crowned`**
+Couvre-chefs et lunettes sont modélisés dans `tools/blender/headwear.py`
+(surfaces paramétriques et profils balayés, pièces fusionnées par matière).
+Wizard Hat (pointe pliée, plis, étoiles brodées, boucle sertie) et Classy Hat
+(bord relevé sur les côtés, calotte cintrée, gros-grain et nœud) gardent
+l’ouverture annulaire d’origine ; le béret a un liseré de cuir, une broche et
+deux plumes. La King’s Crown porte fleurs de lys, pointes à perles, bandeau
+perlé et joyaux sertis. Le Helmet est un casque à nasal : calotte à crête,
+bandes et bandeau rivetés, garde-joues, couvre-nuque à deux lames et cornes
+dans des douilles en laiton. Les lunettes sont dessinées sur le visage mesuré
+de Noa puis portées par l’assise du chapeau : elles tiennent sous chaque
+chapeau ; seules les Goggles, posées sur le front, sont masquées par le
+bandeau du Helmet. **La couronne utilise `crowned`**
 pour chaque coupe : ajustement radial progressif au niveau du bandeau
 métallique, en n’écrasant que le volume du crâne et jamais la frange, ce qui
 évite de la faire traverser le visage.
@@ -362,3 +479,38 @@ Captures fournies dans `/tmp/opencode/` : `equipment-desktop-final.png`,
 Le snapshot source V1 était `assets/items-3d/reference.glb`, remplacé comme
 entrée du constructeur par les deux fichiers `sources/*-medium.glb`.
 `preview.png` reste un rendu Blender réel avec son sidecar `preview.png.json`.
+
+## Objets tenus (armes et boucliers)
+
+Les objets sont redessinés procéduralement dans `tools/blender/held_items.py`
+(palette mate du jeu : acier satiné, or brossé, cuir, émail) ; les modèles
+fournis n'ont servi que de référence de silhouette, sauf le **plateau du
+bouclier du héros** : c'est le modèle fourni lui-même
+(`assets/items-3d/sources/held/hero-shield.glb`, `held_items.SOURCED`), sa
+texture ramenée à des aplats propres (bleu, rouge, argent, or, bois) pour
+garder le blason exact. Poignée et sangle restent celles du jeu. `hold_items()`
+(`tools/build-items-3d.py`) intervient en dernier, sur la peau finie :
+
+- la main ouverte de chaque côté est détachée de la peau le long de ses arêtes
+  (aucun sommet ajouté : peau + mains = surface livrée) et livrée en pièce
+  `persona` (`part: hand`, `hand_side`) ; l'avant-bras est bouché sous la manche ;
+- un **poing fermé** sculpté en SDF (`tools/blender/fist_model.py`, OpenVDB)
+  pousse de l'avant-bras autour d'une poignée standard de 2,7 cm
+  (`GRIP_RADIUS`) ; il prend la matière et un texel de peau du poignet, donc
+  le teint du viewer ;
+- **bras armé plié** (`tools/blender/arm_pose.py`) : l'avant-bras droit — peau
+  et manche de chaque tenue — est découpé le long de ses arêtes et livré deux
+  fois, pendant (`arm_pose: straight`) et plié au coude à 78° (`arm_pose:
+  bent`), visible tant qu'une arme est tenue. Une manche est retenue si elle
+  entoure le bras et recouvre la peau de l'avant-bras plutôt que celle du
+  corps ; les découpes que le bras pendant cachait sont rebouchées et le
+  pantalon est rentré sous les robes à cet endroit ;
+- chaque arme est posée sur `grip_frame('weapon') @ BLADE_TO_GRIP` du poing
+  droit (poing du bras plié, pouce en haut : lame debout, plat vers la caméra ;
+  le bâton repose au sol), chaque
+  bouclier sur `grip_frame('shield') @ SHIELD_TO_GRIP` du poing gauche (les
+  écus du chevalier et du héros ajoutent une sangle d'avant-bras).
+
+`visiblePart` échange main ouverte et poing selon `look.weapon` /
+`look.shield`. Tout nouvel objet tenu réutilise le même poing : il suffit de
+placer sa poignée sur l'axe `+Z` de l'espace lame.

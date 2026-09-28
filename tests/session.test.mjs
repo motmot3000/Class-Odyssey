@@ -47,6 +47,25 @@ test("signin stores only the current token/account and leaves the teacher gate l
   assert.equal(session.isAdultUnlocked(), true);
 });
 
+test("a newly registered account starts with five minutes of teacher access", async (t) => {
+  let now = Date.now();
+  t.mock.method(Date, "now", () => now);
+  respond = () => jsonResponse(201, { token: "new-token", account: ACCOUNT });
+  assert.equal((await session.signUp({ email: "marie.dupont@example.test", password: "new-password", termsAccepted: true })).ok, true);
+  assert.equal(session.unlockUntil(), now + session.TEACHER_UNLOCK_MS);
+  now += session.TEACHER_UNLOCK_MS;
+  assert.equal(session.isAdultUnlocked(), false);
+});
+
+test("Google unlocks the teacher console only when it creates a new account", async () => {
+  respond = () => jsonResponse(200, { token: "google-new", account: ACCOUNT, created: true });
+  assert.equal((await session.signInWithGoogleCode("new-code")).ok, true);
+  assert.equal(session.isAdultUnlocked(), true);
+  respond = () => jsonResponse(200, { token: "google-again", account: ACCOUNT, created: false });
+  assert.equal((await session.signInWithGoogleCode("existing-code")).ok, true);
+  assert.equal(session.isAdultUnlocked(), false);
+});
+
 test("captured session contexts prevent an old async response from clearing a newer account", async () => {
   respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
   await session.signIn("teacher", "class-password");

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Console · Class Odyssey</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/console.css">
+  <script type="module" src="/console.js"></script>
+</head>
+<body>
+  <!-- THESIS: Un registre de comptes lisible et actionnable, pas un tableau de bord décoratif.
+       OWN-WORLD: Calcaire et céladon de la tablette Odyssey ; rails schiste, encre sombre, accent bronze.
+       STORY: Parcourir les inscriptions, inspecter un compte, puis agir avec un contexte précis.
+       FIRST VIEWPORT: Navigation compacte à gauche ; registre et filtres au centre ; fiche persistante à droite.
+       FORM: Console opérateur à trois colonnes, adaptée au travail quotidien sur écran.
+       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance. -->
+  <div class="shell">
+    <aside class="rail" aria-label="Navigation principale">
+      <div class="brand"><img class="brand-logo" src="/brand-logo.svg" alt="Class Odyssey" width="1054" height="212"><span class="brand-caption">Administration</span></div>
+      <div class="rail-group"><div class="rail-label">Espace de travail</div>
+        <button class="nav-item selected" data-view="accounts" aria-current="page"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v14H4zM4 10h16M9 10v9"/></svg> Comptes <span id="nav-count" class="nav-count">—</span></button>
+        <button class="nav-item" data-view="support"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16v13H8l-4 3V5ZM8 10h8m-8 4h5"/></svg> Messages <span id="support-count" class="nav-count" hidden>0</span></button>
+        <button class="nav-item" data-view="audit"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8m-8 4h8m-8 4h5"/></svg> Journal</button>
+        <button class="nav-item" data-view="subscriptions"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h18v11H3zM3 11h18m-14 4h4"/></svg> Abonnements</button>
+      </div>
+      <div class="rail-bottom"><span class="rail-line"></span><div class="system-label"><span class="live-dot"></span> Console locale</div><p>Les données viennent du backend Class Odyssey. Les actions sont enregistrées.</p><span class="rail-edition">ODYSSEY / ADMIN · 01</span></div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar"><div class="breadcrumbs">Class Odyssey <span>/</span> <strong id="crumb">Comptes</strong></div><div class="top-actions"><span id="updated" class="updated">Connexion en cours…</span><button type="button" class="refresh" id="refresh" aria-label="Actualiser les données" title="Actualiser les données"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.7 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.3-2"/></svg></button></div></header>
+      <div id="alert" role="alert" class="alert" hidden></div>
+      <div id="content" class="content"><div class="loading"><span class="spinner"></span> Chargement des comptes…</div></div>
+    </main>
+    <aside id="detail" class="detail" aria-label="Fiche du compte"><div class="detail-empty"><span class="detail-symbol" aria-hidden="true"><svg viewBox="0 0 42 42" fill="none"><path d="m21 3 18 18-18 18L3 21 21 3Z"/></svg></span><h2>Un compte, en détail.</h2><p>Sélectionnez une personne dans le registre pour retrouver son activité et les actions disponibles.</p></div></aside>
+  </div>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog" id="confirm-form"><div class="dialog-mark" aria-hidden="true">!</div><h2 id="confirm-title">Supprimer ce compte ?</h2><p id="confirm-description"></p><label for="confirm-input">Saisissez l’identifiant pour confirmer</label><input id="confirm-input" name="confirmation" autocomplete="off" spellcheck="false" required><div class="dialog-actions"><button type="button" class="button secondary" id="cancel-delete">Annuler</button><button type="submit" class="button danger" id="confirm-delete">Supprimer définitivement</button></div></form></dialog>
+</body>
+</html>

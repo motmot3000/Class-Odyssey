@@ -7,7 +7,7 @@ import { renderRules } from "../src/views/rules.mjs";
 import { renderShop } from "../src/views/shop.mjs";
 import { renderItemDialog, renderPupilDialog } from "../src/views/modals.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
-import { renderSheikahSheet, renderSheikahPersonalize } from "../src/views/sheikah.mjs";
+import { renderOdysseySheet, renderOdysseyPersonalize } from "../src/views/odyssey.mjs";
 import { translateReward } from "../src/ui.mjs";
 
 test("FR/EN views retain all merged shop categories and 3D previews", () => {
@@ -43,12 +43,12 @@ test("every active catalogue item has French copy and English preserves domain d
   } finally { setLang("en"); }
 });
 
-test("Sheikah, admin, validation errors and rewards follow the chosen language", () => {
+test("Odyssey, admin, validation errors and rewards follow the chosen language", () => {
   const pupil = { ...getCurrentClass(createInitialState()).pupils[0], name: 'Alex <img onerror="bad">' };
   try {
     setLang("fr");
-    const sheet = renderSheikahSheet(pupil, { angle: "back" }, { student: true });
-    const workshop = renderSheikahPersonalize(pupil, { draft: null });
+    const sheet = renderOdysseySheet(pupil, { angle: "back" }, { student: true });
+    const workshop = renderOdysseyPersonalize(pupil, { draft: null });
     assert.ok(sheet.includes("Retour à la classe"));
     assert.ok(workshop.includes("Enregistrer la tenue"));
     assert.doesNotMatch(sheet + workshop, /Hair color|Scout|Brown|HP restored|<img onerror=/);
@@ -59,8 +59,8 @@ test("Sheikah, admin, validation errors and rewards follow the chosen language",
     // Parameters are replaced once: user data resembling a placeholder is kept.
     assert.equal(t("notice.joined", { name: "{classroom}", classroom: "7P" }), "{classroom} a rejoint 7P.");
     setLang("en");
-    assert.match(renderSheikahPersonalize(pupil, {}), /Save outfit/);
-    assert.doesNotMatch(renderSheikahSheet(pupil, {}, { student: true }), /Mon héros|pièces|Trois quarts|Tenue/);
+    assert.match(renderOdysseyPersonalize(pupil, {}), /Save outfit/);
+    assert.doesNotMatch(renderOdysseySheet(pupil, {}, { student: true }), /Mon héros|pièces|Trois quarts|Tenue/);
     assert.equal(translateMessage("Wrong username or password."), "Wrong username or password.");
   } finally { setLang("en"); }
 });

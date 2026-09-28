@@ -171,6 +171,8 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       createdAt: now,
       updatedAt: now,
       lastLoginAt: null,
+      recentAccesses: [],
+      status: "active",
       terms: null,
       settings: settingsWithDefaults(null)
     };
@@ -231,21 +233,6 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     return `teacher-${crypto.randomBytes(4).toString("hex")}`;
   }
 
-  /* Google sign-in creates a free username when the address local part is
-   * already taken, instead of refusing the account. */
-  function availableUsername(index, base) {
-    const candidate = /^[a-z0-9][a-z0-9._-]{2,31}$/.test(base) ? base : usernameFromEmail(base);
-    let username = candidate;
-    let counter = 2;
-    while (findByUsername(index, username)) {
-      const room = Math.max(3, 32 - String(counter).length - 1);
-      username = `${candidate.slice(0, room)}-${counter}`;
-      counter += 1;
-      if (counter > 1000) return `teacher-${crypto.randomBytes(4).toString("hex")}`;
-    }
-    return username;
-  }
-
   function parseStateFile(file) {
     const state = readJsonFile(file);
     if (!isStateDocument(state)) {
@@ -298,6 +285,19 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     }
   }
 
+  function deleteAccount(index, accountId) {
+    const next = { accounts: { ...index.accounts } };
+    delete next.accounts[accountId];
+    // Commit the deletion before removing files: an interrupted cleanup cannot
+    // make a removed account usable again through a live session.
+    writeAccounts(next, { backup: false });
+    revokeAccountTokens(accountId);
+    // Old account-index snapshots include the removed account's personal data.
+    for (const file of backupFiles(accountBackupsDir, "accounts-")) fs.rmSync(file);
+    fs.rmSync(accountDirectory(accountId), { recursive: true, force: true });
+    writeAccounts(next);
+  }
+
   function bootstrapAccounts() {
     if (fs.existsSync(accountsFile) || backupFiles(accountBackupsDir, "accounts-").length) {
       const needsRestore = !validAccountsIndex(readJsonFile(accountsFile));
@@ -345,6 +345,11 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     }
   }
 
+  /* Password recovery uses a short numeric code, single use and time limited.
+   * Only its hash is stored, salted with the account id. */
+  const generateResetCode = () => String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+  const resetCodeKey = (code, accountId) => crypto.createHash("sha256").update(`${accountId}:${code}`).digest("hex");
+
   const tokenKey = (token) => crypto.createHash("sha256").update(String(token)).digest("hex");
   const readSessions = () => {
     const sessions = readJsonFile(sessionsFile);
@@ -359,12 +364,13 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
       && Number(session.expiresAt) > now));
   }
 
-  function issueToken(accountId) {
+  function issueToken(accountId, method = "password") {
     const token = crypto.randomBytes(32).toString("base64url");
     const now = Math.floor(Date.now() / 1000);
     const sessions = liveSessions();
     sessions[tokenKey(token)] = {
       accountId,
+      authMethod: method,
       createdAt: new Date().toISOString(),
       expiresAt: now + SESSION_TTL_SECONDS
     };
@@ -392,7 +398,7 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     const session = liveSessions()[tokenKey(token)];
     if (!session) return null;
     const account = readAccounts().accounts[session.accountId];
-    return account ? { account, token } : null;
+    return account && account.status !== "suspended" ? { account, token, authMethod: session.authMethod || "password", createdAt: session.createdAt } : null;
   }
 
   function activeSessionCounts() {
@@ -407,6 +413,8 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     email: account.email || "",
     displayName: account.displayName,
     role: account.role || "teacher",
+    googleOnly: account.googleOnly === true,
+    teacherPasswordSetupRequired: account.teacherPasswordSetupRequired === true,
     createdAt: account.createdAt,
     lastLoginAt: account.lastLoginAt || null,
     terms: account.terms && typeof account.terms === "object" && account.terms.acceptedAt
@@ -421,17 +429,19 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     readAccounts,
     writeAccounts,
     createAccountWithState,
+    deleteAccount,
     writeState,
     readState,
     findByUsername,
     findByEmail,
     usernameFromEmail,
-    availableUsername,
     normalizeUsername,
     usernameProblem,
     passwordProblem,
     passwordMatches,
     hashPassword,
+    generateResetCode,
+    resetCodeKey,
     newAccount,
     issueToken,
     revokeToken,

@@ -6,12 +6,14 @@
   "scripts": {
     "check": "node tools/check-source.mjs && npm test",
     "test": "node --test tests/*.test.mjs",
-    "dev": "node --env-file-if-exists=.env server/server.mjs --auto-port",
+    "dev": "node tools/dev-all.mjs",
+    "dev:app": "node --env-file-if-exists=.env server/server.mjs --auto-port",
     "start": "node --env-file-if-exists=.env server/server.mjs",
+    "console": "node --env-file-if-exists=.env.console admin-console/server.mjs",
     "build:items-3d": "node tools/build-items-viewer.mjs",
     "dev:items-3d": "node tools/serve-items-3d.mjs",
     "build:characters": "esbuild src/base-character-viewer.mjs --bundle --format=esm --minify --outfile=assets/characters-base/runtime/viewer.js",
-    "build:sheikah": "esbuild src/sheikah-viewer.mjs --bundle --format=esm --minify --outfile=assets/sheikah/viewer.js",
+    "build:odyssey": "esbuild src/odyssey-viewer.mjs --bundle --format=esm --minify --outfile=assets/odyssey/viewer.js",
     "build:svg": "python3 tools/svg/build-character-variants.py",
     "build:mini": "esbuild src/mini-hero.mjs --bundle --format=esm --splitting --minify --outdir=assets/mini-hero --entry-names=mini --chunk-names=mini-viewer",
     "build:wardrobe": "node tools/build-wardrobe.mjs",
@@ -19,6 +21,7 @@
     "lab": "node tools/serve-character-lab.mjs"
   },
   "dependencies": {
+    "maxmind": "^5.0.7",
     "three": "0.180.0"
   },
   "devDependencies": {

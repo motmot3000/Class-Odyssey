@@ -1,6 +1,8 @@
 .git
 .gitignore
 .env
+.env.console
+admin-console
 .playwright-mcp
 node_modules
 data

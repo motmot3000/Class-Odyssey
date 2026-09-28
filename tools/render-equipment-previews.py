@@ -27,6 +27,11 @@ scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - Medium High Contrast'
 camera.data.type = 'ORTHO'
 meshes = [obj for obj in scene.objects if obj.type == 'MESH' and obj.get('shop_slot')]
+def open_hands(obj):
+    """Portraits hold nothing: open hands and hanging arms, never the fists."""
+    return obj.get('part') != 'fist' and obj.get('arm_pose') in (None, 'straight')
+
+
 def manifest_revision(path):
     return json.loads(path.read_text())['appearanceRevision']
 
@@ -62,6 +67,14 @@ def frame(selected, width, height, focus=None, front=False):
     lower = Vector(tuple(min(p[i] for p in points) for i in range(3)))
     upper = Vector(tuple(max(p[i] for p in points) for i in range(3)))
     center = (lower + upper)*.5
+    if focus == 'ear':
+        # Ears read from the side: the near (left) ear hides its mirror and
+        # the root that normally sits in the skull faces away from the camera.
+        camera.location = Vector((5.2, center.y, center.z))
+        camera.rotation_euler = (center-camera.location).to_track_quat('-Z','Y').to_euler()
+        camera.data.ortho_scale = max(upper.y-lower.y, upper.z-lower.z)*1.25
+        bpy.context.view_layer.update()
+        return
     if focus == 'head': center = Vector((0,-.015,1.645))
     if focus == 'waist': center = Vector((0,-.015,.99))
     camera.location = center + Vector((0,-5.2,.12) if front else (1.8,-5.2,1.05))
@@ -82,38 +95,44 @@ def render(path):
     print('PREVIEW_READY', path, flush=True)
 
 
-ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','hair']})
+ids = sorted({(obj['shop_slot'],obj['shop_id']) for obj in meshes if obj['shop_slot'] in ['outfit','hat','weapon','shield','hair','accessory']})
 for slot, item in ([] if PORTRAITS_ONLY else ids):
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open')
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and obj.get('shop_slot') == slot and obj.get('shop_id') == item and obj.get('hat_fit','open') == 'open' and obj.get('arm_pose') in (None, 'straight'))
     if not selected: raise ValueError(f'No meshes for {item}')
     assert all(obj.get('shop_slot') not in ['core','persona'] for obj in selected)
-    frame(selected, 320, 320)
+    frame(selected, 320, 320, 'ear' if item in ('elf-ears', 'pierced-ears') else None)
     render(f'items/{item}.png')
     report['items'][item] = {'slot':slot,'file':f'items/{item}.webp','meshCount':len(selected),'containsBody':False}
 
 for persona, hair in [('male','short'),('female','long')]:
     defaults = {'core':'base','persona':persona,'outfit':'starter','hair':hair}
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == persona and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == persona and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open' and open_hands(obj))
     frame(selected,768,1152,front=True)
     render(f'portraits/{persona}.png')
-    report['portraits'][persona] = {'file':f'portraits/{persona}.webp','pose':'base-v2-arms-lowered','view':'front','width':768,'height':1152,'hair':hair}
+    report['portraits'][persona] = {'file':f'portraits/{persona}.webp','pose':'base-v2-arms-lowered','view':'front','width':768,'height':1152,'hair':hair,
+                                    'renderer':f"Three.js, {manifest_revision(ROOT/'assets/character-stylized/manifest.json')}, daylight, full silhouette",'bytes':0}
     if not PORTRAITS_ONLY:
         frame(selected,600,600,'head')
         render(f'review/{persona}-head.png')
         frame(selected,600,600,'waist')
         render(f'review/{persona}-waist.png')
 
+# Full outfits bring their own legs: the delivered trousers are hidden, the
+# boots stay (same rule as visiblePart in src/items-3d-model.mjs).
+FULL_BODY = {'grammar-mage','black-mage','story-keeper','honor-knight','cartographer','healer','alchemist','horse-keeper'}
 for persona in ([] if PORTRAITS_ONLY else ['male','female']):
-    for outfit in ['story-keeper','honor-knight','realm-sovereign']:
+    for outfit in sorted(FULL_BODY):
         defaults={'core':'base','persona':persona,'outfit':outfit,'hair':'short' if persona=='male' else 'long'}
-        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open')
+        selected=set_visibility(lambda obj: obj.get('fit_persona')==persona and defaults.get(obj.get('shop_slot'))==obj.get('shop_id') and obj.get('hat_fit','open')=='open' and open_hands(obj)
+                                and not (obj.get('core_part')=='trousers' and outfit in FULL_BODY))
         frame(selected,600,900)
         render(f'review/{persona}-{outfit}.png')
 
-# Refresh the catalogue's fallback render with the current fitted equipment.
+# Refresh the catalogue's fallback render with the current fitted equipment:
+# sword and shield in hand, so the fists replace the open hands.
 if not PORTRAITS_ONLY:
-    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','hat':'explorer-cap','weapon':'lore-lantern'}
-    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open')
+    defaults = {'core':'base','persona':'male','outfit':'vocab-ranger','hair':'short','accessory':'explorer-cap','weapon':'medieval-sword','shield':'wooden-shield'}
+    selected = set_visibility(lambda obj: obj.get('fit_persona') == 'male' and defaults.get(obj.get('shop_slot')) == obj.get('shop_id') and obj.get('hat_fit','open') == 'open' and obj.get('part') != 'hand' and obj.get('arm_pose') in (None, 'ready'))
     frame(selected,600,900)
     scene.render.filepath = str(ROOT/'assets/items-3d/preview.png')
     bpy.ops.render.render(write_still=True)

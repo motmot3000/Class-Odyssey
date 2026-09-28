@@ -34,31 +34,36 @@ import {
   updateCosmetics
 } from "./domain.mjs";
 import { BRAND } from "./brand.mjs";
-import { requestApi } from "./api.mjs";
+import { apiUrl, requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
   acceptTerms,
   captureSessionContext,
   changePassword,
+  confirmPasswordReset,
   forgetSession,
   getAccount,
   isAdultUnlocked,
   isCurrentSession,
   isSignedIn,
   lockAdult,
+  requestPasswordReset,
+  sendSupportMessage,
   signIn,
   signInWithGoogleCode,
   signOut,
   signUp,
+  setupTeacherPassword,
   unlockAdult,
   unlockUntil,
+  updateProfile,
   updateSettings,
   validateNewPassword,
   verifyPassword
 } from "./session.mjs";
 import { escapeHtml, icon, translateReward } from "./ui.mjs";
 import { renderAdmin } from "./views/admin.mjs";
-import { renderConsent } from "./views/consent.mjs";
+import { renderConsent, renderTeacherSetup } from "./views/consent.mjs";
 import { renderLockScreen } from "./views/lock.mjs";
 import { renderConsole } from "./views/console.mjs";
 import { renderWelcome } from "./views/welcome.mjs";
@@ -66,30 +71,31 @@ import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
-import { renderAddPupilDialog, renderItemDialog, renderNewClassDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderHelpDialog, renderItemDialog, renderNewClassDialog, renderPasswordResetDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { createGuidedTour } from "./tour.mjs";
+import { enableDragScroll } from "./touch-scroll.mjs";
 import { TERMS_VERSION } from "./terms.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits } from "./portrait-runtime.mjs";
 import {
-  renderSheikahTopbar,
-  renderSheikahNoClass,
-  renderSheikahStudent,
-  renderSheikahSheet,
-  renderSheikahShop,
-  renderSheikahPersonalize,
+  renderOdysseyTopbar,
+  renderOdysseyNoClass,
+  renderOdysseyStudent,
+  renderOdysseySheet,
+  renderOdysseyShop,
+  renderOdysseyPersonalize,
   cosmeticChangesFromDraft
-} from "./views/sheikah.mjs";
+} from "./views/odyssey.mjs";
 import {
-  mountSheikahViewer,
-  unmountSheikahViewer,
-  setSheikahAngle,
-  setSheikahRotation,
-  setSheikahTheme,
-  retrySheikahViewer,
-  setSheikahFreeViewHandler
-} from "./sheikah-runtime.mjs";
+  mountOdysseyViewer,
+  unmountOdysseyViewer,
+  setOdysseyAngle,
+  setOdysseyRotation,
+  setOdysseyTheme,
+  retryOdysseyViewer,
+  setOdysseyFreeViewHandler
+} from "./odyssey-runtime.mjs";
 import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i18n.mjs";
 
 const app = document.querySelector("#app");
@@ -146,17 +152,21 @@ const ui = {
   adminError: "",
   consentPending: false,
   consentError: "",
-  /* Interface Sheikah */
-  sheikahView: "board",
+  helpPending: false,
+  teacherSetupPending: false,
+  teacherSetupError: "",
+  teacherRecovery: false,
+  /* Interface Odyssey */
+  odysseyView: "board",
   angle: "quarter",
   rotating: false,
   draft: null,
   shopPreview: null
 };
 
-setSheikahFreeViewHandler(() => {
+setOdysseyFreeViewHandler(() => {
   ui.rotating = false;
-  const control = app.querySelector('[data-action="sheikah-rotate"]');
+  const control = app.querySelector('[data-action="odyssey-rotate"]');
   control?.classList.remove("on");
   control?.setAttribute("aria-pressed", "false");
 });
@@ -180,7 +190,7 @@ function applyTheme() {
   document.documentElement.dataset.theme = displayedTheme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", displayedTheme === "light" ? "#e7e9df" : "#101b20");
   try { localStorage.setItem(THEME_KEY, theme); } catch { /* Keep the in-memory theme. */ }
-  setSheikahTheme(displayedTheme);
+  setOdysseyTheme(displayedTheme);
 }
 
 /* ---------- Hash routing ---------- */
@@ -199,6 +209,8 @@ function currentView() {
   // The current legal revision must be accepted. Accounts created through
   // Google accept it after login; a new TEXT revision asks it again.
   if (!hasAcceptedTerms()) return "consent";
+  if (account?.teacherPasswordSetupRequired) return "teacher-setup";
+  if (ui.teacherRecovery && account?.googleOnly) return "teacher-recovery";
   if (location.hash === "#rules") return "rules";
   if (location.hash === "#admin" && account?.role === "admin" && isAdultUnlocked()) return "admin";
   // Older #board/#student bookmarks now enter the same public class space.
@@ -216,7 +228,7 @@ window.addEventListener("hashchange", () => {
   ui.query = "";
   ui.consoleOpen = false;
   ui.lockError = "";
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   if (location.hash !== "#rules") ui.rulesEditing = false;
   window.scrollTo({ top: 0 });
@@ -232,9 +244,12 @@ function render() {
   const view = currentView();
   applyTheme();
   app.dataset.view = view;
+  // The floating language flag belongs to the welcome page; once signed in,
+  // language is fixed at setup and only changed from the account settings.
+  document.documentElement.dataset.signedIn = isSignedIn() ? "true" : "false";
   const memory = captureUiMemory();
   app.innerHTML = `
-    ${renderSheikahTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
+    ${renderOdysseyTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
     ${renderViewBody(view)}
     ${renderAppFooter()}
@@ -243,6 +258,8 @@ function render() {
     : view === "rules" ? "app.aria.rules"
     : view === "admin" ? "app.aria.accounts"
     : view === "consent" ? "consent.title"
+    : view === "teacher-setup" ? "google.teacher.title"
+    : view === "teacher-recovery" ? "google.teacher.recoveryTitle"
     : view === "mentions" ? "footer.mentions"
     : view === "privacy" ? "footer.privacy"
     : view === "terms" ? "footer.terms"
@@ -251,11 +268,11 @@ function render() {
   renderTeacherDialog();
   restoreUiMemory(memory);
   flushFlash();
-  syncSheikahRuntime();
+  syncOdysseyRuntime();
   mountHeroPortraits(document.body);
   if (view === "welcome") releaseWelcomeScene = mountWelcomeScene(app);
   updateClock();
-  if (ui.focusClassHeading && view === 'class' && ui.sheikahView === 'board') {
+  if (ui.focusClassHeading && view === 'class' && ui.odysseyView === 'board') {
     ui.focusClassHeading = false;
     app.querySelector('.picker h1')?.focus({ preventScroll:true });
     window.scrollTo({ top:0 });
@@ -275,25 +292,25 @@ function revealCookieControls() {
   }
 }
 
-function renderSheikahBody(view) {
+function renderOdysseyBody(view) {
   const classroom = getCurrentClass(state);
-  if (!classroom) return renderSheikahNoClass();
-  const pupil = ui.sheikahView === 'board' ? null : getStudentPupil(classroom);
-  if (pupil && ui.sheikahView === "shop") return renderSheikahShop(pupil, ui);
-  if (pupil && ui.sheikahView === "personalize") return renderSheikahPersonalize(pupil, ui);
-  return renderSheikahStudent({ classroom, ui, pupil, classView:true,
+  if (!classroom) return renderOdysseyNoClass();
+  const pupil = ui.odysseyView === 'board' ? null : getStudentPupil(classroom);
+  if (pupil && ui.odysseyView === "shop") return renderOdysseyShop(pupil, ui);
+  if (pupil && ui.odysseyView === "personalize") return renderOdysseyPersonalize(pupil, ui);
+  return renderOdysseyStudent({ classroom, ui, pupil, classView:true,
     selectionMode:ui.teacherDialog === 'console' && isAdultUnlocked(), selectedIds:state.selectedPupilIds });
 }
 
-function syncSheikahRuntime() {
+function syncOdysseyRuntime() {
   const host = app.querySelector("[data-viewer-host]");
   if (!host) {
-    unmountSheikahViewer();
+    unmountOdysseyViewer();
     return;
   }
   let look = {};
   try { look = JSON.parse(host.dataset.look || "{}"); } catch { /* Retain the fallback look. */ }
-  mountSheikahViewer(host, look);
+  mountOdysseyViewer(host, look);
 }
 
 function renderViewBody(view) {
@@ -308,6 +325,8 @@ function renderViewBody(view) {
   }
   if (view === "admin") return renderAdmin({ accounts: ui.adminAccounts, pending: ui.adminPending, error: ui.adminError, currentAccountId: account?.id });
   if (view === "consent") return renderConsent({ pending: ui.consentPending, error: ui.consentError });
+  if (view === "teacher-setup") return renderTeacherSetup({ pending: ui.teacherSetupPending, error: ui.teacherSetupError });
+  if (view === "teacher-recovery") return renderTeacherSetup({ pending: ui.teacherSetupPending, error: ui.teacherSetupError, recovery: true });
   if (view === "rules") {
     return `<main class="page page-narrow">${renderRules({ unlocked: isAdultUnlocked(), rules: getRules(state), editing: ui.rulesEditing })}</main>`;
   }
@@ -321,7 +340,7 @@ function renderViewBody(view) {
     return `<main class="page page-narrow legal-page">${renderTerms()}</main>`;
   }
 
-  return renderSheikahBody(view);
+  return renderOdysseyBody(view);
 }
 
 function getStudentPupil(classroom) {
@@ -451,23 +470,16 @@ function dispatchActionClick(event) {
 app.addEventListener("click", dispatchActionClick);
 dialogRoot.addEventListener("click", dispatchActionClick);
 
-app.addEventListener("submit", (event) => {
+function handleSubmit(event) {
   const form = event.target.closest("form[data-action]");
   if (!form) return;
   event.preventDefault();
   if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
   const action = FORMS[form.dataset.action];
   if (action) action(form);
-});
-
-dialogRoot.addEventListener("submit", (event) => {
-  const form = event.target.closest("form[data-action]");
-  if (!form) return;
-  event.preventDefault();
-  if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
-  const action = FORMS[form.dataset.action];
-  if (action) action(form);
-});
+}
+app.addEventListener("submit", handleSubmit);
+dialogRoot.addEventListener("submit", handleSubmit);
 
 function handleInput(event) {
   const field = event.target;
@@ -556,7 +568,7 @@ function showClassRoster() {
   if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
   rememberStudent(null);
   state = { ...state, selectedPupilId:null, selectedPupilIds:[] };
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   ui.shopPreview = null;
   ui.focusClassHeading = true;
@@ -573,8 +585,8 @@ function chooseClassPupil(pupilId) {
 function resetHeroCamera() {
   ui.angle = 'quarter';
   ui.rotating = false;
-  setSheikahAngle('quarter');
-  setSheikahRotation(false);
+  setOdysseyAngle('quarter');
+  setOdysseyRotation(false);
 }
 
 const ACTIONS = {
@@ -589,6 +601,11 @@ const ACTIONS = {
   // is never disturbed by a #tarteaucitron link.
   "manage-cookies": () => {
     window.tarteaucitron?.userInterface?.openPanel?.();
+  },
+  "recover-teacher-password": () => {
+    if (!account?.googleOnly) return;
+    try { sessionStorage.setItem("classquest:teacher-recovery", account.id); } catch { /* Retry sign-in manually if storage is unavailable. */ }
+    window.location.assign(apiUrl("auth/google"));
   },
 
   /* ---------- Editable classroom rules ---------- */
@@ -628,18 +645,26 @@ const ACTIONS = {
     rememberAccountLanguage(lang);
     advanceOnboarding();
   },
+  // Language is an account preference: the choice made at setup stays until it
+  // is changed here, in the account settings panel.
+  "set-language": (el) => {
+    const lang = el.dataset.lang === "en" ? "en" : "fr";
+    setLang(lang);
+    rememberAccountLanguage(lang);
+    renderPreservingForms();
+  },
 
-  /* ---------- Sheikah navigation and customization ---------- */
+  /* ---------- Odyssey navigation and customization ---------- */
   "toggle-theme": () => {
     theme = theme === "light" ? "dark" : "light";
     applyTheme();
     if (account) persistSettings({ theme });
     renderPreservingForms();
   },
-  "sheikah-open": (el) => {
+  "odyssey-open": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     render();
     window.scrollTo({ top: 0 });
@@ -648,56 +673,56 @@ const ACTIONS = {
   // "back" from them returns to the hero — never straight to the class.
   "hero-back": () => {
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     ui.shopPreview = null;
     render();
     window.scrollTo({ top: 0 });
   },
-  "sheikah-personalize": (el) => {
+  "odyssey-personalize": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
     resetHeroCamera();
-    ui.sheikahView = "personalize";
+    ui.odysseyView = "personalize";
     ui.draft = null;
     render();
     window.scrollTo({ top: 0 });
   },
-  "retry-viewer": () => retrySheikahViewer(),
-  "sheikah-set": (el) => {
+  "retry-viewer": () => retryOdysseyViewer(),
+  "odyssey-set": (el) => {
     ui.draft = { ...(ui.draft || {}), [el.dataset.field]: el.dataset.value };
     render();
   },
-  "sheikah-angle": (el) => {
+  "odyssey-angle": (el) => {
     ui.angle = el.dataset.value;
     ui.rotating = false;
-    setSheikahAngle(ui.angle);
-    setSheikahRotation(false);
+    setOdysseyAngle(ui.angle);
+    setOdysseyRotation(false);
     render();
   },
-  "sheikah-rotate": () => {
+  "odyssey-rotate": () => {
     ui.rotating = !ui.rotating;
-    setSheikahRotation(ui.rotating);
+    setOdysseyRotation(ui.rotating);
     render();
   },
-  "sheikah-equip": (el) => {
+  "odyssey-equip": (el) => {
     resetHeroCamera();
     const draft = ui.draft;
     const next = draft && el.dataset.pupilId
       ? updateCosmetics(state, el.dataset.pupilId, cosmeticChangesFromDraft(draft))
       : state;
     ui.draft = null;
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     if (draft) commit(next);
     else render();
     window.scrollTo({ top: 0 });
-    toast(t("sheikah.savedLook"), "success");
+    toast(t("odyssey.savedLook"), "success");
   },
-  "sheikah-shop": (el) => {
+  "odyssey-shop": (el) => {
     const id = el.dataset.pupilId || studentPupilId || state.selectedPupilId;
     if (!chooseClassPupil(id)) return;
     resetHeroCamera();
-    ui.sheikahView = "shop";
+    ui.odysseyView = "shop";
     ui.draft = null;
     ui.shopPreview = null;
     render();
@@ -713,6 +738,15 @@ const ACTIONS = {
   "account-settings": () => {
     ui.openPanels.add("account");
     openTeacherConsole();
+  },
+  "open-help": () => {
+    ui.helpPending = false;
+    showDialog(renderHelpDialog({ email: account?.email || "" }));
+  },
+  "forgot-password": () => showDialog(renderPasswordResetDialog()),
+  "request-password-reset": (el) => {
+    const form = el.closest("form");
+    return requestResetCode(form ? new FormData(form).get("email") : account?.email || "");
   },
   "teacher-console": () => {
     if (ui.teacherDialog === 'console') { closeDialog(); render(); }
@@ -744,7 +778,7 @@ const ACTIONS = {
     closeDialog({ resumeConsole:false });
     lockAdult();
     ui.consoleOpen = false;
-    ui.sheikahView = 'board';
+    ui.odysseyView = 'board';
     navigate("#class");
     toast("Adult access locked.", "info");
   },
@@ -758,7 +792,7 @@ const ACTIONS = {
 
   "select-class": (el) => {
     disarmDanger();
-    ui.sheikahView = "board";
+    ui.odysseyView = "board";
     ui.draft = null;
     if (ui.teacherDialog !== 'console') closeDialog({ resumeConsole:false });
     rememberStudent(null);
@@ -782,7 +816,7 @@ const ACTIONS = {
   },
 
   "zoom-pupil": (el) => {
-    ACTIONS['sheikah-open'](el);
+    ACTIONS['odyssey-open'](el);
   },
   "close-dialog": () => { closeDialog(); render(); },
 
@@ -848,7 +882,7 @@ const ACTIONS = {
   },
 
   "preview-item": (el) => {
-    if (currentView() === 'class' && app.contains(el) && ui.sheikahView === "shop") {
+    if (currentView() === 'class' && app.contains(el) && ui.odysseyView === "shop") {
       ui.shopPreview = ui.shopPreview === el.dataset.itemId ? null : el.dataset.itemId;
       render();
       if (matchMedia('(max-width: 1100px)').matches) {
@@ -865,7 +899,7 @@ const ACTIONS = {
   "student-pick": (el) => {
     if (!chooseClassPupil(el.dataset.pupilId)) return;
     resetHeroCamera();
-    ui.sheikahView = "sheet";
+    ui.odysseyView = "sheet";
     ui.draft = null;
     ui.query = "";
     render();
@@ -985,6 +1019,35 @@ const FORMS = {
     maybeStartOnboarding();
   },
 
+  "setup-teacher-password": async (form) => {
+    if (ui.teacherSetupPending) return;
+    const data = new FormData(form);
+    const password = String(data.get("password") || "");
+    const problem = validateNewPassword(password, data.get("confirm"));
+    if (problem) {
+      ui.teacherSetupError = problem;
+      render();
+      return;
+    }
+    ui.teacherSetupPending = true;
+    ui.teacherSetupError = "";
+    render();
+    const result = await setupTeacherPassword(password, ui.teacherRecovery);
+    if (result.stale) return;
+    ui.teacherSetupPending = false;
+    if (!result.ok) {
+      ui.teacherSetupError = result.error;
+      render();
+      return;
+    }
+    account = result.account;
+    ui.teacherRecovery = false;
+    unlockAdult();
+    render();
+    window.scrollTo({ top: 0 });
+    maybeStartOnboarding();
+  },
+
   unlock: async (form) => {
     if (ui.lockPending) return;
     const request = ++teacherUnlockRequest;
@@ -1032,6 +1095,68 @@ const FORMS = {
     form.reset();
     unlockAdult();
     toast("Password updated. Other devices were signed out.", "success");
+  },
+
+  "update-profile": async (form) => {
+    const data = new FormData(form);
+    const displayName = String(data.get("displayName") || "").trim();
+    const email = String(data.get("email") || "").trim();
+    if (!displayName) return toast(t("settings.displayNameRequired"), "error");
+    if (!email) return toast(t("settings.emailRequired"), "error");
+    const result = await updateProfile({ displayName, email });
+    if (!result.ok) return toast(result.error, "error");
+    account = result.account;
+    activeSession = captureSessionContext();
+    toast(t("settings.saved"), "success");
+    render();
+  },
+
+  "request-password-reset": (form) => requestResetCode(new FormData(form).get("email") || account?.email || ""),
+
+  "confirm-password-reset": async (form) => {
+    const data = new FormData(form);
+    const email = String(data.get("email") || account?.email || "").trim();
+    const code = String(data.get("code") || "").trim();
+    const next = String(data.get("next") || "");
+    const problem = validateNewPassword(next, data.get("confirm"));
+    if (problem) return toast(problem, "error");
+    if (!email) return toast(t("settings.emailRequired"), "error");
+    const result = await confirmPasswordReset(email, code, next);
+    if (!result.ok) return toast(result.error, "error");
+    form.reset();
+    const context = captureSessionContext();
+    if (context && isCurrentSession(context)) {
+      // The reset revoked every session, including this one.
+      endSession("", context);
+      toast(t("settings.reset.done"), "success");
+      return;
+    }
+    closeDialog();
+    render();
+    toast(t("settings.reset.done"), "success");
+  },
+
+  "send-support": async (form) => {
+    if (ui.helpPending) return;
+    const data = new FormData(form);
+    const message = String(data.get("message") || "").trim();
+    if (!message) {
+      toast(t("settings.help.empty"), "info");
+      form.querySelector('textarea[name="message"]')?.focus();
+      return;
+    }
+    ui.helpPending = true;
+    const result = await sendSupportMessage({
+      category: String(data.get("category") || "other"),
+      subject: String(data.get("subject") || ""),
+      message
+    });
+    ui.helpPending = false;
+    if (!result.ok) return toast(result.error, "error");
+    closeDialog({ resumeConsole: false });
+    ui.openPanels.add("account");
+    openTeacherConsole();
+    toast(t("settings.help.sent"), "success");
   },
 
   "admin-reset": async (form) => {
@@ -1109,7 +1234,7 @@ const FORMS = {
     const next = createClass(state, { name, students });
     if (next === state) return;
     closeDialog({ resumeConsole:false });
-    ui.sheikahView = "board";
+    ui.odysseyView = "board";
     ui.draft = null;
     rememberStudent(null);
     commit(next);
@@ -1164,12 +1289,25 @@ const FORMS = {
 
 /* ---------- Classroom rewards ---------- */
 
+async function requestResetCode(email) {
+  const value = String(email || "").trim();
+  if (!value) return toast(t("settings.emailRequired"), "error");
+  const result = await requestPasswordReset(value, getLang());
+  if (!result.ok) return toast(result.error, "error");
+  toast(
+    t(result.delivered ? "settings.reset.sent" : "settings.reset.sentPending", { email: value }),
+    result.delivered ? "success" : "info"
+  );
+}
+
 function giveXp(amount, reason) {
   const targets = getTargets();
   if (!targets.length || !Number.isFinite(amount) || amount < 1) return;
   targets.forEach((id) => pendingFlash.add(id));
   commit(awardXp(state, targets, amount, reason));
-  toast(`+${amount} XP · ${reason} · ${describeTargets(targets)}`, "xp");
+  toast(reason
+    ? `+${amount} XP · ${reason} · ${describeTargets(targets)}`
+    : `+${amount} XP · ${describeTargets(targets)}`, "xp");
 }
 
 function giveMoney(amount) {
@@ -1297,7 +1435,7 @@ function openTeacherGate(after = 'console') {
 function openTeacherConsole() {
   if (!isAdultUnlocked()) { openTeacherGate(); return; }
   window.history.replaceState(null, '', '#class');
-  ui.sheikahView = 'board';
+  ui.odysseyView = 'board';
   ui.draft = null;
   ui.rulesEditing = false;
   ui.teacherDialog = 'console';
@@ -1551,15 +1689,25 @@ function endSetupTour({ complete = true, silent = false } = {}) {
 }
 
 function setupTourSteps() {
+  const inConsole = (selector) => `.teacher-console-content ${selector}`;
   return [
     { target: '[data-action="toggle-theme"]', title: t("onboarding.theme.title"), body: t("onboarding.theme.body"), preview: true },
+    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
     {
       target: () => (state.classes.length ? ".class-picker" : '[data-action="add-class"]'),
       title: t("onboarding.class.title"),
       body: () => t(state.classes.length ? "onboarding.class.body" : "onboarding.class.body.empty")
     },
-    { target: '[data-action="show-rules"]', title: t("onboarding.rules.title"), body: t("onboarding.rules.body") },
-    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") }
+    { target: '[data-action="teacher-console"]', title: t("onboarding.console.title"), body: t("onboarding.console.body") },
+    {
+      target: () => (ui.teacherDialog === 'console' ? inConsole('[data-action="focus-add"]') : '[data-action="teacher-console"]'),
+      title: t("onboarding.console.add.title"),
+      body: t("onboarding.console.add.body")
+    },
+    { target: inConsole('[data-action="award-xp"]'), title: t("onboarding.console.xp.title"), body: t("onboarding.console.xp.body") },
+    { target: inConsole('[data-action="hp-minus"]'), title: t("onboarding.console.hp.title"), body: t("onboarding.console.hp.body") },
+    { target: inConsole('[data-action="award-money"]'), title: t("onboarding.console.coins.title"), body: t("onboarding.console.coins.body") },
+    { target: null, title: t("onboarding.final.title"), body: t("onboarding.final.body") }
   ];
 }
 
@@ -1601,8 +1749,9 @@ function openAccount(next) {
   ui.adminPending = false;
   ui.lockPending = false;
   ui.lockError = "";
+  ui.teacherSetupError = "";
   studentPupilId = loadStudentId();
-  ui.sheikahView = "board";
+  ui.odysseyView = "board";
   ui.draft = null;
   const storedTheme = next?.settings?.theme;
   if (storedTheme === "light" || storedTheme === "dark") {
@@ -1632,6 +1781,43 @@ async function completeGoogleSignIn(code) {
   ui.gatePending = true;
   render();
   const result = await signInWithGoogleCode(code);
+  if (result.stale) return;
+  ui.gatePending = false;
+  if (!result.ok) {
+    ui.gateError = result.error;
+    render();
+    return;
+  }
+  try {
+    ui.teacherRecovery = sessionStorage.getItem("classquest:teacher-recovery") === result.account.id
+      && result.account.googleOnly && !result.account.teacherPasswordSetupRequired;
+    sessionStorage.removeItem("classquest:teacher-recovery");
+  } catch { ui.teacherRecovery = false; }
+  openAccount(result.account);
+  toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
+}
+
+/* The 3D workshop links here with `?autologin=user:password` so the developer
+ * can watch the running game signed in as the local admin. Credentials are only
+ * honoured on a loopback host, and the parameter is stripped from the address
+ * bar before the session is opened. */
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+function localAutoLoginCredentials(value) {
+  if (!LOOPBACK_HOSTS.has(location.hostname)) return null;
+  const separator = value.indexOf(":");
+  if (separator < 1) return null;
+  const username = value.slice(0, separator);
+  const password = value.slice(separator + 1);
+  return username && password ? { username, password } : null;
+}
+
+async function completeLocalSignIn(value) {
+  const credentials = localAutoLoginCredentials(value);
+  if (!credentials) return;
+  ui.gateError = "";
+  ui.gatePending = true;
+  render();
+  const result = await signIn(credentials.username, credentials.password);
   if (result.stale) return;
   ui.gatePending = false;
   if (!result.ok) {
@@ -1675,6 +1861,8 @@ function endSession(message = "", context = null) {
   ui.gateTab = "signin";
   ui.gatePending = false;
   ui.lockPending = false;
+  ui.teacherSetupPending = false;
+  ui.teacherRecovery = false;
   ui.adminPending = false;
   ui.adminAccounts = [];
   ui.consoleOpen = false;
@@ -1967,16 +2155,21 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
 const googleParams = new URLSearchParams(location.search);
 const googleCode = googleParams.get("google_code") || "";
 const googleError = googleParams.get("google_error") || "";
-if (googleCode || googleError) {
-  // Never keep the one-time code or the error in the address bar or history.
+const autoLogin = googleParams.get("autologin") || "";
+if (googleCode || googleError || autoLogin) {
+  // Never keep the one-time code, the error or the credentials in the address
+  // bar or history.
   try { window.history.replaceState(null, "", location.pathname + location.hash); } catch { /* keep the query */ }
 }
 if (googleError) ui.gateError = googleErrorMessage(googleError);
 applyTheme();
+// Boards that report fingers as a mouse get drag-to-scroll from anywhere.
+enableDragScroll();
 render();
 bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
 if (googleCode) completeGoogleSignIn(googleCode);
-else loadPublicConfig();
+else if (autoLogin) completeLocalSignIn(autoLogin);
+loadPublicConfig();
 setInterval(updateClock, 1000);

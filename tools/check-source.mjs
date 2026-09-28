@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 
 // Parse authored code without executing browser modules or requiring Blender.
 // Generated bundles/assets are deliberately outside these source roots.
-const roots = ["src", "server", "tools", "tests"];
+const roots = ["src", "server", "admin-console", "tools", "tests"];
 function filesIn(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
     if (entry.name.startsWith(".") || entry.name === "__pycache__") return [];
@@ -14,7 +14,7 @@ function filesIn(directory) {
 }
 
 const files = roots.flatMap(filesIn).sort();
-const modules = files.filter(filename => filename.endsWith(".mjs"));
+const modules = files.filter(filename => filename.endsWith(".mjs") || filename.endsWith(".js"));
 const python = files.filter(filename => filename.endsWith(".py"));
 for (const filename of modules) {
   const result = spawnSync(process.execPath, ["--check", filename], { encoding: "utf8" });

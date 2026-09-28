@@ -38,7 +38,12 @@ const CLOTHS = {
   azur:     { base: "#33507E", dark: "#223757", lite: "#4A6A99", line: "#152036" },
   sinople:  { base: "#2F5C43", dark: "#20422F", lite: "#427659", line: "#132B1E" },
   pourpre:  { base: "#573566", dark: "#3C2449", lite: "#714C81", line: "#25142B" },
-  ecarlate: { base: "#8E3230", dark: "#65211F", lite: "#AC4D48", line: "#3D1211" }
+  ecarlate: { base: "#8E3230", dark: "#65211F", lite: "#AC4D48", line: "#3D1211" },
+  rose:     { base: "#A4566B", dark: "#7A3C4E", lite: "#BE7286", line: "#3A1C25" },
+  sarcelle: { base: "#2D6468", dark: "#1D4144", lite: "#437F83", line: "#10262A" },
+  ivoire:   { base: "#D8D0BC", dark: "#B3AA95", lite: "#ECE6D6", line: "#5B5446" },
+  ambre:    { base: "#7A4B27", dark: "#57341A", lite: "#96633A", line: "#2A190C" },
+  bordeaux: { base: "#6B2336", dark: "#4B1725", lite: "#873449", line: "#240A12" }
 };
 
 /* La laine du manteau est fixe et neutre : elle unifie la palette quelle que
@@ -69,20 +74,28 @@ const OUTFITS = {
   "vocab-ranger":   { cloth: "sinople",  role: "ranger",    mantle: true, mail: false, emblem: false, greaves: false },
   "grammar-mage":   { cloth: "pourpre",  role: "mage",      cape: true,   mail: false, emblem: true,  greaves: false },
   "story-keeper":   { cloth: "ecarlate", role: "keeper",    cape: true,   mail: true,  emblem: true,  greaves: true  },
+  "black-mage":     { cloth: "ecarlate", role: "mage",      cape: true,   mail: false, emblem: true,  greaves: false },
+  bard:             { cloth: "rose",     role: "scout",     cape: false,  mail: false, emblem: false, greaves: false },
+  cartographer:     { cloth: "sarcelle", role: "ranger",    mantle: true, mail: false, emblem: false, greaves: false },
+  healer:           { cloth: "ivoire",   role: "mage",      mantle: true, cape: false, mail: false, emblem: true,  greaves: false },
+  alchemist:        { cloth: "ambre",    role: "mage",      mantle: true, cape: true,  mail: false, emblem: true,  greaves: false },
+  "horse-keeper":   { cloth: "bordeaux", role: "knight",    cape: true,   mail: true,  emblem: true,  greaves: true },
   "honor-knight":   { cloth: "azur",     role: "knight",    cape: true,   mail: true,  emblem: true,  greaves: true },
   "grand-archmage": { cloth: "pourpre",  role: "archmage",  mantle: true, cape: true,  emblem: true,  greaves: false },
   "realm-sovereign":{ cloth: "ecarlate", role: "sovereign", cape: true,   mail: true,  emblem: true,  greaves: true }
 };
 const HEADGEAR = {
   "no-hat": "none",
-  "explorer-cap": "goggles",
-  sunglasses: "sunglasses",
   "feather-beret": "beret",
   "wizard-hat": "wizard",
   "gold-crown": "crown",
   "steel-helm": "helm",
-  "classy-hat": "tophat",
-  "celestial-crown": "celestial"
+  "classy-hat": "tophat"
+};
+/* Eyewear is an accessory: it is drawn over whichever hat is worn. */
+const EYEWEAR = {
+  "explorer-cap": "goggles",
+  sunglasses: "sunglasses"
 };
 const HANDGEAR = {
   "no-weapon": "none",
@@ -97,9 +110,12 @@ const HANDGEAR = {
 };
 const HAIRCUTS = {
   short: "court",
+  spiky: "court",
   long: "longue",
   bald: "chauve",
   curly: "boucle",
+  bun: "chignon",
+  "medium-cut": "court",
   braided: "tresse",
   "royal-hair": "royal"
 };
@@ -562,6 +578,7 @@ function heroShapes(opt) {
 
   /* --- couvre-chef par-dessus le visage */
   H.push(...headgearShapes(head));
+  if (opt.eyewear && !(opt.eyewear === "goggles" && head === "helm")) H.push(...headgearShapes(opt.eyewear));
   S.push(...H.map((shape) => ({
     ...shape,
     a: { ...shape.a, transform: `${shape.a.transform || ""} translate(-8 -4) scale(1.08)`.trim() }
@@ -698,6 +715,17 @@ function backHair(cut, girl, HAIR) {
     ];
   }
 
+  /* Chignon : la torsade dépasse derrière le sommet du crâne, tenue par
+     une épingle dorée ; la frange balayée se dessine devant. */
+  if (cut === "chignon") {
+    return [
+      c(115, 18, 12, HAIR.dark),
+      fold("M107,19 C107,11 119,8 123,15 C126,22 118,27 113,23 C110,20 113,16 117,17", HAIR.lite, 1.7, 0.55),
+      fold("M103,28 L130,8", GOLD.base, 1.9, 1),
+      c(130.5, 7.5, 2.2, GOLD.base)
+    ];
+  }
+
   /* L'afro est volontairement identique pour tout le monde : c'est la coupe
      commune, elle n'a pas besoin d'être genrée. */
   return [];
@@ -761,6 +789,15 @@ function hairShapes(cut, head, girl, HAIR) {
     S.push(fold("M84,50 C86,38 92,29 100,25", HAIR.lite, 1.8, 0.5));
     S.push(fold("M92,52 C94,40 99,31 106,26", HAIR.lite, 1.5, 0.35));
     S.push(fold("M114,50 C112,38 107,30 100,26", HAIR.line, 1.6, 0.4));
+    return S;
+  }
+
+  if (cut === "chignon") {
+    /* Tiré en arrière vers le chignon, frange en pointes balayée sur le front. */
+    S.push(p("M78,56 C74,38 80,18 100,18 C120,18 126,38 122,56 C120,47 117,40 111,36 C104,32 96,32 89,36 C83,40 80,47 78,56 Z", HAIR.base));
+    S.push(p("M83,40 C88,30 100,26 114,31 L112,38 L106,34 L103,42 L98,35 L93,43 L90,37 L85,46 Z", HAIR.base));
+    S.push(fold("M88,30 C94,24 104,22 112,26", HAIR.lite, 1.7, 0.45));
+    S.push(fold("M116,24 C119,30 121,38 121,48", HAIR.line, 1.5, 0.4));
     return S;
   }
 
@@ -935,16 +972,6 @@ function headgearShapes(head) {
     S.push(c(112, 21, 3, "#2F5C43", { sw: 1.1 }));
     S.push(c(100, 35, 2.8, GOLD.lite, { noStroke: true }));
     S.push(fold("M79,30 C87,34 93,35 98,35", GOLD.lite, 1.8, 0.8));
-  } else if (head === "celestial") {
-    S.push(p("M72,34 L70,7 L84,21 L100,0 L116,21 L130,7 L128,34 Z", GOLD.base));
-    S.push(p("M77,27 C77,10 88,3 100,3 C112,3 123,10 123,27", "none", { sw: 4.2, stroke: GOLD.dark }));
-    S.push(p("M74,29 C87,36 113,36 126,29 L126,40 C114,47 86,47 74,40 Z", GOLD.dark));
-    S.push(p("M78,31 C90,36 110,36 122,31 L121,38 C110,43 90,43 79,38 Z", "#8E3230"));
-    S.push(c(84, 18, 3.2, "#8E3230"));
-    S.push(c(100, 9, 4.2, "#7FC7D9"));
-    S.push(c(116, 18, 3.2, "#2F5C43"));
-    S.push(c(100, 35, 3.4, "#FFF4C8", { noStroke: true }));
-    S.push(fold("M78,30 C88,35 96,36 101,36", "#FFFFFF", 2, 0.85));
   }
   return S;
 }
@@ -1065,12 +1092,13 @@ export function renderHero(pupil) {
     hairStyle: HAIRCUTS[pupil.hair] || "court",
     hairColor: pupil.hairColor,
     head: HEADGEAR[pupil.hat] || "none",
+    eyewear: EYEWEAR[pupil.accessory] || null,
     hand: HANDGEAR[pupil.weapon] || "none",
     face: pupil.face,
     girl: pupil.gender === "girl",
     mirror: mirrorFor(pupil.id),
     alt: `${pupil.name || "hero"} the hero`,
-    cls: `avatar hero-${outfit.role} ${pupil.skin === "grammar-mage" ? "magic" : ""}`
+    cls: `avatar hero-${outfit.role} ${["grammar-mage", "black-mage", "alchemist"].includes(pupil.skin) ? "magic" : ""}`
   });
 }
 
@@ -1081,6 +1109,7 @@ const ITEM_CROPS = {
   tone: "54 18 92 150",
   hat: "50 2 100 92",
   sunglasses: "70 30 60 45",
+  "explorer-cap": "66 12 68 40",
   face: "76 30 48 52",
   evil: "76 30 48 52",
   hair: "60 2 80 80",
@@ -1097,9 +1126,12 @@ const ITEM_CROPS = {
   "swords-and-shield": "6 16 174 260",
   "custom-bespoke": "40 40 120 120",
   short: "64 -4 72 96",
+  spiky: "64 -4 72 96",
+  "medium-cut": "60 -8 80 100",
   long: "56 -6 88 156",
   bald: "64 -4 72 96",
   curly: "56 -8 88 100",
+  bun: "60 -8 80 100",
   braided: "56 -4 88 108",
   "royal-hair": "54 -6 92 160"
 };
@@ -1141,6 +1173,7 @@ export function renderItemArt(item, pupil) {
 
   if (item.type === "outfit") Object.assign(base, OUTFITS[item.id] || OUTFITS.starter);
   else if (item.type === "hat") base.head = HEADGEAR[item.id] || "none";
+  else if (item.type === "accessory") base.eyewear = EYEWEAR[item.id] || null;
   else if (item.type === "weapon") base.hand = HANDGEAR[item.id] || "none";
   else if (item.type === "face") base.face = item.id;
   else if (item.type === "hair") base.hairStyle = HAIRCUTS[item.id] || "court";
