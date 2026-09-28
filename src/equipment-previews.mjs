@@ -8,9 +8,13 @@ const modeled = new Set(modeledItemIds());
 const root = new URL('../assets/items-3d/previews/', import.meta.url);
 export const isModeledItem = item => Boolean(item && modeled.has(item.id));
 
+// Bumped when the item thumbnails are re-framed without a new catalogue.
+const THUMBNAIL_FRAMING = 'fit84';
+
 export function previewAsset(path) {
   const pet = getShopItem(path.split('/').at(-1).replace('.webp', ''))?.type === 'pet';
-  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : pet ? PETS_REVISION : CATALOGUE_REVISION;
+  const itemRevision = `${pet ? PETS_REVISION : CATALOGUE_REVISION}-${THUMBNAIL_FRAMING}`;
+  const revision = path.startsWith('portraits/') ? PORTRAIT_REVISION : itemRevision;
   return new URL(`${path}?v=${revision}`, root).href;
 }
 

@@ -2,7 +2,11 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { visiblePart, HAIR_PALETTE, EYE_PALETTE, CATALOGUE_REVISION, PETS_CATALOGUE_URL, SKIN_TONE_COLORS, SKIN_TONE_NEUTRAL } from './items-3d-model.mjs';
-import { renderPortraitImage } from './portrait-image.mjs';
+
+/* Shared portrait frame, in metres (glTF: Y up, hero faces +Z, feet at 0).
+ * Tallest headwear (wizard hat) reaches 2.09 m; the widest hand items stay
+ * within ±0.5 m. Aspect matches the class-card stage. */
+const PORTRAIT_FRAME = { bottom: -.03, top: 2.13, aspect: .8, heroHalfWidth: .5, margin: .04, width: 560 };
 
 // Eye colours re-tint the delivered iris map in plain sRGB: every coloured
 // pixel keeps its natural shading (its luminance) but takes the target hue, so
@@ -145,10 +149,26 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     head: { yaw: .10, target: [0, 1.77, 0], distance: 1.42, elevation: .05 },
     item: { yaw: .10, target: [0, 1, 0], distance: 2.5, elevation: .09 }
   };
+  // Horizontal radius of everything worn around the hero's vertical axis. A
+  // big companion or a long blade must stay in frame at every yaw, so the
+  // body views back off only as far as that radius requires.
+  let reach = 0;
+  function measureReach() {
+    reach = 0;
+    model.updateMatrixWorld(true);
+    const bounds = new THREE.Box3();
+    model.traverseVisible(obj => { if (obj.isMesh) bounds.expandByObject(obj, true); });
+    if (bounds.isEmpty()) return;
+    reach = Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x), Math.abs(bounds.min.z), Math.abs(bounds.max.z));
+  }
   function placeCamera() {
+    const tanHalf = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const fitReach = ['front', 'quarter', 'back', 'free'].includes(angle) && reach > .45
+      ? reach / (tanHalf * camera.aspect) * 1.06 + reach * .5
+      : 0;
     const d = previewSize
-      ? Math.max(previewSize.y/2, Math.hypot(previewSize.x, previewSize.z)/(2*camera.aspect)) / Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * 1.18 + previewSize.length()*.2
-      : distance * Math.max(1, .82 / camera.aspect);
+      ? Math.max(previewSize.y/2, Math.hypot(previewSize.x, previewSize.z)/(2*camera.aspect)) / tanHalf * 1.18 + previewSize.length()*.2
+      : Math.max(distance * Math.max(1, .82 / camera.aspect), fitReach);
     camera.position.set(target.x + Math.sin(yaw) * d, target.y + elevation, target.z + Math.cos(yaw) * d);
     camera.lookAt(target);
   }
@@ -196,6 +216,7 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
         }
       }
     });
+    measureReach();
     if (look.preview || wasPreview || petChanged || angle === 'item' || angle === 'head') setAngle(angle === 'free' ? 'quarter' : angle);
     requestDraw();
     return counts();
@@ -293,31 +314,45 @@ export async function createItemsViewer(container, initialLook, { onProgress, on
     counts,
     resize,
     exportLook,
+    /* Class portraits share ONE world-space frame: every hero is drawn at the
+     * same scale with the feet on the same baseline, whatever is equipped.
+     * Cropping to the silhouette made a staff, a wizard hat or a dragon shrink
+     * the hero, so no two cards matched. The frame only slides sideways to
+     * make room for a companion, and grows only if the content cannot fit. */
     snapshot() {
       if (lost || disposed) return null;
-      const previousTarget=target.clone(), previousSize=previewSize, previousElevation=elevation;
-      const wasGroundVisible=ground.visible;
+      const wasGroundVisible = ground.visible;
+      const previousRatio = renderer.getPixelRatio();
       try {
-        const bounds=new THREE.Box3();
+        const bounds = new THREE.Box3();
         model.updateMatrixWorld(true);
-        model.traverseVisible(obj=>{if(obj.isMesh) bounds.expandByObject(obj,true);});
+        model.traverseVisible(obj => { if (obj.isMesh) bounds.expandByObject(obj, true); });
+        const { bottom, top, aspect, heroHalfWidth, margin, width: pixelWidth } = PORTRAIT_FRAME;
+        let height = top - bottom;
+        let width = height * aspect;
+        let minX = -heroHalfWidth, maxX = heroHalfWidth, maxY = top;
         if (!bounds.isEmpty()) {
-          bounds.getCenter(target);
-          previewSize=bounds.getSize(new THREE.Vector3());
-          if (!look.preview && look.pet && look.pet !== 'no-pet') {
-            // A companion must not pull the hero off the portrait's centreline.
-            target.x=target.z=0;
-            previewSize.x=2*Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x));
-            previewSize.z=2*Math.max(Math.abs(bounds.min.z),Math.abs(bounds.max.z));
-          }
-          elevation=previewSize.y*.025;
+          minX = Math.min(minX, bounds.min.x - margin);
+          maxX = Math.max(maxX, bounds.max.x + margin);
+          maxY = Math.max(maxY, bounds.max.y + margin);
         }
-        ground.visible=false;
-        placeCamera(); renderer.render(scene,camera);
-        return renderPortraitImage(canvas, { centered: !look.preview && look.pet && look.pet !== 'no-pet' });
+        if (maxX - minX > width) { width = maxX - minX; height = width / aspect; }
+        if (maxY - bottom > height) { height = maxY - bottom; width = height * aspect; }
+        // Centre on the hero; slide only as far as a companion requires.
+        const centerX = Math.min(Math.max(0, maxX - width / 2), minX + width / 2);
+        const centerY = bottom + height / 2;
+        const shot = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, .1, 40);
+        shot.position.set(centerX, centerY, 12);
+        shot.lookAt(centerX, centerY, 0);
+        ground.visible = false;
+        renderer.setPixelRatio(1);
+        renderer.setSize(pixelWidth, Math.round(pixelWidth / aspect), false);
+        renderer.render(scene, shot);
+        return canvas.toDataURL('image/webp', .85);
       } finally {
-        target.copy(previousTarget); previewSize=previousSize; elevation=previousElevation;
-        ground.visible=wasGroundVisible;
+        ground.visible = wasGroundVisible;
+        renderer.setPixelRatio(previousRatio);
+        resize();
       }
     },
     destroy() {

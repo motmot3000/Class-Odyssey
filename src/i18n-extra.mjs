@@ -16,6 +16,7 @@ export const messages = {
   "nav.class": ["Classe", "Class"],
   "nav.classes": ["Classe :", "Class:"],
   "class.back": ["Retour à la classe", "Back to class"],
+  "class.heroCount": ["{count} héros", "{count} heroes"],
   "class.hint": ["Ouvre ton personnage, ton dressing ou la boutique.", "Open your character, dressing or shop."],
   "console.target.choose": ["Élève sélectionné", "Selected pupil"],
   "console.target.none": ["Choisir un élève", "Choose a pupil"],

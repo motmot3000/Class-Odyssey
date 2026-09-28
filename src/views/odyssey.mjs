@@ -284,9 +284,16 @@ export function renderOdysseyStudent({ classroom, ui, pupil, classView = false, 
     return `
       <main class="single">
         <div class="picker">
-          <h1 tabindex="-1">${classView ? `${t('nav.class')} ${escapeHtml(classroom.name)}` : t("student.whichHero")}</h1>
-          <p class="atelier-sub">${classView ? t('class.hint') : `${t("odyssey.studentSpace")} · ${t("student.tapName")}`}</p>
-          <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query || "")}" placeholder="${t("student.findName")}" aria-label="${t("student.findName")}" autocomplete="off" /></label>
+          <header class="picker-head">
+            <div class="picker-intro">
+              <h1 tabindex="-1">${classView ? `${t('nav.class')} ${escapeHtml(classroom.name)}` : t("student.whichHero")}</h1>
+              <p class="atelier-sub">${classView ? t('class.hint') : `${t("odyssey.studentSpace")} · ${t("student.tapName")}`}</p>
+            </div>
+            <div class="picker-tools">
+              <span class="picker-count">${t("class.heroCount", { count: classroom.pupils.length })}</span>
+              <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query || "")}" placeholder="${t("student.findName")}" aria-label="${t("student.findName")}" autocomplete="off" /></label>
+            </div>
+          </header>
           ${pupils.length ? `
           <div class="rune-grid picker-grid" role="list">
             ${pupils.map(item => renderRuneCard(item, selectedIds, { student:true, selecting:selectionMode })).join('')}

@@ -13,7 +13,9 @@ let hydrated = false;
 let persistTimer = 0;
 
 // Bake-proof the cache key on the live base so a base change never reuses old images.
-const KEY_PREFIX = `${VIEWER_REVISION}/${PORTRAIT_REVISION}`;
+// The framing revision retires portraits cropped to their silhouette.
+const FRAMING_REVISION = "fixed-frame-v1";
+const KEY_PREFIX = `${VIEWER_REVISION}/${PORTRAIT_REVISION}/${FRAMING_REVISION}`;
 const portraitKey = look => KEY_PREFIX + JSON.stringify(look);
 
 /* Keep the last portraits across reloads so the equipped look is on screen

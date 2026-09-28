@@ -1016,6 +1016,36 @@ input { caret-color: var(--cyan); }
 .rune-card .rune-card-foot { padding: 4px; gap: 2px; }
 .rune-card-foot .rune-act { flex: 1; justify-content: center; min-width: 0; }
 @media (max-width: 640px) { .student-card .dais-card { height: 245px; } }
+
+/* Class home: one header band (who / how many / find), then an airy grid.
+ * The grid keeps clear of the fixed teacher tab on the right edge. */
+.picker { gap: var(--s6); }
+.picker-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--s4) var(--s6); padding-bottom: var(--s5); border-bottom: 1px solid var(--line); }
+.picker-intro { display: grid; gap: var(--s2); min-width: 0; }
+.picker-tools { display: flex; flex: 0 1 auto; flex-wrap: nowrap; align-items: center; gap: var(--s4); }
+.picker-count { color: var(--muted); font: 500 13px/1.3 var(--font-display); letter-spacing: .06em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.picker-head .search { width: min(320px, 100%); }
+.picker-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--s6) var(--s5); }
+.student-card .rune-card-head { padding: 16px 18px 6px; border-top: 0; }
+.student-card .rune-card-title { padding: 0 18px 14px; }
+.student-card .rune-card-title .hero-title-tag { font-size: 17px; text-align: left; }
+.student-card .rune-card-title .hero-title-ribbon { justify-content: flex-start; }
+.student-card .rune-card-title .hero-title-tag[data-title-tier="1"] .title-ornament { display: none; }
+.student-card .rune-vitals { display: grid; gap: 6px; padding: 14px 18px 16px; border-top: 1px solid var(--line); }
+.student-card .rune-xp-label { margin: 4px 0 0; }
+.student-card .dais-card { border-bottom: 1px solid var(--line); }
+@media (min-width: 721px) {
+  .single:has(> .picker) { padding-inline: calc(var(--s6) + 44px); }
+}
+@media (max-width: 720px) {
+  .picker-head { align-items: stretch; }
+  .picker-tools { width: 100%; justify-content: space-between; }
+  .picker-head .search { flex: 1 1 200px; width: auto; }
+  .picker-grid { gap: var(--s4) var(--s3); }
+  .student-card .rune-card-head { padding: 12px 12px 4px; }
+  .student-card .rune-card-title { padding: 0 12px 10px; }
+  .student-card .rune-vitals { padding: 12px; }
+}
 .atelier-stage { scroll-margin-top: calc(var(--topbar-h) + 24px); }
 @media (min-width: 1101px) {
   .atelier-shop .atelier-stage { position: sticky; top: calc(var(--topbar-h) + 16px); }
