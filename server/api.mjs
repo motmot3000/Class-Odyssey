@@ -233,21 +233,6 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     return `teacher-${crypto.randomBytes(4).toString("hex")}`;
   }
 
-  /* Google sign-in creates a free username when the address local part is
-   * already taken, instead of refusing the account. */
-  function availableUsername(index, base) {
-    const candidate = /^[a-z0-9][a-z0-9._-]{2,31}$/.test(base) ? base : usernameFromEmail(base);
-    let username = candidate;
-    let counter = 2;
-    while (findByUsername(index, username)) {
-      const room = Math.max(3, 32 - String(counter).length - 1);
-      username = `${candidate.slice(0, room)}-${counter}`;
-      counter += 1;
-      if (counter > 1000) return `teacher-${crypto.randomBytes(4).toString("hex")}`;
-    }
-    return username;
-  }
-
   function parseStateFile(file) {
     const state = readJsonFile(file);
     if (!isStateDocument(state)) {
@@ -450,7 +435,6 @@ export function createApi({ dataDir, founderUsername, founderPassword, maxBackup
     findByUsername,
     findByEmail,
     usernameFromEmail,
-    availableUsername,
     normalizeUsername,
     usernameProblem,
     passwordProblem,

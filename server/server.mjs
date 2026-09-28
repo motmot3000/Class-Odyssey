@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import maxmind from "maxmind";
 import { createApi } from "./api.mjs";
 import { createGoogleAuth } from "./google.mjs";
-import { createSupportInbox } from "./support-inbox.mjs";
 import { createStaticHandler } from "./static.mjs";
 import { createMailer, passwordResetEmail } from "./mail.mjs";
 import { cleanSupportText, createSupportStore, supportLimits } from "./support.mjs";
@@ -175,9 +174,6 @@ export function createGameServer({
   api.ensureDir(dataDir);
   api.bootstrapAccounts();
   const serveStatic = createStaticHandler({ publicDir, dataDir });
-  const supportStore = fs.existsSync(path.join(__dirname, "support.mjs"))
-    ? import("./support.mjs").then(({ createSupportStore }) => createSupportStore({ dataDir }))
-    : Promise.resolve(createSupportInbox({ dataDir }));
   const geoReader = geoIpDbPath ? maxmind.open(geoIpDbPath).catch((error) => {
     console.warn(`GeoIP database unavailable: ${error.message}`);
     return null;
@@ -740,13 +736,11 @@ export function createGameServer({
       const reader = await geoReader;
       const accounts = await Promise.all(Object.values(index.accounts).map((account) => consoleAccount(account, counts, reader)));
       accounts.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      const support = await supportStore;
-      return sendJson(res, 200, { accounts, supportUnread: await support.unreadCount(), geoipAvailable: Boolean(reader), subscriptionsAvailable: false, updatedAt: new Date().toISOString() });
+      return sendJson(res, 200, { accounts, supportUnread: support.unreadCount(), geoipAvailable: Boolean(reader), subscriptionsAvailable: false, updatedAt: new Date().toISOString() });
     }
     if (req.method === "GET" && pathname === "/api/console/audit") return sendJson(res, 200, { entries: recentAudit() });
     if (pathname === "/api/console/support" && req.method === "GET") {
-      const support = await supportStore;
-      return sendJson(res, 200, { messages: await support.list(), unread: await support.unreadCount() });
+      return sendJson(res, 200, { messages: support.list(), unread: support.unreadCount() });
     }
     const supportMatch = pathname.match(/^\/api\/console\/support\/([0-9a-f]{16})$/);
     if (supportMatch && req.method === "PATCH") {
@@ -755,8 +749,7 @@ export function createGameServer({
       if (!Object.keys(payload).length || Object.keys(payload).some((key) => !["status", "note"].includes(key))) return sendJson(res, 400, { error: "unsupported fields" });
       if (Object.hasOwn(payload, "status") && !["open", "read", "done"].includes(payload.status)) return sendJson(res, 400, { error: "invalid status" });
       if (Object.hasOwn(payload, "note") && (typeof payload.note !== "string" || payload.note.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(payload.note))) return sendJson(res, 400, { error: "invalid note" });
-      const support = await supportStore;
-      const updated = await support.update(supportMatch[1], payload);
+      const updated = support.update(supportMatch[1], payload);
       if (!updated) return sendJson(res, 404, { error: "message not found" });
       audit("support.updated", updated.accountId);
       return sendJson(res, 200, { message: updated });
@@ -819,13 +812,13 @@ export function createGameServer({
       if (pathname === "/api/health" && req.method === "GET") return sendJson(res, 200, { ok: true });
       if (pathname === "/api/config" && req.method === "GET") return sendJson(res, 200, { google: google.enabled });
       if (pathname === "/api/auth/google" && req.method === "GET") return google.start(req, res);
-       if (pathname === "/api/auth/google/callback" && req.method === "GET") return await google.callback(req, res, (claims) => handleGoogleLogin(claims, req));
+      if (pathname === "/api/auth/google/callback" && req.method === "GET") return await google.callback(req, res, (claims) => handleGoogleLogin(claims, req));
       if (pathname === "/api/auth/google/exchange" && req.method === "POST") {
         const payload = await readJsonObject(req, res);
         if (!payload) return;
         const login = google.consumeExchangeCode(stringField(payload, "code"));
         if (!login) return sendJson(res, 400, { error: "google sign-in expired" });
-         return sendJson(res, 200, { ok: true, token: login.token, account: login.account, created: login.created === true });
+        return sendJson(res, 200, { ok: true, token: login.token, account: login.account, created: login.created === true });
       }
       if (pathname === "/api/accounts" && req.method === "POST") return await handleSignUp(req, res);
       if (pathname === "/api/session") {

@@ -3,7 +3,7 @@
  */
 
 import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
-import { escapeHtml, gearOf, translateReward, renderCustomOrders, renderLevel, renderTitle, renderTitleBackdrop, titleBackdropAttributes } from "../ui.mjs";
+import { escapeHtml, translateReward, renderCustomOrders, renderLevel, renderTitle, renderTitleBackdrop, titleBackdropAttributes } from "../ui.mjs";
 import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
@@ -422,11 +422,4 @@ export function renderOdysseyShop(pupil, ui) {
         </div>
       </div>
     </main>`;
-}
-
-export function renderOdysseyGear(pupil) {
-  return `
-    <dl class="gear">
-      ${gearOf(pupil).map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
-    </dl>`;
 }

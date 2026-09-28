@@ -43,17 +43,6 @@ const TYPE_LABEL = {
   bespoke: () => t("modal.type.bespoke")
 };
 
-export function renderAddClassDialog() {
-  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-class-title">
-    <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
-    <h2 id="add-class-title">${t('class.add.title')}</h2>
-    <form class="add-form" data-action="create-class">
-      <label class="field"><span>${t('class.add.name')}</span><input name="name" autocomplete="off" required maxlength="60" placeholder="${t('class.add.placeholder')}" autofocus /></label>
-      <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.add.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
-    </form>
-  </dialog>`;
-}
-
 export function renderAddPupilDialog(classroom) {  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
     <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
     <h2 id="add-pupil-title">${t('console.roster.add')}</h2>

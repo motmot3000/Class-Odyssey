@@ -470,23 +470,16 @@ function dispatchActionClick(event) {
 app.addEventListener("click", dispatchActionClick);
 dialogRoot.addEventListener("click", dispatchActionClick);
 
-app.addEventListener("submit", (event) => {
+function handleSubmit(event) {
   const form = event.target.closest("form[data-action]");
   if (!form) return;
   event.preventDefault();
   if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
   const action = FORMS[form.dataset.action];
   if (action) action(form);
-});
-
-dialogRoot.addEventListener("submit", (event) => {
-  const form = event.target.closest("form[data-action]");
-  if (!form) return;
-  event.preventDefault();
-  if (TEACHER_FORMS.has(form.dataset.action) && !allowTeacherAction()) return;
-  const action = FORMS[form.dataset.action];
-  if (action) action(form);
-});
+}
+app.addEventListener("submit", handleSubmit);
+dialogRoot.addEventListener("submit", handleSubmit);
 
 function handleInput(event) {
   const field = event.target;

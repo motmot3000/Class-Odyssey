@@ -711,10 +711,6 @@ export function getUnlockedSkins(level) {
   return SKINS.filter((skin) => skin.minLevel <= level);
 }
 
-export function getUnlockedTitles(level) {
-  return TITLES.filter((title) => title.minLevel <= level);
-}
-
 export function getRewardsForLevel(level) {
   const rewards = SHOP_ITEMS.filter((item) => item.minLevel === level).map((item) =>
     item.type === "title" ? `${item.name} title` : item.type === "hairColor" ? `${item.name} hair color` : item.type === "eyeColor" ? `${item.name} eye color` : item.name

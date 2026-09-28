@@ -19,6 +19,7 @@ export function escapeHtml(value) {
 
 const PATHS = {
   spark: `<path d="m10 2 2 5 5 3-5 2-2 6-2-6-5-2 5-3 2-5Z"/>`,
+  heroes: `<circle cx="7" cy="7" r="3"/><path d="M2 17c0-3 2.4-5 5-5s5 2 5 5Z"/><circle cx="14.5" cy="8" r="2.3"/><path d="M11.5 17c0-2.6 1.6-4.3 3.2-4.3S18 14.4 18 17Z"/>`,
   coin: `<circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="4.5"/><path d="m10 6 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/>`,
   palette: `<path d="M10 3a7 7 0 1 0 0 14h1a2 2 0 0 0 1-3.7 1.4 1.4 0 0 1 .8-2.6H15A3 3 0 0 0 18 8c0-3-4-5-8-5Z"/><circle cx="6" cy="9" r=".7"/><circle cx="8" cy="6" r=".7"/><circle cx="12" cy="6" r=".7"/>`,
   undo: `<path d="M4 9h9a4.5 4.5 0 0 1 0 9h-4"/><path d="M7.5 5.5 4 9l3.5 3.5"/>`,
