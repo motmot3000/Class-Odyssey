@@ -163,7 +163,8 @@ export function createGameServer({
   const support = supportOption ?? createSupportStore({ dataDir });
   const RESET_TTL_MS = 15 * 60 * 1000;
   const RESET_MAX_ATTEMPTS = 5;
-  const SUPPORT_CATEGORIES = new Set(["bug", "billing", "class", "account", "other"]);
+  // "user-bug" = reports sent from the in-app beta notice.
+  const SUPPORT_CATEGORIES = new Set(["user-bug", "bug", "billing", "class", "account", "other"]);
   const google = createGoogleAuth({
     clientId: googleClientId,
     clientSecret: googleClientSecret,

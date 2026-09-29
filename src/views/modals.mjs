@@ -69,7 +69,6 @@ export function renderNewClassDialog() {
     <p class="panel-note">${t('class.new.hint')}</p>
     <form class="add-form" data-action="create-class">
       <label class="field"><span>${t('class.new.name')}</span><input id="new-class-name" name="name" autocomplete="off" required autofocus /></label>
-      <label class="field"><span>${t('class.new.students')}</span><textarea name="students" rows="5" placeholder="${t('class.new.studentsPlaceholder')}"></textarea></label>
       <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.new.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
     </form>
   </dialog>`;

@@ -395,7 +395,7 @@ input { caret-color: var(--cyan); }
 }
 .lvl-seal small { font-size: 9px; letter-spacing: 0.08em; font-weight: 600; }
 .lvl-seal b { font-size: 20px; font-weight: 600; }
-.lvl-seal.big { min-width: 46px; height: 46px; font-size: 24px; }
+.lvl-seal.big { min-width: 60px; height: 60px; font-size: 32px; color: #1d1305; background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 82%, white), var(--amber)); border: 2px solid color-mix(in srgb, var(--amber) 60%, black); box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 28%, transparent); }
 .hero-role { font-size: 12px; color: var(--muted); position: relative; z-index: 2; margin-top: 4px; pointer-events: none; }
 
 /* ---------------- dais ---------------- */
@@ -992,8 +992,17 @@ input { caret-color: var(--cyan); }
 .picker-portrait { height: clamp(280px, 31vh, 350px); width: 100%; margin: 0; padding: 5px; object-fit: contain; background: var(--stage); }
 .picker-info { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 16px; border-top: 1px solid var(--line); }
 .picker-identity { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.picker-card .lvl-seal, .rune-card .lvl-seal { min-width: 30px; min-height: 34px; padding: 3px 5px; }
-.picker-card .lvl-seal b, .rune-card .lvl-seal b { font-size: 16px; }
+/* The level is the key progression signal: a filled amber crest that reads at a glance. */
+.picker-card .lvl-seal, .rune-card .lvl-seal { min-width: 50px; min-height: 56px; padding: 5px 8px 7px; gap: 1px; color: #1d1305; background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 82%, white), var(--amber)); border: 2px solid color-mix(in srgb, var(--amber) 60%, black); box-shadow: 0 0 0 2px color-mix(in srgb, var(--amber) 28%, transparent), 0 6px 16px rgba(0, 0, 0, 0.35); }
+.picker-card .lvl-seal small, .rune-card .lvl-seal small { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: inherit; opacity: 0.8; }
+.picker-card .lvl-seal b, .rune-card .lvl-seal b { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rune-card.is-selected .lvl-seal { color: #1d1305; }
+/* Light theme: the amber is a deep bronze, so the crest takes light ink. */
+:root[data-theme="light"] .picker-card .lvl-seal, :root[data-theme="light"] .rune-card .lvl-seal, :root[data-theme="light"] .lvl-seal.big { color: #fffaf0; }
+@media (max-width: 520px) {
+  .picker-card .lvl-seal, .rune-card .lvl-seal { min-width: 42px; min-height: 48px; }
+  .picker-card .lvl-seal b, .rune-card .lvl-seal b { font-size: 23px; }
+}
 .picker-card strong { font: 600 24px/1.2 var(--font-display); overflow-wrap: anywhere; min-width: 0; }
 .picker-card small { color: var(--muted); }
 .picker-card .lvl-seal small { color: var(--amber); }

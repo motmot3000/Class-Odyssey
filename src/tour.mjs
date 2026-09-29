@@ -363,14 +363,14 @@ export function createGuidedTour({ steps = [], labels = {}, onFinish, onExit, on
     apply();
   }
 
-  function start() {
+  function start(startIndex = 0) {
     if (running || !steps.length) return;
     running = true;
     buildDom();
     document.body.append(root);
     window.addEventListener("keydown", onKeydown);
     window.addEventListener("resize", onResize);
-    index = 0;
+    index = clamp(startIndex, 0, steps.length - 1);
     renderStep({ focus: true });
     resolve();
     spot.x = goal.x;
@@ -416,5 +416,5 @@ export function createGuidedTour({ steps = [], labels = {}, onFinish, onExit, on
     apply();
   }
 
-  return { start, next, prev, exit, refresh };
+  return { start, next, prev, exit, refresh, get index() { return index; } };
 }

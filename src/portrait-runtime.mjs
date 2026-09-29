@@ -1,7 +1,7 @@
 import { BASE_CATALOGUE_URL, VIEWER_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
 import { createSharedResource } from "./shared-resource.mjs";
 
-const MAX_CACHED_PORTRAITS = 64;
+const MAX_CACHED_PORTRAITS = 160;
 const PRELOAD_MARGIN = "120px";
 const STORAGE_KEY = "classquest.portrait-cache.v1";
 const MAX_PERSISTED_PORTRAITS = 48;
@@ -105,19 +105,19 @@ function showPortrait(image, url) {
   image.dataset.portraitReady = "true";
 }
 
-function requestPortrait(image) {
-  let look;
-  try { look = JSON.parse(image.dataset.look); } catch { return; }
-  const key = portraitKey(look);
-  const cached = cachedHeroPortrait(look);
-  if (cached) return showPortrait(image, cached);
+/* Keys rendered by the live 3D renderer during this session. Persisted entries
+ * may come from an older asset build, so class preloading never trusts them. */
+const fresh = new Set();
 
+function scheduleRender(look, { force = false } = {}) {
+  const key = portraitKey(look);
   if (!pending.has(key)) {
-    const targets = new Set([image]);
+    const targets = new Set();
     // Different looks share one WebGL context. Equal looks share one job;
-    // queued jobs are skipped when every interested DOM image has disappeared.
+    // queued jobs are skipped when every interested DOM image has disappeared
+    // (preload jobs are forced: nothing is on screen yet).
     const promise = queue.catch(() => {}).then(async () => {
-      if (![...targets].some(target => target.isConnected)) return null;
+      if (!force && ![...targets].some(target => target.isConnected)) return null;
       const renderer = await resource.get();
       if (!renderer) return null;
       try {
@@ -127,18 +127,56 @@ function requestPortrait(image) {
         renderer.setVisible(true);
         renderer.resize();
         const url = renderer.snapshot();
-        if (url) rememberPortrait(key, url);
-        else resource.reset();
+        if (url) {
+          rememberPortrait(key, url);
+          fresh.add(key);
+        } else resource.reset();
         return url;
       } finally {
         renderer.setVisible(false);
       }
     });
     queue = promise;
-    pending.set(key, { promise, targets });
+    pending.set(key, { promise, targets, force });
     promise.finally(() => pending.delete(key)).catch(() => {});
   }
-  const job = pending.get(key);
+  return pending.get(key);
+}
+
+/** True when every look already has a portrait rendered during this session. */
+export function heroPortraitsReady(looks) {
+  return looks.every(look => fresh.has(portraitKey(look)));
+}
+
+/** Render every look with the live 3D renderer before a class is shown, so
+ * cards never display a stale or unequipped image. Resolves even on failure
+ * (WebGL unavailable): the baked fallbacks are then the best available. */
+export async function preloadHeroPortraits(looks, onProgress = () => {}) {
+  hydrate();
+  // Progress counts every requested look (one per pupil), even when pupils share one.
+  const keys = looks.map(portraitKey);
+  const settled = new Set(keys.filter(key => fresh.has(key)));
+  const report = () => onProgress(keys.filter(key => settled.has(key)).length, keys.length);
+  const todo = [...new Map(looks.map(look => [portraitKey(look), look])).values()]
+    .filter(look => !settled.has(portraitKey(look)));
+  report();
+  for (const look of todo) {
+    try { await scheduleRender(look, { force: true }).promise; } catch { /* Keep going. */ }
+    settled.add(portraitKey(look));
+    report();
+  }
+}
+
+function requestPortrait(image) {
+  let look;
+  try { look = JSON.parse(image.dataset.look); } catch { return; }
+  const cached = cachedHeroPortrait(look);
+  if (cached) {
+    showPortrait(image, cached);
+    // A persisted image may predate the current assets: refresh it once.
+    if (fresh.has(portraitKey(look))) return;
+  }
+  const job = scheduleRender(look);
   job.targets.add(image);
   job.promise.then(url => showPortrait(image, url)).catch(() => {
     // Keep the baked current-model portrait if WebGL or loading is unavailable.

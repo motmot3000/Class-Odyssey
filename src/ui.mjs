@@ -44,7 +44,9 @@ const PATHS = {
   /* Same Lucide "book-open" as the rules button in the topbar, so the rules
    * emblem and its entry point share one mark. */
   bookOpen: `<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>`,
-  edit: `<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>`
+  edit: `<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>`,
+  bug: `<rect x="6.5" y="7" width="7" height="9.5" rx="3.5"/><path d="M8 7V5.8a2 2 0 0 1 4 0V7"/><path d="M10 10v6.5"/><path d="M3.5 9.5 6.5 10.5M16.5 9.5l-3 1M3.5 15l3-1.5M16.5 15l-3-1.5"/>`,
+  coffee: `<path d="M4 8h10v4.5A4.5 4.5 0 0 1 9.5 17h-1A4.5 4.5 0 0 1 4 12.5Z"/><path d="M14 9.5h1a2.2 2.2 0 0 1 0 4.4h-1.3"/><path d="M7 3.5c-.6.8.6 1.4 0 2.3M10 3.5c-.6.8.6 1.4 0 2.3"/>`
 };
 const VIEWBOXES = { bookOpen: "0 0 24 24", edit: "0 0 24 24" };
 

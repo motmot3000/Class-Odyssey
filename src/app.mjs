@@ -15,6 +15,7 @@ import {
   clearSelection,
   createInitialState,
   createClass,
+  getClassById,
   getCurrentClass,
   getPupilById,
   getRewardsBetween,
@@ -73,11 +74,14 @@ import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
 import { renderAddPupilDialog, renderHelpDialog, renderItemDialog, renderNewClassDialog, renderPasswordResetDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
+import { renderBetaNotice, renderBugReportDialog, renderCoffeeDialog } from "./views/beta.mjs";
+import { SUPPORT, supportUrl } from "./support-links.mjs";
 import { createGuidedTour } from "./tour.mjs";
 import { enableDragScroll } from "./touch-scroll.mjs";
 import { TERMS_VERSION } from "./terms.mjs";
 import { mountCharacterViewer } from "./character-runtime.mjs";
-import { mountHeroPortraits } from "./portrait-runtime.mjs";
+import { mountHeroPortraits, preloadHeroPortraits, heroPortraitsReady } from "./portrait-runtime.mjs";
+import { pupilLook } from "./items-3d-model.mjs";
 import {
   renderOdysseyTopbar,
   renderOdysseyNoClass,
@@ -223,7 +227,7 @@ function navigate(hash) {
 }
 
 window.addEventListener("hashchange", () => {
-  if (activeTour && app.dataset.view !== currentView()) endSetupTour({ complete: true, silent: true });
+  const resumeTour = handOverTour(currentView());
   closeDialog({ resumeConsole: false });
   ui.query = "";
   ui.consoleOpen = false;
@@ -234,6 +238,7 @@ window.addEventListener("hashchange", () => {
   window.scrollTo({ top: 0 });
   if (currentView() === "admin") loadAdminAccounts();
   else render();
+  resumeTour?.();
 });
 
 /* ---------- Rendering ---------- */
@@ -251,6 +256,7 @@ function render() {
   app.innerHTML = `
     ${renderOdysseyTopbar({ view, state, account, unlocked: isAdultUnlocked() })}
     ${renderConflict()}
+    ${view === "class" || view === "rules" ? renderBetaNotice() : ""}
     ${renderViewBody(view)}
     ${renderAppFooter()}
   `;
@@ -295,11 +301,84 @@ function revealCookieControls() {
 function renderOdysseyBody(view) {
   const classroom = getCurrentClass(state);
   if (!classroom) return renderOdysseyNoClass();
+  if (!ensureClassPortraits(classroom)) return renderClassLoading(classroom);
   const pupil = ui.odysseyView === 'board' ? null : getStudentPupil(classroom);
   if (pupil && ui.odysseyView === "shop") return renderOdysseyShop(pupil, ui);
   if (pupil && ui.odysseyView === "personalize") return renderOdysseyPersonalize(pupil, ui);
   return renderOdysseyStudent({ classroom, ui, pupil, classView:true,
     selectionMode:ui.teacherDialog === 'console' && isAdultUnlocked(), selectedIds:state.selectedPupilIds });
+}
+
+/* ---------- Class portrait preloading ----------
+ * Every hero portrait of a class is rendered by the live 3D renderer before
+ * the class is shown, so cards never flash a stale or unequipped image.
+ * A class is gated only the first time it is opened in this session; later
+ * look changes refresh lazily on their card. */
+const readyClasses = new Set();
+let classLoading = null;
+
+function ensureClassPortraits(classroom) {
+  if (readyClasses.has(classroom.id)) return true;
+  const looks = classroom.pupils.map(pupil => pupilLook(pupil));
+  if (heroPortraitsReady(looks)) {
+    readyClasses.add(classroom.id);
+    return true;
+  }
+  if (classLoading?.classId !== classroom.id) startClassLoading(classroom.id);
+  return false;
+}
+
+function startClassLoading(classId) {
+  const job = { classId, done: 0, total: 0 };
+  classLoading = job;
+  const run = async () => {
+    // Loop: the server bootstrap may replace the class while we render.
+    for (let pass = 0; pass < 3; pass += 1) {
+      const classroom = getClassById(state, classId);
+      if (!classroom) break;
+      const looks = classroom.pupils.map(pupil => pupilLook(pupil));
+      if (heroPortraitsReady(looks)) break;
+      await preloadHeroPortraits(looks, (done, total) => {
+        if (classLoading !== job) return;
+        job.done = done;
+        job.total = total;
+        updateClassLoadingBar(job);
+      });
+    }
+  };
+  // Never keep a class locked behind a stuck renderer.
+  const timeout = new Promise(resolve => setTimeout(resolve, 90000));
+  Promise.race([run(), timeout]).catch(() => {}).finally(() => {
+    if (classLoading !== job) return;
+    readyClasses.add(classId);
+    classLoading = null;
+    render();
+  });
+}
+
+function renderClassLoading(classroom) {
+  const job = classLoading || { done: 0, total: classroom.pupils.length };
+  const percent = job.total ? Math.round((job.done / job.total) * 100) : 0;
+  return `<main class="single class-loading" aria-busy="true">
+    <div class="class-loading-card" role="status" aria-live="polite">
+      <h1>${t("class.loading.title")}</h1>
+      <p class="class-loading-name">${escapeHtml(classroom.name)}</p>
+      <div class="class-loading-track" role="progressbar" aria-label="${t("class.loading.title")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>
+      <p class="class-loading-count" data-class-loading-count>${t("class.loading.progress", { done: job.done, total: job.total || classroom.pupils.length })}</p>
+    </div>
+  </main>`;
+}
+
+function updateClassLoadingBar(job) {
+  const card = app.querySelector(".class-loading-card");
+  if (!card) return;
+  const percent = job.total ? Math.round((job.done / job.total) * 100) : 0;
+  const track = card.querySelector(".class-loading-track");
+  track?.setAttribute("aria-valuenow", String(percent));
+  const fill = track?.querySelector("i");
+  if (fill) fill.style.width = `${percent}%`;
+  const count = card.querySelector("[data-class-loading-count]");
+  if (count) count.textContent = t("class.loading.progress", { done: job.done, total: job.total });
 }
 
 function syncOdysseyRuntime() {
@@ -739,6 +818,17 @@ const ACTIONS = {
     ui.openPanels.add("account");
     openTeacherConsole();
   },
+  "open-bug-report": () => {
+    ui.helpPending = false;
+    showDialog(renderBugReportDialog());
+  },
+  "open-coffee": () => showDialog(renderCoffeeDialog()),
+  "coffee-pay": (el) => {
+    const amount = dialogRoot.querySelector('input[name="coffee-amount"]:checked')?.value || SUPPORT.defaultAmount;
+    const url = supportUrl(el.dataset.method, amount);
+    if (!url) return toast(t("beta.coffee.soon"), "info");
+    window.open(url, "_blank", "noopener,noreferrer");
+  },
   "open-help": () => {
     ui.helpPending = false;
     showDialog(renderHelpDialog({ email: account?.email || "" }));
@@ -1159,6 +1249,38 @@ const FORMS = {
     toast(t("settings.help.sent"), "success");
   },
 
+  "send-bug-report": async (form) => {
+    if (ui.helpPending) return;
+    const data = new FormData(form);
+    const description = String(data.get("message") || "").trim();
+    if (!description) {
+      toast(t("settings.help.empty"), "info");
+      form.querySelector('textarea[name="message"]')?.focus();
+      return;
+    }
+    // Context the developer needs to reproduce the report.
+    const context = [
+      `Vue : ${currentView()}${ui.odysseyView && ui.odysseyView !== "board" ? ` / ${ui.odysseyView}` : ""}`,
+      `Classe : ${getCurrentClass(state)?.pupils.length ?? 0} élève(s)`,
+      `Langue : ${getLang()}`,
+      `Écran : ${window.innerWidth}×${window.innerHeight} @${window.devicePixelRatio || 1}x`,
+      `Navigateur : ${navigator.userAgent}`
+    ].join("\n");
+    ui.helpPending = true;
+    const submit = form.querySelector('[type="submit"]');
+    if (submit) submit.disabled = true;
+    const result = await sendSupportMessage({
+      category: "user-bug",
+      subject: String(data.get("subject") || ""),
+      message: `${description}\n\n— Contexte —\n${context}`
+    });
+    ui.helpPending = false;
+    if (submit) submit.disabled = false;
+    if (!result.ok) return toast(result.error, "error");
+    closeDialog({ resumeConsole: false });
+    toast(t("beta.bug.sent"), "success");
+  },
+
   "admin-reset": async (form) => {
     const password = String(new FormData(form).get("password") || "");
     const problem = validateNewPassword(password, password);
@@ -1227,11 +1349,8 @@ const FORMS = {
       form.querySelector("#new-class-name")?.focus();
       return;
     }
-    const students = String(data.get("students") || "")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const next = createClass(state, { name, students });
+    // Only the class name here: pupils are created afterwards from the teacher console.
+    const next = createClass(state, { name });
     if (next === state) return;
     closeDialog({ resumeConsole:false });
     ui.odysseyView = "board";
@@ -1711,24 +1830,76 @@ function setupTourSteps() {
   ];
 }
 
-function startSetupTour() {
+// Index of the main tour step that points at the rules button.
+const RULES_TOUR_STEP = 1;
+
+function tourLabels(overrides = {}) {
+  return {
+    next: t("onboarding.next"),
+    prev: t("onboarding.prev"),
+    finish: t("onboarding.finish"),
+    skip: t("onboarding.skip"),
+    close: t("onboarding.close"),
+    progress: (current, total) => t("onboarding.step", { current, total }),
+    ...overrides
+  };
+}
+
+function markOnboardingSeen(reason) {
+  // "pause" hands over to another part of the tour; it is not an exit.
+  // "finish" is handled by each tour's onFinish (the rules tour hands back).
+  if (reason === "pause" || reason === "finish") return;
+  if (account && !onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
+}
+
+function startSetupTour(startIndex = 0) {
   if (!account || activeTour) return;
   activeTour = createGuidedTour({
     steps: setupTourSteps(),
-    labels: {
-      next: t("onboarding.next"),
-      prev: t("onboarding.prev"),
-      finish: t("onboarding.finish"),
-      skip: t("onboarding.skip"),
-      close: t("onboarding.close"),
-      progress: (current, total) => t("onboarding.step", { current, total })
-    },
+    labels: tourLabels(),
     onFinish: () => finishOnboarding(),
-    onExit: () => {
-      if (account && !onboardingState().completed) persistSettings({ onboarding: { completed: true, step: ONBOARDING_LAST_STEP + 1 } });
-    }
+    onExit: markOnboardingSeen
   });
+  activeTour.kind = "main";
+  activeTour.start(startIndex);
+}
+
+/* Opening the rules from the tour continues the tour inside the rules page,
+ * then "Next" brings the teacher back to the class at the following step. */
+function startRulesTour() {
+  if (!account || activeTour) return;
+  activeTour = createGuidedTour({
+    steps: [
+      { target: ".rules-change", title: t("onboarding.rulesPage.edit.title"), body: t("onboarding.rulesPage.edit.body") },
+      { target: ".rules-rewards", title: t("onboarding.rulesPage.own.title"), body: t("onboarding.rulesPage.own.body") },
+      { target: ".rules-back .btn", title: t("onboarding.rulesPage.back.title"), body: t("onboarding.rulesPage.back.body") }
+    ],
+    labels: tourLabels({ finish: t("onboarding.next") }),
+    onFinish: () => {
+      // Leaving the rules resumes the main tour from the hashchange handler.
+      showClassRoster();
+    },
+    onExit: markOnboardingSeen
+  });
+  activeTour.kind = "rules";
   activeTour.start();
+}
+
+/* Route changes normally end the tour. Rules <-> class switches during the
+ * tour instead hand over between the main tour and the rules tour. */
+function handOverTour(nextView) {
+  if (!activeTour || app.dataset.view === nextView) return null;
+  const tour = activeTour;
+  let resume = null;
+  if (tour.kind === "main" && nextView === "rules") resume = () => startRulesTour();
+  else if (tour.kind === "rules" && nextView === "class") resume = () => startSetupTour(RULES_TOUR_STEP + 1);
+  if (!resume) {
+    endSetupTour({ complete: true, silent: true });
+    return null;
+  }
+  activeTour = null;
+  try { tour.exit("pause"); } catch { /* already gone */ }
+  return resume;
 }
 
 function openAccount(next) {
