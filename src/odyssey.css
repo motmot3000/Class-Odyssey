@@ -1009,8 +1009,10 @@ input { caret-color: var(--cyan); }
 .viewer-error { position: absolute; inset: auto 12% 22px; color: var(--muted); font-size: 12px; text-align: center; }
 
 /* Portraits and product cards all come from the same current 3D catalogue. */
-.portrait-render-host { position: fixed; left: -10000px; top: 0; width: 512px; height: 768px; overflow: hidden; pointer-events: none; }
-.portrait-render-host canvas { display: block; width: 100%; height: 100%; }
+/* Parking spot of the shared 3D engine between hero sheets: off-screen but
+ * sized, so portrait snapshots always render at a real resolution. */
+.odyssey-engine-host { position: fixed; left: -10000px; top: 0; width: 512px; height: 768px; overflow: hidden; pointer-events: none; }
+.odyssey-engine-host canvas { display: block; width: 100%; height: 100%; }
 .shop-thumb .item-thumbnail { display: block; width: 100%; height: 144px; object-fit: contain; padding: 8px; }
 .cosmetic-swatch { display: block; width: 64px; height: 64px; border-radius: 50%; background: var(--swatch); border: 1px solid var(--line-2); }
 .empty-slot-preview { display: grid; place-items: center; width: 64px; height: 64px; color: var(--muted); }

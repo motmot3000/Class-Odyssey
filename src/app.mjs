@@ -98,7 +98,9 @@ import {
   setOdysseyRotation,
   setOdysseyTheme,
   retryOdysseyViewer,
-  setOdysseyFreeViewHandler
+  setOdysseyFreeViewHandler,
+  ensureHeroViewer,
+  heroViewerLoaded
 } from "./odyssey-runtime.mjs";
 import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i18n.mjs";
 
@@ -309,45 +311,54 @@ function renderOdysseyBody(view) {
     selectionMode:ui.teacherDialog === 'console' && isAdultUnlocked(), selectedIds:state.selectedPupilIds });
 }
 
-/* ---------- Class portrait preloading ----------
- * Every hero portrait of a class is rendered by the live 3D renderer before
- * the class is shown, so cards never flash a stale or unequipped image.
- * A class is gated only the first time it is opened in this session; later
- * look changes refresh lazily on their card. */
+/* ---------- Application 3D loading ----------
+ * The first time a class with heroes opens in a session, the app loads the
+ * shared 3D engine (the ~190 MB Blender catalogue: phase 1, real download
+ * percentage), then renders every hero portrait with it (phase 2, X / N).
+ * Afterwards the class shows real renders and every hero sheet opens
+ * instantly. Once the engine is up, later classes and new heroes render
+ * lazily on their cards, which is fast. */
 const readyClasses = new Set();
 let classLoading = null;
+// Engine download weighs far more than the per-hero renders.
+const ENGINE_SHARE = 80;
 
 function ensureClassPortraits(classroom) {
   if (readyClasses.has(classroom.id)) return true;
-  const looks = classroom.pupils.map(pupil => pupilLook(pupil));
-  if (heroPortraitsReady(looks)) {
+  if (classLoading?.classId === classroom.id) return false;
+  if (!classroom.pupils.length || heroViewerLoaded()) {
     readyClasses.add(classroom.id);
     return true;
   }
-  if (classLoading?.classId !== classroom.id) startClassLoading(classroom.id);
+  startClassLoading(classroom.id);
   return false;
 }
 
 function startClassLoading(classId) {
-  const job = { classId, done: 0, total: 0 };
+  const job = { classId, phase: "engine", engine: 0, done: 0, total: 0 };
   classLoading = job;
+  const update = () => { if (classLoading === job) updateClassLoadingBar(job); };
   const run = async () => {
+    const engineOk = await ensureHeroViewer((percent) => { job.engine = percent; update(); })
+      .then(() => true, () => false);
+    if (!engineOk || classLoading !== job) return;
+    job.engine = 100;
+    job.phase = "heroes";
     // Loop: the server bootstrap may replace the class while we render.
     for (let pass = 0; pass < 3; pass += 1) {
       const classroom = getClassById(state, classId);
-      if (!classroom) break;
+      if (!classroom || classLoading !== job) return;
       const looks = classroom.pupils.map(pupil => pupilLook(pupil));
-      if (heroPortraitsReady(looks)) break;
+      if (heroPortraitsReady(looks)) return;
       await preloadHeroPortraits(looks, (done, total) => {
-        if (classLoading !== job) return;
         job.done = done;
         job.total = total;
-        updateClassLoadingBar(job);
+        update();
       });
     }
   };
-  // Never keep a class locked behind a stuck renderer.
-  const timeout = new Promise(resolve => setTimeout(resolve, 90000));
+  // Never keep the class locked behind a stuck download or renderer.
+  const timeout = new Promise(resolve => setTimeout(resolve, 180000));
   Promise.race([run(), timeout]).catch(() => {}).finally(() => {
     if (classLoading !== job) return;
     readyClasses.add(classId);
@@ -356,15 +367,26 @@ function startClassLoading(classId) {
   });
 }
 
+function classLoadingStatus(job) {
+  if (job.phase === "engine") {
+    return { percent: Math.round(job.engine * ENGINE_SHARE / 100), label: t("class.loading.engine", { percent: job.engine }) };
+  }
+  const heroes = job.total ? job.done / job.total : 0;
+  return {
+    percent: Math.round(ENGINE_SHARE + heroes * (100 - ENGINE_SHARE)),
+    label: t("class.loading.heroes", { done: job.done, total: job.total })
+  };
+}
+
 function renderClassLoading(classroom) {
-  const job = classLoading || { done: 0, total: classroom.pupils.length };
-  const percent = job.total ? Math.round((job.done / job.total) * 100) : 0;
+  const { percent, label } = classLoadingStatus(classLoading || { phase: "engine", engine: 0 });
   return `<main class="single class-loading" aria-busy="true">
     <div class="class-loading-card" role="status" aria-live="polite">
       <h1>${t("class.loading.title")}</h1>
       <p class="class-loading-name">${escapeHtml(classroom.name)}</p>
       <div class="class-loading-track" role="progressbar" aria-label="${t("class.loading.title")}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><i style="width:${percent}%"></i></div>
-      <p class="class-loading-count" data-class-loading-count>${t("class.loading.progress", { done: job.done, total: job.total || classroom.pupils.length })}</p>
+      <p class="class-loading-count" data-class-loading-count>${label}</p>
+      <p class="class-loading-hint">${t("class.loading.hint")}</p>
     </div>
   </main>`;
 }
@@ -372,13 +394,13 @@ function renderClassLoading(classroom) {
 function updateClassLoadingBar(job) {
   const card = app.querySelector(".class-loading-card");
   if (!card) return;
-  const percent = job.total ? Math.round((job.done / job.total) * 100) : 0;
+  const { percent, label } = classLoadingStatus(job);
   const track = card.querySelector(".class-loading-track");
   track?.setAttribute("aria-valuenow", String(percent));
   const fill = track?.querySelector("i");
   if (fill) fill.style.width = `${percent}%`;
   const count = card.querySelector("[data-class-loading-count]");
-  if (count) count.textContent = t("class.loading.progress", { done: job.done, total: job.total });
+  if (count) count.textContent = label;
 }
 
 function syncOdysseyRuntime() {

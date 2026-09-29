@@ -1,5 +1,5 @@
-import { BASE_CATALOGUE_URL, VIEWER_REVISION, PORTRAIT_REVISION, DEFAULT_LOOK } from "./items-3d-model.mjs";
-import { createSharedResource } from "./shared-resource.mjs";
+import { VIEWER_REVISION, PORTRAIT_REVISION } from "./items-3d-model.mjs";
+import { portraitSnapshot } from "./odyssey-runtime.mjs";
 
 const MAX_CACHED_PORTRAITS = 160;
 const PRELOAD_MARGIN = "120px";
@@ -67,32 +67,6 @@ export function cachedHeroPortrait(look) {
   return url;
 }
 
-const resource = createSharedResource(async () => {
-  const host = document.createElement("div");
-  host.className = "portrait-render-host";
-  host.setAttribute("aria-hidden", "true");
-  document.body.append(host);
-  try {
-    let ownedResource;
-    const { createHeroViewer } = await import(new URL(`../assets/odyssey/viewer.js?v=${VIEWER_REVISION}`, import.meta.url).href);
-    const renderer = await createHeroViewer(host, BASE_CATALOGUE_URL, DEFAULT_LOOK, {
-      theme: "light",
-      onError: () => { if (ownedResource && resource.peek() === ownedResource) resource.reset(); }
-    });
-    ownedResource = {
-      ...renderer,
-      destroy() {
-        renderer.destroy();
-        host.remove();
-      }
-    };
-    return ownedResource;
-  } catch (error) {
-    host.remove();
-    throw error;
-  }
-});
-
 function rememberPortrait(key, url) {
   cache.set(key, url);
   while (cache.size > MAX_CACHED_PORTRAITS) cache.delete(cache.keys().next().value);
@@ -113,28 +87,17 @@ function scheduleRender(look, { force = false } = {}) {
   const key = portraitKey(look);
   if (!pending.has(key)) {
     const targets = new Set();
-    // Different looks share one WebGL context. Equal looks share one job;
-    // queued jobs are skipped when every interested DOM image has disappeared
-    // (preload jobs are forced: nothing is on screen yet).
+    // Snapshots share the app's single 3D engine, one at a time. Equal looks
+    // share one job; queued jobs are skipped when every interested DOM image
+    // has disappeared (preload jobs are forced: nothing is on screen yet).
     const promise = queue.catch(() => {}).then(async () => {
       if (!force && ![...targets].some(target => target.isConnected)) return null;
-      const renderer = await resource.get();
-      if (!renderer) return null;
-      try {
-        renderer.applyState(look);
-        renderer.setAngle("front");
-        renderer.setRotation(false);
-        renderer.setVisible(true);
-        renderer.resize();
-        const url = renderer.snapshot();
-        if (url) {
-          rememberPortrait(key, url);
-          fresh.add(key);
-        } else resource.reset();
-        return url;
-      } finally {
-        renderer.setVisible(false);
+      const url = await portraitSnapshot(look);
+      if (url) {
+        rememberPortrait(key, url);
+        fresh.add(key);
       }
+      return url;
     });
     queue = promise;
     pending.set(key, { promise, targets, force });
@@ -148,9 +111,8 @@ export function heroPortraitsReady(looks) {
   return looks.every(look => fresh.has(portraitKey(look)));
 }
 
-/** Render every look with the live 3D renderer before a class is shown, so
- * cards never display a stale or unequipped image. Resolves even on failure
- * (WebGL unavailable): the baked fallbacks are then the best available. */
+/** Render every look with the shared 3D engine (load it first with
+ * ensureHeroViewer). Resolves even on failure: the baked fallbacks remain. */
 export async function preloadHeroPortraits(looks, onProgress = () => {}) {
   hydrate();
   // Progress counts every requested look (one per pupil), even when pupils share one.
