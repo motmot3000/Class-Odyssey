@@ -694,8 +694,12 @@ export function getCurrentClass(state) {
   return getClassById(state, state.activeClassId) || state.classes[0];
 }
 
+// Level 1 -> 2 costs 1000 XP, then each level costs 200 XP more than the previous one.
+export const XP_FIRST_LEVEL = 1000;
+export const XP_LEVEL_STEP = 200;
+
 export function xpNeededForLevel(level) {
-  return 1000 + Math.max(0, level - 1) * 500;
+  return XP_FIRST_LEVEL + Math.max(0, level - 1) * XP_LEVEL_STEP;
 }
 
 export function xpProgress(pupil) {
@@ -846,7 +850,7 @@ function applyXp(pupil, amount) {
   const total = Math.min(MAX_COUNTER, pupil.xp + amount);
   // Costs form an arithmetic series. Binary search avoids a potentially huge
   // per-level loop for imported counters or large teacher awards.
-  const cost = count => count * xpNeededForLevel(pupil.level) + 250 * count * (count - 1);
+  const cost = count => count * xpNeededForLevel(pupil.level) + (XP_LEVEL_STEP / 2) * count * (count - 1);
   let low = 0;
   let high = Math.floor(total / xpNeededForLevel(pupil.level)) + 1;
   while (high - low > 1) {

@@ -64,7 +64,7 @@ test("large XP awards use bounded work and preserve the progression formula", ()
   const old = getCurrentClass(state).pupils[0];
   const next = getPupilById(awardXp(state, [old.id], 1e12), old.id);
   const gained = next.level - old.level;
-  const spent = gained * xpNeededForLevel(old.level) + 250 * gained * (gained - 1);
+  const spent = gained * xpNeededForLevel(old.level) + 100 * gained * (gained - 1);
   assert.equal(next.xp + spent, old.xp + 1e12);
   assert.ok(next.xp >= 0 && next.xp < xpNeededForLevel(next.level));
   assert.ok(getRewardsBetween(1, next.level).length < 100);
