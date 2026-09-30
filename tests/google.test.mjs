@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { createGameServer } from "../server/server.mjs";
 import { createGoogleAuth, decodeIdToken, claimsProblem } from "../server/google.mjs";
+import { TERMS_VERSION } from "../src/terms.mjs";
 
 const FOUNDER = { username: "founder.test", password: "founder-secret" };
 const CLIENT_ID = "class-odyssey.apps.googleusercontent.com";
@@ -120,7 +121,7 @@ test("Google sign-in creates an account from the verified email, then reuses it"
     });
     assert.equal(accepted.status, 200);
     const acceptedPayload = await accepted.json();
-    assert.equal(acceptedPayload.account.terms.version, "2026-09-18");
+    assert.equal(acceptedPayload.account.terms.version, TERMS_VERSION);
     assert.ok(acceptedPayload.account.terms.acceptedAt);
     // Accepting twice keeps the first timestamp.
     const again = await (await fetch(`${app.base}/api/account/terms`, {

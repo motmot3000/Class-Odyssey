@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { createGameServer, startServer } from "../server/server.mjs";
+import { TERMS_VERSION } from "../src/terms.mjs";
 
 const FOUNDER = { username: "founder.test", password: "founder-secret" };
 
@@ -382,7 +383,7 @@ test("account settings and email persist per account and stay changeable", async
     assert.equal(emailOnly.response.status, 201);
     assert.equal(emailOnly.payload.account.username, emailOnly.payload.account.email);
     assert.equal(emailOnly.payload.account.displayName, "marie.dupont");
-    assert.equal(emailOnly.payload.account.terms.version, "2026-09-18");
+    assert.equal(emailOnly.payload.account.terms.version, TERMS_VERSION);
     assert.ok(emailOnly.payload.account.terms.acceptedAt);
     const emailSignin = await app.request("/api/session", { method: "POST", body: { username: "Marie.Dupont@example.test", password: "password" } });
     assert.equal(emailSignin.response.status, 200);

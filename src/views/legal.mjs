@@ -25,6 +25,7 @@ const MENTIONS_LEGALES = {
           <p><strong>Thomas Wünsche</strong>, activité indépendante, Suisse.</p>
           <ul>
             <li><strong>Titulaire :</strong> Thomas Wünsche</li>
+            <li><strong>Forme juridique :</strong> entreprise individuelle (activité indépendante)</li>
             <li><strong>Adresse :</strong> 13 chemin des Troènes, 1213 Petit-Lancy, Genève, Suisse</li>
             <li><strong>Email :</strong> ${MAILTO}</li>
             <li><strong>Site :</strong> <a href="${SITE}">${SITE_LABEL}</a></li>
@@ -51,7 +52,8 @@ const MENTIONS_LEGALES = {
       },
       {
         heading: "Statut de l'application et tarification",
-        body: `<p>Class Odyssey est actuellement proposé en <strong>version bêta</strong>. L'accès est <strong>gratuit pour le moment</strong> et pourrait devenir payant à l'avenir. Les fonctionnalités, les conditions d'accès et les tarifs peuvent évoluer à tout moment et sans préavis. En version bêta, des bugs, des interruptions ou des pertes de données ne peuvent être exclus ; il est recommandé d'exporter régulièrement une sauvegarde de vos classes.</p>`
+        body: `<p>Class Odyssey est actuellement proposé en <strong>version bêta</strong>. L'accès est <strong>gratuit pour le moment</strong> : aucun paiement n'est demandé à ce jour. Des offres payantes (achat ponctuel ou abonnement) pourraient être proposées à l'avenir. Les fonctionnalités, les conditions d'accès et les tarifs peuvent évoluer, sous réserve des règles applicables aux offres payantes décrites dans les <a href="#conditions-utilisation">Conditions d'utilisation</a>. En version bêta, des bugs, des interruptions ou des pertes de données ne peuvent être exclus ; il est recommandé d'exporter régulièrement une sauvegarde de vos classes.</p>
+          <p>Le cas échéant, les prix sont indiqués en francs suisses (CHF) et les paiements en ligne sont traités par le prestataire de paiement Stripe (cartes bancaires, TWINT), comme décrit dans les <a href="#conditions-utilisation">Conditions d'utilisation</a> et la <a href="#politique-de-confidentialite">Politique de confidentialité</a>.</p>`
       },
       {
         heading: "Liens hypertextes",
@@ -91,6 +93,7 @@ const MENTIONS_LEGALES = {
           <p><strong>Thomas Wünsche</strong>, independent activity, Switzerland.</p>
           <ul>
             <li><strong>Owner:</strong> Thomas Wünsche</li>
+            <li><strong>Legal form:</strong> sole proprietorship (independent activity)</li>
             <li><strong>Address:</strong> 13 chemin des Troènes, 1213 Petit-Lancy, Geneva, Switzerland</li>
             <li><strong>Email:</strong> ${MAILTO}</li>
             <li><strong>Website:</strong> <a href="${SITE}">${SITE_LABEL}</a></li>
@@ -117,7 +120,8 @@ const MENTIONS_LEGALES = {
       },
       {
         heading: "Application status and pricing",
-        body: `<p>Class Odyssey is currently offered as a <strong>beta version</strong>. Access is <strong>free for the time being</strong> and may become paid in the future. Features, access conditions and pricing may change at any time without notice. In a beta version, bugs, interruptions or data loss cannot be ruled out; exporting a backup of your classes regularly is recommended.</p>`
+        body: `<p>Class Odyssey is currently offered as a <strong>beta version</strong>. Access is <strong>free for the time being</strong>: no payment is requested today. Paid offers (a one-off purchase or a subscription) may be offered in the future. Features, access conditions and pricing may change, subject to the rules for paid offers set out in the <a href="#conditions-utilisation">Terms of use</a>. In a beta version, bugs, interruptions or data loss cannot be ruled out; exporting a backup of your classes regularly is recommended.</p>
+          <p>Where applicable, prices are shown in Swiss francs (CHF) and online payments are processed by the payment provider Stripe (bank cards, TWINT), as described in the <a href="#conditions-utilisation">Terms of use</a> and the <a href="#politique-de-confidentialite">Privacy policy</a>.</p>`
       },
       {
         heading: "Hyperlinks",
@@ -152,7 +156,7 @@ const CONDITIONS = {
     kicker: "Cadre d'utilisation",
     title: "Conditions d'utilisation",
     lede: "Les règles qui encadrent la création d'un compte et l'usage de Class Odyssey.",
-    updated: "18 septembre 2026",
+    updated: "29 septembre 2026",
     sections: [
       {
         heading: "Objet et acceptation",
@@ -185,7 +189,39 @@ const CONDITIONS = {
       },
       {
         heading: "Disponibilité et version bêta",
-        body: `<p>Le service est proposé en <strong>version bêta</strong>, gratuitement pour le moment. L'éditeur s'efforce de le maintenir disponible et à jour, sans garantir une disponibilité ininterrompue ni l'absence d'erreurs ou de pertes de données. Il est recommandé d'exporter régulièrement une sauvegarde de ses classes. Les fonctionnalités et les conditions d'accès peuvent évoluer à tout moment.</p>`
+        body: `<p>Le service est proposé en <strong>version bêta</strong>, gratuitement pour le moment. L'éditeur s'efforce de le maintenir disponible et à jour, sans garantir une disponibilité ininterrompue ni l'absence d'erreurs ou de pertes de données. Il est recommandé d'exporter régulièrement une sauvegarde de ses classes. Les fonctionnalités et les conditions d'accès peuvent évoluer à tout moment, sous réserve des règles applicables aux offres payantes ci-dessous.</p>`
+      },
+      {
+        heading: "Offres payantes et prix",
+        body: `
+          <p>Class Odyssey est <strong>gratuit pour le moment</strong> : aucun paiement n'est demandé à ce jour. Les clauses de cette section et des trois suivantes ne s'appliquent qu'à partir de l'introduction d'offres payantes (achat ponctuel ou abonnement), dont les caractéristiques, la durée et le prix sont alors présentés avant toute commande.</p>
+          <p>Les prix sont indiqués en <strong>francs suisses (CHF)</strong>. Si l'éditeur est assujetti à la TVA, celle-ci est mentionnée avant la validation de la commande. Le prix applicable est celui affiché au moment de la commande.</p>
+          <p>Un achat ou un abonnement confère à l'utilisateur un droit d'utilisation personnel, non exclusif et non transférable des fonctionnalités concernées, dans les limites des présentes conditions et des <a href="#mentions-legales">Mentions légales</a>.</p>`
+      },
+      {
+        heading: "Commande et paiement",
+        body: `
+          <p>Avant de payer, l'utilisateur voit le récapitulatif de sa commande (offre, prix en CHF, durée, reconduction éventuelle) et peut corriger ses saisies. Il finalise l'achat en confirmant explicitement sa commande, puis reçoit une confirmation par e-mail. Le contrat est conclu lorsque la commande est confirmée et le paiement accepté.</p>
+          <p>Les paiements en ligne sont traités par <strong>Stripe</strong> sur une page de paiement sécurisée. Selon les cas, les moyens de paiement proposés comprennent les cartes bancaires et <strong>TWINT</strong> ; ceux réellement disponibles sont affichés au moment du paiement. L'éditeur n'a pas accès aux numéros de carte ni aux identifiants de paiement, et ne les conserve pas.</p>
+          <p>En cas d'échec ou de refus du paiement, la commande n'est pas confirmée. Les données de paiement sont traitées comme décrit dans la <a href="#politique-de-confidentialite">Politique de confidentialité</a>.</p>`
+      },
+      {
+        heading: "Abonnements",
+        body: `
+          <p>Lorsqu'une offre est proposée sous forme d'abonnement, elle est facturée à intervalle régulier (par exemple mensuel ou annuel, selon l'offre choisie) et <strong>reconduite automatiquement</strong> à chaque échéance jusqu'à résiliation. La périodicité, le prix et la date du prochain prélèvement sont indiqués avant la commande, et le moyen de paiement enregistré est débité à chaque échéance.</p>
+          <p>L'utilisateur peut <strong>résilier à tout moment</strong> depuis l'espace de gestion de l'abonnement lorsqu'il est disponible, ou à défaut par e-mail à ${MAILTO}. La résiliation prend effet à la fin de la période de facturation en cours : l'accès aux fonctionnalités payantes est maintenu jusqu'à cette date et aucun nouveau prélèvement n'est effectué ensuite.</p>
+          <p>L'éditeur peut modifier le prix ou les caractéristiques d'un abonnement. Il en informe l'utilisateur à l'avance par e-mail, et la modification ne s'applique qu'à partir de la période suivante ; l'utilisateur peut résilier avant son entrée en vigueur.</p>
+          <p>En cas d'échec d'un prélèvement, l'éditeur peut réessayer le paiement, en informer l'utilisateur, puis suspendre l'accès aux fonctionnalités payantes tant que la situation n'est pas régularisée.</p>`
+      },
+      {
+        heading: "Rétractation et remboursements",
+        body: `
+          <p>En l'état du droit suisse, il n'existe pas de droit de rétractation général pour les achats effectués en ligne. Sous réserve des droits impératifs dont l'utilisateur pourrait bénéficier selon son pays de résidence, et sauf engagement contraire indiqué au moment de la commande, les paiements effectués ne sont donc pas remboursables de plein droit.</p>
+          <p>Toute demande de remboursement (paiement erroné, prélèvement en double, problème technique empêchant l'usage du service) peut être adressée à ${MAILTO} ; elle est examinée de bonne foi, au cas par cas. Un remboursement accepté est effectué par le même moyen de paiement.</p>`
+      },
+      {
+        heading: "Monnaie et objets virtuels du jeu",
+        body: `<p>Les pièces, les objets et les récompenses du jeu (y compris la boutique de la classe) sont des éléments <strong>virtuels</strong> obtenus en jouant en classe. Ils n'ont aucune valeur monétaire, ne sont ni remboursables ni échangeables contre de l'argent et, sauf mention explicite au moment de l'achat, ne peuvent pas être acquis avec de l'argent réel.</p>`
       },
       {
         heading: "Responsabilité",
@@ -193,7 +229,7 @@ const CONDITIONS = {
       },
       {
         heading: "Suspension et suppression",
-        body: `<p>L'utilisateur peut cesser d'utiliser le service à tout moment et demander la suppression de son compte. L'éditeur peut suspendre ou supprimer un compte en cas de manquement grave aux présentes conditions, notamment pour un usage illicite ou une atteinte à la sécurité du service, après information lorsque cela est possible.</p>`
+        body: `<p>L'utilisateur peut cesser d'utiliser le service à tout moment et demander la suppression de son compte. L'éditeur peut suspendre ou supprimer un compte en cas de manquement grave aux présentes conditions, notamment pour un usage illicite, une atteinte à la sécurité du service ou un impayé persistant, après information lorsque cela est possible. Les abonnements sont résiliables à tout moment dans les conditions décrites ci-dessus.</p>`
       },
       {
         heading: "Modification des conditions",
@@ -209,7 +245,7 @@ const CONDITIONS = {
     kicker: "Usage framework",
     title: "Terms of use",
     lede: "The rules that apply when creating an account and using Class Odyssey.",
-    updated: "18 September 2026",
+    updated: "29 September 2026",
     sections: [
       {
         heading: "Purpose and acceptance",
@@ -242,7 +278,39 @@ const CONDITIONS = {
       },
       {
         heading: "Availability and beta version",
-        body: `<p>The service is offered as a <strong>beta version</strong>, free of charge for the time being. The publisher strives to keep it available and up to date, without guaranteeing uninterrupted availability or the absence of errors or data loss. Exporting a backup of your classes regularly is recommended. Features and access conditions may change at any time.</p>`
+        body: `<p>The service is offered as a <strong>beta version</strong>, free of charge for the time being. The publisher strives to keep it available and up to date, without guaranteeing uninterrupted availability or the absence of errors or data loss. Exporting a backup of your classes regularly is recommended. Features and access conditions may change at any time, subject to the rules for paid offers below.</p>`
+      },
+      {
+        heading: "Paid offers and prices",
+        body: `
+          <p>Class Odyssey is <strong>free for the time being</strong>: no payment is requested today. The clauses in this section and the next three apply only once paid offers (a one-off purchase or a subscription) are introduced; their features, duration and price are then presented before any order.</p>
+          <p>Prices are shown in <strong>Swiss francs (CHF)</strong>. If the publisher is subject to VAT, it is shown before the order is confirmed. The applicable price is the one displayed at the time of the order.</p>
+          <p>A purchase or subscription grants the user a personal, non-exclusive, non-transferable right to use the relevant features, within the limits of these terms and of the <a href="#mentions-legales">Legal notice</a>.</p>`
+      },
+      {
+        heading: "Ordering and payment",
+        body: `
+          <p>Before paying, the user sees the order summary (offer, price in CHF, duration, any renewal) and can correct their input. The purchase is completed by explicitly confirming the order, after which a confirmation is sent by email. The contract is concluded once the order is confirmed and the payment accepted.</p>
+          <p>Online payments are processed by <strong>Stripe</strong> on a secure payment page. Depending on the case, the payment methods offered include bank cards and <strong>TWINT</strong>; those actually available are displayed at the time of payment. The publisher has no access to card numbers or payment credentials and does not store them.</p>
+          <p>If a payment fails or is declined, the order is not confirmed. Payment data is processed as described in the <a href="#politique-de-confidentialite">Privacy policy</a>.</p>`
+      },
+      {
+        heading: "Subscriptions",
+        body: `
+          <p>Where an offer is provided as a subscription, it is billed at regular intervals (for example monthly or yearly, depending on the chosen offer) and <strong>renews automatically</strong> at each due date until cancelled. The billing period, the price and the date of the next charge are shown before the order, and the saved payment method is charged at each due date.</p>
+          <p>The user may <strong>cancel at any time</strong> from the subscription management area where available, or otherwise by email at ${MAILTO}. Cancellation takes effect at the end of the current billing period: access to the paid features is kept until then and no further charge is made afterwards.</p>
+          <p>The publisher may change the price or features of a subscription. It informs the user in advance by email, and the change applies only from the following period; the user may cancel before it takes effect.</p>
+          <p>If a charge fails, the publisher may retry the payment, inform the user and then suspend access to the paid features until the situation is resolved.</p>`
+      },
+      {
+        heading: "Withdrawal and refunds",
+        body: `
+          <p>As Swiss law currently stands, there is no general right of withdrawal for purchases made online. Subject to mandatory rights the user may enjoy under the law of their country of residence, and unless a different commitment is stated at the time of the order, payments made are therefore not refundable as of right.</p>
+          <p>Any refund request (mistaken payment, duplicate charge, technical problem preventing use of the service) can be sent to ${MAILTO} and will be examined in good faith, case by case. An approved refund is made through the same payment method.</p>`
+      },
+      {
+        heading: "Virtual currency and in-game items",
+        body: `<p>The coins, items and rewards in the game (including the classroom shop) are <strong>virtual</strong> elements earned by playing in class. They have no monetary value, cannot be refunded or exchanged for money and, unless explicitly stated at the time of purchase, cannot be acquired with real money.</p>`
       },
       {
         heading: "Liability",
@@ -250,7 +318,7 @@ const CONDITIONS = {
       },
       {
         heading: "Suspension and deletion",
-        body: `<p>The user may stop using the service at any time and request the deletion of their account. The publisher may suspend or delete an account in the event of a serious breach of these terms, in particular for unlawful use or an attack on the security of the service, informing the user where possible.</p>`
+        body: `<p>The user may stop using the service at any time and request the deletion of their account. The publisher may suspend or delete an account in the event of a serious breach of these terms, in particular for unlawful use, an attack on the security of the service or a persistent non-payment, informing the user where possible. Subscriptions can be cancelled at any time as described above.</p>`
       },
       {
         heading: "Changes to the terms",
@@ -269,7 +337,7 @@ const CONFIDENTIALITE = {
     kicker: "Vie privée",
     title: "Politique de confidentialité",
     lede: "Comment nous collectons, utilisons et protégeons vos données personnelles.",
-    updated: "18 septembre 2026",
+    updated: "29 septembre 2026",
     sections: [
       {
         heading: "Responsable du traitement",
@@ -288,7 +356,9 @@ const CONFIDENTIALITE = {
           <h3>3. Données conservées sur votre appareil</h3>
           <p>Le navigateur conserve localement, pour le compte connecté, un jeton de session, vos préférences (thème, langue), l'identifiant de l'élève consulté et une copie de progression hors ligne. Ces éléments sont strictement nécessaires au service. La mesure d'audience (Google Analytics 4) n'est activée qu'après votre consentement : aucun cookie de mesure n'est déposé avant ce choix.</p>
           <h3>4. Données techniques</h3>
-          <p>L'hébergeur peut traiter votre adresse IP et des journaux de connexion à des fins de sécurité, de diagnostic et de bon fonctionnement de l'application. Lorsque vous y consentez, Google Analytics 4 traite des données de navigation agrégées et une adresse IP anonymisée (voir « Cookies et technologies de suivi »).</p>`
+          <p>L'hébergeur peut traiter votre adresse IP et des journaux de connexion à des fins de sécurité, de diagnostic et de bon fonctionnement de l'application. Lorsque vous y consentez, Google Analytics 4 traite des données de navigation agrégées et une adresse IP anonymisée (voir « Cookies et technologies de suivi »).</p>
+          <h3>5. Données de facturation et de paiement (offres payantes)</h3>
+          <p>Aucun paiement n'est demandé à ce jour. Lorsque des offres payantes seront proposées, le paiement s'effectuera sur une page sécurisée de <strong>Stripe</strong> et, si vous choisissez ce moyen, par <strong>TWINT</strong>. Stripe et TWINT collectent directement les données nécessaires au paiement : numéro de carte ou identifiants TWINT, nom et, le cas échéant, adresse de facturation. Class Odyssey ne reçoit et ne conserve que le strict nécessaire : identifiant client et d'abonnement Stripe, offre choisie, montant et devise, dates, statut du paiement et de l'abonnement, adresse e-mail de facturation. Aucun numéro de carte n'est enregistré sur nos serveurs.</p>`
       },
       {
         heading: "Finalités et bases légales",
@@ -296,7 +366,9 @@ const CONFIDENTIALITE = {
           <p>Au sens du RGPD, nous traitons vos données sur les bases légales suivantes (la LPD ne soumet pas le traitement à une base légale formelle, mais exige qu'il soit licite, proportionné et effectué de bonne foi) :</p>
           <ul>
             <li><strong>Fournir le service</strong> (comptes, classes, progression, boutique) — exécution du contrat ou de mesures précontractuelles (art. 6 §1 lit. b RGPD).</li>
-            <li><strong>Assurer la sécurité</strong> et prévenir les abus — intérêt légitime (art. 6 §1 lit. f RGPD).</li>
+            <li><strong>Assurer la sécurité</strong> et prévenir les abus, y compris la fraude au paiement — intérêt légitime (art. 6 §1 lit. f RGPD).</li>
+            <li><strong>Gérer les commandes, paiements et abonnements</strong> (offres payantes) — exécution du contrat (art. 6 §1 lit. b RGPD).</li>
+            <li><strong>Respecter nos obligations comptables et légales</strong> — obligation légale (art. 6 §1 lit. c RGPD).</li>
             <li><strong>Répondre à vos demandes</strong> — votre consentement ou l'exécution de mesures précontractuelles (art. 6 §1 lit. a et b RGPD).</li>
             <li><strong>Mesurer l'audience</strong> afin d'améliorer le service — votre consentement (art. 6 §1 lit. a RGPD), révocable à tout moment via le bouton « Gérer les cookies ».</li>
           </ul>`
@@ -311,20 +383,22 @@ const CONFIDENTIALITE = {
           <p>Avec votre accord uniquement, nous utilisons <strong>Google Analytics 4</strong> pour comprendre comment l'application est utilisée : pages consultées, durée de visite, parcours, type d'appareil, source de la visite et interactions (défilement, clics sortants). L'adresse IP est anonymisée avant enregistrement et les données sont exploitées sous forme agrégée, à des fins d'amélioration du service uniquement. Durée de conservation : jusqu'à 14 mois. Vous pouvez retirer votre accord à tout moment sans que cela affecte l'utilisation du service.</p>
           <h3>Publicité (Google Ads)</h3>
           <p>Class Odyssey ne diffuse pas de publicité à ce jour. Si des campagnes Google Ads étaient lancées, leur mesure d'efficacité et le remarketing reposeraient sur votre consentement préalable, recueilli via le même bandeau et révocable à tout moment. Les cookies publicitaires Google ont une durée pouvant aller jusqu'à 13 mois.</p>
+          <h3>Paiement (Stripe)</h3>
+          <p>Le paiement se déroule sur une page hébergée par Stripe, qui peut déposer ses propres cookies, strictement nécessaires à la sécurité et à la prévention de la fraude, selon sa <a href="https://stripe.com/privacy">politique de confidentialité</a>. À ce jour, Class Odyssey ne charge aucun script Stripe sur ses propres pages.</p>
           <h3>Gérer ou refuser les cookies</h3>
           <p>Vous pouvez modifier ou retirer votre choix à tout moment grâce au bouton <strong>« Gérer les cookies »</strong> présent en pied de page. Conformément à l'art. 45c de la loi fédérale sur les télécommunications (LTC), vous pouvez également configurer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies strictement nécessaires empêche toutefois la connexion et l'utilisation du compte.</p>`
       },
       {
         heading: "Hébergement et destinataires des données",
-        body: `<p><strong>Infomaniak Network SA</strong> (Rue Eugène-Marziano 25, 1227 Les Acacias, Genève, Suisse) héberge l'application et les données sur des serveurs situés en Suisse. Vos données ne sont ni vendues, ni louées, ni transmises à des tiers à des fins commerciales.</p>`
+        body: `<p><strong>Infomaniak Network SA</strong> (Rue Eugène-Marziano 25, 1227 Les Acacias, Genève, Suisse) héberge l'application et les données sur des serveurs situés en Suisse. Vos données ne sont ni vendues, ni louées, ni transmises à des tiers à des fins commerciales.</p><p>Lorsque des offres payantes seront proposées, les données nécessaires au paiement seront communiquées à <strong>Stripe</strong> (<a href="https://stripe.com/privacy">politique de confidentialité de Stripe</a>) et, si vous payez par TWINT, à <strong>TWINT AG</strong> (Suisse), en tant que prestataires de paiement. Ils les traitent selon leurs propres politiques de confidentialité.</p>`
       },
       {
         heading: "Transferts de données à l'étranger",
-        body: `<p>Les données des comptes et des classes sont hébergées en Suisse. Si vous choisissez la connexion Google, votre navigateur est redirigé vers Google pour l'authentification ; Google traite les données nécessaires à celle-ci selon sa propre politique, et nous recevons votre adresse e-mail vérifiée et votre nom. Séparément, si vous consentez à la mesure d'audience, les données de navigation agrégées sont traitées par Google (Google Ireland Limited et, le cas échéant, Google LLC) dans le cadre des garanties appropriées prévues par le RGPD. Sans ce consentement, Google Analytics ne reçoit aucune donnée de navigation. Les polices sont servies localement.</p>`
+        body: `<p>Les données des comptes et des classes sont hébergées en Suisse. Si vous choisissez la connexion Google, votre navigateur est redirigé vers Google pour l'authentification ; Google traite les données nécessaires à celle-ci selon sa propre politique, et nous recevons votre adresse e-mail vérifiée et votre nom. Séparément, si vous consentez à la mesure d'audience, les données de navigation agrégées sont traitées par Google (Google Ireland Limited et, le cas échéant, Google LLC) dans le cadre des garanties appropriées prévues par le RGPD. Sans ce consentement, Google Analytics ne reçoit aucune donnée de navigation. Les polices sont servies localement. Lorsque des offres payantes seront proposées, Stripe pourra traiter les données de paiement en dehors de la Suisse et de l'Union européenne, notamment aux États-Unis, dans le cadre des garanties appropriées prévues par la LPD et le RGPD.</p>`
       },
       {
         heading: "Durée de conservation",
-        body: `<p>Les données de compte et de classe sont conservées tant que le compte existe ou tant qu'elles sont nécessaires à la fourniture du service. L'enseignant peut supprimer un élève, une classe ou l'ensemble de ses données depuis l'application ; une sauvegarde peut être exportée avant suppression. Les journaux techniques sont conservés pour une durée limitée.</p>`
+        body: `<p>Les données de compte et de classe sont conservées tant que le compte existe ou tant qu'elles sont nécessaires à la fourniture du service. L'enseignant peut supprimer un élève, une classe ou l'ensemble de ses données depuis l'application ; une sauvegarde peut être exportée avant suppression. Les journaux techniques sont conservés pour une durée limitée. Les pièces comptables et justificatifs de paiement (factures, montants, dates) sont conservés dix ans, conformément au droit suisse (art. 958f CO).</p>`
       },
       {
         heading: "Vos droits",
@@ -343,11 +417,11 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Données des élèves et des mineurs",
-        body: `<p>Class Odyssey est avant tout un outil destiné aux enseignants. Les données des élèves sont saisies par l'enseignant, qui s'engage à respecter le cadre légal applicable à son établissement (information des parents, autorisations éventuelles). Nous ne collectons pas directement de données auprès des élèves, ne leur adressons aucune publicité et ne demandons aucune donnée sensible. Le prénom est la seule donnée d'identification requise pour créer un personnage ; il est recommandé de n'utiliser que les informations nécessaires.</p>`
+        body: `<p>Class Odyssey est avant tout un outil destiné aux enseignants. Les données des élèves sont saisies par l'enseignant, qui s'engage à respecter le cadre légal applicable à son établissement (information des parents, autorisations éventuelles). Nous ne collectons pas directement de données auprès des élèves, ne leur adressons aucune publicité et ne demandons aucune donnée sensible. Le prénom est la seule donnée d'identification requise pour créer un personnage ; il est recommandé de n'utiliser que les informations nécessaires. Les éventuelles offres payantes s'adressent aux enseignants ou à leur établissement : aucun paiement ni aucune donnée de paiement n'est demandé aux élèves.</p>`
       },
       {
         heading: "Sécurité des données",
-        body: `<p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, altération, divulgation ou destruction. Les mots de passe sont hachés, les sessions sont limitées dans le temps et l'accès aux données est restreint.</p>`
+        body: `<p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, altération, divulgation ou destruction. Les mots de passe sont hachés, les sessions sont limitées dans le temps et l'accès aux données est restreint. Les données de carte bancaire sont traitées exclusivement par Stripe et ne transitent pas par nos serveurs.</p>`
       },
       {
         heading: "Modifications",
@@ -363,7 +437,7 @@ const CONFIDENTIALITE = {
     kicker: "Privacy",
     title: "Privacy policy",
     lede: "How we collect, use and protect your personal data.",
-    updated: "18 September 2026",
+    updated: "29 September 2026",
     sections: [
       {
         heading: "Data controller",
@@ -382,7 +456,9 @@ const CONFIDENTIALITE = {
           <h3>3. Data stored on your device</h3>
           <p>The browser stores locally, for the signed-in account, a session token, your preferences (theme, language), the selected pupil identifier and an offline progress copy. These are strictly necessary for the service. Audience measurement (Google Analytics 4) is only activated after your consent: no measurement cookie is stored before that choice.</p>
           <h3>4. Technical data</h3>
-          <p>The host may process your IP address and connection logs for security, diagnostics and the proper operation of the application. When you consent to it, Google Analytics 4 processes aggregated browsing data and an anonymised IP address (see “Cookies and tracking technologies”).</p>`
+          <p>The host may process your IP address and connection logs for security, diagnostics and the proper operation of the application. When you consent to it, Google Analytics 4 processes aggregated browsing data and an anonymised IP address (see “Cookies and tracking technologies”).</p>
+          <h3>5. Billing and payment data (paid offers)</h3>
+          <p>No payment is requested today. When paid offers are introduced, payment will be made on a secure <strong>Stripe</strong> page and, if you choose that method, through <strong>TWINT</strong>. Stripe and TWINT collect the data needed for the payment directly: card number or TWINT credentials, name and, where applicable, billing address. Class Odyssey receives and keeps only what is strictly necessary: Stripe customer and subscription identifiers, chosen offer, amount and currency, dates, payment and subscription status, and billing email address. No card number is stored on our servers.</p>`
       },
       {
         heading: "Purposes and legal bases",
@@ -390,7 +466,9 @@ const CONFIDENTIALITE = {
           <p>Within the meaning of the GDPR, we process your data on the following legal bases (the FADP does not require a formal legal basis, but requires processing to be lawful, proportionate and in good faith):</p>
           <ul>
             <li><strong>Providing the service</strong> (accounts, classes, progress, shop) — performance of the contract or pre-contractual steps (Art. 6(1)(b) GDPR).</li>
-            <li><strong>Ensuring security</strong> and preventing abuse — legitimate interest (Art. 6(1)(f) GDPR).</li>
+            <li><strong>Ensuring security</strong> and preventing abuse, including payment fraud — legitimate interest (Art. 6(1)(f) GDPR).</li>
+            <li><strong>Managing orders, payments and subscriptions</strong> (paid offers) — performance of the contract (Art. 6(1)(b) GDPR).</li>
+            <li><strong>Complying with our accounting and legal obligations</strong> — legal obligation (Art. 6(1)(c) GDPR).</li>
             <li><strong>Responding to your requests</strong> — your consent or performance of pre-contractual steps (Art. 6(1)(a) and (b) GDPR).</li>
             <li><strong>Measuring audience</strong> in order to improve the service — your consent (Art. 6(1)(a) GDPR), revocable at any time via the “Manage cookies” button.</li>
           </ul>`
@@ -405,20 +483,22 @@ const CONFIDENTIALITE = {
           <p>Only with your agreement do we use <strong>Google Analytics 4</strong> to understand how the application is used: pages viewed, visit duration, navigation paths, device type, traffic source and interactions (scrolling, outbound clicks). The IP address is anonymised before storage and the data is used in aggregate form, solely to improve the service. Retention period: up to 14 months. You may withdraw your agreement at any time without affecting your use of the service.</p>
           <h3>Advertising (Google Ads)</h3>
           <p>Class Odyssey currently displays no advertising. If Google Ads campaigns were launched, their effectiveness measurement and remarketing would rely on your prior consent, collected through the same banner and revocable at any time. Google advertising cookies have a lifetime of up to 13 months.</p>
+          <h3>Payment (Stripe)</h3>
+          <p>Payment takes place on a page hosted by Stripe, which may set its own cookies, strictly necessary for security and fraud prevention, under its <a href="https://stripe.com/privacy">privacy policy</a>. To date, Class Odyssey loads no Stripe script on its own pages.</p>
           <h3>Managing or refusing cookies</h3>
           <p>You can change or withdraw your choice at any time using the <strong>“Manage cookies”</strong> button in the page footer. In accordance with Art. 45c of the Swiss Federal Act on Telecommunications (TCA), you may also configure your browser to block or delete cookies. Blocking strictly necessary cookies will, however, prevent sign-in and use of the account.</p>`
       },
       {
         heading: "Hosting and recipients of the data",
-        body: `<p><strong>Infomaniak Network SA</strong> (Rue Eugène-Marziano 25, 1227 Les Acacias, Geneva, Switzerland) hosts the application and the data on servers located in Switzerland. Your data is neither sold nor rented, nor passed on to third parties for commercial purposes.</p>`
+        body: `<p><strong>Infomaniak Network SA</strong> (Rue Eugène-Marziano 25, 1227 Les Acacias, Geneva, Switzerland) hosts the application and the data on servers located in Switzerland. Your data is neither sold nor rented, nor passed on to third parties for commercial purposes.</p><p>When paid offers are introduced, the data needed for payment will be shared with <strong>Stripe</strong> (<a href="https://stripe.com/privacy">Stripe's privacy policy</a>) and, if you pay with TWINT, with <strong>TWINT AG</strong> (Switzerland), as payment service providers. They process it under their own privacy policies.</p>`
       },
       {
         heading: "Transfers of data abroad",
-        body: `<p>Account and class data is hosted in Switzerland. If you choose Google sign-in, your browser is redirected to Google for authentication; Google processes the data necessary for this under its own privacy policy, and we receive your verified email address and name. Separately, if you consent to audience measurement, aggregated browsing data is processed by Google (Google Ireland Limited and, where applicable, Google LLC) under appropriate GDPR safeguards. Without that consent, Google Analytics receives no browsing data. Fonts are served locally.</p>`
+        body: `<p>Account and class data is hosted in Switzerland. If you choose Google sign-in, your browser is redirected to Google for authentication; Google processes the data necessary for this under its own privacy policy, and we receive your verified email address and name. Separately, if you consent to audience measurement, aggregated browsing data is processed by Google (Google Ireland Limited and, where applicable, Google LLC) under appropriate GDPR safeguards. Without that consent, Google Analytics receives no browsing data. Fonts are served locally. When paid offers are introduced, Stripe may process payment data outside Switzerland and the European Union, in particular in the United States, under the appropriate safeguards provided for by the FADP and the GDPR.</p>`
       },
       {
         heading: "Retention period",
-        body: `<p>Account and class data is kept for as long as the account exists or as long as it is needed to provide the service. The teacher can delete a pupil, a class or all of their data from the application; a backup can be exported before deletion. Technical logs are kept for a limited period.</p>`
+        body: `<p>Account and class data is kept for as long as the account exists or as long as it is needed to provide the service. The teacher can delete a pupil, a class or all of their data from the application; a backup can be exported before deletion. Technical logs are kept for a limited period. Accounting records and payment vouchers (invoices, amounts, dates) are kept for ten years, in accordance with Swiss law (Art. 958f CO).</p>`
       },
       {
         heading: "Your rights",
@@ -437,11 +517,11 @@ const CONFIDENTIALITE = {
       },
       {
         heading: "Pupil and minor data",
-        body: `<p>Class Odyssey is primarily a tool for teachers. Pupil data is entered by the teacher, who undertakes to comply with the legal framework applicable to their institution (informing parents, any required authorisations). We do not collect data directly from pupils, send them no advertising and request no sensitive data. The first name is the only identifying data needed to create a character; using only the necessary information is recommended.</p>`
+        body: `<p>Class Odyssey is primarily a tool for teachers. Pupil data is entered by the teacher, who undertakes to comply with the legal framework applicable to their institution (informing parents, any required authorisations). We do not collect data directly from pupils, send them no advertising and request no sensitive data. The first name is the only identifying data needed to create a character; using only the necessary information is recommended. Any paid offers are aimed at teachers or their institution: no payment and no payment data is requested from pupils.</p>`
       },
       {
         heading: "Data security",
-        body: `<p>We implement appropriate technical and organisational measures to protect your data against unauthorised access, alteration, disclosure or destruction. Passwords are hashed, sessions are time-limited and access to data is restricted.</p>`
+        body: `<p>We implement appropriate technical and organisational measures to protect your data against unauthorised access, alteration, disclosure or destruction. Passwords are hashed, sessions are time-limited and access to data is restricted. Bank card data is processed exclusively by Stripe and does not pass through our servers.</p>`
       },
       {
         heading: "Changes",
