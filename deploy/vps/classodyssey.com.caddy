@@ -1,36 +1,33 @@
 # Adresse canonique : https://classodyssey.com/
 #
-# Redirection temporaire : l'application est servie depuis
-# https://www.thomaswunsche.com/classodyssey tant que classodyssey.com est
-# classé « Newly Registered Domain » par le proxy de l'État de Genève (art. 16a
-# LIP). Le conteneur ne publie que 127.0.0.1:5180, donc ce vhost est le point
-# d'entrée public. `security_headers` est le snippet de security-headers.caddy.
+# Service direct : classodyssey.com est le seul hôte indexable (le serveur
+# envoie `X-Robots-Tag: noindex` à tout autre hôte, cf. server/static.mjs).
+# Une redirection vers le relais www.thomaswunsche.com/classodyssey rendait
+# donc tout le site non indexable par Google.
 #
-# Une fois le domaine débloqué, remplacer le bloc actif par la variante directe
-# documentée en commentaire plus bas.
-classodyssey.com, www.classodyssey.com {
+# Le réseau de l'État de Genève, qui classe classodyssey.com « Newly Registered
+# Domain » (art. 16a LIP), garde l'accès par classodyssey.thomaswunsche.com et
+# par le relais www.thomaswunsche.com/classodyssey (autres vhosts).
+#
+# Le conteneur ne publie que 127.0.0.1:5180, donc ce vhost est le point
+# d'entrée public. `security_headers` est le snippet de security-headers.caddy.
+www.classodyssey.com {
 	import security_headers
-	redir https://www.thomaswunsche.com/classodyssey{uri} temporary
+	redir https://classodyssey.com{uri} permanent
 }
 
-# --- Variante à activer une fois classodyssey.com débloqué (service direct) ---
-# www.classodyssey.com {
-# 	import security_headers
-# 	redir https://classodyssey.com{uri} permanent
-# }
-#
-# classodyssey.com {
-# 	import security_headers
-# 	header Strict-Transport-Security "max-age=31536000"
-# 	encode zstd gzip
-#
-# 	# Game state is per-user and must never be cached by an intermediary.
-# 	@api path /api/*
-# 	header @api Cache-Control "no-store"
-#
-# 	reverse_proxy 127.0.0.1:5180
-#
-# 	log {
-# 		format json
-# 	}
-# }
+classodyssey.com {
+	import security_headers
+	header Strict-Transport-Security "max-age=31536000"
+	encode zstd gzip
+
+	# Game state is per-user and must never be cached by an intermediary.
+	@api path /api/*
+	header @api Cache-Control "no-store"
+
+	reverse_proxy 127.0.0.1:5180
+
+	log {
+		format json
+	}
+}
