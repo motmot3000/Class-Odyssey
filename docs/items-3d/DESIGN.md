@@ -67,7 +67,7 @@ Cette première proposition reprend le studio du vestiaire Noa/Mila : papier cha
 - Silhouettes médiévales-fantastiques lisibles et accueillantes pour les élèves de 7P–8P.
 - Lumière douce, choix explicites et inspection sans mouvement imposé.
 
-Périmètre : uniquement le prototype local `items-3d.html`, sans intégration d’animation. Le [contrat dans le commentaire body](../../items-3d.html) fixe cette extension ; [PRODUCT.md](../../PRODUCT.md) porte les contraintes de marque. La référence visuelle reste `/home/motmot3000/orca/workspaces/classquest/test-modelisation/docs/wardrobe/DESIGN.md` ; les corps courants proviennent désormais de la livraison `assets/characters-base/` de ce worktree.
+Périmètre : uniquement le prototype local `items-3d.html`, sans intégration d’animation. Le [contrat dans le commentaire body](../../items-3d.html) fixe cette extension ; [PRODUCT.md](../../PRODUCT.md) porte les contraintes de marque. La référence visuelle reste [`docs/wardrobe/DESIGN.md`](../wardrobe/DESIGN.md) ; les corps courants proviennent désormais de la livraison `assets/characters-base/`.
 
 Sources locales : [CSS](../../src/items-3d.css), [interface](../../src/items-3d.mjs), [sélection des modèles](../../src/items-3d-model.mjs), [viewer](../../src/items-3d-viewer.mjs) et [construction Blender](../../tools/build-items-3d.py). Les tokens ci-dessus décrivent cette implémentation ; les petites extensions documentaires sont dans [.impeccable/design.json](.impeccable/design.json).
 
@@ -75,7 +75,7 @@ La morphologie et les textures héritées sont créditées **Nintendo / The Mode
 
 La base stabilisée **`base-v2-2026-09` est livrée et le réajustement autorisé est réalisé**, sans changement de palette ni de composition. Seuls les fichiers garçon/fille **medium** sont intégrés, pas les dix carnations. Pose statique : bras à 82° depuis T, coudes à 8°, doigts à 10°, paumes vers les cuisses ; mètres, +Y vertical, +Z face, origine au sol. Les anciens morceaux de mains sculptées ne sont plus utilisés.
 
-**Nouvelle revue indépendante rapportée : SHIP, sans correction demandée**, sur les sources et captures finales de base-v2. Le [bilan actuel](README.md#base-v2--bilan-actuel-rapporté) consigne 58 tests passés et les exports réels ; il distingue les anciens bilans V1 et le suivi ciblé des couronnes. La conservation des positions de peau est testée comme ensemble quantifié à 10⁻⁵, sans preuve de topologie intégrale. Le verdict reste celui d’une proposition statique, sans certification de collisions pour tous les angles. Aucun contrôle n’a été rejoué pour cette documentation.
+**Nouvelle revue indépendante rapportée : SHIP, sans correction demandée**, sur les sources et captures finales de base-v2. Le [guide du pipeline](README.md#verification-and-provenance) décrit les contrôles courants ; il distingue les anciens bilans V1 et le suivi ciblé des couronnes. La conservation des positions de peau est testée comme ensemble quantifié à 10⁻⁵, sans preuve de topologie intégrale. Le verdict reste celui d’une proposition statique, sans certification de collisions pour tous les angles. Aucun contrôle n’a été rejoué pour cette documentation.
 
 ## Colors
 

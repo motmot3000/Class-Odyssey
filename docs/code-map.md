@@ -17,13 +17,14 @@
 | Game rules and catalogue | `src/domain.mjs` | Pure state transitions, XP, HP, inventory, purchases and import migration |
 | Persisted shape | `src/state-schema.mjs` | Shared browser/API validation; no DOM or filesystem dependency |
 | Authentication client | `src/session.mjs`, `src/api.mjs` | Session tokens, bounded API calls, offline verifier and account-bound teacher unlock |
+| Password contract | `src/password-policy.mjs` | Shared password length bounds for server validation, client validation and HTML forms |
 | Screens | `src/views/` | Escaped HTML; the active game screens live in `odyssey.mjs` |
 | Shared UI and languages | `src/ui.mjs`, `src/i18n*.mjs` | Icons, titles, stats and keyed FR/EN copy |
 | HTTP routes | `server/server.mjs` | Authentication, request validation, per-client rate limits (trust-proxy aware), account caps and revision conflict responses |
 | Disk persistence | `server/api.mjs` | Password hashing, token index, atomic writes and backup recovery |
 | Public files | `server/static.mjs` | Allowlisted paths, symlink checks, correct 404 responses and streamed assets |
 
-`src/views/board.mjs` and `src/views/student.mjs` are retained legacy renderers. They are **not** the active Odyssey picker/board. `src/avatar.mjs` also retains the vector renderer and shared stat icons. Do not mistake either for the source of current 3D portraits.
+`src/views/odyssey.mjs` is the only live classroom/hero renderer; the replaced legacy `board.mjs` / `student.mjs` views and base-character dialog have been removed. `src/avatar.mjs` retains the vector renderer used by workshops and shared stat icons; do not mistake it for the source of current 3D portraits.
 
 ## A state change, end to end
 
@@ -55,7 +56,7 @@ Every asynchronous result must check its captured account/token before touching 
 - `src/odyssey-viewer.mjs`: small adapter between the game screens and the catalogue viewer.
 - `src/odyssey-runtime.mjs`: owns the one visible canvas and moves it between current view hosts.
 - `src/shared-resource.mjs`: shared in-flight loading with generation-based reset. A late result after a retry is disposed, not mounted.
-- `src/portrait-runtime.mjs`: one offscreen renderer, serialized jobs and a 64-entry LRU image cache. Equal looks share a job.
+- `src/portrait-runtime.mjs`: serialized jobs through the shared viewer, a 160-entry in-memory LRU cache and up to 48 persisted portraits. Equal looks share a job.
 - `src/portrait-image.mjs`: transparent-margin detection and full-silhouette image framing.
 - `src/equipment-previews.mjs`: HTML for current-model portraits, item-only thumbnails and non-3D swatches.
 
@@ -104,3 +105,28 @@ The character, surface, wardrobe and item workshops are development tools. Their
 For browser smoke tests use an isolated `DATA_DIR`. Check login/unlock, shop → purchase → workshop → updated portrait, Rules, admin, both themes and mobile. Do not reset real classroom data as part of a test.
 
 The file-backed API assumes one Node.js writer per data directory. Synchronous state/index writes serialize mutations within that process; multiple server processes would require a database or explicit cross-process locking.
+
+## Persisted compatibility contracts
+
+The product is Class Odyssey. Historical `classquest` identifiers are deliberately retained: renaming them without a migration would orphan caches or interrupt auth. The early scripts in `index.html` repeat theme/session/language keys to avoid a flash before ES modules load; keep those values aligned with their owning modules.
+
+| Key / identifier | Owner | What it preserves |
+| --- | --- | --- |
+| `classquest:v1:<account>` and `:dirty` | `domain.mjs`, `app.mjs` | Cached state, including unsynced edits |
+| `classquest:v1:<account>:conflict:<timestamp>` | `app.mjs` | Archived local conflict copies |
+| `classquest:session` | `session.mjs`, `index.html` | Session and offline verifier |
+| `classquest:adult` | `session.mjs` | Account-bound five-minute teacher grant |
+| `classquest:theme` | `app.mjs`, `index.html`, `gamification.mjs` | Device theme preference |
+| `classquest.lang` and `classquest.lang:<account>` | `i18n.mjs`, `app.mjs`, `index.html` | Device/account language preference |
+| `classquest:student` and account-suffixed forms | `app.mjs` | Device-local selected hero |
+| `classquest.portrait-cache.v1` | `portrait-runtime.mjs` | Regenerable portrait cache |
+| `classquest:teacher-recovery` (sessionStorage) | `app.mjs` | In-progress Google teacher recovery |
+| `classquest_oauth` (cookie) | `server/google.mjs` | In-progress OAuth state |
+
+`normalizePupil()` also migrates historical cosmetic IDs (`RENAMED_ITEMS`, `MOVED_TO_ACCESSORIES`) and restores free starter inventory. Do not remove that compatibility logic because an old identifier is absent from today's shop. A formerly free item that becomes paid needs an explicit one-off migration, not repeated removal at every load. Never recalculate earned XP, coins or HP merely to normalize a save.
+
+## Copy and feature flags
+
+New UI copy should use keyed `t()` / `tItem()` calls at render time. The `translateMessage()` adapter remains for existing English API/validation messages; it is not a reason to introduce another parallel translation dictionary.
+
+`BETA_NOTICE_ENABLED` in `views/beta.mjs` intentionally keeps the support/payment notice off. Its code is retained for a future, explicitly configured rollout; the payment URLs in `support-links.mjs` are test links, not a live billing system.

@@ -106,7 +106,7 @@ Vérifications **rapportées**, non rejouées ici : 36 combinaisons personnage �
 
 Export contrôlé Mila / Éclaireur / lanterne / sac à dos : **40 meshes, 0 skins**, tags de sélection exacts `gender=female`, `outfit=explorer`, `item=lantern`, `pack=on`. Fallback/retry testé, aucun overflow à 390 px, provenance de 17 rasters vérifiée avec 0 manquant.
 
-Captures finales consultées : [Noa](../../.impeccable/review/wardrobe-noa.png), [Mila Éclaireur](../../.impeccable/review/wardrobe-mila-explorer.png), [Voyageur](../../.impeccable/review/wardrobe-traveller.png), [sac à dos](../../.impeccable/review/wardrobe-backpack.png), [mobile](../../.impeccable/review/wardrobe-mobile.png), [mobile en usage](../../.impeccable/review/wardrobe-mobile-live.png), [visage mobile](../../.impeccable/review/wardrobe-face-mobile.png).
+Captures finales consultées (dossier local non versionné `.impeccable/review/`) : `wardrobe-noa.png`, `wardrobe-mila-explorer.png`, `wardrobe-traveller.png`, `wardrobe-backpack.png`, `wardrobe-mobile.png`, `wardrobe-mobile-live.png`, `wardrobe-face-mobile.png`.
 
 ## Colors
 **Primary — vert atelier (`accent`) :** export, reprise du chargement et retours d’action ; l’encre verte (`ink`) structure la lecture.

@@ -57,8 +57,9 @@ un test ou en mettant à jour une empreinte sans comprendre le changement.
 | Texte traduit | `src/i18n.mjs`, `src/i18n-extra.mjs` | Couverture FR/EN et affichage réel |
 | Équipement 3D | Domaine, modèle de look, scripts Blender, viewers | Slots, ancrages, modèle livré et aperçus synchronisés |
 
-Les anciens renderers `board.mjs` et `student.mjs` ne sont pas l'écran de jeu
-actif. Les clés historiques `classquest:*` restent utilisées pour le stockage
+`src/views/odyssey.mjs` est l'unique renderer de l'écran de jeu actif (les
+anciennes vues `board.mjs` et `student.mjs` ont été retirées). Les clés
+historiques `classquest:*` restent utilisées pour le stockage
 local ; les renommer sans migration peut rendre un cache inaccessible.
 
 ## Sources graphiques et fichiers générés

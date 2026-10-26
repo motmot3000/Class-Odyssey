@@ -132,8 +132,7 @@ Le bouclier bleu porte une boussole originale Class Odyssey ; l’ensemble reste
 Verdict indépendant final **rapporté : ship**, après deux corrections : retrait du titre signalé en revue et synchronisation du libellé ARIA rendu/3D avec l’angle courant.
 Vérifications rapportées : quatre vues, rotation, retour au portrait, activation clavier Entrée, absence de débordement à (390px), GLB différé.
 Échec GLB simulé : nouvelle tentative disponible, poster préservé, puis récupération ; provenance PNG/WebP embarquée et sidecar, scan de 2 images, 0 manquante.
-Captures finales consultées : [bureau portrait](../../.impeccable/review/mini-desktop.png), [bureau 3D](../../.impeccable/review/mini-live-desktop.png),
-[dos](../../.impeccable/review/mini-back.png), [mobile 3D](../../.impeccable/review/mini-live-mobile.png), [mobile portrait](../../.impeccable/review/mini-mobile.png).
+Captures finales consultées (dossier local non versionné `.impeccable/review/`) : `mini-desktop.png`, `mini-live-desktop.png`, `mini-back.png`, `mini-live-mobile.png`, `mini-mobile.png`.
 La présente passe valide la documentation par lecture des sources et captures ; les essais interactifs ci-dessus sont ceux du bilan fourni.
 
 ## Do's and Don'ts

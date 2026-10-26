@@ -80,7 +80,7 @@ Le scan déterministe ciblé sur la page de comparaison retourne `[]`, mais en
 mode regex dégradé, sans analyse de contraste calculé. Il ne constitue pas
 une certification de l’interface.
 
-Preuves temporaires dans `/tmp/opencode/` :
+Preuves de revue (captures temporaires hors dépôt) :
 
 - `surface-v3-results.json` : données techniques et hashes complets ;
 - `surface-v3-boy-medium-face.png`, `surface-v3-boy-medium-outfit.png` ;

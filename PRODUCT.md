@@ -1,33 +1,31 @@
-# Product
+# Product intent
 
-## Register
+## Audience and purpose
 
-product
+Class Odyssey makes classroom effort visible through a shared adventure.
+Each pupil has a named hero, earns experience and coins, unlocks cosmetic
+rewards and keeps a recognizable identity throughout the year. The original
+setting is English lessons for ages 11–13; the classroom mechanics are not
+restricted to one subject.
 
-## Users
+The teacher needs quick rewards, clear selection and protected controls while
+teaching. Pupils need understandable progress and occasional hands-on character
+customization. Essential information must remain readable on a projected
+interactive board from the back of the room.
 
-Élèves de 7P et 8P, environ 11 à 13 ans, et leur enseignant pendant les cours d'anglais. Le tableau est projeté sur un écran interactif et doit rester lisible depuis le fond de la classe. Les élèves consultent leur progression et peuvent ponctuellement manipuler leur personnage; l'enseignant attribue rapidement XP, HP et récompenses.
+## Design guardrails
 
-## Product Purpose
+- Adventurous, welcoming medieval fantasy; capable heroes, not childish mascots.
+- Recognizable silhouettes and restrained materials; avoid visual clutter,
+  adult-warrior proportions, chibi bodies, saturated primaries and dark violence.
+- Make character progression understandable at a glance.
+- Favor curiosity, cooperation and effort over combat power.
+- Keep customization modular and consistent across both base characters.
+- Preserve fast, safe classroom operation; public viewing is not teacher access.
 
-Class Odyssey transforme la progression en anglais en aventure collective. Chaque élève possède un personnage nominatif qui gagne des niveaux, débloque des éléments visuels et rend l'effort visible tout au long de l'année, sans ralentir la gestion du cours.
+## Accessibility and inclusion
 
-## Brand Personality
-
-Aventurier, classe, accueillant. L'univers doit évoquer un jeu vidéo médiéval-fantastique crédible pour des préadolescents, avec des héros compétents auxquels ils peuvent s'identifier.
-
-## Anti-references
-
-Éviter les mascottes enfantines, les proportions chibi, les corps de guerriers adultes, les couleurs primaires criardes, la violence sombre, les poses de poupées symétriques et les équipements surchargés qui deviennent illisibles sur une petite carte.
-
-## Design Principles
-
-- Rendre le personnage et sa progression compréhensibles en un regard.
-- Donner à chaque élève une silhouette et une identité reconnaissables.
-- Valoriser la curiosité, l'adresse et la coopération plutôt que la puissance guerrière.
-- Garder les personnalisations cohérentes grâce à un système modulaire partagé.
-- Préserver une utilisation rapide et sûre pendant le cours.
-
-## Accessibility & Inclusion
-
-Viser une lisibilité de projection compatible WCAG AA pour les informations essentielles. Ne pas dépendre uniquement de la couleur pour les états, proposer plusieurs carnations, textures de cheveux et expressions de genre, et conserver une alternative sans mouvement pour les animations.
+Aim for WCAG AA contrast for essential information, readable projected labels,
+keyboard-operable controls and states that do not rely on color alone. Offer
+multiple skin tones and hairstyles. Respect reduced-motion preferences and
+do not require animation to understand progress.

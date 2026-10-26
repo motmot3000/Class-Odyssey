@@ -60,10 +60,11 @@ Sans transport d'e-mail, les codes de réinitialisation sont journalisés **hors
 production seulement**. En production, il faut configurer un transport pour que
 la personne reçoive le code. Les journaux de développement restent privés.
 
-**Limite du Compose actuel :** `compose.yaml` ne transmet pas `RESEND_API_KEY`,
-`MAIL_FROM` ou `GOOGLE_REDIRECT_URI`. Leur simple ajout dans le `.env` de Compose
-ne suffit donc pas ; un opérateur doit aussi transmettre les variables nécessaires
-au conteneur. Ne pas annoncer l'envoi d'e-mails sur la seule présence d'un `.env`.
+`compose.yaml` (projet `class-odyssey`) transmet au conteneur `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `RESEND_API_KEY`, `MAIL_FROM`,
+`ADMIN_CONSOLE_KEY` et `GEOIP_DB` depuis le `.env` du déploiement. Vérifiez tout
+de même la configuration effective (`docker compose config --quiet`) avant d'annoncer
+que l'envoi d'e-mails ou Google OAuth sont actifs.
 
 ## API
 

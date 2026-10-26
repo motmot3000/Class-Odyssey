@@ -52,8 +52,8 @@ Les variables déjà exportées prennent le pas sur `.env`.
 Pour découvrir le jeu, utilisez **`npm run dev:app`** et l'URL imprimée.
 `npm run dev` privilégie l'atelier pour le flux de travail graphique et impose
 ses deux ports : il ne respecte pas un `PORT` personnalisé de `.env`.
-Le lien historique de connexion rapide de l'atelier ne correspond pas à vos
-identifiants ; ouvrez l'application normalement et connectez-vous avec `.env`.
+Le bouton « Lancer l'application en temps réel » de l'atelier ouvre l'écran de
+connexion normal : connectez-vous avec les identifiants de votre `.env`.
 Ne mettez jamais un vrai mot de passe dans une URL.
 
 ## Première utilisation

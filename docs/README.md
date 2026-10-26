@@ -36,13 +36,15 @@ d'entrée. Les études et anciens documents ne sont pas des spécifications acti
 - [Inventaire de droits](assets-and-licenses.md) : à lire **avant** de réutiliser
   ou de proposer un modèle, une texture ou une image.
 
-## Études et documents historiques
+## Ateliers 3D et archives historiques
 
-`docs/archive/`, `docs/directions/`, `prototype/`, `docs/PRODUCT_DRAFT.md`,
-`docs/HANDOFF.md` et `HANDOFF-maj-accessoires.md` conservent des étapes de travail.
-Certains décrivent d'anciens noms, écrans, catalogues ou branches. Le runtime actif
-est identifié dans la [carte du code](code-map.md) ; ces documents historiques ne
-prévalent pas sur lui.
+Les ateliers de développement (`items-3d.html`, `character-lab.html`,
+`character-detail-study.html`, `assets/labs/index.html`) et leurs notes de
+direction (`docs/*/DESIGN.md`) servent à inspecter et valider les modèles 3D.
+Les anciens prototypes autonomes, vues remplacées et notes de passation ont été
+retirés de l'arbre de travail ; ils restent consultables dans l'historique Git
+et les tags `archive/*` ([Historique des branches](branch-archives.md)). Le
+runtime actif est identifié dans la [carte du code](code-map.md).
 
 Les sources Markdown du wiki vivent dans `docs/wiki/` pour être relues en PR.
 Les indications de publication sont dans [Développement](development.md#documentation-et-wiki).

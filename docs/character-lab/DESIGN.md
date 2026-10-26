@@ -62,7 +62,7 @@ La surface est en mode **Experience** : elle expose un seul rôdeur, sa comparai
 - Personnage en pied, portrait prioritaire et commandes secondaires.
 - Prototype local explicitement signalé, avec données fictives.
 
-**Preuves :** les quatre sources ci-dessus, [la documentation technique](../character-lab.md), [la provenance](../../assets/character-lab/provenance.json) et les captures [desktop](../../.impeccable/review/desktop.png), [mobile](../../.impeccable/review/mobile.png), [modèle desktop](../../.impeccable/review/model-desktop.png), [modèle mobile](../../.impeccable/review/model-mobile.png). Les valeurs normatives proviennent du CSS ; les captures attestent les compositions. Aucun navigateur ni serveur relancé pour ce relevé.
+**Preuves :** les quatre sources ci-dessus, [la documentation technique](../character-lab.md), [la provenance](../../assets/character-lab/provenance.json) et les captures locales non versionnées (`.impeccable/review/{desktop,mobile,model-desktop,model-mobile}.png`). Les valeurs normatives proviennent du CSS ; les captures attestent les compositions. Aucun navigateur ni serveur relancé pour ce relevé.
 
 **Finition :** verdict indépendant **ship**, au périmètre prototype, transmis par le demandeur. Réserves non bloquantes : dos moins détaillé, lanterne approximative, métadonnées avant le viewer sur mobile, fidélité d’archétype plutôt que reproduction des personnalisations exactes. Ce verdict ne vaut pas validation d’un asset de production.
 
