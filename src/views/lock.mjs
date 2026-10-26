@@ -1,3 +1,4 @@
+/* Teacher-gate form. The classroom remains readable while controls are locked. */
 import { escapeHtml, icon } from "../ui.mjs";
 import { t, translateMessage } from "../i18n.mjs";
 

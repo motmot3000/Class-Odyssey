@@ -38,6 +38,7 @@ import { BRAND } from "./brand.mjs";
 import { apiUrl, requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
+  SESSION_ENDED,
   acceptTerms,
   captureSessionContext,
   changePassword,
@@ -50,6 +51,7 @@ import {
   lockAdult,
   requestPasswordReset,
   sendSupportMessage,
+  sessionHeaders,
   signIn,
   signInWithGoogleCode,
   signOut,
@@ -72,21 +74,19 @@ import { mountWelcomeScene } from "./welcome-scene.mjs";
 import { renderRules } from "./views/rules.mjs";
 import { renderMentions, renderPrivacy, renderTerms } from "./views/legal.mjs";
 import { renderAppFooter } from "./views/footer.mjs";
-import { renderAddPupilDialog, renderHelpDialog, renderItemDialog, renderNewClassDialog, renderPasswordResetDialog, renderPupilDialog, renderRuleDialog } from "./views/modals.mjs";
+import { renderAddPupilDialog, renderHelpDialog, renderItemDialog, renderNewClassDialog, renderPasswordResetDialog, renderRuleDialog } from "./views/modals.mjs";
 import { renderOnboardingWelcome, renderOnboardingLanguage } from "./views/onboarding.mjs";
 import { renderBetaNotice, renderBugReportDialog, renderCoffeeDialog } from "./views/beta.mjs";
 import { SUPPORT, supportUrl } from "./support-links.mjs";
 import { createGuidedTour } from "./tour.mjs";
 import { enableDragScroll } from "./touch-scroll.mjs";
 import { TERMS_VERSION } from "./terms.mjs";
-import { mountCharacterViewer } from "./character-runtime.mjs";
 import { mountHeroPortraits, preloadHeroPortraits, heroPortraitsReady } from "./portrait-runtime.mjs";
 import { pupilLook } from "./items-3d-model.mjs";
 import {
   renderOdysseyTopbar,
   renderOdysseyNoClass,
   renderOdysseyStudent,
-  renderOdysseySheet,
   renderOdysseyShop,
   renderOdysseyPersonalize,
   cosmeticChangesFromDraft
@@ -107,7 +107,6 @@ import { t, tItem, getLang, setLang, initLanguage, translateMessage } from "./i1
 const app = document.querySelector("#app");
 const toastRoot = document.querySelector("#toasts");
 const dialogRoot = document.querySelector("#dialog-root");
-let releaseCharacterViewer = null;
 let teacherUnlockRequest = 0;
 let releaseWelcomeScene = null;
 let activeTour = null;
@@ -133,12 +132,9 @@ const pendingFlash = new Set();
 /* Transient UI preferences. Resetting them must never change classroom data. */
 const ui = {
   query: "",
-  density: "auto",
   shopCategory: "outfit",
   xpAmount: 100,
   coinAmount: 20,
-  consoleOpen: false,
-  focusPanel: null,
   openPanels: new Set(["hero"]),
   lockError: "",
   lockPending: false,
@@ -232,7 +228,6 @@ window.addEventListener("hashchange", () => {
   const resumeTour = handOverTour(currentView());
   closeDialog({ resumeConsole: false });
   ui.query = "";
-  ui.consoleOpen = false;
   ui.lockError = "";
   ui.odysseyView = "board";
   ui.draft = null;
@@ -262,16 +257,17 @@ function render() {
     ${renderViewBody(view)}
     ${renderAppFooter()}
   `;
-  const titleKey = view === "welcome" ? "welcome.title.signin"
-    : view === "rules" ? "app.aria.rules"
-    : view === "admin" ? "app.aria.accounts"
-    : view === "consent" ? "consent.title"
-    : view === "teacher-setup" ? "google.teacher.title"
-    : view === "teacher-recovery" ? "google.teacher.recoveryTitle"
-    : view === "mentions" ? "footer.mentions"
-    : view === "privacy" ? "footer.privacy"
-    : view === "terms" ? "footer.terms"
-    : "nav.class";
+  const titleKey = {
+    welcome: "welcome.title.signin",
+    rules: "app.aria.rules",
+    admin: "app.aria.accounts",
+    consent: "consent.title",
+    "teacher-setup": "google.teacher.title",
+    "teacher-recovery": "google.teacher.recoveryTitle",
+    mentions: "footer.mentions",
+    privacy: "footer.privacy",
+    terms: "footer.terms"
+  }[view] || "nav.class";
   document.title = `${t(titleKey)} · ${BRAND.name}`;
   renderTeacherDialog();
   restoreUiMemory(memory);
@@ -290,9 +286,8 @@ function render() {
   revealCookieControls();
 }
 
-/* The cookie manager is loaded from index.html by the referencement branch.
- * The footer button only appears once that script is actually available, so
- * the control is never shown dead on builds without consent management. */
+/* The footer's cookie control is usable only after the consent manager loaded.
+ * A blocked or failed script must not leave a dead button in the interface. */
 function revealCookieControls() {
   const available = typeof window.tarteaucitron !== "undefined";
   for (const el of document.querySelectorAll("[data-cookies-button], [data-cookies-dot]")) {
@@ -520,7 +515,7 @@ function flushFlash() {
   if (!pendingFlash.size) return;
   for (const id of pendingFlash) {
     const safe = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : String(id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".hero-card, .hero-row, .rune-card");
+    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".rune-card");
     if (!card) continue;
     card.classList.add("is-flash");
     card.addEventListener("animationend", () => card.classList.remove("is-flash"), { once: true });
@@ -529,8 +524,6 @@ function flushFlash() {
 }
 
 function updateClock() {
-  const clock = app.querySelector("#clock");
-  if (clock) clock.textContent = new Date().toLocaleTimeString(getLang() === "fr" ? "fr-CH" : "en-GB", { hour: "2-digit", minute: "2-digit" });
   const access = dialogRoot.querySelector('[data-teacher-time]');
   if (access) {
     const seconds = Math.max(0, Math.ceil(((unlockUntil() || 0) - Date.now()) / 1000));
@@ -692,8 +685,6 @@ function resetHeroCamera() {
 
 const ACTIONS = {
   "show-class": showClassRoster,
-  "show-board": showClassRoster,
-  "show-student": showClassRoster,
   "show-rules": () => {
     ui.rulesEditing = false;
     navigate("#rules");
@@ -889,18 +880,12 @@ const ACTIONS = {
   "lock-adult": () => {
     closeDialog({ resumeConsole:false });
     lockAdult();
-    ui.consoleOpen = false;
     ui.odysseyView = 'board';
     navigate("#class");
     toast("Adult access locked.", "info");
   },
 
   "reload-server": () => reloadServerCopy(),
-
-  "toggle-console": () => {
-    ui.consoleOpen = !ui.consoleOpen;
-    render();
-  },
 
   "select-class": (el) => {
     disarmDanger();
@@ -935,11 +920,6 @@ const ACTIONS = {
   "toggle-class-selection": () => commit(toggleClassSelection(state, state.activeClassId), { record: false }),
 
   "clear-selection": () => commit(clearSelection(state), { record: false }),
-
-  density: (el) => {
-    ui.density = el.dataset.density;
-    render();
-  },
 
   "clear-search": () => {
     ui.query = "";
@@ -1017,8 +997,6 @@ const ACTIONS = {
     render();
     window.scrollTo({ top: 0 });
   },
-
-  "change-hero": showClassRoster,
 
   undo: () => undo(),
 
@@ -1313,7 +1291,7 @@ const FORMS = {
     try {
       response = await requestApi(`admin/accounts/${accountId}/password`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
+        headers: { "Content-Type": "application/json", ...sessionHeaders(context) },
         body: JSON.stringify({ password })
       });
     } catch {
@@ -1502,14 +1480,6 @@ function buyOrEquip(itemId, pupil = getShopPupil()) {
 
 /* ---------- Native dialog lifecycle ---------- */
 
-function openPupilDialog(pupilId) {
-  const pupil = getPupilById(state, pupilId);
-  if (!pupil) return;
-  showDialog(renderPupilDialog(pupil));
-  const viewer = dialogRoot.querySelector("[data-base-character-viewer]");
-  if (viewer) releaseCharacterViewer = mountCharacterViewer(viewer);
-}
-
 function openItemDialog(itemId, pupil = getShopPupil()) {
   const item = getShopItem(itemId);
   if (!pupil || !item) return;
@@ -1548,8 +1518,6 @@ function closeDialog({ resumeConsole = true, preserveUnlock = false } = {}) {
     teacherUnlockRequest += 1;
     ui.lockPending = false;
   }
-  releaseCharacterViewer?.();
-  releaseCharacterViewer = null;
   const dialog = dialogRoot.querySelector("dialog");
   if (dialog?.open) dialog.close();
   dialogRoot.innerHTML = "";
@@ -1990,38 +1958,6 @@ async function completeGoogleSignIn(code) {
   toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
 }
 
-/* The 3D workshop links here with `?autologin=user:password` so the developer
- * can watch the running game signed in as the local admin. Credentials are only
- * honoured on a loopback host, and the parameter is stripped from the address
- * bar before the session is opened. */
-const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
-function localAutoLoginCredentials(value) {
-  if (!LOOPBACK_HOSTS.has(location.hostname)) return null;
-  const separator = value.indexOf(":");
-  if (separator < 1) return null;
-  const username = value.slice(0, separator);
-  const password = value.slice(separator + 1);
-  return username && password ? { username, password } : null;
-}
-
-async function completeLocalSignIn(value) {
-  const credentials = localAutoLoginCredentials(value);
-  if (!credentials) return;
-  ui.gateError = "";
-  ui.gatePending = true;
-  render();
-  const result = await signIn(credentials.username, credentials.password);
-  if (result.stale) return;
-  ui.gatePending = false;
-  if (!result.ok) {
-    ui.gateError = result.error;
-    render();
-    return;
-  }
-  openAccount(result.account);
-  toast(t("notice.accountReady", { name: result.account.displayName }), "levelup");
-}
-
 /* The gate only offers Google when the server has credentials configured. */
 async function loadPublicConfig() {
   try {
@@ -2058,8 +1994,6 @@ function endSession(message = "", context = null) {
   ui.teacherRecovery = false;
   ui.adminPending = false;
   ui.adminAccounts = [];
-  ui.consoleOpen = false;
-  ui.focusPanel = null;
   if (location.hash) historyReplaceWithoutHash();
   render();
   window.scrollTo({ top: 0 });
@@ -2177,7 +2111,7 @@ async function saveToServer() {
   try {
     const response = await requestApi("state", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Session-Token": context.token },
+      headers: { "Content-Type": "application/json", ...sessionHeaders(context) },
       body: snapshot
     });
     if (!isCurrentSession(context) || account?.id !== context.accountId) return;
@@ -2220,7 +2154,7 @@ async function bootstrapFromServer() {
   try {
     const response = await requestApi("state", {
       cache: "no-store",
-      headers: { "X-Session-Token": context.token }
+      headers: sessionHeaders(context)
     });
     if (!isCurrentSession(context) || account?.id !== context.accountId) return;
     if (response.status === 401) {
@@ -2254,7 +2188,7 @@ async function reloadServerCopy() {
   const context = captureSessionContext();
   const accountId = account.id;
   try {
-    const response = await requestApi("state", { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    const response = await requestApi("state", { cache: "no-store", headers: sessionHeaders(context) });
     if (!isCurrentSession(context) || account?.id !== accountId || !response.ok) return;
     const remote = await response.json();
     if (!isCurrentSession(context) || account?.id !== accountId) return;
@@ -2279,11 +2213,11 @@ async function loadAdminAccounts() {
   ui.adminError = "";
   render();
   try {
-    const response = await requestApi("admin/accounts", { cache: "no-store", headers: { "X-Session-Token": context?.token || "" } });
+    const response = await requestApi("admin/accounts", { cache: "no-store", headers: sessionHeaders(context) });
     if (!isCurrentSession(context) || account?.role !== "admin") return;
     const payload = await response.json().catch(() => null);
     if (!isCurrentSession(context) || account?.role !== "admin") return;
-    if (response.status === 401) return endSession("The session ended. Sign in again.", context);
+    if (response.status === 401) return endSession(SESSION_ENDED, context);
     if (!response.ok) throw new Error(payload?.error || "Could not load accounts.");
     ui.adminAccounts = Array.isArray(payload.accounts) ? payload.accounts : [];
   } catch (error) {
@@ -2307,7 +2241,7 @@ window.addEventListener("pagehide", () => {
   try {
     void requestApi("state", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Session-Token": context?.token || "" },
+      headers: { "Content-Type": "application/json", ...sessionHeaders(context) },
       body: JSON.stringify(state),
       keepalive: true
     }, 8000).catch(() => {});
@@ -2348,10 +2282,9 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
 const googleParams = new URLSearchParams(location.search);
 const googleCode = googleParams.get("google_code") || "";
 const googleError = googleParams.get("google_error") || "";
-const autoLogin = googleParams.get("autologin") || "";
-if (googleCode || googleError || autoLogin) {
-  // Never keep the one-time code, the error or the credentials in the address
-  // bar or history.
+if (googleCode || googleError || googleParams.has("autologin")) {
+  // Strip OAuth parameters and obsolete credential links from the address bar.
+  // Old workshop autologin URLs are no longer accepted, even on localhost.
   try { window.history.replaceState(null, "", location.pathname + location.hash); } catch { /* keep the query */ }
 }
 if (googleError) ui.gateError = googleErrorMessage(googleError);
@@ -2363,6 +2296,5 @@ bootstrapFromServer();
 if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
 if (googleCode) completeGoogleSignIn(googleCode);
-else if (autoLogin) completeLocalSignIn(autoLogin);
 loadPublicConfig();
 setInterval(updateClock, 1000);

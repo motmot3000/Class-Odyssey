@@ -25,12 +25,10 @@ $('#categories').innerHTML = CATEGORIES.map(({ type, label }) => `<button type="
  * flashed back on every refresh. */
 $('#poster').src = BASE_PREVIEW_URL;
 
-/* One click from the workshop to the running game, signed in as the local
- * admin. The app only honours the credentials on localhost, so this never
- * exposes the account outside the developer machine. */
+/* Open the companion app without putting credentials into a public URL.
+ * The developer signs in through the same form as any other account. */
 const APP_PORT = '5180';
 const appUrl = new URL(`${location.protocol}//${location.hostname}:${APP_PORT}/`);
-appUrl.searchParams.set('autologin', 'admin:1234');
 $('#open-app').href = appUrl.href;
 
 function setReady(ready) {

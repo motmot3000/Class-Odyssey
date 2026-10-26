@@ -7,7 +7,7 @@ export const CATEGORIES = [
   { type: 'hairColor', field: 'hairColor', label: 'Hair Color' },
   { type: 'eyeColor', field: 'eyeColor', label: 'Eye Color' },
   { type: 'accessory', field: 'accessory', label: 'Accessories' },
-{ type: 'weapon', field: 'weapon', label: 'Weapons' },
+  { type: 'weapon', field: 'weapon', label: 'Weapons' },
   { type: 'shield', field: 'shield', label: 'Shields' },
   { type: 'pet', field: 'pet', label: 'Pets' }
 ];

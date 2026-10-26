@@ -5,7 +5,7 @@ import { setLang, t, tItem, hasTranslation, translateMessage } from "../src/i18n
 import { renderWelcome } from "../src/views/welcome.mjs";
 import { renderRules } from "../src/views/rules.mjs";
 import { renderShop } from "../src/views/shop.mjs";
-import { renderItemDialog, renderPupilDialog } from "../src/views/modals.mjs";
+import { renderItemDialog } from "../src/views/modals.mjs";
 import { renderAdmin } from "../src/views/admin.mjs";
 import { renderOdysseySheet, renderOdysseyPersonalize } from "../src/views/odyssey.mjs";
 import { translateReward } from "../src/ui.mjs";
@@ -25,7 +25,7 @@ test("FR/EN views retain all merged shop categories and 3D previews", () => {
         assert.doesNotMatch(html, /modal\.type\.|shop\.cat\./);
         assert.doesNotMatch(html, /<img onerror=/);
       }
-      assert.match(renderPupilDialog(pupil), /data-base-character-viewer/);
+      assert.match(renderOdysseySheet(pupil, {}), /data-viewer-host/);
     }
   } finally { setLang("en"); }
 });

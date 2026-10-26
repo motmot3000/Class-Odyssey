@@ -1,3 +1,4 @@
+/* Same-origin API URLs also work when the app is served under a path prefix. */
 export function apiUrl(path) {
   return new URL(`api/${path}`, document.baseURI).toString();
 }

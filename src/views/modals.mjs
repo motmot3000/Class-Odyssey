@@ -1,26 +1,16 @@
-/* Native dialogs provide focus containment, Escape handling and an inert
- * background. app.mjs owns mounting and disposal of their optional 3D viewer.
+/* Form and product-preview dialogs. app.mjs owns their mounting, event handling
+ * and teardown; views only return escaped markup.
  */
 
-import { canBuyItem, cosmeticField, getNextReward, isItemOwned, xpProgress, SKIN_TONES } from "../domain.mjs";
+import { canBuyItem, cosmeticField, isItemOwned, SKIN_TONES } from "../domain.mjs";
 import { renderItemThumbnail } from "../equipment-previews.mjs";
-import { renderBaseCharacterViewer, baseStageAttributes } from "../characters.mjs";
 import {
   escapeHtml,
   getItemRarity,
-  gearOf,
   icon,
-  renderHearts,
-  renderCustomOrders,
-  renderLevel,
-  renderMoney,
-  renderOutBadge,
-  renderTitle,
-  renderXpBar,
-  statusClass,
-  translateReward
 } from "../ui.mjs";
 import { t, tItem } from "../i18n.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "../password-policy.mjs";
 
 const RULE_SECTION_LABEL = {
   journey: "rules.title.how",
@@ -43,7 +33,8 @@ const TYPE_LABEL = {
   bespoke: () => t("modal.type.bespoke")
 };
 
-export function renderAddPupilDialog(classroom) {  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
+export function renderAddPupilDialog(classroom) {
+  return `<dialog class="dialog dialog-add-pupil" aria-labelledby="add-pupil-title">
     <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t('modal.close')}">${icon('close')}</button>
     <h2 id="add-pupil-title">${t('console.roster.add')}</h2>
     <p class="panel-note">${t('console.roster.joining',{name:escapeHtml(classroom.name)})}</p>
@@ -72,40 +63,6 @@ export function renderNewClassDialog() {
       <div class="row"><button class="btn btn-primary" type="submit">${icon('plus')}${t('class.new.submit')}</button><button class="btn" type="button" data-action="close-dialog">${t('common.cancel')}</button></div>
     </form>
   </dialog>`;
-}
-
-// Read-only hero details remain safe to display on a classroom touch screen.
-export function renderPupilDialog(pupil) {
-  const progress = xpProgress(pupil);
-  const next = getNextReward(pupil.level);
-
-  return `
-    <dialog class="dialog dialog-hero ${statusClass(pupil)}" aria-label="${escapeHtml(pupil.name)}">
-      <button class="dialog-close" type="button" data-action="close-dialog" aria-label="${t("modal.close")}">${icon("close")}</button>
-      <div class="dialog-hero-art dialog-hero-art-3d" ${baseStageAttributes(pupil)}>
-        ${renderBaseCharacterViewer(pupil)}
-        ${renderOutBadge(pupil)}
-      </div>
-      <div class="dialog-hero-facts">
-        <header class="locker-name">
-          <h2>${escapeHtml(pupil.name)}</h2>
-          ${renderLevel(pupil.level)}
-        </header>
-        ${renderTitle(pupil)}
-        ${renderHearts(pupil)}
-        ${renderXpBar(pupil)}
-        <p class="panel-note">${t("modal.xpToLevel", { n: progress.needed - progress.current, level: pupil.level + 1 })}</p>
-        ${renderMoney(pupil.money)}
-        <dl class="gear">
-          ${gearOf(pupil).map(([label, value]) => `<div><dt>${label}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
-        </dl>
-        ${renderCustomOrders(pupil)}
-        <p class="panel-note">${next
-          ? t("modal.levelUnlocks", { level: next.level, rewards: next.rewards.map(translateReward).map(escapeHtml).join(", ") })
-          : t("modal.allUnlocked")}</p>
-      </div>
-    </dialog>
-  `;
 }
 
 export function renderItemDialog(item, pupil) {
@@ -181,8 +138,8 @@ export function renderPasswordResetDialog() {
       <label class="field"><span>${t('welcome.field.email')}</span><input name="email" type="email" autocomplete="email" maxlength="160" required autofocus /></label>
       <button class="btn btn-sm" type="button" data-action="request-password-reset">${t('settings.reset.send')}</button>
       <label class="field"><span>${t('settings.reset.code')}</span><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required /></label>
-      <label class="field"><span>${t('settings.reset.next')}</span><input name="next" type="password" autocomplete="new-password" required minlength="6" maxlength="128" /></label>
-      <label class="field"><span>${t('console.account.repeat')}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" /></label>
+      <label class="field"><span>${t('settings.reset.next')}</span><input name="next" type="password" autocomplete="new-password" required minlength="${MIN_PASSWORD_LENGTH}" maxlength="${MAX_PASSWORD_LENGTH}" /></label>
+      <label class="field"><span>${t('console.account.repeat')}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="${MAX_PASSWORD_LENGTH}" /></label>
       <button class="btn btn-primary" type="submit">${t('settings.reset.confirm')}</button>
     </form>
   </dialog>`;

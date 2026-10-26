@@ -1,7 +1,6 @@
 /* Discreet application footer: copyright, publisher and legal links.
  * The year is computed at render time so it stays correct without maintenance.
- * The cookie button is wired by the referencement branch; it stays hidden
- * until the consent manager has loaded, so it is never a dead control.
+ * app.mjs reveals the cookie button only after the consent manager has loaded.
  */
 
 import { t } from "../i18n.mjs";

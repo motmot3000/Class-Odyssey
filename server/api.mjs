@@ -1,11 +1,14 @@
+/* File-backed accounts, sessions and revisioned classroom state.
+ * Atomic writes and bounded backups protect a single Node.js writer; this
+ * store does not provide cross-process locking. Game rules live in src/domain.
+ */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 import { isStateDocument } from "../src/state-schema.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "../src/password-policy.mjs";
 
-const MIN_PASSWORD_LENGTH = 6;
-const MAX_PASSWORD_LENGTH = 128;
 const MAX_DISPLAY_NAME_LENGTH = 60;
 const MAX_CLASS_NAME_LENGTH = 80;
 const MAX_EMAIL_LENGTH = 160;

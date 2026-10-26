@@ -2,9 +2,8 @@
  * the domain enforces purchases, and the runtime owns the shared 3D canvas.
  */
 
-import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, cosmeticField, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
 import { escapeHtml, translateReward, renderCustomOrders, renderLevel, renderTitle, renderTitleBackdrop, titleBackdropAttributes } from "../ui.mjs";
-import { renderConsole } from "./console.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
 import { t, tItem } from "../i18n.mjs";
@@ -45,9 +44,6 @@ const ico = (name, cls = "") => {
 
 export const ODYSSEY_ANGLES = ["front", "quarter", "back", "head", "item"];
 
-// Map shop categories to persisted cosmetic fields (outfit is stored as skin).
-export const SHOP_FIELD = { outfit: "skin", hat: "hat", weapon: "weapon", shield: "shield", hair: "hair", hairColor: "hairColor", eyeColor: "eyeColor", accessory: "accessory", pet: "pet" };
-
 // Portraits and the workshop must derive exactly the same equipped look.
 export function gameLook(pupil, draft = null) {
   return pupilLook(pupil, draft);
@@ -60,7 +56,7 @@ export function shopPreviewItem(pupil, ui = {}) {
   const requested = getShopItem(ui.shopPreview);
   if (requested?.type === type) return requested;
   if (type === 'pet' && (!pupil.pet || pupil.pet === 'no-pet')) return items.find(isModeledItem) || items[0];
-  const field = SHOP_FIELD[type] || (type === 'tone' ? 'skinTone' : type);
+  const field = cosmeticField(type);
   return items.find(item => item.id === pupil[field]) || items[0] || getShopItems('outfit')[0];
 }
 
@@ -73,7 +69,7 @@ export function shopPreviewLook(pupil, ui = {}) {
   // Ears only read on a head: show the hero wearing them, not floating ears.
   if (item?.type === 'accessory') return { ...gameLook(pupil), accessory: item.id };
   if (!isModeledItem(item)) return null;
-  return { ...gameLook(pupil, { [SHOP_FIELD[item.type]]: item.id }), preview: { slot:item.type, id:item.id } };
+  return { ...gameLook(pupil, { [cosmeticField(item.type)]: item.id }), preview: { slot:item.type, id:item.id } };
 }
 
 export function cosmeticChangesFromDraft(draft = {}) {
@@ -124,7 +120,7 @@ function renderHeroBack() {
 /* ---------- Application navigation ---------- */
 
 /* Public documents are reachable without an account and use a minimal bar. */
-const DOC_VIEWS = new Set(["mentions", "privacy"]);
+const DOC_VIEWS = new Set(["mentions", "privacy", "terms"]);
 
 export function renderOdysseyTopbar({ view, state, account, unlocked }) {
   const activeClass = state.classes.find((classroom) => classroom.id === state.activeClassId) || state.classes[0];
@@ -175,61 +171,6 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
       </div>`}
     </header>
     ${isGate || isDoc ? '' : `<button class="teacher-console-tab" type="button" data-action="teacher-console" aria-haspopup="dialog" aria-expanded="false" aria-label="${t('console.title')}">${ico('lock')}<span>${t('console.title')}</span></button>`}`;
-}
-
-/* ---------- Teacher board ---------- */
-
-export function renderOdysseyTeacher({ classroom, ui, targets, focused, canUndo, account, selectedIds = [], events = [], armedReset = false, unlockedUntil = null }) {
-  return `
-    <main class="layout">
-      ${renderOdysseyBoard(classroom, ui, selectedIds)}
-      <aside class="console ${ui.consoleOpen ? "is-open" : ""}" aria-label="${t("console.title")}">
-        <button class="console-mobile-toggle" type="button" data-action="toggle-console" aria-expanded="${ui.consoleOpen}" aria-controls="teacher-console-body">
-          <span>${ico("rune")}${t("console.title")}</span>
-          <strong>${ui.consoleOpen ? t("app.console.close") : targets.length ? t("app.selected", { n: targets.length }) : t("common.open")}</strong>
-        </button>
-        <div class="console-body" id="teacher-console-body">
-          ${renderConsole({ classroom, ui, targets, focused, canUndo, events, armedReset, unlockedUntil, account })}
-        </div>
-      </aside>
-    </main>`;
-}
-
-function renderOdysseyBoard(classroom, ui, selectedIds) {
-  const total = classroom.pupils.length;
-  const out = classroom.pupils.filter(isEliminated).length;
-  const average = total ? (classroom.pupils.reduce((sum, pupil) => sum + pupil.level, 0) / total).toFixed(1) : "0.0";
-  const query = ui.query.trim().toLowerCase();
-  const pupils = query ? classroom.pupils.filter((pupil) => pupil.name.toLowerCase().includes(query)) : classroom.pupils;
-  return `
-    <section class="board" aria-label="${t("odyssey.board", { name: escapeHtml(classroom.name) })}">
-      <div class="board-heading">
-        <span class="class-seal">${escapeHtml(classroom.name)}</span>
-        <div class="board-title">
-          <h1>${t("odyssey.roster")}</h1>
-          <p class="board-sub">${t("odyssey.classroom")} · <span id="clock">--:--</span></p>
-        </div>
-      </div>
-      <div class="board-bar">
-        <div class="board-stats">
-          <span class="chip">${ico("heroes")}<b>${total}</b> ${t("common.heroes")}</span>
-          <span class="chip ${out ? "danger" : ""}">${ico("skull")}<b>${out}</b> ${t("common.out")}</span>
-          <span class="chip">${ico("star")}<b>${average}</b> ${t("board.avgLevel")}</span>
-        </div>
-        <div class="board-tools">
-          <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query)}" placeholder="${t("board.searchPlaceholder")}" aria-label="${t("board.searchAria")}" /></label>
-        </div>
-      </div>
-      ${pupils.length ? `
-        <div class="rune-grid" role="list">
-          ${pupils.map((pupil) => renderRuneCard(pupil, selectedIds)).join("")}
-        </div>
-      ` : total ? `
-        <div class="empty">${ico("search")}<h2>${t("odyssey.noResults")}</h2><p>${t("odyssey.noResultsHint")}</p><button class="btn" type="button" data-action="clear-search">${t("board.clearSearch")}</button></div>
-      ` : `
-        <div class="empty">${ico("heroes")}<h2>${t("odyssey.noHeroes")}</h2><p>${t("odyssey.noHeroesHint")}</p><button class="btn btn-primary" type="button" data-action="focus-add">${ico("plus")}${t("board.emptyAction")}</button></div>
-      `}
-    </section>`;
 }
 
 function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = false } = {}) {

@@ -1,4 +1,6 @@
+/* Legal acceptance and teacher-password setup after provider sign-in. */
 import { escapeHtml } from "../ui.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "../password-policy.mjs";
 import { t, translateMessage } from "../i18n.mjs";
 
 /* The legal consent sentence, shared by the sign-up form and the consent page
@@ -31,8 +33,8 @@ export function renderTeacherSetup({ pending = false, error = "", recovery = fal
       <form class="consent-card" data-action="setup-teacher-password" aria-busy="${pending}" ${error ? 'aria-describedby="teacher-setup-error"' : ""}>
         <h1>${t(recovery ? "google.teacher.recoveryTitle" : "google.teacher.title")}</h1>
         <p>${t(recovery ? "google.teacher.recoveryBody" : "google.teacher.body")}</p>
-        <label class="field"><span>${t("google.teacher.password")}</span><input name="password" type="password" autocomplete="new-password" required minlength="6" maxlength="128" ${off} /></label>
-        <label class="field"><span>${t("welcome.field.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" ${off} /></label>
+        <label class="field"><span>${t("google.teacher.password")}</span><input name="password" type="password" autocomplete="new-password" required minlength="${MIN_PASSWORD_LENGTH}" maxlength="${MAX_PASSWORD_LENGTH}" ${off} /></label>
+        <label class="field"><span>${t("welcome.field.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="${MAX_PASSWORD_LENGTH}" ${off} /></label>
         <p class="field-hint">${t("welcome.passwordHint")}</p>
         ${error ? `<p id="teacher-setup-error" class="gate-error" role="alert">${escapeHtml(translateMessage(error))}</p>` : ""}
         <div class="consent-actions">

@@ -6,8 +6,8 @@ import { escapeHtml, icon } from "../ui.mjs";
 import { t } from "../i18n.mjs";
 import { SUPPORT, methodAvailable } from "../support-links.mjs";
 
-// Off in production until Stripe card payments are live (see newbrain note
-// STRIPE-EN-SUSPENS). The dialogs and the bug inbox stay wired.
+// Payments are paused. Keep this disabled until live payment links have been
+// configured and verified; the dialogs and bug inbox remain available in code.
 export const BETA_NOTICE_ENABLED = false;
 
 export function renderBetaNotice() {

@@ -87,6 +87,24 @@ test("an open teacher panel enables single-card selection and hero navigation st
   assert.doesNotMatch(sheet,/data-action="hero-back"/);
 });
 
+test("all public legal pages have minimal navigation without account controls", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = { documentElement: { dataset: { theme: "light" } }, getElementById: () => null };
+  try {
+    for (const lang of ["fr", "en"]) {
+      setLang(lang);
+      for (const view of ["mentions", "privacy", "terms"]) {
+        const html = renderOdysseyTopbar({ view, state: createInitialState({ samples: false }), account: null, unlocked: false });
+        assert.match(html, /class="ghost doc-back"/);
+        assert.doesNotMatch(html, /data-action="(?:teacher-console|add-class|account-settings|sign-out|show-admin)"/);
+      }
+    }
+  } finally {
+    setLang("en");
+    globalThis.document = previousDocument;
+  }
+});
+
 test("Dressing and Shop both return to the hero from the same header control", () => {
   const classroom=getCurrentClass(createInitialState());
   const pupil=classroom.pupils[0];
@@ -152,9 +170,10 @@ test("item previews in the shop never sit on a title backdrop", () => {
 });
 
 test("locked pupils can return from the rules without hitting the teacher gate", () => {
-  assert.match(renderRules({ unlocked: false }), /data-action="show-student"/);
-  assert.doesNotMatch(renderRules({ unlocked: false }), /data-action="show-board"/);
-  assert.match(renderRules({ unlocked: true }), /data-action="show-board"/);
+  for (const unlocked of [false, true]) {
+    assert.match(renderRules({ unlocked }), /data-action="show-class"/);
+    assert.doesNotMatch(renderRules({ unlocked }), /data-action="teacher-console"/);
+  }
 });
 
 test("the teacher console links to the rules page after the hero details", () => {
@@ -263,7 +282,7 @@ test("account management connects own-account settings and labels other-account 
 });
 
 test("account settings expose profile, password recovery and help in both languages", () => {
-  const account = { username: "__VG_EMAIL_58bef97775b0__", email: "__VG_EMAIL_58bef97775b0__", displayName: "thomas.vunch" };
+  const account = { username: "teacher@example.test", email: "teacher@example.test", displayName: "Teacher" };
   try {
     for (const lang of ["fr", "en"]) {
       setLang(lang);

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-globalThis.document = { baseURI: "https://classquest.example/" };
+globalThis.document = {
+  baseURI: "https://classodyssey.example/",
+  documentElement: {},
+  getElementById: () => null
+};
 
 const store = new Map();
 globalThis.localStorage = {
@@ -73,6 +77,9 @@ test("captured session contexts prevent an old async response from clearing a ne
 
   const nextAccount = { ...ACCOUNT, id: "account-b", username: "other" };
   store.set("classquest:session", JSON.stringify({ token: "token-b", account: nextAccount }));
+  assert.deepEqual(session.sessionHeaders(old), { "X-Session-Token": "token-a" });
+  assert.deepEqual(session.sessionHeaders(), { "X-Session-Token": "token-b" });
+  assert.deepEqual(session.sessionHeaders(null), {});
   assert.equal(session.isCurrentSession(old), false);
   assert.equal(session.forgetSession(old), false);
   assert.equal(session.getAccount().id, "account-b");
@@ -102,6 +109,24 @@ test("password validation and API failures are reported safely", async () => {
   assert.equal(refused.ok, false);
   assert.match(refused.error, /Wrong username or password/);
   assert.equal(session.isSignedIn(), false);
+});
+
+test("account operations use the same translated expired-session message", async () => {
+  const { setLang, translateMessage } = await import("../src/i18n.mjs");
+  respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
+  await session.signIn("teacher", "class-password");
+  respond = () => jsonResponse(401, { error: "not signed in" });
+  for (const result of [
+    await session.updateSettings({ theme: "light" }),
+    await session.updateProfile({ displayName: "Teacher" }),
+    await session.sendSupportMessage({ category: "bug", message: "Test message" })
+  ]) {
+    assert.equal(result.error, session.SESSION_ENDED);
+    try {
+      setLang("fr");
+      assert.notEqual(translateMessage(result.error), result.error);
+    } finally { setLang("en"); }
+  }
 });
 
 test("a wrong teacher password does not expire a valid account session", async () => {

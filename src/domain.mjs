@@ -1,6 +1,11 @@
+/* Game catalogue and immutable classroom transitions, shared by UI and tests.
+ * Normalization is also a compatibility boundary: preserve earned counters
+ * and migrate historical item IDs rather than silently resetting progress.
+ */
 import { isStateDocument, isRecord } from "./state-schema.mjs";
 import { defaultRules } from "./i18n.mjs";
 
+// Historical persisted prefix; changing it would orphan unsynced local state.
 export const STORAGE_KEY = "classquest:v1";
 // Imported counters must remain renderable and exactly representable as numbers.
 const MAX_HEARTS = 100;

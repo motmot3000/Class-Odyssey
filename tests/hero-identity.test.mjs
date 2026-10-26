@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createInitialState,getCurrentClass } from '../src/domain.mjs';
 import { renderTitle, titleTierOf, titleBackdropAttributes } from '../src/ui.mjs';
-import { renderOdysseyStudent,renderOdysseySheet,renderOdysseyPersonalize,renderOdysseyTeacher } from '../src/views/odyssey.mjs';
+import { renderOdysseyStudent,renderOdysseySheet,renderOdysseyPersonalize } from '../src/views/odyssey.mjs';
 import { renderRules } from '../src/views/rules.mjs';
 import { t,setLang } from '../src/i18n.mjs';
 
@@ -18,7 +18,7 @@ test('hero identity uses the equipped title, never the outfit or hair colour',()
   assert.match(sheet,/data-title-labelled/);
   assert.doesNotMatch(sheet,/Ranger · Brown/);
   assert.match(renderOdysseyPersonalize(pupil,ui),/data-title-labelled/);
-  const board=renderOdysseyTeacher({classroom:{...classroom,pupils:[pupil]},ui,targets:[],selectedIds:[]});
+  const board=renderOdysseyStudent({classroom:{...classroom,pupils:[pupil]},ui,pupil:null,classView:true,selectionMode:true,selectedIds:[]});
   assert.ok(board.indexOf('dais-card')<board.indexOf('rune-card-head'));
 });
 

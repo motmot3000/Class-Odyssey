@@ -7,7 +7,8 @@ import { baseStageAttributes as heroStageAttributes } from "../characters.mjs";
 import { renderEquippedCharacter as renderHero } from "../equipment-previews.mjs";
 import { escapeHtml, gearOf, icon, renderCustomOrders, renderHearts, renderLevel, renderMoney, translateReward } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
-import { getLang, t, tItem, translateMessage } from "../i18n.mjs";
+import { getLang, t, translateMessage } from "../i18n.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "../password-policy.mjs";
 
 const XP_PRESETS = [50, 100, 200, 500, 1000];
 
@@ -83,8 +84,8 @@ function renderAccountPanel(open, unlockedUntil, account) {
         </form>
         <form class="access-form" data-action="confirm-password-reset">
           <label class="field"><span>${t("settings.reset.code")}</span><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required /></label>
-          <label class="field"><span>${t("settings.reset.next")}</span><input name="next" type="password" autocomplete="new-password" required minlength="6" maxlength="128" /></label>
-          <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" /></label>
+          <label class="field"><span>${t("settings.reset.next")}</span><input name="next" type="password" autocomplete="new-password" required minlength="${MIN_PASSWORD_LENGTH}" maxlength="${MAX_PASSWORD_LENGTH}" /></label>
+          <label class="field"><span>${t("console.account.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="${MAX_PASSWORD_LENGTH}" /></label>
           <button class="btn btn-primary btn-sm" type="submit">${t("settings.reset.confirm")}</button>
         </form>
       </details>

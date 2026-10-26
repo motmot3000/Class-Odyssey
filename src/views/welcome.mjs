@@ -1,4 +1,6 @@
+/* Public sign-in and account creation; app.mjs handles all form submissions. */
 import { escapeHtml, icon } from "../ui.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "../password-policy.mjs";
 import { t, translateMessage, getLang } from "../i18n.mjs";
 import { BRAND } from "../brand.mjs";
 import { termsConsentMarkup } from "./consent.mjs";
@@ -42,9 +44,9 @@ export function renderWelcome({ tab = "signin", error = "", pending = false, val
         ${signup ? `
           <form class="gate-form" data-action="sign-up" aria-busy="${pending}" ${error ? 'aria-describedby="gate-error"' : ""}>
             <label class="field"><span>${t("welcome.field.email")}</span><input id="gate-email" name="email" type="email" autocomplete="email" required maxlength="160" value="${escapeHtml(values.email || "")}" ${off} /></label>
-            <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="new-password" required minlength="6" maxlength="128" aria-describedby="password-hint" ${off} /></label>
+            <label class="field"><span>${t("welcome.field.password")}</span><input id="gate-password" name="password" type="password" autocomplete="new-password" required minlength="${MIN_PASSWORD_LENGTH}" maxlength="${MAX_PASSWORD_LENGTH}" aria-describedby="password-hint" ${off} /></label>
             <p class="field-hint" id="password-hint">${t("welcome.passwordHint")}</p>
-            <label class="field"><span>${t("welcome.field.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="128" ${off} /></label>
+            <label class="field"><span>${t("welcome.field.repeat")}</span><input name="confirm" type="password" autocomplete="new-password" required maxlength="${MAX_PASSWORD_LENGTH}" ${off} /></label>
             <label class="field-check"><input name="terms" type="checkbox" value="accepted" required ${off} /><span>${termsConsentMarkup()}</span></label>
             <button class="btn btn-primary" type="submit" ${off}><span>${t(pending ? "welcome.submit.creating" : "welcome.submit.create")}</span>${icon("back", "welcome-arrow")}</button>
           </form>` : `

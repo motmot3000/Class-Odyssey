@@ -1,13 +1,18 @@
+/* Account sessions and the five-minute classroom teacher gate.
+ * Capture the account/token before asynchronous work; never apply a late
+ * response to a different session. The teacher gate is not server-side auth.
+ */
 import { requestApi } from "./api.mjs";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-policy.mjs";
 
+// Persisted keys retain their historical prefix for existing installations.
 export const SESSION_KEY = "classquest:session";
 const UNLOCK_KEY = "classquest:adult";
 export const TEACHER_UNLOCK_MS = 5 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;
 
-export const MIN_PASSWORD_LENGTH = 6;
-export const MAX_PASSWORD_LENGTH = 128;
+export const SESSION_ENDED = "The session ended. Sign in again.";
 
 function readStored(key) {
   try {
@@ -35,8 +40,9 @@ export function getSession() {
 
 export const getAccount = () => getSession()?.account ?? null;
 export const isSignedIn = () => getSession() !== null;
-export const sessionHeaders = () => {
-  const token = getSession()?.token;
+// Pass the captured context, not a fresh session, when completing async work.
+export const sessionHeaders = (context = captureSessionContext()) => {
+  const token = context?.token;
   return token ? { "X-Session-Token": token } : {};
 };
 
@@ -135,7 +141,7 @@ async function callApi(path, { method = "POST", body, context = captureSessionCo
   try {
     response = await requestApi(path, {
       method,
-      headers: { "Content-Type": "application/json", ...(context ? { "X-Session-Token": context.token } : {}) },
+      headers: { "Content-Type": "application/json", ...sessionHeaders(context) },
       body: body === undefined ? undefined : JSON.stringify(body)
     });
   } catch {
@@ -220,7 +226,7 @@ export async function updateSettings(patch) {
   const { offline, response, payload } = await callApi("account/settings", { method: "PUT", body: patch, context });
   if (offline) return { ok: false, offline: true, error: OFFLINE };
   if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
-  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (response.status === 401) return { ok: false, error: SESSION_ENDED };
   if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
   const session = readStored(SESSION_KEY);
   if (session && session.account?.id === payload.account.id) {
@@ -236,7 +242,7 @@ export async function updateProfile(patch) {
   const { offline, response, payload } = await callApi("account/profile", { method: "PUT", body: patch, context });
   if (offline) return { ok: false, offline: true, error: OFFLINE };
   if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
-  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (response.status === 401) return { ok: false, error: SESSION_ENDED };
   if (!response.ok || !payload?.account) return { ok: false, error: payload?.error || "The server refused the request." };
   const session = readStored(SESSION_KEY);
   if (session && session.account?.id === payload.account.id) {
@@ -283,7 +289,7 @@ export async function sendSupportMessage({ category, subject, message }) {
   if (offline) return { ok: false, offline: true, error: OFFLINE };
   if (!isCurrentSession(context)) return { ok: false, stale: true, error: "The account changed while saving." };
   if (response.status === 429) return { ok: false, error: retryMessage(payload) };
-  if (response.status === 401) return { ok: false, error: "Your session ended. Sign in again." };
+  if (response.status === 401) return { ok: false, error: SESSION_ENDED };
   if (!response.ok) return { ok: false, error: payload?.error || "The server refused the request." };
   return { ok: true, id: payload?.id };
 }
@@ -312,7 +318,7 @@ export async function signOut() {
   // Local sign-out is immediate even if token revocation is slow or offline.
   // The request captures the old token, so it cannot revoke a subsequent login.
   void requestApi("session", {
-    method: "DELETE", headers: { "X-Session-Token": context.token },
+    method: "DELETE", headers: sessionHeaders(context),
   }, 8000).catch(() => {});
 }
 
@@ -338,7 +344,7 @@ export async function verifyPassword(password) {
   if (!isCurrentSession(result.context)) return { ok: false, stale: true, error: "The account changed while checking." };
   if (result.response.status === 429) return { ok: false, error: retryMessage(result.payload) };
   if (result.response.status === 401) {
-    if (result.payload?.error === "not signed in") return { ok: false, expired: true, error: "The session ended. Sign in again." };
+    if (result.payload?.error === "not signed in") return { ok: false, expired: true, error: SESSION_ENDED };
     return { ok: false, error: "Wrong password." };
   }
   if (!result.response.ok) return { ok: false, error: "The server could not check the password. Try again." };

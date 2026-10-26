@@ -72,7 +72,7 @@ export function renderRules({ unlocked = true, rules = null, editing = false } =
       </div>
 
       <p class="rules-back">
-          <button class="btn btn-primary" type="button" data-action="${unlocked ? "show-board" : "show-student"}">${icon("back")}<span>${t(unlocked ? "rules.back" : "lock.action.back")}</span></button>
+          <button class="btn btn-primary" type="button" data-action="show-class">${icon("back")}<span>${t(unlocked ? "rules.back" : "lock.action.back")}</span></button>
       </p>
     </article>
   `;

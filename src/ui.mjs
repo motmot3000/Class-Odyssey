@@ -88,8 +88,6 @@ export function getItemName(type, id) {
   return item ? tItem(item, "name") : tItem({ id: "rookie", name: "Rookie" }, "name");
 }
 
-/* Rank identity, independent of outfit and hair colour. Higher earned titles
-   receive richer heraldic decoration, without motion or changes to game rules. */
 /* Titles are a prestige ladder. The earned title (not the pupil level) decides a
  * 1-5 tier used for colour, ornament and the backdrop behind the character.
  */
@@ -174,10 +172,6 @@ export function renderCustomOrders(pupil) {
       </ul>
     </section>
   `;
-}
-
-export function heroStageAttributes(pupil) {
-  return `data-outfit="${escapeHtml(pupil.skin || "starter")}" data-gear="${escapeHtml(pupil.weapon || "no-weapon")}"`;
 }
 
 export function translateReward(reward) {
