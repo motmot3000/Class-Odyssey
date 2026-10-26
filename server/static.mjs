@@ -13,8 +13,7 @@ const MIME = {
 };
 const CACHEABLE_IMAGES = new Set([".svg", ".jpg", ".jpeg", ".png", ".webp", ".ico"]);
 const CACHEABLE_STATIC = new Set([".xml", ".txt", ".webmanifest", ".woff2", ".woff", ".ttf", ".otf"]);
-const ENTRIES = new Set(["index.html", "styles.css", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html", "gamification-en.html", "robots.txt", "sitemap.xml"]);
-const PROTOTYPE_TYPES = new Set([".html", ".css", ".js", ".mjs", ".glb", ".webp"]);
+const ENTRIES = new Set(["index.html", "items-3d.html", "character-lab.html", "character-detail-study.html", "gamification.html", "gamification-en.html", "robots.txt", "sitemap.xml"]);
 
 // Only the canonical origin may be indexed. The personal relay path on
 // thomaswunsche.com and any legacy host stay fully usable for their owners
@@ -51,8 +50,7 @@ export function createStaticHandler({ publicDir, dataDir }) {
     const relative = path.relative(root, target);
     const parts = relative.split(path.sep);
     if (parts.some(part => part.startsWith("."))) return false;
-    return ENTRIES.has(relative) || ["assets", "src"].includes(parts[0])
-      || (parts[0] === "prototype" && parts[1] === "odyssey" && PROTOTYPE_TYPES.has(path.extname(target)));
+    return ENTRIES.has(relative) || ["assets", "src"].includes(parts[0]);
   }
   return function serveStatic(req, res, pathname) {
     const notFound = () => res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");

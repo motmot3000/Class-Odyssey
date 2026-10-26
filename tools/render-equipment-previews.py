@@ -6,13 +6,15 @@ python3 tools/finalize-equipment-previews.py
 import bpy
 import hashlib
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'assets/items-3d/previews'
-RAW = Path('/tmp/opencode/class-odyssey-equipment-previews')
+RAW = Path(os.environ.get('EQUIPMENT_PREVIEWS_DIR', str(Path(tempfile.gettempdir()) / 'class-odyssey-equipment-previews')))
 RAW.mkdir(parents=True, exist_ok=True)
 OUT.mkdir(parents=True, exist_ok=True)
 scene = bpy.context.scene

@@ -7,11 +7,10 @@ Allow: /
 # API privée : sessions, comptes et sauvegardes de classes.
 Disallow: /api/
 
-# Ateliers internes et prototypes, hors du site public.
+# Ateliers internes, hors du site public.
 Disallow: /character-lab.html
 Disallow: /character-detail-study.html
 Disallow: /items-3d.html
-Disallow: /prototype/
 
 # Sources et fichiers de développement.
 Disallow: /server/

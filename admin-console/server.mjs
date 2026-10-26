@@ -1,3 +1,6 @@
+/* Local operator proxy. The backend key stays on this server, not in the
+ * browser. Anyone able to reach this listener can perform admin operations.
+ */
 import http from "node:http";
 import fs from "node:fs";
 import net from "node:net";
@@ -42,7 +45,7 @@ async function readBody(req) {
 }
 
 export function createConsoleServer({
-  apiUrl = process.env.CONSOLE_API_URL || "https://www.thomaswunsche.com/classodyssey",
+  apiUrl = process.env.CONSOLE_API_URL || "http://127.0.0.1:5180",
   key = process.env.ADMIN_CONSOLE_KEY,
   host = process.env.CONSOLE_HOST || "127.0.0.1",
   allowedCidr = process.env.CONSOLE_ALLOWED_CIDR || "",

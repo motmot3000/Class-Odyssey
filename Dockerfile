@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY server/ ./server/
-COPY index.html styles.css character-detail-study.html character-lab.html items-3d.html gamification.html gamification-en.html robots.txt sitemap.xml ./
+COPY index.html character-detail-study.html character-lab.html items-3d.html gamification.html gamification-en.html robots.txt sitemap.xml ./
 COPY src/ ./src/
 COPY assets/ ./assets/
 

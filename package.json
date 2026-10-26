@@ -1,9 +1,13 @@
 {
   "name": "class-odyssey",
   "version": "0.1.0",
+  "description": "Classroom gamification with 3D heroes and teacher-controlled progression",
   "license": "MIT",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "scripts": {
     "check": "node tools/check-source.mjs && npm test",
     "test": "node --test tests/*.test.mjs",

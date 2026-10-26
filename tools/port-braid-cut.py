@@ -20,16 +20,21 @@ on the real face, all fixed here at the source:
 * The z-compression of the ellipsoid mapping flattened the fringe against the
   forehead; a falloff puff restores the delivered volume.
 
-Run: blender -b --factory-startup --python tools/port-braid-cut.py
+Run: BRAID_SOURCE=/path/to/afro.fbx blender -b --factory-startup \
+  --python-exit-code 1 --python tools/port-braid-cut.py
 Writes assets/characters-refit/hair/curly.glb
 """
 import bpy
 import math
 import mathutils
+import os
+from pathlib import Path
 from mathutils import Vector
 
-ROOT = '/home/motmot3000/orca/workspaces/class-odyssey/haircut'
-SRC = '/tmp/opencode/ported-hair/inner/afro.fbx'
+ROOT = str(Path(__file__).resolve().parents[1])
+SRC = os.environ.get('BRAID_SOURCE', '')
+if not SRC or not Path(SRC).is_file():
+    raise SystemExit('Set BRAID_SOURCE to the supplied fringe-and-braid FBX file.')
 OUT = f'{ROOT}/assets/characters-refit/hair/curly.glb'
 TAU = math.pi * 2
 

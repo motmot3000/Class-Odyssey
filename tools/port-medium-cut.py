@@ -46,9 +46,10 @@ import medium_cut_locks  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'assets' / 'characters-refit' / 'hair'
 OUT.mkdir(parents=True, exist_ok=True)
-DEFAULT_ARCHIVE = Path('/home/motmot3000/Téléchargements/beautiful-hair-1.zip')
 args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-archive_path = Path(args[0]) if args else DEFAULT_ARCHIVE
+if not args:
+    raise SystemExit('Usage: blender -b --python tools/port-medium-cut.py -- /path/to/beautiful-hair-1.zip')
+archive_path = Path(args[0])
 
 # Authored-frame conversion: the inverse of the boy hat-seat transform, taken
 # from the catalogue contract so the medium cut lands where it was measured.

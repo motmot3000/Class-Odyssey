@@ -412,7 +412,7 @@ def import_character(path):
     text += b' ' * ((-len(text)) % 4)
     chunks = struct.pack('<I4s', len(text), b'JSON') + text + data[20+json_size:]
     normalized = struct.pack('<4sII', b'glTF', 2, 12+len(chunks)) + chunks
-    with tempfile.TemporaryDirectory(prefix='items-gltf-import-', dir='/tmp/opencode') as directory:
+    with tempfile.TemporaryDirectory(prefix='items-gltf-import-') as directory:
         temporary = Path(directory)/path.name
         temporary.write_bytes(normalized)
         bpy.ops.import_scene.gltf(filepath=str(temporary))

@@ -1,12 +1,14 @@
 """Compress rendered previews and build a local review sheet (Pillow)."""
 from pathlib import Path
 import json
+import os
 import sys
+import tempfile
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'assets/items-3d/previews'
-RAW = Path('/tmp/opencode/class-odyssey-equipment-previews')
+RAW = Path(os.environ.get('EQUIPMENT_PREVIEWS_DIR', str(Path(tempfile.gettempdir()) / 'class-odyssey-equipment-previews')))
 report = json.loads((OUT/'manifest.json').read_text())
 portraits_only = '--portraits-only' in sys.argv
 

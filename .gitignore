@@ -3,6 +3,9 @@ node_modules/
 *.log
 .env
 .env.console
+.env.*
+!.env.example
+!.env.console.example
 
 # Sorties d'outils et captures de travail : régénérables depuis l'app.
 .playwright-mcp/
@@ -23,6 +26,7 @@ var/
 
 # Character-lab review captures and Blender transient files.
 .impeccable/review/
+.impeccable/build/
 *.blend1
 __pycache__/
 

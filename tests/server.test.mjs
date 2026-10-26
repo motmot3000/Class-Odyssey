@@ -108,12 +108,12 @@ async function signIn(request, username = FOUNDER.username, password = FOUNDER.p
 test("merged workshop entry points are served without exposing private files", async () => {
   const app = await fixture();
   try {
-    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/gamification.html", "/prototype/odyssey/index.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
+    for (const route of ["/items-3d.html", "/character-lab.html", "/character-detail-study.html", "/gamification.html", "/assets/labs/index.html", "/assets/characters-refined/index.html"]) {
       const { response } = await app.request(route);
       assert.equal(response.status, 200, route);
       assert.match(response.headers.get("content-type"), /text\/html/);
     }
-    for (const route of ["/.git", "/.env", "/.env.missing", "/server/server.mjs", "/server/missing.mjs", "/package.json"]) {
+    for (const route of ["/.git", "/.env", "/.env.missing", "/server/server.mjs", "/server/missing.mjs", "/package.json", "/prototype/odyssey/index.html", "/styles.css"]) {
       assert.equal((await app.request(route)).response.status, 404, route);
     }
   } finally { await app.close(); }

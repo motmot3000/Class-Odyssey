@@ -17,7 +17,7 @@ const ATELIER_PORT = '5201';
 const ATELIER_URL = `http://127.0.0.1:${ATELIER_PORT}/items-3d.html`;
 
 console.log(`Atelier 3D : ${ATELIER_URL}`);
-console.log(`Application : http://127.0.0.1:${APP_PORT} (compte admin / 1234)`);
+console.log(`Application : http://127.0.0.1:${APP_PORT} (sign in with your .env credentials)`);
 console.log('Ctrl+C pour arrêter les deux serveurs.');
 
 let shuttingDown = false;

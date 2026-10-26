@@ -1,13 +1,15 @@
 """Render a contact sheet of each character wearing every haircut and hat.
 
 blender -b --factory-startup --python tools/render-hair-sheet.py -- [hair] [persona]
-Writes /tmp/opencode/hair-sheet/*.png
+Writes PNGs to HAIR_REVIEW_DIR, defaulting to the system temporary directory.
 """
 import bpy, math, sys, os
 import mathutils
+import tempfile
+from pathlib import Path
 
-CATALOGUE = '/home/motmot3000/orca/workspaces/class-odyssey/haircut/assets/character-stylized/catalogue.glb'
-OUT = '/tmp/opencode/hair-sheet'
+CATALOGUE = str(Path(__file__).resolve().parents[1] / 'assets/character-stylized/catalogue.glb')
+OUT = os.environ.get('HAIR_REVIEW_DIR', str(Path(tempfile.gettempdir()) / 'class-odyssey-hair-sheet'))
 os.makedirs(OUT, exist_ok=True)
 
 args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
