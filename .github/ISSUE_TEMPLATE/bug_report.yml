@@ -1,0 +1,49 @@
+name: Bug report / Signaler un bug
+description: Report a reproducible problem using fictional data only.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        French and English welcome. Do not include real pupil names, tokens, passwords or classroom exports.
+        For security vulnerabilities, use SECURITY.md instead of this public form.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Problème
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps / Étapes
+      description: Minimal steps with fictional data, starting from a known state.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: Commit SHA, archive tag or site URL and date if unknown.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment / Environnement
+      description: Browser/version, operating system, device or interactive board; Node version if local.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Additional evidence / Éléments complémentaires
+      description: Anonymized screenshots or redacted errors only. Do not paste entire private logs.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy / Confidentialité
+      options:
+        - label: I checked for duplicates and removed secrets and real personal/classroom data.
+          required: true

@@ -8,17 +8,17 @@ fichiers `admin-console/`.
 ## Installation
 
 1. Générer une clé aléatoire : `openssl rand -hex 32`.
-2. Sur le VPS, définir `ADMIN_CONSOLE_KEY` avec cette valeur dans
-   `/srv/apps/classquest/.env` (ou dans l'environnement de `docker compose`),
+2. Sur votre serveur, définir `ADMIN_CONSOLE_KEY` avec cette valeur dans
+   le `.env` du déploiement (ou dans l'environnement de `docker compose`),
    transférer les changements du dépôt (`server/`, `package*.json`, `Dockerfile`,
    `compose.yaml`), puis exécuter `docker compose up -d --build` dans
-   `/srv/apps/classquest`. Cette opération nécessite votre accès SSH au VPS.
+   le dossier du déploiement. Cette opération nécessite votre accès opérateur.
 3. Sur votre ordinateur, copier `.env.console.example` en `.env.console` et
    renseigner la **même clé** dans `ADMIN_CONSOLE_KEY`. Ce fichier est ignoré par
    Git. `CONSOLE_API_URL` doit être l'URL actuelle de l'application :
-   `https://www.thomaswunsche.com/classodyssey` tant que le domaine principal
-   redirige, puis `https://classodyssey.com` lorsque le site y est servi.
-4. Lancer `npm install` puis `npm run console`. Ouvrir
+   celle de votre propre instance (par exemple `http://127.0.0.1:5180` en local).
+   Ne pas connecter la console à l'instance d'un tiers sans autorisation.
+4. Lancer `npm ci` puis `npm run console`. Ouvrir
    **http://127.0.0.1:5191**. La console affiche une erreur explicite si le
    backend ou la clé ne sont pas encore déployés.
 
@@ -50,9 +50,8 @@ venues d'une autre origine sont refusées.
   l'application. L'onglet Abonnements l'indique explicitement.
 - L'onglet Messages lit `support-messages.json` lorsque « Demander de l’aide »
   est présent sur le site. Il affiche les demandes, leur état et les notes
-  internes, ainsi qu'un compteur des messages à lire. En attendant le module
-  `server/support.mjs` de la branche paramètres, un adaptateur compatible lit
-  et met à jour le même fichier. Répondre ouvre la messagerie locale.
+   internes, ainsi qu'un compteur des messages à lire. Le module
+   `server/support.mjs` est intégré dans `main`. Répondre ouvre la messagerie locale.
 - « Écrire un e-mail » ouvre le logiciel de messagerie local ; la console ne
   prétend pas qu'un e-mail a été envoyé. Une suppression retire le compte, ses
   données de classe et ses sauvegardes applicatives sur le serveur actif ; les

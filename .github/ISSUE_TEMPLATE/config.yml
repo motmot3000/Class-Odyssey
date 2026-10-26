@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security / Signalement de sécurité
+    url: https://github.com/motmot3000/Class-Odyssey/blob/main/SECURITY.md
+    about: Report vulnerabilities privately; never post secrets or real classroom data in an issue.
+  - name: Documentation and wiki / Documentation et wiki
+    url: https://github.com/motmot3000/Class-Odyssey/wiki
+    about: Installation, game rules, architecture and contribution guide.

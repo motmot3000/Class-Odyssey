@@ -1,151 +1,118 @@
 # Class Odyssey
 
-For maintainers: [code map, data flow and build ownership](docs/code-map.md).
+**Transformer la progression en classe en aventure, sans ralentir le cours.**
 
-Premier draft d'application web pour ludifier les cours d'anglais avec des personnages d'élèves, XP, niveaux, HP, skins et récompenses.
+Class Odyssey est une application web de ludification : chaque élève possède un
+héros, gagne de l'expérience, progresse et personnalise son personnage avec des
+pièces virtuelles. Le projet est conçu pour les cours d'anglais de 7P/8P, avec
+un tableau projeté et une console pilotée par l'enseignant.
 
-## Lancer (développement local)
+[Site](https://classodyssey.com) · [Documentation](docs/README.md) ·
+[Wiki](https://github.com/motmot3000/Class-Odyssey/wiki) ·
+[Contribuer](CONTRIBUTING.md) · [Feuille de route](docs/project-status.md)
 
-Utiliser Node.js 22.9 ou ultérieur. À la première utilisation de chaque clone
-ou worktree, préparer la configuration locale :
+## Un projet jeune, ouvert aux contributions
 
-```bash
+Class Odyssey est un **projet personnel en début de développement**, avec déjà
+un socle conséquent : comptes, classes, sauvegardes, progression, boutique,
+personnages 3D, interface français/anglais et outils d'administration.
+Il reste des imperfections, des expérimentations et du travail de consolidation.
+Ce n'est pas une solution scolaire certifiée ni un service avec support garanti.
+
+Une partie du projet a été **« vibe codée »**, avec l'aide d'outils d'IA.
+Cette transparence n'exonère pas de comprendre le code : les changements doivent
+être relus, testés et documentés. La présence de tests n'est pas une garantie
+d'absence de bugs ou une certification de sécurité.
+
+Thomas Wünsche développe le projet pour qu'il soit **fonctionnel, utilisable et
+maintenable dans la durée**. Il en suit l'évolution et reprend progressivement
+les problèmes, les dépendances et la documentation, au rythme permis par son
+agenda. Il n'y a ni surveillance humaine permanente, ni délai de réponse promis.
+
+**Les contributions sont les bienvenues** : développement, tests, accessibilité,
+traduction, documentation, retours pédagogiques et création d'assets originaux.
+Commencez par le [guide de contribution](CONTRIBUTING.md).
+
+> **Code sous licence MIT ; médias à distinguer.** Le code original et la
+> documentation du projet sont open source sous [MIT](LICENSE). Les dépendances
+> et médias tiers ne sont pas relicenciés. La présentation graphique est celle
+> d'un jeu d'aventure fantasy : héros stylisés, tenues et accessoires modulaires.
+> Certains fichiers de médias conservent une provenance ou des droits à clarifier.
+> Voir l'[inventaire des assets](docs/assets-and-licenses.md) et les
+> [notices tierces](THIRD_PARTY_NOTICES.md). Aucune autorisation de réutiliser ces
+> modèles tiers n'est accordée par la licence du code.
+
+## Ce que l'application propose
+
+- Classes et héros : noms, XP, niveaux, points de vie, inventaire et portraits.
+- Récompenses individuelles ou pour toute la classe, avec annulation locale.
+- Boutique en **monnaie virtuelle**, équipements et personnalisation 3D.
+- Console enseignant déverrouillée pour cinq minutes ; comptes séparés côté API.
+- Interface FR/EN, thèmes clair/sombre et visite guidée.
+- Persistance serveur, cache local par compte, export/import JSON et détection
+  des conflits de sauvegarde.
+- Connexion Google et envoi d'e-mails facultatifs ; console d'administration séparée.
+
+Les règles effectivement implémentées et leurs limites sont décrites dans
+[Règles du jeu](docs/game-rules.md). Il ne s'agit pas d'un système de comptes
+élèves indépendants : le navigateur connecté utilise le compte de l'enseignant.
+
+## Démarrer en local
+
+Prérequis : **Node.js 22.9 ou ultérieur** (Node 22 testé), npm, Git et Git LFS.
+Python 3 est requis pour `npm run check`, mais pas pour lancer le serveur.
+Blender n'est nécessaire que pour reconstruire la géométrie 3D.
+
+```sh
+git clone https://github.com/motmot3000/Class-Odyssey.git
+cd Class-Odyssey
+git lfs install --local
+git lfs pull
+npm ci
 cp .env.example .env
 ```
 
-Dans `.env`, choisir `FOUNDER_USERNAME` (3 à 32 caractères : lettres minuscules,
-chiffres, points, tirets ou underscores) et renseigner `FOUNDER_PASSWORD`
-(6 à 128 caractères). Puis lancer :
+Renseignez `FOUNDER_USERNAME` et un **mot de passe local personnel** dans `.env`,
+puis lancez :
 
-```bash
-npm run dev
+```sh
+npm run dev:app
 ```
 
-`npm run dev` démarre deux serveurs : l'**atelier 3D** sur le port `5201` et
-l'**application** sur le port `5180`. L'atelier est annoncé en premier, donc Go
-Live ouvre :
+Ouvrez l'adresse annoncée, normalement **http://127.0.0.1:5180**. Les nouveaux
+comptes commencent sans classe ni élève. Utilisez uniquement des données fictives
+pour développer. `.env` et `server/data/` ne doivent jamais être commités.
 
-```text
-http://127.0.0.1:5201/items-3d.html
+[Installation détaillée et dépannage](docs/getting-started.md) ·
+[Backend et configuration](BACKEND.md) · [Architecture](docs/code-map.md)
+
+## Vérifier et contribuer
+
+```sh
+npm run check
 ```
 
-L'atelier embarque un bouton **Lancer l'application en temps réel** qui ouvre
-l'application sur `http://127.0.0.1:5180` et connecte automatiquement le compte
-administrateur local (les identifiants ne sont acceptés que depuis `localhost` /
-`127.0.0.1`). `npm run dev:app` démarre l'application seule, et `npm start`
-démarre sur un port strictement fixé en signalant un conflit s'il est occupé.
+Cette commande vérifie la syntaxe JavaScript/Python puis exécute les tests.
+Le code inclut notamment des tests de domaine, HTTP, sessions, langues et assets.
+Les parcours visuels et le comportement réel sur TBI/mobile nécessitent aussi
+une vérification manuelle : [guide de développement](docs/development.md).
 
-`npm run dev` et `npm start` chargent automatiquement le fichier `.env`, ignoré
-par Git. Les variables déjà exportées dans le terminal sont prioritaires.
-Les deux identifiants servent à créer le compte administrateur lors de la
-première initialisation ; modifier `.env` ensuite ne réinitialise pas son mot
-de passe. Le mot de passe ne doit jamais être ajouté au dépôt.
+**`main` est l'unique branche active d'intégration.** Proposez vos changements
+depuis une branche de travail ou un fork, par pull request vers `main`.
+Les versions historiques sont conservées par tags `archive/*`, pas comme
+branches de développement. Un merge GitHub ne déploie pas automatiquement le site.
 
-### Connexion Google (facultatif)
+Pour une faille ou des données personnelles exposées, suivez
+[SECURITY.md](SECURITY.md), sans créer d'issue publique contenant les détails.
 
-Le bouton **Se connecter avec son compte Google** apparaît dès que `GOOGLE_CLIENT_ID` et
-`GOOGLE_CLIENT_SECRET` sont renseignés. Dans la console Google Cloud, créer un
-identifiant OAuth 2.0 de type « application Web » et autoriser l'URI de
-redirection `https://www.thomaswunsche.com/classodyssey/api/auth/google/callback`
-(ou `https://classodyssey.thomaswunsche.com/api/auth/google/callback`, puis
-`https://classodyssey.com/api/auth/google/callback` après l'ouverture du domaine ; en local,
-`http://127.0.0.1:5180/api/auth/google/callback`, ou le port choisi). À la
-première connexion, Class Odyssey crée le compte à partir de l'adresse Google
-vérifiée ; si un compte existe déjà avec cet e-mail, Google ouvre ce compte.
-Un nouveau compte Google accepte les textes légaux puis choisit un **mot de
-passe de console du professeur** (6 caractères minimum). Il est déverrouillé
-pour cinq minutes après sa création, puis demandé pour accéder aux commandes
-enseignant après reconnexion. Ce mot de passe ne sert jamais à se connecter au
-compte Google : il peut être modifié depuis la console et réinitialisé après
-une nouvelle authentification Google avec l'adresse e-mail vérifiée.
+## English summary
 
-Les données locales sont conservées dans `server/data/`, propre à chaque
-worktree et ignoré par Git. `DATA_DIR` peut aussi pointer vers un dossier
-temporaire. Pour lancer plusieurs branches en parallèle, choisir un `PORT`
-différent dans chaque `.env` et ouvrir l'URL correspondante.
-
-## Une vue Class
-
-- **Class** (`#class`) affiche les héros de la classe avec leurs portraits de
-  face, titres, niveaux, XP, cœurs et pièces. Les cartes donnent accès à la
-  fiche, au **Dressing** et au **Shop**.
-- La navigation suit une hiérarchie unique : **Classe → Fiche héros →
-  Dressing / Shop**. La fiche héros revient à la **Classe** ; le Dressing et
-  le Shop reviennent au **héros** par le même bouton, placé en haut à gauche.
-- La console enseignant sélectionne un élève à la fois. **Toute la classe**
-  est une bascule : un appui sélectionne tout le monde, un second efface la
-  sélection. Les récompenses visent toujours la sélection visible.
-- **Teacher console**, via l'onglet du bord droit, ouvre un panneau latéral protégé
-  par le mot de passe du compte. Elle contient les récompenses, les données et
-  le bouton **+ Add a student**. L'ajout se fait dans une boîte dédiée, puis
-  revient à la console. L'accès reste déverrouillé cinq minutes après validation
-  du mot de passe, y compris quand le panneau est replié. La classe reste
-  interactive pendant l'utilisation de la console.
-
-Un seul élève est sélectionné à la fois ; « Toute la classe » reste un choix
-explicite pour les récompenses collectives. Les anciens liens `#board` et
-`#student` ouvrent désormais la même vue Class.
-
-Chaque enseignant dispose d'un compte, d'un état et de sauvegardes isolés. Le
-compte fondateur a le rôle `admin` et voit en plus la page **Accounts**, qui
-permet de consulter les comptes et de réinitialiser le mot de passe d'un autre
-compte.
-
-À l'inscription, une case à cocher obligatoire recueille l'acceptation des
-[Conditions d'utilisation](src/views/legal.mjs) et de la Politique de
-confidentialité ; la date et la version acceptées sont conservées sur le compte
-(`src/terms.mjs`). Un compte créé via Google valide ces textes à sa première
-connexion.
-
-## Production (sauvegarde partagée)
-
-En production, le frontend et le backend Node sont réunis dans le même
-conteneur sur le VPS Infomaniak. Caddy sert le domaine public et les données
-persistantes restent montées hors du conteneur. N'importe quelle machine qui
-ouvre l'URL retrouve les données de son compte.
-
-Voir `BACKEND.md` pour l'architecture, le déploiement Infomaniak et l'API.
-
-## Console d'administration locale
-
-La console séparée est dans `admin-console/` et s'ouvre sur
-`http://127.0.0.1:5191` avec `npm run console`. Elle lit les comptes en direct
-depuis le backend du site, sans mot de passe à saisir dans le navigateur.
-L'installation et la connexion au VPS sont décrites dans
-[`admin-console/README.md`](admin-console/README.md).
-
-## Structure du code
-
-```text
-index.html          coque HTML (topbar + zones app/toasts/dialogues)
-src/odyssey.css     système visuel partagé, thèmes sombre et clair
-src/shell.css       navigation, connexion, règles, comptes, boutique et dialogues
-styles.css          ancien habillage conservé pour les prototypes
-src/app.mjs         état d'interface, routage, événements délégués, persistance
-src/session.mjs     session du compte et verrou de la console enseignant
-src/domain.mjs      règles du jeu (XP, HP, argent, boutique) — testé
-src/avatar.mjs      héros et icônes en SVG
-src/ui.mjs          briques de stats partagées (cœurs, barre XP, argent, niveau)
-src/views/board.mjs      plateau de classe (grille et liste)
-src/views/console.mjs    console de l'enseignant
-src/views/student.mjs    choix du héros et casier de l'élève
-src/views/shop.mjs       boutique, partagée entre les deux interfaces
-src/views/rules.mjs      page des règles
-src/views/modals.mjs     vue plein écran d'un héros, aperçu d'un article
-src/views/admin.mjs      gestion des comptes réservée aux administrateurs
-server/server.mjs        serveur HTTP Node et routes API
-server/api.mjs           stockage atomique, comptes, sessions et sauvegardes
-```
-
-Les vues ne produisent que du HTML ; `app.mjs` est seul à écouter les
-événements (`data-action` délégué sur `#app`) et à écrire l'état.
-
-## Tester
-
-```bash
-npm test
-```
-
-## Documentation
-
-Le cadrage du draft est dans `docs/PRODUCT_DRAFT.md`.
+Class Odyssey is an early-stage classroom gamification app, initially built for
+French-speaking teachers of English. It includes teacher accounts, classroom
+progression, virtual rewards and 3D characters. Contributions in French or
+English are welcome. Some code was developed with AI assistance; contributors
+remain responsible for understanding, testing and reviewing their changes.
+The maintainer works on usability and long-term maintenance as time allows,
+without a support SLA. Original code and project documentation use the MIT
+license; third-party assets are **not** covered by that grant. Check the asset
+inventory and third-party notices before reusing media.
