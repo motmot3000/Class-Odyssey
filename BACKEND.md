@@ -1,228 +1,193 @@
-# Class Odyssey — Backend
+# Backend, API et exploitation
 
-Le backend Node sauvegarde les comptes, classes, élèves, XP, niveaux, HP, skins
-et monnaie sur le VPS Infomaniak. Le `localStorage` du navigateur reste un cache
-hors ligne isolé par compte. Aucun backend PHP n'est utilisé.
+[Documentation](docs/README.md) · [Installation](docs/getting-started.md) ·
+[Architecture](docs/code-map.md) · [Sécurité](SECURITY.md)
 
-## Production
+## Modèle d'exécution
+
+Un serveur HTTP Node.js sert le frontend statique et l'API depuis la même
+origine. Le navigateur garde un cache local par compte ; l'état persistant
+de référence est enregistré côté serveur. Il n'y a pas de backend PHP ni
+de base SQL. Three.js gère la 3D et MaxMind la GeoIP locale facultative.
 
 ```text
-navigateur
-    │ https://classodyssey.com
-    ▼
-Caddy sur le VPS
-    │ reverse proxy vers 127.0.0.1:5180
-    ▼
-conteneur Docker Node
-    ├── frontend statique : index.html, styles.css, src/, assets/
-    ├── API comptes et jeu : /api/*
-    └── volume persistant : /srv/apps/classquest/data
+navigateur → HTTPS / reverse proxy → serveur Node.js
+                                      ├── fichiers publics autorisés
+                                      ├── /api/*
+                                      └── DATA_DIR hors des sources publiques
 ```
 
-Le frontend, l'API et les données sont donc centralisés sur le VPS. Pendant la
-propagation DNS, l'ancien hébergement peut relayer provisoirement toutes les
-requêtes vers `www.thomaswunsche.com/_class-odyssey-site/`. Le navigateur garde
-dans tous les cas l'URL Class Odyssey.
+**Un seul processus Node doit écrire dans un même `DATA_DIR`.** Le contrôle de
+révision et les écritures synchrones sérialisent les mutations dans ce processus ;
+ce n'est pas un verrou multi-processus. Ne pas lancer plusieurs réplicas sur le
+même dossier sans concevoir une autre couche de persistance.
 
-## Configuration obligatoire
+## Configuration
 
-Le premier démarrage requiert exclusivement ces variables d'environnement :
+Les commandes npm de l'application lisent `.env` ; les variables déjà exportées
+restent prioritaires. Ne jamais commiter de valeurs secrètes.
 
-- `FOUNDER_USERNAME` : identifiant du compte fondateur ;
-- `FOUNDER_PASSWORD` : mot de passe initial du compte fondateur.
+| Variable | Usage / défaut |
+| --- | --- |
+| `FOUNDER_USERNAME` | Identifiant du fondateur, requis à l'initialisation |
+| `FOUNDER_PASSWORD` | Mot de passe initial, requis à l'initialisation ; ne réinitialise pas un compte existant |
+| `HOST` | `127.0.0.1` hors Docker |
+| `PORT` | `5180` |
+| `DATA_DIR` | `server/data/` hors Docker, `/data` dans le conteneur |
+| `MAX_BACKUPS` | `60` versions maximum par rotation, entier positif ou nul |
+| `TRUST_PROXY` | `1` uniquement derrière un proxy de confiance contrôlant `X-Forwarded-For` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Les deux sont nécessaires à la connexion Google facultative |
+| `GOOGLE_REDIRECT_URI` | URI OAuth explicite si nécessaire ; sinon calculée depuis la requête/proxy |
+| `RESEND_API_KEY`, `MAIL_FROM` | Transport d'e-mail de réinitialisation, facultatif |
+| `ADMIN_CONSOLE_KEY` | Active `/api/console/*` si au moins 32 caractères ; jamais envoyé au navigateur |
+| `GEOIP_DB` | Base City `.mmdb` locale facultative, non fournie par le dépôt |
+| `NODE_ENV` | `production` dans Docker ; empêche notamment l'affichage des codes de récupération dans les logs |
 
-La connexion Google est facultative : renseigner à la fois `GOOGLE_CLIENT_ID` et
-`GOOGLE_CLIENT_SECRET` (identifiants OAuth 2.0 « application Web » créés dans la
-console Google) pour activer le bouton. L'URI de redirection autorisée est
-`https://<domaine>/api/auth/google/callback` (ou l'URL locale
-`http://127.0.0.1:<port>/api/auth/google/callback` en développement).
-`GOOGLE_REDIRECT_URI` force cette adresse si le proxy ne transmet pas le bon
-hôte. Sans ces variables, `/api/config` annonce `google: false` et aucune
-connexion Google n'est proposée.
+### Google et récupération du compte
 
-La réinitialisation du mot de passe envoie un code à six chiffres par e-mail.
-Le transport s'active avec `RESEND_API_KEY` et `MAIL_FROM` (expéditeur vérifié
-chez Resend). Sans ces variables, la demande est enregistrée et le code est
-écrit dans les journaux du serveur hors production ; les autres paramètres du
-flux restent identiques.
+Déclarer exactement `https://votre-instance.example/api/auth/google/callback`
+comme URI autorisée, ou `http://127.0.0.1:5180/api/auth/google/callback` en local.
+Un déploiement sous préfixe nécessite aussi le préfixe dans cette URI.
+Le proxy doit contrôler les en-têtes d'hôte/protocole et `X-Forwarded-Prefix`.
+Ne pas copier les identifiants OAuth de l'instance publique pour un fork.
 
-Le site public est provisoirement servi sous
-`https://www.thomaswunsche.com/classodyssey/`. Le vhost Caddy transmet
-`X-Forwarded-Prefix: /classodyssey` et le serveur l'utilise pour l'URI de
-retour, le cookie OAuth et la redirection finale. Inscrire cet URI exact dans
-le client Google, en plus des URI du sous-domaine de secours, du domaine
-principal et du développement local. `compose.yaml` transmet au conteneur
-`GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` depuis le `.env` non versionné.
+Un nouveau compte Google accepte les textes légaux puis choisit un mot de passe
+de console enseignant. Ce mot de passe n'est pas celui du compte Google et ne
+transforme pas le compte en compte à connexion locale. Une authentification
+Google récente permet sa récupération.
 
-Elles doivent être fournies au processus `docker compose` par l'environnement
-du VPS ou un fichier `.env` non versionné. Aucune valeur secrète ne doit être
-écrite dans le dépôt. `HOST`, `PORT`, `DATA_DIR`, `MAX_BACKUPS` et `TRUST_PROXY`
-restent configurables ; le conteneur utilise `HOST=0.0.0.0`,
-tandis que son port est publié uniquement sur la boucle locale du VPS.
+Sans transport d'e-mail, les codes de réinitialisation sont journalisés **hors
+production seulement**. En production, il faut configurer un transport pour que
+la personne reçoive le code. Les journaux de développement restent privés.
 
-`TRUST_PROXY=1` fait lire l'adresse client dans `X-Forwarded-For` (posée par
-Caddy) : nécessaire pour que la limitation de débit soit par visiteur et non
-partagée par toute l'instance derrière le reverse proxy. À ne pas activer sans
-proxy de confiance devant l'application, car l'en-tête serait alors falsifiable.
-
-En développement local, `npm run dev` (utilisé par Go Live) et `npm start`
-chargent automatiquement le fichier `.env` à la racine du worktree. Copier `.env.example`
-vers `.env` et y renseigner les identifiants avant le premier démarrage, comme
-décrit dans `README.md`. Les variables déjà exportées restent prioritaires.
-Le mode de développement choisit automatiquement un port libre si le port
-configuré est occupé et affiche l'URL effective.
-
-Au premier démarrage, `data/state.json`, s'il existe, est copié atomiquement
-dans l'état du compte fondateur (`admin`). Le fichier d'origine n'est renommé
-en `state.json.migrated` qu'après l'écriture durable de l'index des comptes. Il
-reste ainsi récupérable. Les comptes créés ensuite commencent avec des classes
-7P et 8P vides.
+**Limite du Compose actuel :** `compose.yaml` ne transmet pas `RESEND_API_KEY`,
+`MAIL_FROM` ou `GOOGLE_REDIRECT_URI`. Leur simple ajout dans le `.env` de Compose
+ne suffit donc pas ; un opérateur doit aussi transmettre les variables nécessaires
+au conteneur. Ne pas annoncer l'envoi d'e-mails sur la seule présence d'un `.env`.
 
 ## API
 
-| Méthode | Route                                      | Rôle |
-|---------|--------------------------------------------|------|
-| GET     | `/api/health`                              | Vérifie le conteneur |
-| GET     | `/api/config`                              | Fonctionnalités publiques (connexion Google active ou non) |
-| GET     | `/api/auth/google`                         | Redirige vers Google (OAuth 2.0 + PKCE) |
-| GET     | `/api/auth/google/callback`                | Reçoit le code Google et ouvre la session |
-| POST    | `/api/auth/google/exchange`                | Échange le code à usage unique contre un jeton de session |
-| POST    | `/api/accounts`                            | Crée un compte et son état vide |
-| POST    | `/api/session`                             | Ouvre une session |
-| GET     | `/api/session`                             | Vérifie la session courante |
-| DELETE  | `/api/session`                             | Révoque la session courante |
-| POST    | `/api/session/verify`                      | Vérifie le mot de passe pour la console enseignant |
-| PUT     | `/api/session/password`                    | Change le mot de passe et révoque les autres sessions |
-| PUT     | `/api/account/profile`                     | Modifie le nom affiché et l'e-mail (identifiant) |
-| POST    | `/api/session/password/reset`              | Envoie un code de réinitialisation à l'adresse e-mail |
-| POST    | `/api/session/password/reset/confirm`      | Vérifie le code et définit le nouveau mot de passe |
-| POST    | `/api/support/messages`                    | Dépose une demande d'aide (lue par la console admin) |
-| PUT     | `/api/account/terms`                       | Enregistre l'acceptation des textes légaux (comptes créés via Google) |
-| PUT     | `/api/account/teacher-password`            | Définit le mot de passe console d'un nouveau compte Google |
-| PUT     | `/api/account/teacher-password/recover`    | Réinitialise ce mot de passe après une connexion Google récente |
-| GET     | `/api/state`                               | Lit l'état du compte connecté |
-| PUT     | `/api/state`                               | Écrit l'état si sa révision est courante |
-| GET     | `/api/admin/accounts`                      | Liste les comptes (`admin`) |
-| PUT     | `/api/admin/accounts/:id/password`         | Réinitialise le mot de passe d'un autre compte (`admin`) |
-| GET     | `/api/console/overview`                    | Métadonnées et dernières IP des comptes (clé serveur) |
-| GET     | `/api/console/audit`                       | Journal de modération (clé serveur) |
-| GET     | `/api/console/support`                     | Messages d'aide et nombre de messages ouverts (clé serveur) |
-| PATCH   | `/api/console/support/:id`                 | Statut et note interne d'un message d'aide (clé serveur) |
-| PATCH   | `/api/console/accounts/:id`                | Nom affiché, note interne, suspension/réactivation (clé serveur) |
-| DELETE  | `/api/console/accounts/:id/sessions`       | Révoque les sessions du compte (clé serveur) |
-| DELETE  | `/api/console/accounts/:id`                | Supprime le compte après confirmation (clé serveur) |
+Le contrat effectif est dans `server/server.mjs` et ses tests. Les corps JSON
+et les erreurs restent susceptibles d'évoluer pendant la bêta.
 
-Les routes autres que `health`, inscription, connexion et `/api/console/*` exigent
-`X-Session-Token`. Les routes `/api/console/*` exigent `X-Console-Key`, configurée
-uniquement côté serveur avec `ADMIN_CONSOLE_KEY` (au moins 32 caractères) ; sans
-clé elles sont désactivées. Les jetons ne sont stockés que sous forme de condensat
-SHA-256, les mots de passe avec `scrypt` (asynchrone, sel de 16 octets, dérivé
-de 32 octets, comparaison en temps constant), et aucune réponse d'administration
-n'expose ces valeurs. Le mot de passe fait au minimum 6 caractères. Une session
-dure 14 jours ; le changement de mot de passe révoque les autres sessions.
-La création d'un compte exige `termsAccepted: true` ; le serveur enregistre
-`terms: { acceptedAt, version }` sur le compte (version issue de
-`src/terms.mjs`). Les comptes créés via Google, dont le flux ne peut pas
-afficher la case, acceptent les textes à la première connexion via
-`PUT /api/account/terms`, puis choisissent un mot de passe dédié à la console
-du professeur. Ce mot de passe ne permet pas la connexion au compte ; Google
-reste la méthode de connexion. Une nouvelle connexion Google permet de
-réinitialiser ce mot de passe si l'ancien est oublié.
-Connexion et inscription sont limitées par adresse (via `X-Forwarded-For` quand
-`TRUST_PROXY=1`) sans différencier un identifiant existant d'un identifiant
-inconnu. Le nombre de comptes n'est pas plafonné ; c'est la **taille** qui est
-bornée : un état fait au plus 4 Mo et les sauvegardes d'un compte au plus 64 Mo
-au total (en plus de la rotation des 60 versions), donc un compte ne peut pas
-remplir le disque à lui seul.
+| Méthode | Route | Accès / rôle |
+| --- | --- | --- |
+| GET | `/api/health` | Public, état du processus |
+| GET | `/api/config` | Public, disponibilité de Google |
+| GET | `/api/auth/google` | Départ OAuth |
+| GET | `/api/auth/google/callback` | Retour OAuth |
+| POST | `/api/auth/google/exchange` | Code à usage unique → session |
+| POST | `/api/accounts` | Inscription avec acceptation des conditions |
+| POST | `/api/session` | Connexion locale |
+| GET / DELETE | `/api/session` | Vérification / révocation de la session |
+| POST | `/api/session/verify` | Vérification du mot de passe enseignant |
+| PUT | `/api/session/password` | Changement du mot de passe |
+| POST | `/api/session/password/reset` | Demande de récupération |
+| POST | `/api/session/password/reset/confirm` | Confirmation du code et nouveau mot de passe |
+| PUT | `/api/account/profile` | Profil du compte connecté |
+| PUT | `/api/account/settings` | Langue, thème et onboarding du compte |
+| PUT | `/api/account/terms` | Acceptation des textes légaux |
+| PUT | `/api/account/teacher-password` | Mot de passe console pour nouveau compte Google |
+| PUT | `/api/account/teacher-password/recover` | Récupération après authentification Google récente |
+| POST | `/api/support/messages` | Demande d'aide du compte connecté |
+| GET / HEAD / PUT | `/api/state` | État du compte connecté ; PUT avec révision |
+| GET | `/api/admin/accounts` | Session avec rôle `admin` |
+| PUT | `/api/admin/accounts/:id/password` | Session `admin` |
+| GET | `/api/console/overview` | Clé de console serveur |
+| GET | `/api/console/audit` | Clé de console serveur |
+| GET | `/api/console/support` | Clé de console serveur |
+| PATCH | `/api/console/support/:id` | Clé de console serveur |
+| PATCH / DELETE | `/api/console/accounts/:id` | Clé de console serveur |
+| DELETE | `/api/console/accounts/:id/sessions` | Clé de console serveur |
 
-Les réponses API portent `Cache-Control: no-store`, `X-Content-Type-Options:
-nosniff` et `Referrer-Policy`. Caddy, seul service public, ajoute HSTS et les
-en-têtes de sécurité du snippet `deploy/vps/security-headers.caddy`.
-L'état écrit est borné (classes, élèves, longueurs, caractères de contrôle
-interdits) avant persistance.
+Les opérations du compte exigent `X-Session-Token`, hors inscription, connexion,
+configuration publique et parcours OAuth/récupération. Les routes `/api/console/*`
+utilisent `X-Console-Key`, pas le déverrouillage enseignant du navigateur.
+La liste précise des contrôles est à lire dans les handlers, pas à déduire du
+seul préfixe de route.
 
-Chaque état porte une `revision`. Un `PUT` obsolète reçoit `409` et ne remplace
-jamais une sauvegarde plus récente. Les écritures sont atomiques et les 60
-dernières versions sont conservées dans le dossier `backups/` propre au compte.
-L'index des comptes possède également ses propres copies de récupération.
-
-## Côté navigateur
-
-- L'application affiche le cache `localStorage` du compte connecté, puis charge
-  `/api/state` depuis la même origine.
-- Chaque modification déclenche un `PUT /api/state` après 300 ms.
-- Le frontend et l'API partagent directement la même origine sur le VPS.
-- En cas de coupure réseau, le cache local permet de continuer et une nouvelle
-  synchronisation est tentée à la visite suivante.
-- Une réponse `401` ou une déconnexion oublie la session, jamais un cache local
-  marqué comme non synchronisé.
-- Un conflit `409` suspend les écritures, conserve la copie locale et propose
-  de l'exporter ou de charger explicitement la copie serveur. La copie locale
-  est archivée sur l'appareil avant ce chargement.
-
-## Déploiement VPS
-
-Les fichiers d'exécution se trouvent dans `/srv/apps/classquest` :
+## Persistance et limites
 
 ```text
-/srv/apps/classquest/
-├── Dockerfile
-├── compose.yaml
-├── server/
-│   ├── server.mjs
-│   └── api.mjs
-├── index.html
-├── styles.css
-├── src/
-├── assets/
-└── data/
-    ├── accounts.json
-    ├── sessions.json
-    ├── account-backups/
-    ├── state.json.migrated
-    └── accounts/<id>/
-        ├── state.json
-        └── backups/
+DATA_DIR/
+├── accounts.json
+├── sessions.json
+├── account-backups/
+├── support-messages.json
+├── admin-audit.jsonl
+└── accounts/<id>/
+    ├── state.json
+    └── backups/
 ```
 
-Depuis le dépôt local, copier la configuration avec la clé SSH du VPS :
+- Les nouveaux comptes commencent avec `classes: []` et aucun élève.
+- Mots de passe dérivés avec `scrypt` et sel ; jetons de session indexés par
+  condensat SHA-256. Une session expire après 14 jours.
+- Le changement de mot de passe révoque les autres sessions.
+- Écritures via fichier temporaire puis renommage ; copies de récupération des
+  états et de l'index des comptes. Ce mécanisme n'équivaut pas à une sauvegarde
+  indépendante du disque ou de la machine.
+- Un état est limité à **4 Mio** ; sa forme partagée autorise au plus 50 classes
+  et 300 héros par classe, avec bornes sur les noms et identifiants.
+- La rotation est limitée en nombre (60 par défaut) et en volume (64 Mio par
+  ensemble de sauvegardes géré par la rotation).
+- Un PUT doit porter la révision courante ; le serveur l'incrémente après
+  écriture. Une révision obsolète reçoit **409**, sans écrasement silencieux.
+- Le client diffère les sauvegardes d'environ 300 ms et conserve les changements
+  non synchronisés. Un conflit suspend les écritures et permet export ou
+  chargement explicite de la copie serveur avec archivage local préalable.
 
-```bash
-rsync -az \
-  -e "ssh -i ~/.ssh/infomaniak_ssh/infomaniak_vps" \
-  .dockerignore Dockerfile compose.yaml server index.html styles.css src assets \
-  debian@<IP_DU_VPS>:/srv/apps/classquest/
+Le schéma serveur borne la forme des données ; il ne recalcule pas toutes les
+règles économiques du jeu. Le compte enseignant est une autorité de modification
+de son propre état. Ne pas présenter l'application comme un serveur compétitif
+anti-triche ou un système d'identités séparées pour chaque élève.
+
+## Auto-hébergement
+
+Ces indications sont génériques, pas un accès à l'instance de l'auteur.
+Après configuration et récupération des objets LFS :
+
+```sh
+docker compose config --quiet
+docker compose build
 ```
 
-Puis reconstruire et contrôler le service :
+Le conteneur tourne sous l'utilisateur `node`, avec racine en lecture seule,
+capacités supprimées et volume `./data:/data`. Préparez un dossier de données
+accessible en écriture à cet utilisateur avec des droits restreints selon votre
+environnement. Évitez une commande de permission globale copiée sans vérification.
 
-```bash
-cd /srv/apps/classquest
-export FOUNDER_USERNAME
-export FOUNDER_PASSWORD
-docker compose config
-docker compose up -d --build
+Une fois le volume et la sauvegarde préparés :
+
+```sh
+docker compose up -d
 docker compose ps
-docker compose logs --tail=100
-curl -fsS http://127.0.0.1:5180/api/health
+curl --fail http://127.0.0.1:5180/api/health
 ```
 
-Le port Docker est publié uniquement sur `127.0.0.1`. Caddy est le seul service
-Web exposé publiquement et utilise la configuration versionnée dans
-`deploy/vps/classodyssey.com.caddy`.
+Le port hôte est publié sur `127.0.0.1` seulement. Un reverse proxy de confiance
+termine TLS ; les fichiers `deploy/vps/` illustrent le déploiement de l'auteur,
+à adapter avant réutilisation. `TRUST_PROXY=1` n'est approprié que si aucun client
+ne peut joindre l'application en contournant ce proxy.
 
-Après une modification Caddy :
+Avant une mise à jour : identifier le commit, sauvegarder `DATA_DIR`, vérifier
+les migrations et le retour arrière, lancer les tests et tester avec des données
+fictives. Une réponse de santé 200 ne valide ni l'authentification, ni les droits,
+ni les sauvegardes, ni le rendu 3D. Après déploiement, vérifier la version réellement
+servie et les parcours utilisateur. Le merge GitHub ne fait aucune de ces étapes.
 
-```bash
-sudo -u caddy -H caddy validate --config /etc/caddy/Caddyfile
-sudo systemctl reload caddy
-```
+La migration d'un ancien `data/state.json` et les scripts de
+`server/migrations/` concernent des formats historiques. Ils ne doivent pas être
+lancés au hasard sur une classe en cours d'utilisation.
 
-## Sauvegardes
+## Sauvegardes et protection des données
 
-- Données actives : `/srv/apps/classquest/data/` sur le VPS.
-- Rotation applicative : 60 versions dans `data/backups/`.
-- Archive de la migration depuis le Pi conservée sur l'hébergement Infomaniak
-  dans `~/cagipi_backup/`.
-- La console enseignant propose aussi l'export/import JSON pour conserver une
-  copie indépendante du serveur.
+Conserver une copie indépendante du volume, protégée comme les données actives,
+et tester une restauration sur une instance isolée. L'export JSON enseignant est
+un complément, pas une politique de sauvegarde complète. Ne pas publier un export
+réel en issue ou dans une PR. La suppression d'un compte actif ne purge pas
+magiquement les sauvegardes externes de l'hébergeur.
+
+L'auto-hébergeur doit adapter les textes légaux, contacts, sous-traitants et durées
+de conservation à son propre déploiement. La licence du code n'est ni une
+validation juridique de cet usage ni une autorisation de traiter des données élèves.
