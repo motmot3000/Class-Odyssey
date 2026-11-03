@@ -1,19 +1,20 @@
 ## Class Odyssey
 
-- [Accueil](Home)
-- [Projet et pérennité](Projet-et-perennite)
+- [Home](Home)
+- [Why gamification](Why-gamification)
+- [Project and maintenance](Project-and-maintenance)
 - [Installation](Installation)
-- [Règles du jeu](Regles-du-jeu)
+- [Game rules](Game-rules)
 - [Architecture](Architecture)
-- [Contribuer](Contribuer)
-- [Développement et tests](Developpement-et-tests)
-- [Backend et données](Backend-et-donnees)
-- [Licences et assets](Licences-et-assets)
-- [Branches et archives](Branches-et-archives)
+- [Contributing](Contributing)
+- [Development and testing](Development-and-testing)
+- [Backend and data](Backend-and-data)
+- [Licenses and assets](Licenses-and-assets)
+- [Branches and archives](Branches-and-archives)
 
-## Références
+## References
 
-- [Documentation complète](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/README.md)
-- [Code](https://github.com/motmot3000/Class-Odyssey)
-- [Sécurité](https://github.com/motmot3000/Class-Odyssey/blob/main/SECURITY.md)
-- [Site](https://classodyssey.com)
+- [Full documentation](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/README.md)
+- [Source code](https://github.com/motmot3000/Class-Odyssey)
+- [Security](https://github.com/motmot3000/Class-Odyssey/blob/main/SECURITY.md)
+- [Website](https://classodyssey.com)

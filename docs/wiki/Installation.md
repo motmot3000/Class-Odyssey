@@ -1,16 +1,16 @@
 # Installation
 
-## Essayer le jeu
+## Try the app
 
-L'application est accessible sur [classodyssey.com](https://classodyssey.com).
-C'est une bêta : avant un usage réel, examiner ses limites, les textes légaux,
-les règles de l'établissement et la protection des données.
+The application is available at [classodyssey.com](https://classodyssey.com).
+It is a beta: before real classroom use, review its limits, the legal texts,
+your school's rules and data protection requirements.
 
-## Développer sur son ordinateur
+## Develop on your computer
 
-Prérequis : Node.js 22.9 minimum, npm, Git et Git LFS. Python 3 est aussi
-nécessaire pour le contrôle syntaxique complet. Blender n'est pas requis pour
-le lancement ordinaire : les modèles livrés sont récupérés par LFS.
+Requirements: Node.js 22.9 or later, npm, Git and Git LFS. Python 3 is also
+needed for the full syntax check. Blender is not required for ordinary use: the
+shipped models are fetched through LFS.
 
 ```sh
 git clone https://github.com/motmot3000/Class-Odyssey.git
@@ -21,23 +21,23 @@ npm ci
 cp .env.example .env
 ```
 
-Renseigner un `FOUNDER_USERNAME` et un `FOUNDER_PASSWORD` personnels pour le
-développement, sans jamais les commiter. Puis :
+Set a personal `FOUNDER_USERNAME` and `FOUNDER_PASSWORD` for local development,
+and never commit them. Then:
 
 ```sh
 npm run dev:app
 ```
 
-Ouvrir l'URL imprimée, normalement `http://127.0.0.1:5180`.
-Créer une classe et des héros fictifs : un nouveau compte est vide.
-Modifier `.env` ne réinitialise pas un compte déjà créé.
+Open the printed URL, normally `http://127.0.0.1:5180`. Create a class and
+fictional heroes: a new account starts empty. Editing `.env` does not reset an
+account that already exists.
 
-`npm run dev` lance plutôt l'application sur 5180 **et** l'atelier 3D sur 5201.
-Pour découvrir le jeu, `dev:app` est le point d'entrée le plus simple.
+`npm run dev` starts the app on 5180 **and** the 3D workshop on 5201. To discover
+the game, `dev:app` is the simplest entry point.
 
-Le [guide détaillé](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/getting-started.md)
-explique les ports, Google facultatif, le stockage et les erreurs LFS.
-Des modèles absents ou des erreurs « glTF » sont souvent dus à des pointeurs
-LFS non remplacés : ne pas ignorer les tests pour contourner ce problème.
+The [detailed guide](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/getting-started.md)
+covers ports, optional Google sign-in, storage and LFS errors. Missing models or
+"glTF" errors are often caused by unreplaced LFS pointers: do not skip the tests
+to work around that problem.
 
-Suite : [Règles du jeu](Regles-du-jeu) · [Développement](Developpement-et-tests)
+Next: [Game rules](Game-rules) · [Development and testing](Development-and-testing)

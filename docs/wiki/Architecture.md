@@ -1,38 +1,41 @@
-# Architecture et règles de fonctionnement
+# Architecture
 
-Class Odyssey utilise du JavaScript ESM côté navigateur et un serveur HTTP
-Node.js. Three.js gère les personnages. Les données sont des fichiers JSON
-isolés par compte ; le navigateur maintient un cache local.
+Class Odyssey uses browser-side JavaScript ESM and a Node.js HTTP server.
+Three.js renders the characters. Data is stored as JSON files isolated per
+account; the browser keeps a local cache.
 
-| Couche | Responsabilité |
+| Layer | Responsibility |
 | --- | --- |
-| `src/domain.mjs` | Catalogue et transitions de jeu, sans DOM ni réseau |
-| `src/state-schema.mjs` | Validation de forme partagée entre navigateur et API |
-| `src/app.mjs` | Routage, actions, état d'interface et synchronisation |
-| `src/views/` | HTML échappé ; écran actif principal dans `odyssey.mjs` |
-| `src/session.mjs`, `src/api.mjs` | Compte, session et appels API bornés |
-| `server/server.mjs` | Routes et contrôles HTTP |
-| `server/api.mjs` | Comptes, dérivation des mots de passe, stockage et sauvegardes |
-| `server/static.mjs` | Fichiers publics autorisés, pas les données ou secrets |
+| `src/domain.mjs` | Game catalogue and transitions, without DOM or network |
+| `src/state-schema.mjs` | Shape validation shared by browser and API |
+| `src/app.mjs` | Routing, actions, UI state and synchronisation |
+| `src/views/` | Escaped HTML; the main active screen is `odyssey.mjs` |
+| `src/session.mjs`, `src/api.mjs` | Account, session and bounded API calls |
+| `server/server.mjs` | HTTP routes and controls |
+| `server/api.mjs` | Accounts, password derivation, storage and backups |
+| `server/static.mjs` | Allowed public files, never data or secrets |
 
-## Invariants à préserver dans une PR
+## Invariants to preserve in a pull request
 
-1. Une action produit une transition de domaine avant sauvegarde.
-2. Le cache reste lié au bon compte et conserve les changements non synchronisés.
-3. Un PUT porte la révision courante ; un conflit reçoit 409, sans écrasement implicite.
-4. Un résultat asynchrone ne doit pas modifier le compte qui a remplacé celui
-   capturé au départ de la requête.
-5. Le verrou enseignant n'est pas une identité serveur distincte par élève.
-6. Le stockage suppose un seul écrivain Node par dossier de données.
+1. An action produces a domain transition before saving.
+2. The cache stays bound to the right account and keeps unsynchronised changes.
+3. A PUT carries the current revision; a conflict receives 409, with no implicit
+   overwrite.
+4. An asynchronous result must not modify the account that replaced the one
+   captured when the request started.
+5. The teacher unlock is not a separate server identity per student.
+6. Storage assumes a single Node writer per data folder.
 
-## Chaîne 3D
+## 3D pipeline
 
-Les modèles de look, slots et sélections sont distincts du rendu Three.js.
-Un canvas visible est partagé entre vues ; les portraits utilisent un renderer
-hors écran et un cache borné. La durée de vie de l'hôte et celle des ressources
-doivent toutes deux être vérifiées pour éviter les montages tardifs.
-Les bundles générés doivent provenir des sources, pas être retouchés à la main.
+Look models, slots and selections are separate from Three.js rendering. One
+visible canvas is shared between views; portraits use an off-screen renderer and
+a bounded cache. Both the host lifetime and the resource lifetime must be
+checked to avoid late mounts. Generated bundles must come from the sources, not
+be edited by hand.
 
-Voir la [carte complète du code](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/code-map.md)
-et le [pipeline 3D](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/items-3d/README.md).
-Les prototypes et anciens renderers ne sont pas automatiquement le runtime du jeu.
+See the [full code map](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/code-map.md)
+and the [3D pipeline](https://github.com/motmot3000/Class-Odyssey/blob/main/docs/items-3d/README.md).
+Prototypes and old renderers are not automatically the game runtime.
+
+Next: [Backend and data](Backend-and-data) · [Development and testing](Development-and-testing)
