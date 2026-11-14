@@ -44,8 +44,18 @@ Rules for use:
 
 Navigation: **Class → Hero page → Wardrobe / Shop**. The teacher console
 selects one hero at a time; **Whole class** is an explicit toggle for collective
-rewards. The teacher unlock lasts five minutes after confirmation and is not
+rewards. The teacher unlock lasts thirty minutes after confirmation and is not
 extended by collapsing the panel.
+
+No countdown is shown: when the thirty minutes are over, the console closes
+on the password screen by itself. **Lock the console** ends it at once.
+
+The class can be shown in three layouts, remembered on each device: **Grid**
+(large hero cards), **List** (one compact label per hero, to see many students
+at once) and **Ranking** (a podium, then the other ranks as a pyramid). The
+ranking only counts experience: the level sets the rank, heroes on the same
+level share it, and XP orders them inside the rank. Coins never count. It is an
+optional view: use it when it motivates the group, not to expose a student.
 
 This lock is a protection against accidental manipulation. It is not a separate
 student account and not a separate server permission. Do not share teacher

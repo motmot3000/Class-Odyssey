@@ -80,11 +80,30 @@ La console sélectionne un seul héros à la fois. **Toute la classe** est une
 bascule explicite : un clic sélectionne tous les héros de la classe active,
 un second efface la sélection. Les récompenses visent la sélection visible.
 
+## Affichages de la classe
+
+Trois affichages, au choix au-dessus de la classe ; le choix est mémorisé sur
+l'appareil (`classodyssey:board-layout`) :
+
+- **Grille** : les grandes cartes de héros (affichage par défaut).
+- **Liste** : une étiquette allongée par héros (buste, nom, titre, niveau, PV,
+  pièces, XP, accès Dressing et Shop), pour voir beaucoup d'élèves à la fois.
+- **Classement** : podium puis rangs suivants en pyramide. Seule l'expérience
+  compte : le **niveau** fixe le rang (les héros de même niveau partagent le
+  rang), puis les XP ordonnent à l'intérieur du rang. Les pièces ne comptent pas
+  (`rankPupils()` dans `domain.mjs`).
+
+Dans les trois affichages, toucher un héros ouvre sa fiche ; console
+déverrouillée et ouverte, il le sélectionne. La recherche filtre les héros sans
+modifier les rangs.
+
 ## Console enseignant : protection d'usage, pas identité distincte
 
-Le déverrouillage dure **cinq minutes après validation**. Replier le panneau ne
-prolonge pas ce délai. Verrouillage et déconnexion l'annulent. Le droit local
-reste lié au compte qui l'a obtenu.
+Le déverrouillage dure **trente minutes après validation**. Aucun décompte
+n'est affiché : à l'échéance, la console se referme d'elle-même sur l'écran du
+mot de passe et les contrôles enseignant disparaissent. Replier le panneau ne
+prolonge pas ce délai. Le bouton **Verrouiller la console** et la déconnexion
+l'annulent immédiatement. Le droit local reste lié au compte qui l'a obtenu.
 
 Ce verrou limite les manipulations en classe ; **ce n'est pas une autorisation
 serveur distincte par élève**. Le serveur reconnaît le jeton du compte connecté.

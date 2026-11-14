@@ -47,7 +47,8 @@ Commencez par le [guide de contribution](CONTRIBUTING.md).
 - Classes et héros : noms, XP, niveaux, points de vie, inventaire et portraits.
 - Récompenses individuelles ou pour toute la classe, avec annulation locale.
 - Boutique en **monnaie virtuelle**, équipements et personnalisation 3D.
-- Console enseignant déverrouillée pour cinq minutes ; comptes séparés côté API.
+- Console enseignant déverrouillée pour trente minutes, sans décompte affiché ; comptes séparés côté API.
+- Trois affichages de la classe : grille, liste compacte et classement à l'expérience (podium).
 - Interface FR/EN, thèmes clair/sombre et visite guidée.
 - Persistance serveur, cache local par compte, export/import JSON et détection
   des conflits de sauvegarde.

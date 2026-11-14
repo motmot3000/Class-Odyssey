@@ -40,12 +40,20 @@ the Dressing and Shop. Navigation follows one hierarchy — **Class → Hero she
 same top-left control, and the hero sheet returns to the class. The teacher
 console is a native dialog, reached through the fixed right-edge tab and
 password verification. Its non-modal panel is docked on the right, so the
-class remains interactive. Folding it preserves the five-minute grant;
+class remains interactive. Folding it preserves the thirty-minute grant;
 adding a pupil temporarily opens a child form and returns to the console.
 Individual selection is singular; **Whole class** is a reversible selection
 toggle, and rewards always target the visible selection.
 
-The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account and expires five minutes after password verification. Folding/reopening does not extend this deadline. Explicit locking or sign-out revokes it immediately.
+The class board has three layouts (`BOARD_LAYOUTS` in `src/views/odyssey.mjs`):
+**grid** (large cards, `renderRuneCard`), **list** (compact long labels,
+`renderHeroRow`) and **ranking** (podium then pyramid tiers, `renderRanking`).
+They share the same card helpers (hit area, hearts, coins, XP bar, level seal),
+so pick/select behaviour is identical. Ranking order comes from the pure
+`rankPupils()` in `src/domain.mjs`: dense rank by level, XP inside a rank,
+money ignored.
+
+The browser teacher gate is a classroom interaction safeguard, not a separate server identity for pupils. The API authenticates the account token; admin routes additionally require the admin role. Unlock state is bound to its account and expires thirty minutes after password verification. Folding/reopening does not extend this deadline. Explicit locking or sign-out revokes it immediately. No countdown is shown: `enforceTeacherLock()` in `app.mjs` checks the grant every second and re-renders once when it lapses, so an open console falls back to the password screen.
 
 Every asynchronous result must check its captured account/token before touching state. In particular, imports, saves and password checks must not act on a newly signed-in account. The server rechecks sessions after receiving request bodies because a token may have been revoked while a body was arriving.
 
@@ -115,7 +123,8 @@ The product is Class Odyssey. Historical `classquest` identifiers are deliberate
 | `classquest:v1:<account>` and `:dirty` | `domain.mjs`, `app.mjs` | Cached state, including unsynced edits |
 | `classquest:v1:<account>:conflict:<timestamp>` | `app.mjs` | Archived local conflict copies |
 | `classquest:session` | `session.mjs`, `index.html` | Session and offline verifier |
-| `classquest:adult` | `session.mjs` | Account-bound five-minute teacher grant |
+| `classquest:adult` | `session.mjs` | Account-bound thirty-minute teacher grant |
+| `classodyssey:board-layout` | `app.mjs` | Device class layout (`grid`, `list`, `ranking`) |
 | `classquest:theme` | `app.mjs`, `index.html`, `gamification.mjs` | Device theme preference |
 | `classquest.lang` and `classquest.lang:<account>` | `i18n.mjs`, `app.mjs`, `index.html` | Device/account language preference |
 | `classquest:student` and account-suffixed forms | `app.mjs` | Device-local selected hero |

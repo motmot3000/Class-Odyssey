@@ -75,7 +75,7 @@ classroom behaviour:
 - **Whole-class rewards.** A deliberate toggle for collective recognition,
   supporting cooperation.
 - **A protected teacher console.** Fast, explicit feedback during the lesson,
-  with a five-minute unlock and no separate student accounts.
+  with a thirty-minute unlock and no separate student accounts.
 
 The app does not grade schoolwork and does not decide who deserves a reward.
 The teacher does. The platform only makes the decision visible and quick.
