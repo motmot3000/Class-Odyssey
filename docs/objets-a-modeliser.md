@@ -123,6 +123,16 @@ ans — s'il est repris, redessiner en motifs tribaux/runes.
 | 1 | Ambre / doré | 5 | 40 | Va avec peau dorée et dragon |
 | 2 | Gris | 2 | 20 | Neutre manquant |
 
+### 1.10 Chapeaux (slot `hat`)
+
+Le slot `hat` existe déjà (`HATS` dans `src/domain.mjs` : béret, chapeau de mage, haut-de-forme,
+heaume, couronne). Les couvre-chefs se construisent en pipeline C avec l'attache `hat_seat` et les
+marges `headFits` (pas de flottement, pas de traversée de chevelure).
+
+| # | Item | Niv. | Prix | Notes |
+|---|------|------|------|-------|
+| 1 | **Chapeau de paille de Luffy** | 6 | 70 | Demande de Thomas (2026-11-14). Chapeau de paille rond à large bord, bandeau rouge, sommet légèrement bombé ; référence One Piece, à styliser dans le ton médiéval-fantastique du catalogue (pas de reproduction d'un modèle sous copyright : géométrie originale, paille tressée mate). Doit rester lisible avec les 7 coupes de cheveux et sur les deux bases ; attention au bord large qui masque les yeux dans la vue Tête. |
+
 ---
 
 ## 2. Sources d'exemples (à consulter avant de modéliser de zéro)
