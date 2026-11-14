@@ -36,7 +36,7 @@ const dict = {
     "lock.submit.unlock": "Déverrouiller",
     "lock.action.back": "Retour aux héros",
     "lock.action.signout": "Se déconnecter",
-    "lock.hint": "L’accès professeur reste déverrouillé pendant 5 minutes, même si la console est repliée.",
+    "lock.hint": "L’accès professeur reste déverrouillé pendant 30 minutes, même si la console est repliée.",
     "lock.prompt": "Saisis le mot de passe de {account} pour ouvrir les contrôles du professeur.",
 
     /* ---------- rules ---------- */
@@ -130,7 +130,6 @@ const dict = {
     "console.data.erase": "Effacer chaque classe",
     "console.account": "Compte",
     "console.account.note": "Le mot de passe du compte déverrouille aussi cette console.",
-    "console.account.openUntil": " Elle est ouverte ici jusqu'à {time}.",
     "console.account.current": "Mot de passe actuel",
     "console.account.new": "Nouveau mot de passe",
     "console.account.repeat": "Répète le nouveau mot de passe",
@@ -446,7 +445,7 @@ const dict = {
     "lock.submit.unlock": "Unlock",
     "lock.action.back": "Back to heroes",
     "lock.action.signout": "Sign out",
-    "lock.hint": "Teacher access stays unlocked for 5 minutes, even when the console is folded away.",
+    "lock.hint": "Teacher access stays unlocked for 30 minutes, even when the console is folded away.",
     "lock.prompt": "Type the password for {account} to open teacher controls.",
 
     "rules.title.how": "How does it work?",
@@ -537,7 +536,6 @@ const dict = {
     "console.data.erase": "Erase every class",
     "console.account": "Account",
     "console.account.note": "The account password also unlocks this console.",
-    "console.account.openUntil": " It's open here until {time}.",
     "console.account.current": "Current password",
     "console.account.new": "New password",
     "console.account.repeat": "Repeat the new password",

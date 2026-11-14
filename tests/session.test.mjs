@@ -51,7 +51,7 @@ test("signin stores only the current token/account and leaves the teacher gate l
   assert.equal(session.isAdultUnlocked(), true);
 });
 
-test("a newly registered account starts with five minutes of teacher access", async (t) => {
+test("a newly registered account starts with thirty minutes of teacher access", async (t) => {
   let now = Date.now();
   t.mock.method(Date, "now", () => now);
   respond = () => jsonResponse(201, { token: "new-token", account: ACCOUNT });
@@ -152,15 +152,15 @@ test("teacher unlock state cannot follow a switch to another account", async () 
   assert.equal(session.unlockUntil(), null);
 });
 
-test("teacher access has a fixed five-minute deadline", async (t) => {
+test("teacher access has a fixed thirty-minute deadline", async (t) => {
   respond = () => jsonResponse(200, { token: "token-a", account: ACCOUNT });
   await session.signIn("teacher", "class-password");
   let now = Date.now();
   t.mock.method(Date, "now", () => now);
   session.unlockAdult();
   const deadline = session.unlockUntil();
-  assert.equal(deadline, now + 5 * 60 * 1000);
-  now += 299999;
+  assert.equal(deadline, now + 30 * 60 * 1000);
+  now += 30 * 60 * 1000 - 1;
   assert.equal(session.isAdultUnlocked(), true);
   assert.equal(session.unlockUntil(), deadline);
   now += 1;

@@ -275,7 +275,6 @@ function render() {
   syncOdysseyRuntime();
   mountHeroPortraits(document.body);
   if (view === "welcome") releaseWelcomeScene = mountWelcomeScene(app);
-  updateClock();
   if (ui.focusClassHeading && view === 'class' && ui.odysseyView === 'board') {
     ui.focusClassHeading = false;
     app.querySelector('.picker h1')?.focus({ preventScroll:true });
@@ -523,13 +522,13 @@ function flushFlash() {
   pendingFlash.clear();
 }
 
-function updateClock() {
-  const access = dialogRoot.querySelector('[data-teacher-time]');
-  if (access) {
-    const seconds = Math.max(0, Math.ceil(((unlockUntil() || 0) - Date.now()) / 1000));
-    const time = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-    access.textContent = seconds ? t('console.accessRemaining', { time }) : t('console.accessExpired');
-  }
+/* The teacher unlock expires silently: when it lapses, re-render once so an
+ * open console falls back to the password screen and teacher controls hide. */
+let teacherWasUnlocked = isAdultUnlocked();
+function enforceTeacherLock() {
+  const unlocked = isAdultUnlocked();
+  if (teacherWasUnlocked && !unlocked) render();
+  teacherWasUnlocked = unlocked;
 }
 
 /* Event delegation survives complete DOM replacement without accumulating
@@ -2297,4 +2296,4 @@ if (currentView() === "admin") loadAdminAccounts();
 maybeStartOnboarding();
 if (googleCode) completeGoogleSignIn(googleCode);
 loadPublicConfig();
-setInterval(updateClock, 1000);
+setInterval(enforceTeacherLock, 1000);

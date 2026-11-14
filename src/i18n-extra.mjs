@@ -1,6 +1,5 @@
 // French and English copy for the integrated shell, 3D views and notifications.
 export const messages = {
-  "console.accessRemaining": ["Verrouillage auto dans {time}", "Auto lock in {time}"],
   "class.new.title": ["Nouvelle classe", "New class"],
   "class.new.hint": ["Donne un nom à la classe. Tu ajouteras ensuite les élèves depuis la console du professeur.", "Name the class. You will add the students afterwards from the teacher console."],
   "class.new.name": ["Nom de la classe", "Class name"],
@@ -40,7 +39,6 @@ export const messages = {
   "class.empty.title": ["Aucune classe pour l'instant", "No class yet"],
   "class.empty.body": ["Créez votre première classe pour ajouter des élèves et lancer l'aventure.", "Create your first class to add pupils and start the adventure."],
   "notice.classCreated": ["Classe {name} créée.", "Class {name} created."],
-  "console.accessExpired": ["Accès expiré — saisis le mot de passe pour continuer.", "Access expired — enter the password to continue."],
   "console.account.language": ["Langue de l'application", "Application language"],
   "nav.class": ["Classe", "Class"],
   "nav.classes": ["Classe :", "Class:"],
@@ -97,7 +95,7 @@ export const messages = {
   "welcome.google.signin": ["Se connecter avec son compte Google", "Sign in with Google"],
   "welcome.google.signup": ["Créer un compte avec Google", "Create account with Google"],
   "google.teacher.title": ["Protège ta console du professeur", "Protect your teacher console"],
-  "google.teacher.body": ["Choisis un mot de passe pour la console du professeur. Ta connexion restera liée à Google ; ce mot de passe sert seulement à ouvrir la console pendant cinq minutes et pourra être modifié dans les paramètres du compte.", "Choose a password for your teacher console. You will still sign in with Google; this password only unlocks the console for five minutes and can be changed in account settings."],
+  "google.teacher.body": ["Choisis un mot de passe pour la console du professeur. Ta connexion restera liée à Google ; ce mot de passe sert seulement à ouvrir la console pendant trente minutes et pourra être modifié dans les paramètres du compte.", "Choose a password for your teacher console. You will still sign in with Google; this password only unlocks the console for thirty minutes and can be changed in account settings."],
   "google.teacher.password": ["Mot de passe de la console du professeur", "Teacher console password"],
   "google.teacher.submit": ["Créer mon espace professeur", "Create my teacher space"],
   "google.teacher.lockPrompt": ["Saisis le mot de passe de ta console du professeur pour ouvrir les contrôles.", "Enter your teacher console password to open teacher controls."],

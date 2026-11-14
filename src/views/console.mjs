@@ -24,7 +24,6 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     </div>
     ${unlockedUntil ? `<div class="teacher-session-lock">
       <button class="btn btn-sm" type="button" data-action="lock-adult">${icon('lock')}<span>${t('console.account.lock')}</span></button>
-      <span class="teacher-session-status" role="timer" aria-live="off" data-teacher-time data-until="${Number(unlockedUntil)}"></span>
     </div>` : ''}
     <div class="console-history">
       <button class="btn btn-sm" type="button" data-action="undo" ${canUndo ? "" : "disabled"} title="${t("console.undoHint")}">
@@ -38,21 +37,17 @@ export function renderConsole({ classroom, ui, targets, focused, canUndo, events
     ${renderRulesPanel(open)}
     ${renderActivityPanel(events, open)}
     ${renderDataPanel(open, armedReset)}
-    ${renderAccountPanel(open, unlockedUntil, account)}
+    ${renderAccountPanel(open, account)}
   `;
 }
 
-function renderAccountPanel(open, unlockedUntil, account) {
-  const locale = getLang() === "fr" ? "fr-FR" : "en-GB";
-  const endsAt = Number.isFinite(unlockedUntil)
-    ? new Date(unlockedUntil).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
-    : null;
+function renderAccountPanel(open, account) {
   const email = account?.email || "";
   return `
     <details class="panel" data-panel="account" ${open("account")}>
       <summary>${icon("lock")}<span>${t("settings.title")}</span></summary>
       <p class="account-line"><strong>${escapeHtml(account?.displayName || "")}</strong><span>@${escapeHtml(account?.username || "")}</span></p>
-      <p class="panel-note">${t(account?.googleOnly ? "google.teacher.accountNote" : "console.account.note")}${endsAt ? t("console.account.openUntil", { time: endsAt }) : ""}</p>
+      <p class="panel-note">${t(account?.googleOnly ? "google.teacher.accountNote" : "console.account.note")}</p>
       <p class="section-label">${t("console.account.language")}</p>
       <div class="onboarding-choices">
         <button class="btn btn-sm${getLang() === "fr" ? " is-active" : ""}" type="button" data-action="set-language" data-lang="fr" aria-pressed="${getLang() === "fr"}">Français</button>

@@ -8,7 +8,7 @@ import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-policy.mjs"
 // Persisted keys retain their historical prefix for existing installations.
 export const SESSION_KEY = "classquest:session";
 const UNLOCK_KEY = "classquest:adult";
-export const TEACHER_UNLOCK_MS = 5 * 60 * 1000;
+export const TEACHER_UNLOCK_MS = 30 * 60 * 1000;
 const PBKDF2_ROUNDS = 150_000;
 let authGeneration = 0;
 
