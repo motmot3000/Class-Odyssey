@@ -2,17 +2,19 @@
  * the domain enforces purchases, and the runtime owns the shared 3D canvas.
  */
 
-import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, cosmeticField, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward } from "../domain.mjs";
+import { HATS, HAIRS, SKINS, HAIR_COLORS, EYE_COLORS, ACCESSORIES, PETS, SKIN_TONES, WEAPONS, SHIELDS, cosmeticField, getShopItem, getShopItems, xpProgress, isEliminated, getNextReward, rankPupils } from "../domain.mjs";
 import { escapeHtml, translateReward, renderCustomOrders, renderLevel, renderTitle, renderTitleBackdrop, titleBackdropAttributes } from "../ui.mjs";
 import { renderShop } from "./shop.mjs";
 import { BRAND } from "../brand.mjs";
-import { t, tItem } from "../i18n.mjs";
+import { getLang, t, tItem } from "../i18n.mjs";
 import { pupilLook } from "../items-3d-model.mjs";
 import { renderHeroPortrait, renderItemThumbnail, isModeledItem } from "../equipment-previews.mjs";
 
 const ico = (name, cls = "") => {
   const paths = {
     board: `<rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/>`,
+    rows: `<rect x="2.5" y="3.5" width="4" height="4" rx="1"/><rect x="2.5" y="12.5" width="4" height="4" rx="1"/><path d="M9 5.5h8.5M9 14.5h8.5"/>`,
+    podium: `<path d="M7.5 8.5h5V17h-5zM2.5 11.5h5V17h-5zM12.5 13.5h5V17h-5z"/><path d="M10 2.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L7.1 4.6l2-.3Z"/>`,
     heroes: `<circle cx="7" cy="7" r="3"/><path d="M2 17c0-3 2.4-5 5-5s5 2 5 5Z"/><circle cx="14.5" cy="8" r="2.3"/><path d="M11.5 17c0-2.6 1.6-4.3 3.2-4.3S18 14.4 18 17Z"/>`,
     heart: `<path d="M10 17S3.5 12.8 3.5 8.6A3.9 3.9 0 0 1 10 5.9a3.9 3.9 0 0 1 6.5 2.7C16.5 12.8 10 17 10 17Z"/>`,
     coin: `<circle cx="10" cy="10" r="8"/><circle cx="10" cy="10" r="3.7" fill="none" stroke-width="1.4"/>`,
@@ -173,13 +175,127 @@ export function renderOdysseyTopbar({ view, state, account, unlocked }) {
     ${isGate || isDoc ? '' : `<button class="teacher-console-tab" type="button" data-action="teacher-console" aria-haspopup="dialog" aria-expanded="false" aria-label="${t('console.title')}">${ico('lock')}<span>${t('console.title')}</span></button>`}`;
 }
 
+/* ---------- Class board layouts ----------
+ * Grid: large cards. List: long compact labels, many heroes per screen.
+ * Ranking: podium then descending tiers, ordered by experience only. */
+
+export const BOARD_LAYOUTS = ["grid", "list", "ranking"];
+const LAYOUT_ICONS = { grid: "board", list: "rows", ranking: "podium" };
+
+function renderLayoutSwitch(layout) {
+  return `<div class="layout-switch" role="group" aria-label="${t("board.layout")}">
+    ${BOARD_LAYOUTS.map(value => `<button type="button" class="${value === layout ? "on" : ""}" data-action="board-layout" data-layout="${value}" aria-pressed="${value === layout}" title="${t(`board.layout.${value}`)}">${ico(LAYOUT_ICONS[value])}<span>${t(`board.layout.${value}`)}</span></button>`).join("")}
+  </div>`;
+}
+
+function renderPupilHit(pupil, selected, { student = false, selecting = false } = {}) {
+  const pick = student && !selecting;
+  return `<button class="card-hit" type="button" data-action="${pick ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${pick ? '' : `aria-pressed="${selected}"`} aria-label="${t(pick ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>`;
+}
+
+function renderPupilHearts(pupil) {
+  return `<div class="hearts" role="img" aria-label="${t("app.aria.hp", { hp: pupil.hp, maxHp: pupil.maxHp })}">
+    ${Array.from({ length: pupil.maxHp }, (_, i) => `<span class="heart ${i < pupil.hp ? "" : "off"}">${ico("heart")}</span>`).join("")}
+  </div>`;
+}
+
+function renderCoins(pupil) {
+  return `<span class="coins" aria-label="${t("app.aria.coins", { amount: pupil.money })}">${ico("coin")}${pupil.money}</span>`;
+}
+
+function renderXpBar(pupil) {
+  const progress = xpProgress(pupil);
+  return `<div class="rune-xp-label"><span>XP</span><span>${progress.current}<span class="xp-needed"> / ${progress.needed}</span></span></div>
+        <div class="conduit" role="progressbar" aria-label="${t("student.experience")}" aria-valuemin="0" aria-valuemax="${progress.needed}" aria-valuenow="${progress.current}"><i style="--progress:${progress.percent / 100}"></i></div>`;
+}
+
+function renderLevelSeal(pupil) {
+  return `<span class="lvl-seal" aria-label="${t("app.aria.level", { level: pupil.level })}"><small>${t("common.levelShort")}</small><b>${pupil.level}</b></span>`;
+}
+
+function renderHeroRow(pupil, selectedIds = [], { student = false, selecting = false } = {}) {
+  const selected = (!student || selecting) && selectedIds.includes(pupil.id);
+  const out = isEliminated(pupil);
+  const pick = student && !selecting;
+  return `
+    <article class="hero-row ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
+      ${renderPupilHit(pupil, selected, { student, selecting })}
+      <div class="hero-row-portrait" ${titleBackdropAttributes(pupil)}>
+        ${renderHeroPortrait(pupil, { className: 'hero-row-fig' })}
+        ${pick ? '' : `<span class="selection-mark" aria-hidden="true">${ico("check")}</span>`}
+      </div>
+      <div class="hero-row-id">
+        <h2>${escapeHtml(pupil.name)}</h2>
+        <div class="hero-row-title">${renderTitle(pupil)}${out ? `<span class="out-tag">${t("common.out")}</span>` : ""}</div>
+      </div>
+      ${renderLevelSeal(pupil)}
+      <div class="hero-row-vitals">
+        <div class="card-health-money">
+          ${renderPupilHearts(pupil)}
+          ${renderCoins(pupil)}
+        </div>
+        ${renderXpBar(pupil)}
+      </div>
+      <div class="hero-row-acts">
+        <button class="rune-act" type="button" data-action="odyssey-personalize" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t('student.openDressing',{name:escapeHtml(pupil.name)})}" title="${t("odyssey.workshop")}">${ico("rune")}<span>${t("odyssey.workshop")}</span></button>
+        <button class="rune-act" type="button" data-action="odyssey-shop" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t('student.openShop',{name:escapeHtml(pupil.name)})}" title="${t("student.shop")}">${ico("shop")}<span>${t("student.shop")}</span></button>
+      </div>
+    </article>`;
+}
+
+function ordinal(rank) {
+  if (getLang() === "fr") return `${rank}<sup>${rank === 1 ? "er" : "e"}</sup>`;
+  const teen = rank % 100 >= 11 && rank % 100 <= 13;
+  return `${rank}<sup>${teen ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[rank % 10] || "th")}</sup>`;
+}
+
+function renderRankedHero(pupil, selectedIds, options, className) {
+  const selected = (!options.student || options.selecting) && selectedIds.includes(pupil.id);
+  const out = isEliminated(pupil);
+  return `
+    <article class="${className} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
+      ${renderPupilHit(pupil, selected, options)}
+      <div class="${className}-portrait" ${titleBackdropAttributes(pupil)}>${renderHeroPortrait(pupil, { className: `${className}-fig` })}</div>
+      <div class="${className}-info">
+        <strong>${escapeHtml(pupil.name)}</strong>
+        <span class="${className}-stats"><span class="rank-xp">${pupil.xp} XP</span>${renderPupilHearts(pupil)}</span>
+      </div>
+    </article>`;
+}
+
+function renderRanking(pupils, matches, selectedIds, options) {
+  const tiers = rankPupils(pupils)
+    .map(tier => ({ ...tier, pupils: tier.pupils.filter(matches) }))
+    .filter(tier => tier.pupils.length);
+  const podium = tiers.filter(tier => tier.rank <= 3);
+  const rest = tiers.filter(tier => tier.rank > 3);
+  const label = tier => t("ranking.rankLabel", { rank: tier.rank, level: tier.level });
+  return `<div class="ranking">
+    <p class="ranking-hint">${t("ranking.hint")}</p>
+    ${podium.length ? `<ol class="podium" aria-label="${t("ranking.podium")}">
+      ${podium.map(tier => `<li class="podium-spot" data-rank="${tier.rank}" data-crowd="${tier.pupils.length > 4 ? "many" : tier.pupils.length > 2 ? "some" : "few"}" aria-label="${label(tier)}">
+        <div class="podium-heroes" role="list">${tier.pupils.map(pupil => renderRankedHero(pupil, selectedIds, options, "podium-hero")).join("")}</div>
+        <div class="podium-step">
+          <span class="podium-place">${ordinal(tier.rank)}</span>
+          <span class="podium-level">${t("common.levelShort")} ${tier.level}</span>
+        </div>
+      </li>`).join("")}
+    </ol>` : ""}
+    ${rest.length ? `<ol class="ranking-rest" aria-label="${t("ranking.rest")}">
+      ${rest.map((tier, index) => `<li class="rank-tier" style="--i:${index}" aria-label="${label(tier)}">
+        <div class="rank-badge"><span class="rank-place">${ordinal(tier.rank)}</span><span class="rank-level">${t("common.levelShort")} ${tier.level}</span></div>
+        <div class="rank-tier-heroes" role="list">${tier.pupils.map(pupil => renderRankedHero(pupil, selectedIds, options, "rank-chip")).join("")}</div>
+      </li>`).join("")}
+    </ol>` : ""}
+  </div>`;
+}
+
 function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = false } = {}) {
   const selected = (!student || selecting) && selectedIds.includes(pupil.id);
-  const progress = xpProgress(pupil);
   const out = isEliminated(pupil);
   return `
     <article class="rune-card ${student ? 'student-card' : ''} ${selected ? "is-selected" : ""} ${out ? "is-out" : ""}" role="listitem">
-      <button class="card-hit" type="button" data-action="${student && !selecting ? 'student-pick' : 'toggle-pupil'}" data-pupil-id="${escapeHtml(pupil.id)}" ${student && !selecting ? '' : `aria-pressed="${selected}"`} aria-label="${t(student && !selecting ? 'student.openHero' : 'board.select', { name: escapeHtml(pupil.name) })}"></button>
+      ${renderPupilHit(pupil, selected, { student, selecting })}
       <div class="dais dais-card" ${titleBackdropAttributes(pupil)}>
         ${renderTitleBackdrop()}
         ${renderHeroPortrait(pupil, { className: student ? 'hero-fig picker-portrait' : 'hero-fig' })}
@@ -189,18 +305,15 @@ function renderRuneCard(pupil, selectedIds = [], { student = false, selecting = 
       </div>
       <header class="rune-card-head">
         <div class="rune-card-name"><h2>${escapeHtml(pupil.name)}</h2></div>
-        <span class="lvl-seal" aria-label="${t("app.aria.level", { level: pupil.level })}"><small>${t("common.levelShort")}</small><b>${pupil.level}</b></span>
+        ${renderLevelSeal(pupil)}
       </header>
       <div class="rune-card-title">${renderTitle(pupil)}</div>
       <div class="rune-vitals">
         <div class="card-health-money">
-        <div class="hearts" role="img" aria-label="${t("app.aria.hp", { hp: pupil.hp, maxHp: pupil.maxHp })}">
-          ${Array.from({ length: pupil.maxHp }, (_, i) => `<span class="heart ${i < pupil.hp ? "" : "off"}">${ico("heart")}</span>`).join("")}
+          ${renderPupilHearts(pupil)}
+          ${renderCoins(pupil)}
         </div>
-        <span class="coins" aria-label="${t("app.aria.coins", { amount: pupil.money })}">${ico("coin")}${pupil.money}</span>
-        </div>
-        <div class="rune-xp-label"><span>XP</span><span>${progress.current}<span class="xp-needed"> / ${progress.needed}</span></span></div>
-        <div class="conduit" role="progressbar" aria-label="${t("student.experience")}" aria-valuemin="0" aria-valuemax="${progress.needed}" aria-valuenow="${progress.current}"><i style="--progress:${progress.percent / 100}"></i></div>
+        ${renderXpBar(pupil)}
       </div>
       <footer class="rune-card-foot">
         <button class="rune-act" type="button" data-action="odyssey-personalize" data-pupil-id="${escapeHtml(pupil.id)}" aria-label="${t('student.openDressing',{name:escapeHtml(pupil.name)})}">${ico("rune")}<span>${t("odyssey.workshop")}</span></button>
@@ -221,7 +334,15 @@ export function renderOdysseyStudent({ classroom, ui, pupil, classView = false, 
       return `<main class="single"><div class="empty">${ico("heroes")}<h1>${t("student.noHeroesTitle", { name: escapeHtml(classroom.name) })}</h1><p>${t("odyssey.studentEmpty")}</p></div></main>`;
     }
     const query = (ui.query || "").trim().toLocaleLowerCase();
-    const pupils = classroom.pupils.filter(item => item.name.toLocaleLowerCase().includes(query));
+    const matches = item => item.name.toLocaleLowerCase().includes(query);
+    const pupils = classroom.pupils.filter(matches);
+    const layout = BOARD_LAYOUTS.includes(ui.boardLayout) ? ui.boardLayout : "grid";
+    const cardOptions = { student:true, selecting:selectionMode };
+    const roster = layout === "list"
+      ? `<div class="hero-list" role="list">${pupils.map(item => renderHeroRow(item, selectedIds, cardOptions)).join('')}</div>`
+      : layout === "ranking"
+        ? renderRanking(classroom.pupils, matches, selectedIds, cardOptions)
+        : `<div class="rune-grid picker-grid" role="list">${pupils.map(item => renderRuneCard(item, selectedIds, cardOptions)).join('')}</div>`;
     return `
       <main class="single">
         <div class="picker">
@@ -232,13 +353,11 @@ export function renderOdysseyStudent({ classroom, ui, pupil, classView = false, 
             </div>
             <div class="picker-tools">
               <span class="picker-count">${t("class.heroCount", { count: classroom.pupils.length })}</span>
+              ${renderLayoutSwitch(layout)}
               <label class="search">${ico("search")}<input type="search" id="roster-search" data-action="search" value="${escapeHtml(ui.query || "")}" placeholder="${t("student.findName")}" aria-label="${t("student.findName")}" autocomplete="off" /></label>
             </div>
           </header>
-          ${pupils.length ? `
-          <div class="rune-grid picker-grid" role="list">
-            ${pupils.map(item => renderRuneCard(item, selectedIds, { student:true, selecting:selectionMode })).join('')}
-          </div>` : `<div class="empty"><h2>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h2><button class="btn" data-action="clear-search">${t("student.clearSearch")}</button></div>`}
+          ${pupils.length ? roster : `<div class="empty"><h2>${t("student.noMatchTitle", { query: escapeHtml(ui.query.trim()) })}</h2><button class="btn" data-action="clear-search">${t("student.clearSearch")}</button></div>`}
         </div>
       </main>`;
   }

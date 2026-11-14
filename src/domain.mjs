@@ -748,6 +748,20 @@ export function isEliminated(pupil) {
   return pupil.hp <= 0;
 }
 
+/* Class ranking: experience decides, never money. Heroes on the same level
+ * share a rank (dense ranking); within a rank, more XP comes first. */
+export function rankPupils(pupils) {
+  const sorted = [...pupils].sort((a, b) =>
+    b.level - a.level || b.xp - a.xp || a.name.localeCompare(b.name));
+  const tiers = [];
+  for (const pupil of sorted) {
+    const last = tiers[tiers.length - 1];
+    if (last && last.level === pupil.level) last.pupils.push(pupil);
+    else tiers.push({ rank: tiers.length + 1, level: pupil.level, pupils: [pupil] });
+  }
+  return tiers;
+}
+
 const SAMPLE_TONES = ["light", "medium", "tan", "brown", "dark"];
 
 function samplePupils(prefix, entries) {

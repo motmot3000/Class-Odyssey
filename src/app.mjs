@@ -89,7 +89,8 @@ import {
   renderOdysseyStudent,
   renderOdysseyShop,
   renderOdysseyPersonalize,
-  cosmeticChangesFromDraft
+  cosmeticChangesFromDraft,
+  BOARD_LAYOUTS
 } from "./views/odyssey.mjs";
 import {
   mountOdysseyViewer,
@@ -129,6 +130,8 @@ let armedDanger = null;
 let googleEnabled = false;
 const pendingFlash = new Set();
 
+const BOARD_LAYOUT_KEY = "classodyssey:board-layout";
+
 /* Transient UI preferences. Resetting them must never change classroom data. */
 const ui = {
   query: "",
@@ -160,6 +163,13 @@ const ui = {
   teacherRecovery: false,
   /* Interface Odyssey */
   odysseyView: "board",
+  boardLayout: (() => {
+    try {
+      const stored = localStorage.getItem(BOARD_LAYOUT_KEY);
+      if (BOARD_LAYOUTS.includes(stored)) return stored;
+    } catch { /* Storage may be blocked. */ }
+    return "grid";
+  })(),
   angle: "quarter",
   rotating: false,
   draft: null,
@@ -514,7 +524,7 @@ function flushFlash() {
   if (!pendingFlash.size) return;
   for (const id of pendingFlash) {
     const safe = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : String(id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".rune-card");
+    const card = app.querySelector(`[data-pupil-id="${safe}"]`)?.closest(".rune-card, .hero-row, .podium-hero, .rank-chip");
     if (!card) continue;
     card.classList.add("is-flash");
     card.addEventListener("animationend", () => card.classList.remove("is-flash"), { once: true });
@@ -919,6 +929,13 @@ const ACTIONS = {
   "toggle-class-selection": () => commit(toggleClassSelection(state, state.activeClassId), { record: false }),
 
   "clear-selection": () => commit(clearSelection(state), { record: false }),
+
+  "board-layout": (el) => {
+    if (!BOARD_LAYOUTS.includes(el.dataset.layout)) return;
+    ui.boardLayout = el.dataset.layout;
+    try { localStorage.setItem(BOARD_LAYOUT_KEY, ui.boardLayout); } catch { /* Keep the in-memory layout. */ }
+    render();
+  },
 
   "clear-search": () => {
     ui.query = "";

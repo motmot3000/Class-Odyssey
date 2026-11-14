@@ -78,7 +78,7 @@ test("an open teacher panel enables single-card selection and hero navigation st
   const pupil=classroom.pupils[0];
   const html=renderOdysseyStudent({classroom,ui:{},pupil:null,classView:true,selectionMode:true,selectedIds:[pupil.id]});
   assert.match(html,/data-action="toggle-pupil"/);
-  assert.equal((html.match(/aria-pressed="true"/g)||[]).length,1);
+  assert.equal((html.match(/data-action="toggle-pupil"[^>]*aria-pressed="true"/g)||[]).length,1);
   const sheet=renderOdysseySheet(pupil,{}, {student:true});
   const dressing=sheet.match(/<button[^>]+data-action="odyssey-personalize"[^>]*>/)[0];
   assert.doesNotMatch(dressing,/btn-primary|aria-pressed="true"|is-active/);
