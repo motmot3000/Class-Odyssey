@@ -35,6 +35,7 @@ import {
   updateCosmetics
 } from "./domain.mjs";
 import { BRAND } from "./brand.mjs";
+import { sharedState, sameClassroomData, decideBootstrap, adoptRemoteState as adoptSharedRemote } from "./sync-policy.mjs";
 import { apiUrl, requestApi } from "./api.mjs";
 import {
   SESSION_KEY,
@@ -125,6 +126,9 @@ let saveInFlight = null;
 let saveQueued = false;
 let localDirty = account ? loadDirty(account.id) : false;
 let syncConflict = false;
+/* Last classroom payload this device knows the server holds, so a save that
+ * changes nothing is not sent at all (and cannot bump the revision). */
+let lastSyncedShared = null;
 let gateRequest = 0;
 let armedDanger = null;
 let googleEnabled = false;
@@ -1919,6 +1923,7 @@ function openAccount(next) {
   state = loadState(next.id);
   localDirty = loadDirty(next.id);
   syncConflict = false;
+  lastSyncedShared = null;
   history = [];
   ui.gateError = "";
   ui.gateValues = {};
@@ -1999,6 +2004,7 @@ function endSession(message = "", context = null) {
   history = [];
   localDirty = false;
   syncConflict = false;
+  lastSyncedShared = null;
   clearTimeout(persistTimer);
   persistTimer = null;
   saveQueued = false;
@@ -2102,6 +2108,14 @@ function dismiss(node) {
 
 /* ---------- Optimistic server synchronization ---------- */
 
+/* Which class is open and which hero is focused belong to the device, not to
+ * the classroom: sharing them made two machines fight over one revision for
+ * data nobody had changed. The policy lives in sync-policy.mjs so it is
+ * testable without a browser. */
+function adoptRemoteState(remote) {
+  return normalizeState(adoptSharedRemote(remote, state));
+}
+
 function scheduleServerSave() {
   if (saveInFlight || syncConflict) {
     saveQueued = true;
@@ -2122,13 +2136,19 @@ async function saveToServer() {
   if (!account || syncConflict) return;
   const context = captureSessionContext();
   if (!context || context.accountId !== account.id) return;
+  const sent = JSON.stringify(sharedState(state));
+  /* Nothing the server stores has changed: sending it would only burn a
+   * revision and make every other device look stale. */
+  if (sent === lastSyncedShared) {
+    setDirty(false);
+    return;
+  }
   saveInFlight = context;
-  const snapshot = JSON.stringify(state);
   try {
     const response = await requestApi("state", {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...sessionHeaders(context) },
-      body: snapshot
+      body: sent
     });
     if (!isCurrentSession(context) || account?.id !== context.accountId) return;
     const payload = await response.json().catch(() => null);
@@ -2146,8 +2166,9 @@ async function saveToServer() {
       return;
     }
     if (!response.ok || !Number.isSafeInteger(payload?.revision)) throw new Error(`save failed: ${response.status}`);
-    const unchanged = snapshot === JSON.stringify(state);
+    const unchanged = sent === JSON.stringify(sharedState(state));
     state = { ...state, revision: payload.revision, updatedAt: payload.updatedAt || state.updatedAt };
+    lastSyncedShared = JSON.stringify(sharedState(state));
     cacheState();
     setDirty(!unchanged);
   } catch {
@@ -2182,18 +2203,22 @@ async function bootstrapFromServer() {
     if (!isCurrentSession(context) || account?.id !== context.accountId) return;
     if (!remote || !Array.isArray(remote.classes)) return;
     if ((Number(remote.revision) || 0) < state.revision) return;
-    if (localDirty) {
-      if ((Number(state.revision) || 0) === (Number(remote.revision) || 0)) saveToServer();
-      else {
+    lastSyncedShared = JSON.stringify(sharedState(remote));
+    switch (decideBootstrap({ local: state, remote, localDirty })) {
+      case "push":
+        saveToServer();
+        return;
+      case "conflict":
         syncConflict = true;
         render();
-      }
-      return;
+        return;
+      default:
+        state = adoptRemoteState(remote);
+        history = [];
+        cacheState();
+        setDirty(false);
+        render();
     }
-    state = normalizeState(remote);
-    history = [];
-    cacheState();
-    render();
   } catch {
     // Stay on the local cache when the server is unavailable.
   }
@@ -2210,7 +2235,8 @@ async function reloadServerCopy() {
     if (!isCurrentSession(context) || account?.id !== accountId) return;
     if (!remote || !Array.isArray(remote.classes)) return;
     localStorage.setItem(`${stateKey(accountId)}:conflict:${Date.now()}`, JSON.stringify(state));
-    state = normalizeState(remote);
+    lastSyncedShared = JSON.stringify(sharedState(remote));
+    state = adoptRemoteState(remote);
     history = [];
     syncConflict = false;
     cacheState();
